@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNetJit.Cli", "DotNetJit.Cli\DotNetJit.Cli.csproj", "{8FEB9F57-1C65-4294-94C3-B606338F48A7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NESDecompiler.Core", "..\..\NESDecompiler\NESDecompiler.Core\NESDecompiler.Core.csproj", "{167CECF3-5FFB-4B9F-908D-C583CDF4EB1E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8FEB9F57-1C65-4294-94C3-B606338F48A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8FEB9F57-1C65-4294-94C3-B606338F48A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8FEB9F57-1C65-4294-94C3-B606338F48A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8FEB9F57-1C65-4294-94C3-B606338F48A7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{167CECF3-5FFB-4B9F-908D-C583CDF4EB1E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{167CECF3-5FFB-4B9F-908D-C583CDF4EB1E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{167CECF3-5FFB-4B9F-908D-C583CDF4EB1E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{167CECF3-5FFB-4B9F-908D-C583CDF4EB1E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

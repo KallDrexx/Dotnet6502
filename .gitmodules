@@ -1,0 +1,3 @@
+[submodule "NESDecompiler"]
+	path = NESDecompiler
+	url = git@github.com:KallDrexx/NESDecompiler.git
