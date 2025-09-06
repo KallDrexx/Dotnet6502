@@ -1,25 +1,20 @@
-﻿using NESDecompiler.Core.Decompilation;
+﻿using DotNetJit.Cli;
+using NESDecompiler.Core.Decompilation;
 using NESDecompiler.Core.Disassembly;
 using NESDecompiler.Core.ROM;
 
-var arguments = Environment.GetCommandLineArgs();
-if (arguments.Length <= 1)
+var commandLineValues = CommandLineHandler.Parse(args);
+if (commandLineValues == null)
 {
-    Console.WriteLine("No NES rom specified");
+    // Errors already written to stderr
     return 1;
 }
 
-var romFile = arguments[1];
-if (!File.Exists(romFile))
-{
-    Console.WriteLine($"Rom file '{romFile}' does not exist");
-    return 2;
-}
-
-Console.WriteLine($"Loading rom file '{romFile}'");
+var romFile = commandLineValues.RomFile;
+Console.WriteLine($"Loading rom file '{romFile.FullName}'");
 
 var loader = new ROMLoader();
-var romInfo = loader.LoadFromFile(romFile);
+var romInfo = loader.LoadFromFile(romFile.FullName);
 var programRomData = loader.GetPRGROMData();
 var disassembler = new Disassembler(romInfo, programRomData);
 disassembler.Disassemble();
@@ -27,5 +22,4 @@ disassembler.Disassemble();
 var decompiler = new Decompiler(romInfo, disassembler);
 decompiler.Decompile();
 
-Console.WriteLine("Hello, World!");
 return 0;

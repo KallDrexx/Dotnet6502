@@ -11,4 +11,8 @@
       <ProjectReference Include="..\..\NESDecompiler\NESDecompiler.Core\NESDecompiler.Core.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="System.CommandLine" Version="2.0.0-beta7.25380.108" />
+    </ItemGroup>
+
 </Project>
