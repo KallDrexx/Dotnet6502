@@ -19,7 +19,7 @@ public abstract class InstructionHandler
     public void Handle(
         ILGenerator ilGenerator,
         DisassembledInstruction instruction,
-        NesAssemblyBuilder builder)
+        GameClass gameClass)
     {
         if (!Mnemonics.Contains(instruction.Info.Mnemonic))
         {
@@ -29,11 +29,11 @@ public abstract class InstructionHandler
             throw new ArgumentException(message);
         }
 
-        HandleInternal(ilGenerator, instruction, builder);
+        HandleInternal(ilGenerator, instruction, gameClass);
     }
 
     protected abstract void HandleInternal(
         ILGenerator ilGenerator,
         DisassembledInstruction instruction,
-        NesAssemblyBuilder builder);
+        GameClass gameClass);
 }

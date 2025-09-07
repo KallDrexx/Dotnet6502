@@ -12,13 +12,13 @@ public class LoadHandlers : InstructionHandler
 {
     public override string[] Mnemonics => ["LDA", "LDX"];
 
-    protected override void HandleInternal(ILGenerator ilGenerator, DisassembledInstruction instruction, NesAssemblyBuilder builder)
+    protected override void HandleInternal(ILGenerator ilGenerator, DisassembledInstruction instruction, GameClass gameClass)
     {
         var targetRegister = instruction.Info.Mnemonic switch
         {
-            "LDA" => builder.Hardware.Accumulator,
-            "LDX" => builder.Hardware.XIndex,
-            "LDY" => builder.Hardware.YIndex,
+            "LDA" => gameClass.CpuRegisters.Accumulator,
+            "LDX" => gameClass.CpuRegisters.XIndex,
+            "LDY" => gameClass.CpuRegisters.YIndex,
             _ => throw new NotSupportedException(instruction.Info.Mnemonic),
         };
 
@@ -38,13 +38,13 @@ public class LoadHandlers : InstructionHandler
 
             case AddressingMode.ZeroPageX:
                 ilGenerator.Emit(OpCodes.Ldc_I4, (int)instruction.Operands[0]);
-                ilGenerator.Emit(OpCodes.Ldfld, builder.Hardware.XIndex);
+                ilGenerator.Emit(OpCodes.Ldfld, gameClass.CpuRegisters.XIndex);
                 ilGenerator.Emit(OpCodes.Add);
                 break;
 
             case AddressingMode.ZeroPageY:
                 ilGenerator.Emit(OpCodes.Ldc_I4, (int)instruction.Operands[0]);
-                ilGenerator.Emit(OpCodes.Ldfld, builder.Hardware.YIndex);
+                ilGenerator.Emit(OpCodes.Ldfld, gameClass.CpuRegisters.YIndex);
                 ilGenerator.Emit(OpCodes.Add);
                 break;
 
@@ -56,14 +56,14 @@ public class LoadHandlers : InstructionHandler
             case AddressingMode.AbsoluteX:
                 tempAddress = (instruction.Operands[1] << 8) | (instruction.Operands[0]);
                 ilGenerator.Emit(OpCodes.Ldc_I4, tempAddress);
-                ilGenerator.Emit(OpCodes.Ldfld, builder.Hardware.XIndex);
+                ilGenerator.Emit(OpCodes.Ldfld, gameClass.CpuRegisters.XIndex);
                 ilGenerator.Emit(OpCodes.Add);
                 break;
 
             case AddressingMode.AbsoluteY:
                 tempAddress = (instruction.Operands[1] << 8) | (instruction.Operands[0]);
                 ilGenerator.Emit(OpCodes.Ldc_I4, tempAddress);
-                ilGenerator.Emit(OpCodes.Ldfld, builder.Hardware.YIndex);
+                ilGenerator.Emit(OpCodes.Ldfld, gameClass.CpuRegisters.YIndex);
                 ilGenerator.Emit(OpCodes.Add);
                 break;
 
@@ -76,7 +76,7 @@ public class LoadHandlers : InstructionHandler
         ilGenerator.Emit(OpCodes.Stloc, sourceAddress);
 
         // Load the memory block and index grab the value from it
-        ilGenerator.Emit(OpCodes.Ldsfld, builder.Hardware.Memory);
+        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegisters.Memory);
         ilGenerator.Emit(OpCodes.Ldloc, sourceAddress);
         ilGenerator.Emit(OpCodes.Ldelem_U1);
         ilGenerator.Emit(OpCodes.Stsfld, targetRegister);

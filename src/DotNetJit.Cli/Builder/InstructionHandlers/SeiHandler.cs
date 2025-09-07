@@ -10,12 +10,14 @@ public class SeiHandler : InstructionHandler
     protected override void HandleInternal(
         ILGenerator ilGenerator,
         DisassembledInstruction instruction,
-        NesAssemblyBuilder builder)
+        GameClass gameClass)
     {
-        // Set the interrupt disable flag to true
-        var field = builder.Hardware.InterruptDisableFlag;
+        var setFlagMethod = typeof(NesHardware).GetMethod(nameof(NesHardware.SetFlag));
 
+        // Set the interrupt disable flag to true
+        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
+        ilGenerator.Emit(OpCodes.Ldc_I4, (int)CpuStatusFlags.InterruptDisable);
         ilGenerator.Emit(OpCodes.Ldc_I4, 1);
-        ilGenerator.Emit(OpCodes.Stsfld, field);
+        ilGenerator.Emit(OpCodes.Callvirt, setFlagMethod!);
     }
 }
