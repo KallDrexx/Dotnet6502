@@ -11,8 +11,16 @@ public class HardwareBuilder
     public FieldInfo Accumulator { get; }
     public FieldInfo XIndex { get; }
     public FieldInfo YIndex { get; }
-    public FieldInfo Status { get; }
     public FieldInfo Memory { get; }
+
+    // Status fields
+    public FieldInfo CarryFlag { get; }
+    public FieldInfo ZeroFlag { get; }
+    public FieldInfo InterruptDisableFlag { get; }
+    public FieldInfo DecimalFlag { get; }
+    public FieldInfo OverflowFlag { get; }
+    public FieldInfo NegativeFlag { get; }
+    public FieldInfo BreakFlag { get; }
 
     public HardwareBuilder(string rootNamespace, ModuleBuilder module)
     {
@@ -21,7 +29,16 @@ public class HardwareBuilder
         Accumulator = _typeBuilder.DefineField("Accumulator", typeof(byte), FieldAttributes.Public | FieldAttributes.Static);
         XIndex = _typeBuilder.DefineField("XIndex", typeof(byte), FieldAttributes.Public | FieldAttributes.Static);
         YIndex = _typeBuilder.DefineField("YIndex", typeof(byte), FieldAttributes.Public | FieldAttributes.Static);
-        Status = _typeBuilder.DefineField("Status", typeof(byte), FieldAttributes.Public | FieldAttributes.Static);
+        CarryFlag = _typeBuilder.DefineField("Carry", typeof(bool), FieldAttributes.Public | FieldAttributes.Static);
+        ZeroFlag = _typeBuilder.DefineField("Zero", typeof(bool), FieldAttributes.Public | FieldAttributes.Static);
+        DecimalFlag = _typeBuilder.DefineField("Decimal", typeof(bool), FieldAttributes.Public | FieldAttributes.Static);
+        OverflowFlag = _typeBuilder.DefineField("Overflow", typeof(bool), FieldAttributes.Public | FieldAttributes.Static);
+        NegativeFlag = _typeBuilder.DefineField("Negative", typeof(bool), FieldAttributes.Public | FieldAttributes.Static);
+        BreakFlag = _typeBuilder.DefineField("Break", typeof(bool), FieldAttributes.Public | FieldAttributes.Static);
+        InterruptDisableFlag = _typeBuilder.DefineField(
+            "InterruptDisable",
+            typeof(bool),
+            FieldAttributes.Public | FieldAttributes.Static);
 
         Memory = _typeBuilder.DefineField(
             "Memory",

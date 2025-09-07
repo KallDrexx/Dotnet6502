@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Reflection.Emit;
+using DotNetJit.Cli.Builder.InstructionHandlers;
 using NESDecompiler.Core.Decompilation;
 using NESDecompiler.Core.Disassembly;
 
@@ -11,11 +12,23 @@ public class NesAssemblyBuilder
     private readonly Dictionary<ushort, FieldInfo> _variableFields = new();
     private readonly Dictionary<ushort, MethodInfo> _methods = new();
     private readonly TypeBuilder _gameClassBuilder;
+    private readonly Dictionary<string, InstructionHandler> _instructionHandlers;
 
     public HardwareBuilder Hardware { get; }
 
+    public Dictionary<ushort, FieldInfo> VariableFields => _variableFields;
+
     public NesAssemblyBuilder(string namespaceName, Decompiler decompiler)
     {
+        _instructionHandlers = GetType().Assembly
+            .GetTypes()
+            .Where(x => !x.IsAbstract)
+            .Where(x => !x.IsInterface)
+            .Where(x => typeof(InstructionHandler).IsAssignableFrom(x))
+            .Select(x => (InstructionHandler)Activator.CreateInstance(x)!)
+            .SelectMany(x => x.Mnemonics.Select(y => new { Mnemonic = y, Instance = x}))
+            .ToDictionary(x => x.Mnemonic, x => x.Instance);
+
         _builder = new PersistedAssemblyBuilder(
             new AssemblyName(namespaceName),
             typeof(object).Assembly);
@@ -82,7 +95,6 @@ public class NesAssemblyBuilder
             }
         }
 
-
         ilGenerator.Emit(OpCodes.Ret);
 
         return method;
@@ -90,6 +102,15 @@ public class NesAssemblyBuilder
 
     private void GenerateIl(ILGenerator ilGenerator, DisassembledInstruction instruction)
     {
-        throw new NotImplementedException();
+        if (!_instructionHandlers.TryGetValue(instruction.Info.Mnemonic, out var handler))
+        {
+            // throw new NotSupportedException(instruction.ToString());
+            ilGenerator.EmitWriteLine($"Skipping {instruction}");
+            return;
+        }
+
+        ilGenerator.EmitWriteLine(instruction.ToString());
+
+        handler.Handle(ilGenerator, instruction, this);
     }
 }
