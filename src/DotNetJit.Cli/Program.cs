@@ -23,7 +23,7 @@ disassembler.Disassemble();
 var decompiler = new Decompiler(romInfo, disassembler);
 decompiler.Decompile();
 
-var builder = new NesAssemblyBuilder(Path.GetFileNameWithoutExtension(romFile.Name));
+var builder = new NesAssemblyBuilder(Path.GetFileNameWithoutExtension(romFile.Name), decompiler);
 
 var dllFileName = Path.Combine(romFile.DirectoryName!, Path.GetFileNameWithoutExtension(romFile.Name) + ".dll");
 try

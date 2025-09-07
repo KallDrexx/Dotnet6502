@@ -5,35 +5,30 @@ namespace DotNetJit.Cli.Builder;
 
 public class HardwareBuilder
 {
-    private readonly string _rootNamespace;
+    private readonly TypeBuilder _typeBuilder;
 
-    public string TypeName => $"{_rootNamespace}.Hardware";
-    public const string AccumulatorFieldName ="Accumulator";
-    public const string XIndexFieldName = "XIndex";
-    public const string YIndexFieldName = "YIndex";
-    public const string StatusFieldName = "Status";
-    public const string MemoryFieldName = "Memory";
+    public TypeInfo Type => _typeBuilder;
+    public FieldInfo Accumulator { get; }
+    public FieldInfo XIndex { get; }
+    public FieldInfo YIndex { get; }
+    public FieldInfo Status { get; }
+    public FieldInfo Memory { get; }
 
-    public HardwareBuilder(string rootNamespace)
+    public HardwareBuilder(string rootNamespace, ModuleBuilder module)
     {
-        _rootNamespace = rootNamespace;
-    }
+        _typeBuilder = module.DefineType($"{rootNamespace}.NesHardware", TypeAttributes.Public);
 
-    public void AddCpuRegisterType(ModuleBuilder module)
-    {
-        var typeBuilder = module.DefineType(TypeName, TypeAttributes.Public);
+        Accumulator = _typeBuilder.DefineField("Accumulator", typeof(byte), FieldAttributes.Public | FieldAttributes.Static);
+        XIndex = _typeBuilder.DefineField("XIndex", typeof(byte), FieldAttributes.Public | FieldAttributes.Static);
+        YIndex = _typeBuilder.DefineField("YIndex", typeof(byte), FieldAttributes.Public | FieldAttributes.Static);
+        Status = _typeBuilder.DefineField("Status", typeof(byte), FieldAttributes.Public | FieldAttributes.Static);
 
-        typeBuilder.DefineField(AccumulatorFieldName, typeof(byte), FieldAttributes.Public | FieldAttributes.Static);
-        typeBuilder.DefineField(XIndexFieldName, typeof(byte), FieldAttributes.Public | FieldAttributes.Static);
-        typeBuilder.DefineField(YIndexFieldName, typeof(byte), FieldAttributes.Public | FieldAttributes.Static);
-        typeBuilder.DefineField(StatusFieldName, typeof(byte), FieldAttributes.Public | FieldAttributes.Static);
-
-        var memoryField = typeBuilder.DefineField(
-            MemoryFieldName,
+        Memory = _typeBuilder.DefineField(
+            "Memory",
             typeof(byte[]),
             FieldAttributes.Public | FieldAttributes.Static);
 
-        var constructor = typeBuilder.DefineConstructor(
+        var constructor = _typeBuilder.DefineConstructor(
             MethodAttributes.Public | MethodAttributes.Static,
             CallingConventions.Any,
             []);
@@ -43,9 +38,9 @@ public class HardwareBuilder
         // Constructor needs to allocate the 64k memory block
         constructorGenerator.Emit(OpCodes.Ldc_I4, 0x10000);
         constructorGenerator.Emit(OpCodes.Newarr, typeof(byte));
-        constructorGenerator.Emit(OpCodes.Stsfld, memoryField);
+        constructorGenerator.Emit(OpCodes.Stsfld, Memory);
         constructorGenerator.Emit(OpCodes.Ret);
 
-        typeBuilder.CreateType();
+        _typeBuilder.CreateType();
     }
 }

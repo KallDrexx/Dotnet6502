@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Reflection.Emit;
+using NESDecompiler.Core.Decompilation;
 
 namespace DotNetJit.Cli.Builder;
 
@@ -8,19 +9,20 @@ public class NesAssemblyBuilder
     private readonly string _rootNamespace;
     private readonly PersistedAssemblyBuilder _builder;
 
-    public HardwareBuilder Hardwares { get; }
+    public HardwareBuilder Hardware { get; }
+    public VariableTrackerBuilder VariableTracker { get; }
 
-    public NesAssemblyBuilder(string namespaceName)
+    public NesAssemblyBuilder(string namespaceName, Decompiler decompiler)
     {
         _rootNamespace = namespaceName;
-        Hardwares = new HardwareBuilder(_rootNamespace);
 
         _builder = new PersistedAssemblyBuilder(
             new AssemblyName(namespaceName),
             typeof(object).Assembly);
 
         var rootModule = _builder.DefineDynamicModule("<Module>");
-        Hardwares.AddCpuRegisterType(rootModule);
+        Hardware = new HardwareBuilder(_rootNamespace, rootModule);
+        VariableTracker = new VariableTrackerBuilder(_rootNamespace, rootModule, decompiler.Variables);
     }
 
     public void Save(Stream outputStream)
