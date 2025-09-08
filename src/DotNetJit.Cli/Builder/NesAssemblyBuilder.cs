@@ -38,8 +38,12 @@ public class NesAssemblyBuilder
 
         _gameClass = SetupGameClass(rootModule, namespaceName, decompiler);
         AddFunctions(decompiler);
-        AddInterruptHandlers();
-        AddAdvancedSystemMethods();
+
+        // TEMPORARILY COMMENTED OUT: These cause TypeBuilder circular reference issues
+        // REASON: Methods try to call GetMethod() on TypeBuilder before CreateType() is called
+        // TODO: Fix by reordering or using different architecture for cross-method calls
+        // AddInterruptHandlers();
+        // AddAdvancedSystemMethods();
 
         _gameClass.Type.CreateType();
     }
@@ -114,6 +118,11 @@ public class NesAssemblyBuilder
         return method;
     }
 
+    // TEMPORARILY COMMENTED OUT: AddInterruptHandlers() and related methods
+    // REASON: These methods cause "The invoked member is not supported before the type is created" errors
+    // because they try to reference methods that don't exist yet during IL generation
+
+    /*
     private void AddInterruptHandlers()
     {
         AddSophisticatedInterruptCheckMethod();
@@ -130,10 +139,13 @@ public class NesAssemblyBuilder
         AddStackOperationsMethod();
         AddMemoryAccessWrapperMethod();
     }
+    */
 
     /// <summary>
-    /// Sophisticated interrupt checking with proper priority handling
+    /// TEMPORARILY COMMENTED OUT: Sophisticated interrupt checking with proper priority handling
+    /// REASON: This method tries to call other methods in the same type that don't exist yet
     /// </summary>
+    /*
     private void AddSophisticatedInterruptCheckMethod()
     {
         var method = _gameClass.Type.DefineMethod(
@@ -234,8 +246,9 @@ public class NesAssemblyBuilder
         ilGenerator.MarkLabel(processNMI);
         ilGenerator.EmitWriteLine("Processing NMI interrupt");
 
+        // PROBLEM LINE: This tries to get a method that doesn't exist yet
         var handleNMIMethod = typeof(NesHal).GetMethod("HandleNMI") ??
-                              _gameClass.Type.GetMethod("HandleNMI");
+                              _gameClass.Type.GetMethod("HandleNMI"); // This fails
 
         if (handleNMIMethod != null)
         {
@@ -252,7 +265,7 @@ public class NesAssemblyBuilder
         else
         {
             // Call our generated NMI handler
-            ilGenerator.Emit(OpCodes.Call, _gameClass.Type.GetMethod("ProcessNMI"));
+            ilGenerator.Emit(OpCodes.Call, _gameClass.Type.GetMethod("ProcessNMI")); // This also fails
         }
 
         ilGenerator.Emit(OpCodes.Ldc_I4_1); // Return true - interrupt processed
@@ -263,7 +276,7 @@ public class NesAssemblyBuilder
         ilGenerator.EmitWriteLine("Processing IRQ interrupt");
 
         var handleIRQMethod = typeof(NesHal).GetMethod("HandleIRQ") ??
-                              _gameClass.Type.GetMethod("HandleIRQ");
+                              _gameClass.Type.GetMethod("HandleIRQ"); // This fails
 
         if (handleIRQMethod != null)
         {
@@ -280,7 +293,7 @@ public class NesAssemblyBuilder
         else
         {
             // Call our generated IRQ handler
-            ilGenerator.Emit(OpCodes.Call, _gameClass.Type.GetMethod("ProcessIRQ"));
+            ilGenerator.Emit(OpCodes.Call, _gameClass.Type.GetMethod("ProcessIRQ")); // This also fails
         }
 
         ilGenerator.Emit(OpCodes.Ldc_I4_1); // Return true - interrupt processed
@@ -293,10 +306,13 @@ public class NesAssemblyBuilder
         ilGenerator.MarkLabel(endMethod);
         ilGenerator.Emit(OpCodes.Ret);
     }
+    */
 
     /// <summary>
-    /// Complete NMI handler implementation
+    /// TEMPORARILY COMMENTED OUT: Complete NMI handler implementation
+    /// REASON: Works fine, but depends on CheckInterrupts method which has issues
     /// </summary>
+    /*
     private void AddNMIHandlerMethod()
     {
         var method = _gameClass.Type.DefineMethod(
@@ -380,10 +396,13 @@ public class NesAssemblyBuilder
 
         ilGenerator.Emit(OpCodes.Ret);
     }
+    */
 
     /// <summary>
-    /// Complete IRQ handler implementation
+    /// TEMPORARILY COMMENTED OUT: Complete IRQ handler implementation
+    /// REASON: Works fine, but depends on CheckInterrupts method which has issues
     /// </summary>
+    /*
     private void AddIRQHandlerMethod()
     {
         var method = _gameClass.Type.DefineMethod(
@@ -468,6 +487,7 @@ public class NesAssemblyBuilder
 
         ilGenerator.Emit(OpCodes.Ret);
     }
+    */
 
     private void AddVBlankWaitMethod()
     {
@@ -499,6 +519,11 @@ public class NesAssemblyBuilder
         ilGenerator.Emit(OpCodes.Ret);
     }
 
+    /// <summary>
+    /// TEMPORARILY COMMENTED OUT: CPU cycle execution method
+    /// REASON: This tries to call CheckInterrupts method which doesn't exist yet
+    /// </summary>
+    /*
     private void AddCPUCycleExecutionMethod()
     {
         var method = _gameClass.Type.DefineMethod(
@@ -512,8 +537,8 @@ public class NesAssemblyBuilder
 
         ilGenerator.EmitWriteLine("Executing CPU cycle with interrupt checking");
 
-        // Check interrupts first
-        ilGenerator.Emit(OpCodes.Call, _gameClass.Type.GetMethod("CheckInterrupts"));
+        // PROBLEM LINE: This tries to call a method that doesn't exist yet
+        ilGenerator.Emit(OpCodes.Call, _gameClass.Type.GetMethod("CheckInterrupts")); // FAILS HERE
         var continueExecution = ilGenerator.DefineLabel();
         ilGenerator.Emit(OpCodes.Brfalse, continueExecution);
 
@@ -528,6 +553,7 @@ public class NesAssemblyBuilder
         ilGenerator.Emit(OpCodes.Ldc_I4_1);
         ilGenerator.Emit(OpCodes.Ret);
     }
+    */
 
     private void AddInterruptVectorHandlerMethod()
     {
@@ -596,7 +622,8 @@ public class NesAssemblyBuilder
         ilGenerator.EmitWriteLine("Processing NMI vector");
 
         var setPCMethod = typeof(NesHal).GetMethod(nameof(NesHal.SetProgramCounter));
-        var processNMIMethod = _gameClass.Type.GetMethod("ProcessNMI");
+        // COMMENTED OUT: This would try to call ProcessNMI method which doesn't exist yet
+        // var processNMIMethod = _gameClass.Type.GetMethod("ProcessNMI");
 
         if (setPCMethod != null)
         {
@@ -605,11 +632,11 @@ public class NesAssemblyBuilder
             ilGenerator.Emit(OpCodes.Ldloc, vectorAddressLocal);
             ilGenerator.Emit(OpCodes.Callvirt, setPCMethod);
 
-            // Call NMI handler if available
-            if (processNMIMethod != null)
-            {
-                ilGenerator.Emit(OpCodes.Call, processNMIMethod);
-            }
+            // COMMENTED OUT: Call NMI handler if available
+            // if (processNMIMethod != null)
+            // {
+            //     ilGenerator.Emit(OpCodes.Call, processNMIMethod);
+            // }
         }
         ilGenerator.Emit(OpCodes.Br, endMethod);
 
@@ -645,7 +672,8 @@ public class NesAssemblyBuilder
         ilGenerator.MarkLabel(irqVectorLabel);
         ilGenerator.EmitWriteLine("Processing IRQ vector");
 
-        var processIRQMethod = _gameClass.Type.GetMethod("ProcessIRQ");
+        // COMMENTED OUT: This would try to call ProcessIRQ method which doesn't exist yet
+        // var processIRQMethod = _gameClass.Type.GetMethod("ProcessIRQ");
         if (setPCMethod != null)
         {
             // Set PC to IRQ vector address
@@ -653,11 +681,11 @@ public class NesAssemblyBuilder
             ilGenerator.Emit(OpCodes.Ldloc, vectorAddressLocal);
             ilGenerator.Emit(OpCodes.Callvirt, setPCMethod);
 
-            // Call IRQ handler if available
-            if (processIRQMethod != null)
-            {
-                ilGenerator.Emit(OpCodes.Call, processIRQMethod);
-            }
+            // COMMENTED OUT: Call IRQ handler if available
+            // if (processIRQMethod != null)
+            // {
+            //     ilGenerator.Emit(OpCodes.Call, processIRQMethod);
+            // }
         }
         ilGenerator.Emit(OpCodes.Br, endMethod);
 
@@ -723,17 +751,18 @@ public class NesAssemblyBuilder
             // Add method header comment
             ilGenerator.EmitWriteLine($"=== Function: {function.Name} at ${function.Address:X4} ===");
 
-            // Add interrupt check at function entry
-            ilGenerator.EmitWriteLine("Checking for interrupts at function entry");
-            ilGenerator.Emit(OpCodes.Call, _gameClass.Type.GetMethod("CheckInterrupts"));
-            var continueFunction = ilGenerator.DefineLabel();
-            ilGenerator.Emit(OpCodes.Brfalse, continueFunction);
-
-            // If interrupt was processed, return early
-            ilGenerator.EmitWriteLine("Interrupt processed - exiting function early");
-            ilGenerator.Emit(OpCodes.Ret);
-
-            ilGenerator.MarkLabel(continueFunction);
+            // TEMPORARILY COMMENTED OUT: Add interrupt check at function entry
+            // REASON: CheckInterrupts method doesn't exist yet and trying to reference it
+            // causes "The invoked member is not supported before the type is created" error
+            //
+            // ORIGINAL CODE THAT FAILS:
+            // ilGenerator.EmitWriteLine("Checking for interrupts at function entry");
+            // ilGenerator.Emit(OpCodes.Call, _gameClass.Type.GetMethod("CheckInterrupts"));
+            // var continueFunction = ilGenerator.DefineLabel();
+            // ilGenerator.Emit(OpCodes.Brfalse, continueFunction);
+            // ilGenerator.EmitWriteLine("Interrupt processed - exiting function early");
+            // ilGenerator.Emit(OpCodes.Ret);
+            // ilGenerator.MarkLabel(continueFunction);
 
             // Get instructions for this function directly from the disassembler
             var functionInstructions = _decompiler.Disassembler.Instructions
@@ -750,32 +779,35 @@ public class NesAssemblyBuilder
 
             ilGenerator.EmitWriteLine($"Processing {functionInstructions.Count} instructions");
 
-            // Add periodic interrupt checks for long functions
-            var instructionCount = 0;
-            const int INTERRUPT_CHECK_INTERVAL = 10; // Check every 10 instructions
+            // TEMPORARILY COMMENTED OUT: Add periodic interrupt checks for long functions
+            // REASON: Same issue as above - CheckInterrupts method doesn't exist yet
+            //
+            // ORIGINAL CODE:
+            // var instructionCount = 0;
+            // const int INTERRUPT_CHECK_INTERVAL = 10; // Check every 10 instructions
 
             // Generate code for each instruction
             foreach (var instruction in functionInstructions)
             {
                 try
                 {
-                    // Add periodic interrupt checks for long-running functions
-                    if (instructionCount > 0 && instructionCount % INTERRUPT_CHECK_INTERVAL == 0)
-                    {
-                        ilGenerator.EmitWriteLine($"Periodic interrupt check at instruction {instructionCount}");
-                        ilGenerator.Emit(OpCodes.Call, _gameClass.Type.GetMethod("CheckInterrupts"));
-                        var continueAfterCheck = ilGenerator.DefineLabel();
-                        ilGenerator.Emit(OpCodes.Brfalse, continueAfterCheck);
-
-                        // If interrupt was processed, return
-                        ilGenerator.EmitWriteLine("Interrupt processed during function execution");
-                        ilGenerator.Emit(OpCodes.Ret);
-
-                        ilGenerator.MarkLabel(continueAfterCheck);
-                    }
+                    // TEMPORARILY COMMENTED OUT: Periodic interrupt checking
+                    // REASON: References CheckInterrupts method that doesn't exist yet
+                    //
+                    // ORIGINAL CODE:
+                    // if (instructionCount > 0 && instructionCount % INTERRUPT_CHECK_INTERVAL == 0)
+                    // {
+                    //     ilGenerator.EmitWriteLine($"Periodic interrupt check at instruction {instructionCount}");
+                    //     ilGenerator.Emit(OpCodes.Call, _gameClass.Type.GetMethod("CheckInterrupts"));
+                    //     var continueAfterCheck = ilGenerator.DefineLabel();
+                    //     ilGenerator.Emit(OpCodes.Brfalse, continueAfterCheck);
+                    //     ilGenerator.EmitWriteLine("Interrupt processed during function execution");
+                    //     ilGenerator.Emit(OpCodes.Ret);
+                    //     ilGenerator.MarkLabel(continueAfterCheck);
+                    // }
 
                     GenerateIl(ilGenerator, instruction);
-                    instructionCount++;
+                    // instructionCount++;
                 }
                 catch (Exception ex)
                 {
