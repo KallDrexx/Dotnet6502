@@ -49,7 +49,7 @@ public class NesAssemblyBuilder
         var builder = module.DefineType($"{namespaceName}.Game", TypeAttributes.Public);
         var hardwareField = builder.DefineField(
             "Hardware",
-            typeof(NesHardware),
+            typeof(NesHal),
             FieldAttributes.Public | FieldAttributes.Static);
 
         return new GameClass

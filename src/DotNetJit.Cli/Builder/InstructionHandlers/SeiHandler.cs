@@ -12,7 +12,7 @@ public class SeiHandler : InstructionHandler
         DisassembledInstruction instruction,
         GameClass gameClass)
     {
-        var setFlagMethod = typeof(NesHardware).GetMethod(nameof(NesHardware.SetFlag));
+        var setFlagMethod = typeof(NesHal).GetMethod(nameof(NesHal.SetFlag));
 
         // Set the interrupt disable flag to true
         ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
