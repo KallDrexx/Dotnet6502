@@ -16,9 +16,9 @@ public class LoadHandlers : InstructionHandler
     {
         var targetRegister = instruction.Info.Mnemonic switch
         {
-            "LDA" => gameClass.CpuRegisters.Accumulator,
-            "LDX" => gameClass.CpuRegisters.XIndex,
-            "LDY" => gameClass.CpuRegisters.YIndex,
+            "LDA" => gameClass.Registers.Accumulator,
+            "LDX" => gameClass.Registers.XIndex,
+            "LDY" => gameClass.Registers.YIndex,
             _ => throw new NotSupportedException(instruction.Info.Mnemonic),
         };
 

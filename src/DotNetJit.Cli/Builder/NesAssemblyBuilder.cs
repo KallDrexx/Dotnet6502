@@ -56,7 +56,7 @@ public class NesAssemblyBuilder
         {
             Type = builder,
             CpuRegistersField = hardwareField,
-            CpuRegisters = Hardware,
+            Registers = Hardware,
         };
     }
 

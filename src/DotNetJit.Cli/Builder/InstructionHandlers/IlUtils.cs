@@ -20,13 +20,13 @@ public static class IlUtils
 
             case AddressingMode.ZeroPageX:
                 ilGenerator.Emit(OpCodes.Ldc_I4, (int)instruction.Operands[0]);
-                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegisters.XIndex);
+                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.Registers.XIndex);
                 ilGenerator.Emit(OpCodes.Add);
                 break;
 
             case AddressingMode.ZeroPageY:
                 ilGenerator.Emit(OpCodes.Ldc_I4, (int)instruction.Operands[0]);
-                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegisters.YIndex);
+                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.Registers.YIndex);
                 ilGenerator.Emit(OpCodes.Add);
                 break;
 
@@ -38,14 +38,14 @@ public static class IlUtils
             case AddressingMode.AbsoluteX:
                 tempAddress = (instruction.Operands[1] << 8) | (instruction.Operands[0]);
                 ilGenerator.Emit(OpCodes.Ldc_I4, tempAddress);
-                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegisters.XIndex);
+                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.Registers.XIndex);
                 ilGenerator.Emit(OpCodes.Add);
                 break;
 
             case AddressingMode.AbsoluteY:
                 tempAddress = (instruction.Operands[1] << 8) | (instruction.Operands[0]);
                 ilGenerator.Emit(OpCodes.Ldc_I4, tempAddress);
-                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegisters.YIndex);
+                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.Registers.YIndex);
                 ilGenerator.Emit(OpCodes.Add);
                 break;
 
@@ -61,6 +61,20 @@ public static class IlUtils
         ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
         ilGenerator.Emit(OpCodes.Ldc_I4, (int)flag);
         ilGenerator.Emit(OpCodes.Ldc_I4, value ? 1 : 0);
+        ilGenerator.Emit(OpCodes.Callvirt, setFlagMethod!);
+    }
+
+    public static void SetFlagFromIlStack(GameClass gameClass, ILGenerator ilGenerator, CpuStatusFlags flag)
+    {
+        var setFlagMethod = typeof(NesHal).GetMethod(nameof(NesHal.SetFlag));
+
+        // Store the current value to a local variable so we can get it in the right order
+        var local = ilGenerator.DeclareLocal(typeof(bool));
+        ilGenerator.Emit(OpCodes.Stloc, local);
+
+        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+        ilGenerator.Emit(OpCodes.Ldc_I4, (int)flag);
+        ilGenerator.Emit(OpCodes.Ldloc, local);
         ilGenerator.Emit(OpCodes.Callvirt, setFlagMethod!);
     }
 }

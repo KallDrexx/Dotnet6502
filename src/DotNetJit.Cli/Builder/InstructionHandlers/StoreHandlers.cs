@@ -14,9 +14,9 @@ public class StoreHandlers : InstructionHandler
     {
         var sourceRegister = instruction.Info.Mnemonic switch
         {
-            "STA" => gameClass.CpuRegisters.Accumulator,
-            "STX" => gameClass.CpuRegisters.XIndex,
-            "STY" => gameClass.CpuRegisters.YIndex,
+            "STA" => gameClass.Registers.Accumulator,
+            "STX" => gameClass.Registers.XIndex,
+            "STY" => gameClass.Registers.YIndex,
             _ => throw new NotSupportedException(instruction.Info.Mnemonic),
         };
 
