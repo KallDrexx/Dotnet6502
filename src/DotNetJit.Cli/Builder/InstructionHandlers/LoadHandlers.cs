@@ -24,7 +24,9 @@ public class LoadHandlers : InstructionHandler
 
         if (instruction.Info.AddressingMode == AddressingMode.Immediate)
         {
-            LoadFromConstant(ilGenerator, targetRegister, instruction.Operands[0]);
+            // Saves a constant straight to the accumulator
+            ilGenerator.Emit(OpCodes.Ldc_I4, (int)instruction.Operands[0]);
+            ilGenerator.Emit(OpCodes.Stsfld, targetRegister);
             return;
         }
 
@@ -75,16 +77,12 @@ public class LoadHandlers : InstructionHandler
         var sourceAddress = ilGenerator.DeclareLocal(typeof(int));
         ilGenerator.Emit(OpCodes.Stloc, sourceAddress);
 
-        // Load the memory block and index grab the value from it
-        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegisters.Memory);
-        ilGenerator.Emit(OpCodes.Ldloc, sourceAddress);
-        ilGenerator.Emit(OpCodes.Ldelem_U1);
-        ilGenerator.Emit(OpCodes.Stsfld, targetRegister);
-    }
+        // Call the read memory handler and save the value in the target register
+        var getMemoryValueMethod = typeof(NesHardware).GetMethod(nameof(NesHardware.ReadMemory));
 
-    private static void LoadFromConstant(ILGenerator ilGenerator, FieldInfo target, byte value)
-    {
-        ilGenerator.Emit(OpCodes.Ldc_I4, (int)value);
-        ilGenerator.Emit(OpCodes.Stsfld, target);
+        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+        ilGenerator.Emit(OpCodes.Ldloc, sourceAddress);
+        ilGenerator.Emit(OpCodes.Callvirt, getMemoryValueMethod!);
+        ilGenerator.Emit(OpCodes.Stsfld, targetRegister);
     }
 }

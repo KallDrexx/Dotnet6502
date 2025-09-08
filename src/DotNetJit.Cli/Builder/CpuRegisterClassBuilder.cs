@@ -3,7 +3,7 @@ using System.Reflection.Emit;
 
 namespace DotNetJit.Cli.Builder;
 
-public class HardwareBuilder
+public class CpuRegisterClassBuilder
 {
     private readonly TypeBuilder _typeBuilder;
 
@@ -13,7 +13,7 @@ public class HardwareBuilder
     public FieldInfo YIndex { get; }
     public FieldInfo Memory { get; }
 
-    public HardwareBuilder(string rootNamespace, ModuleBuilder module)
+    public CpuRegisterClassBuilder(string rootNamespace, ModuleBuilder module)
     {
         _typeBuilder = module.DefineType($"{rootNamespace}.CpuRegisters", TypeAttributes.Public);
 

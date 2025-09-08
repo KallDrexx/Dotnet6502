@@ -15,7 +15,7 @@ public class SeiHandler : InstructionHandler
         var setFlagMethod = typeof(NesHardware).GetMethod(nameof(NesHardware.SetFlag));
 
         // Set the interrupt disable flag to true
-        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
+        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
         ilGenerator.Emit(OpCodes.Ldc_I4, (int)CpuStatusFlags.InterruptDisable);
         ilGenerator.Emit(OpCodes.Ldc_I4, 1);
         ilGenerator.Emit(OpCodes.Callvirt, setFlagMethod!);

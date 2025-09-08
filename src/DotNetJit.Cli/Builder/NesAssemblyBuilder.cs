@@ -13,7 +13,7 @@ public class NesAssemblyBuilder
     private readonly GameClass _gameClass;
     private readonly Dictionary<string, InstructionHandler> _instructionHandlers;
 
-    public HardwareBuilder Hardware { get; }
+    public CpuRegisterClassBuilder Hardware { get; }
 
     public NesAssemblyBuilder(string namespaceName, Decompiler decompiler)
     {
@@ -31,7 +31,7 @@ public class NesAssemblyBuilder
             typeof(object).Assembly);
 
         var rootModule = _builder.DefineDynamicModule("<Module>");
-        Hardware = new HardwareBuilder(namespaceName, rootModule);
+        Hardware = new CpuRegisterClassBuilder(namespaceName, rootModule);
 
         _gameClass = SetupGameClass(rootModule, namespaceName, decompiler);
         AddFunctions(decompiler);
@@ -55,7 +55,7 @@ public class NesAssemblyBuilder
         return new GameClass
         {
             Type = builder,
-            HardwareField = hardwareField,
+            CpuRegistersField = hardwareField,
             CpuRegisters = Hardware,
         };
     }
