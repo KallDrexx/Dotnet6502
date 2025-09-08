@@ -19,44 +19,28 @@ public class ArithmeticHandlers : InstructionHandler
                 ilGenerator.Emit(OpCodes.Ldsfld, gameClass.Registers.XIndex);
                 ilGenerator.Emit(OpCodes.Ldc_I4, 1);
                 ilGenerator.Emit(OpCodes.Add);
+                ilGenerator.Emit(OpCodes.Dup); // For zero flag
+                ilGenerator.Emit(OpCodes.Dup); // For negative flag
                 ilGenerator.Emit(OpCodes.Stsfld, gameClass.Registers.XIndex);
 
-                UpdateZeroFlag(gameClass.Registers.XIndex, gameClass, ilGenerator);
-                UpdateNegativeFlag(gameClass.Registers.XIndex, gameClass, ilGenerator);
+                IlUtils.UpdateZeroFlag(gameClass, ilGenerator);
+                IlUtils.UpdateNegativeFlag(gameClass, ilGenerator);
                 break;
 
            case "INY": // Increment Y by 1
                 ilGenerator.Emit(OpCodes.Ldsfld, gameClass.Registers.YIndex);
                 ilGenerator.Emit(OpCodes.Ldc_I4, 1);
                 ilGenerator.Emit(OpCodes.Add);
+                ilGenerator.Emit(OpCodes.Dup); // For zero flag
+                ilGenerator.Emit(OpCodes.Dup); // For negative flag
                 ilGenerator.Emit(OpCodes.Stsfld, gameClass.Registers.YIndex);
 
-                UpdateZeroFlag(gameClass.Registers.YIndex, gameClass, ilGenerator);
-                UpdateNegativeFlag(gameClass.Registers.YIndex, gameClass, ilGenerator);
+                IlUtils.UpdateZeroFlag(gameClass, ilGenerator);
+                IlUtils.UpdateNegativeFlag(gameClass, ilGenerator);
                 break;
 
             default:
                 throw new NotSupportedException(instruction.Info.Mnemonic);
         }
-    }
-
-    private static void UpdateZeroFlag(FieldInfo register, GameClass gameClass, ILGenerator ilGenerator)
-    {
-        ilGenerator.Emit(OpCodes.Ldsfld, register);
-        ilGenerator.Emit(OpCodes.Ldc_I4, 0);
-        ilGenerator.Emit(OpCodes.Ceq);
-
-        IlUtils.SetFlagFromIlStack(gameClass, ilGenerator, CpuStatusFlags.Zero);
-    }
-
-    private static void UpdateNegativeFlag(FieldInfo register, GameClass gameClass, ILGenerator ilGenerator)
-    {
-        ilGenerator.Emit(OpCodes.Ldsfld, register);
-        ilGenerator.Emit(OpCodes.Ldc_I4, 0x80); // check msb
-        ilGenerator.Emit(OpCodes.And);
-        ilGenerator.Emit(OpCodes.Ldc_I4, 0x80);
-        ilGenerator.Emit(OpCodes.Ceq);
-
-        IlUtils.SetFlagFromIlStack(gameClass, ilGenerator, CpuStatusFlags.Negative);
     }
 }
