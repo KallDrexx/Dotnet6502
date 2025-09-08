@@ -6,7 +6,7 @@ using NESDecompiler.Core.Disassembly;
 namespace DotNetJit.Cli.Builder.InstructionHandlers;
 
 /// <summary>
-/// Handles branch instructions with VBlank waiting pattern detection
+/// Handles branch instructions with VBlank waiting pattern detection - FIXED VERSION
 /// </summary>
 public class BranchHandlers : InstructionHandler
 {
@@ -101,37 +101,55 @@ public class BranchHandlers : InstructionHandler
     {
         // Get flag checking method
         var getFlagMethod = typeof(NesHal).GetMethod(nameof(NesHal.GetFlag));
+        if (getFlagMethod == null)
+        {
+            ilGenerator.EmitWriteLine($"Error: GetFlag method not found for branch {instruction.Info.Mnemonic}");
+            return;
+        }
 
         // Create labels for branch logic
-        var branchLabel = ilGenerator.DefineLabel();
-        var endLabel = ilGenerator.DefineLabel();
+        var branchTakenLabel = ilGenerator.DefineLabel();
+        var branchNotTakenLabel = ilGenerator.DefineLabel();
 
         // Load hardware instance and flag enum
         ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
         ilGenerator.Emit(OpCodes.Ldc_I4, (int)flagToCheck);
-        ilGenerator.Emit(OpCodes.Callvirt, getFlagMethod!);
+        ilGenerator.Emit(OpCodes.Callvirt, getFlagMethod);
 
         // Check if we should branch
         if (shouldBranchIfSet)
         {
-            ilGenerator.Emit(OpCodes.Brtrue, branchLabel);
+            ilGenerator.Emit(OpCodes.Brtrue, branchTakenLabel);
         }
         else
         {
-            ilGenerator.Emit(OpCodes.Brfalse, branchLabel);
+            ilGenerator.Emit(OpCodes.Brfalse, branchTakenLabel);
         }
 
-        // No branch taken - continue to next instruction
-        ilGenerator.Emit(OpCodes.Br, endLabel);
+        // Branch not taken - continue to next instruction
+        ilGenerator.MarkLabel(branchNotTakenLabel);
+        ilGenerator.EmitWriteLine($"Branch not taken - continuing to next instruction");
+        ilGenerator.Emit(OpCodes.Br, GetEndLabel(ilGenerator));
 
         // Branch taken - jump to target
-        ilGenerator.MarkLabel(branchLabel);
+        ilGenerator.MarkLabel(branchTakenLabel);
         ilGenerator.EmitWriteLine($"Branch taken to ${targetAddress:X4}");
 
         // For now, we'll use a simple approach and call a dispatch method
-        // In a more sophisticated implementation, you'd handle this with direct jumps
         GenerateBranchTarget(ilGenerator, gameClass, targetAddress);
 
+        MarkEndLabel(ilGenerator);
+    }
+
+    private Label GetEndLabel(ILGenerator ilGenerator)
+    {
+        // Create a unique end label for this branch
+        return ilGenerator.DefineLabel();
+    }
+
+    private void MarkEndLabel(ILGenerator ilGenerator)
+    {
+        var endLabel = ilGenerator.DefineLabel();
         ilGenerator.MarkLabel(endLabel);
     }
 
@@ -141,8 +159,6 @@ public class BranchHandlers : InstructionHandler
     private void GenerateBranchTarget(ILGenerator ilGenerator, GameClass gameClass, ushort targetAddress)
     {
         // For simplicity, we'll use a dispatch method
-        // In practice, you might want to inline the target code or use direct IL jumps
-
         var dispatchMethod = typeof(NesHal).GetMethod("DispatchToAddress");
 
         if (dispatchMethod != null)

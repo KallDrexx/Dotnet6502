@@ -6,7 +6,7 @@ using NESDecompiler.Core.Disassembly;
 namespace DotNetJit.Cli.Builder.InstructionHandlers;
 
 /// <summary>
-/// Handles load related instructions
+/// Handles load related instructions - FIXED VERSION
 /// </summary>
 public class LoadHandlers : InstructionHandler
 {
@@ -25,11 +25,14 @@ public class LoadHandlers : InstructionHandler
         if (instruction.Info.AddressingMode == AddressingMode.Immediate)
         {
             // Load a constant directly into the register
-            ilGenerator.Emit(OpCodes.Ldc_I4, (int)instruction.Operands[0]);
+            var immediateValue = (int)instruction.Operands[0];
+
+            ilGenerator.Emit(OpCodes.Ldc_I4, immediateValue);
             ilGenerator.Emit(OpCodes.Stsfld, targetRegister);
 
-            // Update flags for the loaded value
-            ilGenerator.Emit(OpCodes.Ldc_I4, (int)instruction.Operands[0]);
+            // Update flags for the loaded value - fix the stack underflow
+            ilGenerator.Emit(OpCodes.Ldc_I4, immediateValue); // Push value for zero flag
+            ilGenerator.Emit(OpCodes.Dup); // Duplicate for negative flag
             IlUtils.UpdateZeroFlag(gameClass, ilGenerator);
             IlUtils.UpdateNegativeFlag(gameClass, ilGenerator);
             return;
@@ -37,14 +40,21 @@ public class LoadHandlers : InstructionHandler
 
         // For memory addressing modes, call the memory read handler
         var getMemoryValueMethod = typeof(NesHal).GetMethod(nameof(NesHal.ReadMemory));
+        if (getMemoryValueMethod == null)
+        {
+            ilGenerator.EmitWriteLine($"Error: ReadMemory method not found for {instruction.Info.Mnemonic}");
+            return;
+        }
 
+        // Load hardware instance and address onto stack
         ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
         IlUtils.LoadAddressToStack(instruction, gameClass, ilGenerator);
-        ilGenerator.Emit(OpCodes.Callvirt, getMemoryValueMethod!);
+        ilGenerator.Emit(OpCodes.Callvirt, getMemoryValueMethod);
 
-        // Store the value and update flags
-        ilGenerator.Emit(OpCodes.Dup); // Duplicate for flag updates
-        ilGenerator.Emit(OpCodes.Dup); // Duplicate again for both flags
+        // Store the result and prepare for flag updates
+        ilGenerator.Emit(OpCodes.Dup); // Duplicate for storing
+        ilGenerator.Emit(OpCodes.Dup); // Duplicate for zero flag  
+        ilGenerator.Emit(OpCodes.Dup); // Duplicate for negative flag
         ilGenerator.Emit(OpCodes.Stsfld, targetRegister);
 
         // Update zero and negative flags

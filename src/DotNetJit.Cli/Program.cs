@@ -66,45 +66,94 @@ try
     }
 
     Assembly? jitAssembly = null;
+    string dllFileName = "";
 
     // Build JIT assembly
     Console.WriteLine("Phase 3: JIT Compilation...");
-    var builder = new NesAssemblyBuilder(Path.GetFileNameWithoutExtension(romFile.Name), decompiler);
 
-    var outputDir = commandLineValues.OutputDirectory ?? romFile.DirectoryName!;
-    var dllFileName = Path.Combine(outputDir, Path.GetFileNameWithoutExtension(romFile.Name) + ".dll");
-
-    // Save DLL if requested
-    if (commandLineValues.SaveDll)
-    {
-        try
-        {
-            File.Delete(dllFileName);
-        }
-        catch (IOException)
-        {
-            // File doesn't exist, ignore
-        }
-
-        using var dllFile = File.Create(dllFileName);
-        builder.Save(dllFile);
-        dllFile.Close();
-        Console.WriteLine($"  ✓ Generated: {dllFileName}");
-    }
-
-    // Load the assembly for execution
     try
     {
-        var assemblyBytes = File.ReadAllBytes(dllFileName);
-        jitAssembly = Assembly.Load(assemblyBytes);
-        Console.WriteLine($"  ✓ Loaded JIT assembly with {decompiler.Functions.Count} compiled functions");
+        var builder = new NesAssemblyBuilder(Path.GetFileNameWithoutExtension(romFile.Name), decompiler);
+
+        var outputDir = commandLineValues.OutputDirectory ?? romFile.DirectoryName!;
+        dllFileName = Path.Combine(outputDir, Path.GetFileNameWithoutExtension(romFile.Name) + ".dll");
+
+        // Save DLL if requested
+        if (commandLineValues.SaveDll)
+        {
+            try
+            {
+                if (File.Exists(dllFileName))
+                {
+                    File.Delete(dllFileName);
+                }
+            }
+            catch (IOException)
+            {
+                // File doesn't exist or can't be deleted, ignore
+            }
+
+            try
+            {
+                using var dllFile = File.Create(dllFileName);
+                builder.Save(dllFile);
+                dllFile.Close();
+                Console.WriteLine($"  ✓ Generated: {dllFileName}");
+            }
+            catch (Exception saveEx)
+            {
+                Console.WriteLine($"  ⚠ Warning: Could not save DLL: {saveEx.Message}");
+                if (commandLineValues.Verbose)
+                {
+                    Console.WriteLine($"  Save error details: {saveEx}");
+                }
+            }
+        }
+
+        // Load the assembly for execution
+        if (File.Exists(dllFileName))
+        {
+            try
+            {
+                var assemblyBytes = File.ReadAllBytes(dllFileName);
+                jitAssembly = Assembly.Load(assemblyBytes);
+                Console.WriteLine($"  ✓ Loaded JIT assembly with {decompiler.Functions.Count} compiled functions");
+            }
+            catch (Exception loadEx)
+            {
+                Console.WriteLine($"  ⚠ Warning: Could not load JIT assembly: {loadEx.Message}");
+                if (commandLineValues.Verbose)
+                {
+                    Console.WriteLine($"  Load error details: {loadEx}");
+                }
+
+                if (commandLineValues.RunEmulation)
+                {
+                    Console.WriteLine("  Continuing with interpretation mode...");
+                }
+            }
+        }
+        else
+        {
+            Console.WriteLine($"  ⚠ Warning: DLL file not found at {dllFileName}");
+            if (commandLineValues.RunEmulation)
+            {
+                Console.WriteLine("  Continuing with interpretation mode...");
+            }
+        }
     }
-    catch (Exception ex)
+    catch (Exception jitEx)
     {
-        Console.WriteLine($"  ⚠ Warning: Could not load JIT assembly: {ex.Message}");
+        Console.WriteLine($"  ⚠ JIT Compilation failed: {jitEx.Message}");
+        if (commandLineValues.Verbose)
+        {
+            Console.WriteLine($"  JIT error details: {jitEx}");
+            Console.WriteLine($"  Stack trace: {jitEx.StackTrace}");
+        }
+
         if (commandLineValues.RunEmulation)
         {
-            Console.WriteLine("  Continuing with interpretation mode...");
+            Console.WriteLine("  Continuing with interpretation-only mode...");
         }
     }
 
@@ -121,14 +170,37 @@ try
         Console.WriteLine("  D: Debug info, F: List functions");
         Console.WriteLine();
 
-        var emulator = new AdvancedNESEmulator(romInfo, programRomData, chrRomData, decompiler, jitAssembly);
-        emulator.Run(commandLineValues.EmulationMode, commandLineValues.Verbose);
+        try
+        {
+            var emulator = new AdvancedNESEmulator(romInfo, programRomData, chrRomData, decompiler, jitAssembly);
+            emulator.Run(commandLineValues.EmulationMode, commandLineValues.Verbose);
+        }
+        catch (Exception emulationEx)
+        {
+            Console.WriteLine($"Emulation error: {emulationEx.Message}");
+            if (commandLineValues.Verbose)
+            {
+                Console.WriteLine($"Emulation error details: {emulationEx}");
+                Console.WriteLine($"Stack trace: {emulationEx.StackTrace}");
+            }
+            return 1;
+        }
     }
     else
     {
         Console.WriteLine("\nCompilation complete! Use --run to start emulation.");
-        Console.WriteLine($"JIT Assembly: {dllFileName}");
+        if (File.Exists(dllFileName))
+        {
+            Console.WriteLine($"JIT Assembly: {dllFileName}");
+        }
         Console.WriteLine($"Functions compiled: {decompiler.Functions.Count}");
+
+        // Show compilation summary
+        var successfulFunctions = decompiler.Functions.Count;
+        Console.WriteLine($"Compilation Summary:");
+        Console.WriteLine($"  Total Functions: {decompiler.Functions.Count}");
+        Console.WriteLine($"  JIT Assembly: {(File.Exists(dllFileName) ? "Generated" : "Failed")}");
+        Console.WriteLine($"  Ready for emulation: {(jitAssembly != null ? "Yes" : "Interpretation mode only")}");
     }
 }
 catch (Exception ex)
@@ -136,7 +208,7 @@ catch (Exception ex)
     Console.WriteLine($"Error: {ex.Message}");
     if (commandLineValues.Verbose)
     {
-        Console.WriteLine(ex.StackTrace);
+        Console.WriteLine($"Stack trace: {ex.StackTrace}");
     }
     return 1;
 }
@@ -145,7 +217,7 @@ Console.WriteLine("Done.");
 return 0;
 
 /// <summary>
-/// Advanced NES emulator with full JIT integration
+/// Advanced NES emulator with full JIT integration and enhanced error handling
 /// </summary>
 public class AdvancedNESEmulator
 {
@@ -206,7 +278,7 @@ public class AdvancedNESEmulator
             Console.WriteLine($"Emulation error: {ex.Message}");
             if (verbose)
             {
-                Console.WriteLine(ex.StackTrace);
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
             }
         }
     }
@@ -247,12 +319,8 @@ public class AdvancedNESEmulator
 
         try
         {
-            var gameType = _jitAssembly.GetType($"{Path.GetFileNameWithoutExtension(_romInfo.RawData.GetHashCode().ToString())}.Game");
-            if (gameType == null)
-            {
-                var types = _jitAssembly.GetTypes();
-                gameType = types.FirstOrDefault(t => t.Name == "Game" || t.Name.EndsWith(".Game"));
-            }
+            var gameType = _jitAssembly.GetTypes()
+                .FirstOrDefault(t => t.Name == "Game" || t.Name.EndsWith(".Game"));
 
             if (gameType != null)
             {
@@ -271,12 +339,11 @@ public class AdvancedNESEmulator
                     {
                         _jitMethods[function.Address] = method;
 
-                        // Register with detailed error handling
+                        // Register with enhanced error handling
                         _hardware.RegisterJITFunction(function.Address, () =>
                         {
                             try
                             {
-                                Console.WriteLine($"Executing JIT function {function.Name} at ${function.Address:X4}");
                                 method.Invoke(null, null);
                                 return true;
                             }
@@ -313,6 +380,8 @@ public class AdvancedNESEmulator
             else
             {
                 Console.WriteLine("  ⚠ Could not find Game class in JIT assembly");
+                var types = _jitAssembly.GetTypes();
+                Console.WriteLine($"  Available types: {string.Join(", ", types.Select(t => t.Name))}");
             }
         }
         catch (Exception ex)
@@ -361,7 +430,7 @@ public class AdvancedNESEmulator
             Console.WriteLine($"Emulation loop error: {ex.Message}");
             if (verbose)
             {
-                Console.WriteLine(ex.StackTrace);
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
             }
         }
     }
@@ -381,9 +450,9 @@ public class AdvancedNESEmulator
     private void ExecuteNMIHandler()
     {
         // Try to find and execute NMI handler function
-        var nmiVector = (ushort)(_hardware.ReadMemory(0xFFFA) | (_hardware.ReadMemory(0xFFFB) << 8));
+        var vectors = _hardware.GetInterruptVectors();
 
-        if (_jitMethods.TryGetValue(nmiVector, out var nmiMethod))
+        if (_jitMethods.TryGetValue(vectors.nmi, out var nmiMethod))
         {
             try
             {
@@ -397,7 +466,7 @@ public class AdvancedNESEmulator
         else
         {
             // Fallback: call hardware's NMI handler
-            _hardware.JumpToAddress(nmiVector);
+            _hardware.HandleNMI();
         }
     }
 
@@ -531,13 +600,7 @@ public class AdvancedNESEmulator
     private void ResetSystem()
     {
         _mainLoop.Reset();
-        _hardware.SetProgramCounter(_romInfo.ResetVector);
-        _hardware.SetStackPointer(0xFF);
-
-        // Reset CPU flags
-        _hardware.SetFlag(CpuStatusFlags.InterruptDisable, true);
-        _hardware.SetFlag(CpuStatusFlags.Always1, true);
-
+        _hardware.Reset();
         Console.WriteLine($"System reset - PC: ${_romInfo.ResetVector:X4}");
     }
 
@@ -557,6 +620,7 @@ public class AdvancedNESEmulator
         Console.WriteLine($"Paused: {_isPaused}");
         Console.WriteLine($"CPU State: {_hardware.GetCPUState()}");
         Console.WriteLine($"PPU State: {_hardware.GetPPUStatus()}");
+        Console.WriteLine($"Interrupt State: {_hardware.GetInterruptState()}");
         Console.WriteLine("=====================================\n");
     }
 
@@ -585,9 +649,16 @@ public class AdvancedNESEmulator
         for (int i = -4; i <= 4; i++)
         {
             var addr = (ushort)(pc + i);
-            var value = _hardware.ReadMemory(addr);
-            var marker = i == 0 ? " <-- PC" : "";
-            Console.WriteLine($"  ${addr:X4}: ${value:X2}{marker}");
+            try
+            {
+                var value = _hardware.ReadMemory(addr);
+                var marker = i == 0 ? " <-- PC" : "";
+                Console.WriteLine($"  ${addr:X4}: ${value:X2}{marker}");
+            }
+            catch
+            {
+                Console.WriteLine($"  ${addr:X4}: ?? (read error)");
+            }
         }
 
         Console.WriteLine("========================\n");

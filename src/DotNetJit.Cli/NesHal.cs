@@ -6,7 +6,7 @@ using System.Reflection;
 namespace DotNetJit.Cli;
 
 /// <summary>
-/// Complete Hardware Abstraction Layer with full NES emulation
+/// Complete Hardware Abstraction Layer with full NES emulation and proper interrupt handling
 /// </summary>
 public class NesHal
 {
@@ -55,12 +55,20 @@ public class NesHal
         { CpuStatusFlags.Negative, false },
     };
 
-    // Interrupt state
+    // Interrupt state - ENHANCED
     private bool _nmiRequested = false;
     private bool _irqRequested = false;
+    private bool _nmiPending = false;
+    private bool _irqPending = false;
+    private bool _nmiEdgeDetected = false;
 
     // Cycle counting
     private long _totalCycles = 0;
+
+    // Interrupt vectors (cached from ROM)
+    private ushort _nmiVector = 0;
+    private ushort _resetVector = 0;
+    private ushort _irqVector = 0;
 
     public NesHal(byte[] prgRom, byte[] chrRom = null)
     {
@@ -111,19 +119,19 @@ public class NesHal
         if (_prgRom.Length >= 6)
         {
             // Read vectors from end of PRG ROM
-            var nmiVector = (ushort)(_prgRom[_prgRom.Length - 4] | (_prgRom[_prgRom.Length - 3] << 8));
-            var resetVector = (ushort)(_prgRom[_prgRom.Length - 2] | (_prgRom[_prgRom.Length - 1] << 8));
-            var irqVector = (ushort)(_prgRom[_prgRom.Length - 6] | (_prgRom[_prgRom.Length - 5] << 8));
+            _nmiVector = (ushort)(_prgRom[_prgRom.Length - 4] | (_prgRom[_prgRom.Length - 3] << 8));
+            _resetVector = (ushort)(_prgRom[_prgRom.Length - 2] | (_prgRom[_prgRom.Length - 1] << 8));
+            _irqVector = (ushort)(_prgRom[_prgRom.Length - 6] | (_prgRom[_prgRom.Length - 5] << 8));
 
             // Write vectors to memory
-            WriteMemory(0xFFFA, (byte)(nmiVector & 0xFF));
-            WriteMemory(0xFFFB, (byte)(nmiVector >> 8));
-            WriteMemory(0xFFFC, (byte)(resetVector & 0xFF));
-            WriteMemory(0xFFFD, (byte)(resetVector >> 8));
-            WriteMemory(0xFFFE, (byte)(irqVector & 0xFF));
-            WriteMemory(0xFFFF, (byte)(irqVector >> 8));
+            WriteMemory(0xFFFA, (byte)(_nmiVector & 0xFF));
+            WriteMemory(0xFFFB, (byte)(_nmiVector >> 8));
+            WriteMemory(0xFFFC, (byte)(_resetVector & 0xFF));
+            WriteMemory(0xFFFD, (byte)(_resetVector >> 8));
+            WriteMemory(0xFFFE, (byte)(_irqVector & 0xFF));
+            WriteMemory(0xFFFF, (byte)(_irqVector >> 8));
 
-            Console.WriteLine($"Vectors - NMI: ${nmiVector:X4}, RESET: ${resetVector:X4}, IRQ: ${irqVector:X4}");
+            Console.WriteLine($"Vectors - NMI: ${_nmiVector:X4}, RESET: ${_resetVector:X4}, IRQ: ${_irqVector:X4}");
         }
     }
 
@@ -219,6 +227,209 @@ public class NesHal
         _statusFlags[CpuStatusFlags.Always1] = (status & 0x20) != 0;
         _statusFlags[CpuStatusFlags.Overflow] = (status & 0x40) != 0;
         _statusFlags[CpuStatusFlags.Negative] = (status & 0x80) != 0;
+    }
+
+    #endregion
+
+    #region Enhanced Interrupt Management
+
+    /// <summary>
+    /// Checks if NMI is currently requested
+    /// </summary>
+    public bool GetNMIRequested()
+    {
+        return _nmiRequested;
+    }
+
+    /// <summary>
+    /// Checks if NMI is pending
+    /// </summary>
+    public bool CheckNMIPending()
+    {
+        return _nmiPending;
+    }
+
+    /// <summary>
+    /// Checks if IRQ is currently requested
+    /// </summary>
+    public bool GetIRQRequested()
+    {
+        return _irqRequested;
+    }
+
+    /// <summary>
+    /// Checks if IRQ is pending
+    /// </summary>
+    public bool CheckIRQPending()
+    {
+        return _irqPending;
+    }
+
+    /// <summary>
+    /// Sets the NMI request flag
+    /// </summary>
+    public void SetNMIRequested(bool requested)
+    {
+        _nmiRequested = requested;
+        if (requested)
+        {
+            _nmiPending = true;
+            _nmiEdgeDetected = true;
+        }
+    }
+
+    /// <summary>
+    /// Sets the IRQ request flag
+    /// </summary>
+    public void SetIRQRequested(bool requested)
+    {
+        _irqRequested = requested;
+        if (requested)
+            _irqPending = true;
+    }
+
+    /// <summary>
+    /// Requests an NMI interrupt
+    /// </summary>
+    public void RequestNMI()
+    {
+        SetNMIRequested(true);
+    }
+
+    /// <summary>
+    /// Requests an IRQ interrupt
+    /// </summary>
+    public void RequestIRQ()
+    {
+        SetIRQRequested(true);
+    }
+
+    /// <summary>
+    /// Handles NMI interrupt processing
+    /// </summary>
+    public void HandleNMI()
+    {
+        try
+        {
+            Console.WriteLine("HandleNMI called - processing NMI interrupt");
+
+            // Clear the NMI request flags
+            _nmiRequested = false;
+            _nmiPending = false;
+            _nmiEdgeDetected = false;
+
+            // Push current PC and status
+            PushAddress(_programCounter);
+            PushStack(GetProcessorStatus());
+
+            // Set interrupt disable flag
+            SetFlag(CpuStatusFlags.InterruptDisable, true);
+
+            // Jump to NMI vector
+            _programCounter = _nmiVector;
+            _totalCycles += 7; // NMI takes 7 cycles
+
+            Console.WriteLine($"NMI handled - jumping to ${_nmiVector:X4}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in HandleNMI: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Handles IRQ interrupt processing
+    /// </summary>
+    public void HandleIRQ()
+    {
+        try
+        {
+            Console.WriteLine("HandleIRQ called - processing IRQ interrupt");
+
+            // Clear the IRQ request flags
+            _irqRequested = false;
+            _irqPending = false;
+
+            // Push current PC and status
+            PushAddress(_programCounter);
+            var status = GetProcessorStatus();
+            status = (byte)(status & ~0x10); // Clear B flag for IRQ
+            PushStack(status);
+
+            // Set interrupt disable flag
+            SetFlag(CpuStatusFlags.InterruptDisable, true);
+
+            // Jump to IRQ vector
+            _programCounter = _irqVector;
+            _totalCycles += 7; // IRQ takes 7 cycles
+
+            Console.WriteLine($"IRQ handled - jumping to ${_irqVector:X4}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in HandleIRQ: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Enhanced interrupt checking with proper priority
+    /// </summary>
+    public bool CheckAndProcessInterrupts()
+    {
+        // NMI has highest priority and cannot be disabled
+        if (_nmiRequested || _nmiPending || _nmiEdgeDetected)
+        {
+            HandleNMI();
+            return true;
+        }
+
+        // IRQ can be disabled by the interrupt disable flag
+        if ((_irqRequested || _irqPending) && !GetFlag(CpuStatusFlags.InterruptDisable))
+        {
+            HandleIRQ();
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Triggers NMI based on PPU VBlank
+    /// </summary>
+    public void TriggerVBlankNMI()
+    {
+        // Check if NMI is enabled in PPUCTRL (bit 7)
+        if ((_ppuCtrl & 0x80) != 0)
+        {
+            Console.WriteLine("VBlank NMI triggered");
+            SetNMIRequested(true);
+        }
+    }
+
+    /// <summary>
+    /// Resets interrupt state
+    /// </summary>
+    public void ResetInterrupts()
+    {
+        _nmiRequested = false;
+        _irqRequested = false;
+        _nmiPending = false;
+        _irqPending = false;
+        _nmiEdgeDetected = false;
+
+        Console.WriteLine("Interrupt state reset");
+    }
+
+    /// <summary>
+    /// Debug method to show interrupt state
+    /// </summary>
+    public string GetInterruptState()
+    {
+        return $"NMI: Req={_nmiRequested}, Pend={_nmiPending}, Edge={_nmiEdgeDetected} | " +
+               $"IRQ: Req={_irqRequested}, Pend={_irqPending} | " +
+               $"I-Flag={GetFlag(CpuStatusFlags.InterruptDisable)} | " +
+               $"NMI-Enable={(_ppuCtrl & 0x80) != 0} | " +
+               $"VBlank={(_ppuStatus & 0x80) != 0}";
     }
 
     #endregion
@@ -322,10 +533,7 @@ public class NesHal
                 return 0; // Write-only register
 
             case 0x2002: // PPUSTATUS
-                byte status = _mainLoop?.HandlePPUSTATUSRead() ?? _ppuStatus;
-                // Notify main loop about PPUSTATUS read for VBlank detection
-                _mainLoop?.DetectVBlankWaitingPattern(address, status);
-                return status;
+                return ReadPPUSTATUSWithVBlank();
 
             case 0x2003: // OAMADDR
                 return 0; // Write-only register
@@ -355,6 +563,33 @@ public class NesHal
     }
 
     /// <summary>
+    /// Enhanced PPUSTATUS read with proper VBlank handling
+    /// </summary>
+    public byte ReadPPUSTATUSWithVBlank()
+    {
+        byte status = _ppuStatus;
+
+        // Set VBlank flag if we're in VBlank
+        if (_mainLoop != null)
+        {
+            var currentScanline = _mainLoop.GetStats().CurrentScanline;
+            if (currentScanline >= 241) // VBlank period
+            {
+                status |= 0x80; // Set VBlank flag
+            }
+        }
+
+        // Notify main loop about PPUSTATUS read for VBlank detection
+        _mainLoop?.DetectVBlankWaitingPattern(0x2002, status);
+
+        // Reading PPUSTATUS clears the VBlank flag and the PPU address latch
+        _ppuStatus &= 0x7F; // Clear VBlank flag
+        _ppuAddrLatch = false;
+
+        return status;
+    }
+
+    /// <summary>
     /// Writes to PPU registers
     /// </summary>
     private void WritePPURegister(ushort address, byte value)
@@ -362,8 +597,7 @@ public class NesHal
         switch (address)
         {
             case 0x2000: // PPUCTRL
-                _ppuCtrl = value;
-                _mainLoop?.HandlePPUCTRLWrite(value);
+                WritePPUCTRLWithNMI(value);
                 break;
 
             case 0x2001: // PPUMASK
@@ -416,6 +650,27 @@ public class NesHal
     }
 
     /// <summary>
+    /// Enhanced PPUCTRL write with NMI handling
+    /// </summary>
+    public void WritePPUCTRLWithNMI(byte value)
+    {
+        bool oldNMIEnable = (_ppuCtrl & 0x80) != 0;
+        bool newNMIEnable = (value & 0x80) != 0;
+
+        _ppuCtrl = value;
+
+        // Notify main loop about PPUCTRL write
+        _mainLoop?.HandlePPUCTRLWrite(value);
+
+        // If NMI was just enabled and we're in VBlank, trigger NMI immediately
+        if (!oldNMIEnable && newNMIEnable && (_ppuStatus & 0x80) != 0)
+        {
+            Console.WriteLine("Immediate NMI trigger due to PPUCTRL write during VBlank");
+            SetNMIRequested(true);
+        }
+    }
+
+    /// <summary>
     /// Reads from PPU memory space (VRAM, pattern tables, etc.)
     /// </summary>
     private byte ReadPPUMemory(ushort address)
@@ -452,7 +707,6 @@ public class NesHal
 
         // Simplified PPU memory write - just ignore for now
         // In a full implementation, this would handle nametables, palette RAM, etc.
-        // TODO: Implement PPU memory writes as needed
     }
 
     #endregion
@@ -689,17 +943,19 @@ public class NesHal
     }
 
     /// <summary>
-    /// Executes a single CPU instruction cycle
+    /// Executes a single CPU instruction cycle with enhanced error handling
     /// </summary>
     public bool ExecuteCPUCycle()
     {
         try
         {
-            if (CheckInterrupts())
+            // Check for interrupts first
+            if (CheckAndProcessInterrupts())
             {
                 return true;
             }
 
+            // Try to execute JIT function
             if (_jitFunctions.TryGetValue(_programCounter, out var function))
             {
                 try
@@ -708,16 +964,16 @@ public class NesHal
                 }
                 catch (Exception ex)
                 {
-                    // Unwrap all nested exceptions to find the root cause
+                    // Enhanced error reporting
                     var currentEx = ex;
                     while (currentEx.InnerException != null)
                     {
                         currentEx = currentEx.InnerException;
                     }
 
-                    Console.WriteLine($"JIT error at ${_programCounter:X4}: {currentEx.GetType().Name}: {currentEx.Message}");
+                    Console.WriteLine($"JIT execution error at ${_programCounter:X4} in {_functionNames.GetValueOrDefault(_programCounter, "unknown")}:");
+                    Console.WriteLine($"  {currentEx.GetType().Name}: {currentEx.Message}");
 
-                    // Also print the first few lines of stack trace for context
                     if (currentEx.StackTrace != null)
                     {
                         var lines = currentEx.StackTrace.Split('\n').Take(3);
@@ -734,6 +990,7 @@ public class NesHal
                 }
             }
 
+            // Fallback execution
             _programCounter++;
             _totalCycles++;
             return true;
@@ -746,67 +1003,11 @@ public class NesHal
     }
 
     /// <summary>
-    /// Checks for pending interrupts and handles them
+    /// Executes one CPU cycle (enhanced version)
     /// </summary>
-    private bool CheckInterrupts()
+    public bool ExecuteOneCycle()
     {
-        // NMI has higher priority and can't be disabled
-        if (_nmiRequested)
-        {
-            _nmiRequested = false;
-            HandleNMI();
-            return true;
-        }
-
-        // IRQ can be disabled by the interrupt disable flag
-        if (_irqRequested && !GetFlag(CpuStatusFlags.InterruptDisable))
-        {
-            _irqRequested = false;
-            HandleIRQ();
-            return true;
-        }
-
-        return false;
-    }
-
-    /// <summary>
-    /// Handles NMI interrupt
-    /// </summary>
-    private void HandleNMI()
-    {
-        // Push current PC and status
-        PushAddress(_programCounter);
-        PushStack(GetProcessorStatus());
-
-        // Set interrupt disable flag
-        SetFlag(CpuStatusFlags.InterruptDisable, true);
-
-        // Jump to NMI vector
-        var nmiVector = (ushort)(ReadMemory(0xFFFA) | (ReadMemory(0xFFFB) << 8));
-        _programCounter = nmiVector;
-
-        _totalCycles += 7; // NMI takes 7 cycles
-    }
-
-    /// <summary>
-    /// Handles IRQ interrupt
-    /// </summary>
-    private void HandleIRQ()
-    {
-        // Push current PC and status
-        PushAddress(_programCounter);
-        var status = GetProcessorStatus();
-        status = (byte)(status & ~0x10); // Clear B flag for IRQ
-        PushStack(status);
-
-        // Set interrupt disable flag
-        SetFlag(CpuStatusFlags.InterruptDisable, true);
-
-        // Jump to IRQ vector
-        var irqVector = (ushort)(ReadMemory(0xFFFE) | (ReadMemory(0xFFFF) << 8));
-        _programCounter = irqVector;
-
-        _totalCycles += 7; // IRQ takes 7 cycles
+        return ExecuteCPUCycle();
     }
 
     #endregion
@@ -886,10 +1087,8 @@ public class NesHal
         // Set interrupt disable flag
         SetFlag(CpuStatusFlags.InterruptDisable, true);
 
-        // Jump to IRQ/BRK vector at $FFFE-$FFFF
-        var interruptVector = (ushort)(ReadMemory(0xFFFE) | (ReadMemory(0xFFFF) << 8));
-        _programCounter = interruptVector;
-
+        // Jump to IRQ/BRK vector
+        _programCounter = _irqVector;
         _totalCycles += 7; // BRK takes 7 cycles
     }
 
@@ -899,22 +1098,6 @@ public class NesHal
     public void DispatchToAddress(ushort address)
     {
         JumpToAddress(address);
-    }
-
-    /// <summary>
-    /// Requests an NMI interrupt
-    /// </summary>
-    public void RequestNMI()
-    {
-        _nmiRequested = true;
-    }
-
-    /// <summary>
-    /// Requests an IRQ interrupt
-    /// </summary>
-    public void RequestIRQ()
-    {
-        _irqRequested = true;
     }
 
     #endregion
@@ -953,7 +1136,8 @@ public class NesHal
     public string GetPPUStatus()
     {
         return $"PPUCTRL: ${_ppuCtrl:X2}, PPUMASK: ${_ppuMask:X2}, " +
-               $"PPUADDR: ${_ppuAddr:X4}, Scroll: ({_ppuScrollX}, {_ppuScrollY})";
+               $"PPUSTATUS: ${_ppuStatus:X2}, PPUADDR: ${_ppuAddr:X4}, " +
+               $"Scroll: ({_ppuScrollX}, {_ppuScrollY}), AddrLatch: {_ppuAddrLatch}";
     }
 
     /// <summary>
@@ -964,7 +1148,8 @@ public class NesHal
         return $"PC:${_programCounter:X4} SP:${_stackPointer:X2} " +
                $"Status:${GetProcessorStatus():X2} " +
                $"Cycles:{_totalCycles} " +
-               $"JIT Functions:{_jitFunctions.Count}";
+               $"JIT Functions:{_jitFunctions.Count} " +
+               $"Interrupts:{GetInterruptState()}";
     }
 
     /// <summary>
@@ -994,7 +1179,7 @@ public class NesHal
     {
         // Reset CPU state
         _stackPointer = 0xFF;
-        _programCounter = (ushort)(ReadMemory(0xFFFC) | (ReadMemory(0xFFFD) << 8));
+        _programCounter = _resetVector;
 
         // Reset flags
         SetFlag(CpuStatusFlags.InterruptDisable, true);
@@ -1024,11 +1209,33 @@ public class NesHal
         _controller1Shift = 0;
         _controller2Shift = 0;
 
-        // Reset interrupt requests
-        _nmiRequested = false;
-        _irqRequested = false;
+        // Reset interrupt state
+        ResetInterrupts();
 
         Console.WriteLine($"Hardware reset - PC: ${_programCounter:X4}");
+    }
+
+    /// <summary>
+    /// Force trigger interrupts for testing
+    /// </summary>
+    public void ForceNMI()
+    {
+        Console.WriteLine("Force triggering NMI");
+        SetNMIRequested(true);
+    }
+
+    public void ForceIRQ()
+    {
+        Console.WriteLine("Force triggering IRQ");
+        SetIRQRequested(true);
+    }
+
+    /// <summary>
+    /// Gets interrupt vectors
+    /// </summary>
+    public (ushort nmi, ushort reset, ushort irq) GetInterruptVectors()
+    {
+        return (_nmiVector, _resetVector, _irqVector);
     }
 
     #endregion
