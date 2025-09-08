@@ -53,4 +53,14 @@ public static class IlUtils
                 throw new NotSupportedException(instruction.Info.AddressingMode.ToString());
         }
     }
+
+    public static void SetFlag(GameClass gameClass, ILGenerator ilGenerator, CpuStatusFlags flag, bool value)
+    {
+        var setFlagMethod = typeof(NesHal).GetMethod(nameof(NesHal.SetFlag));
+
+        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+        ilGenerator.Emit(OpCodes.Ldc_I4, (int)flag);
+        ilGenerator.Emit(OpCodes.Ldc_I4, value ? 1 : 0);
+        ilGenerator.Emit(OpCodes.Callvirt, setFlagMethod!);
+    }
 }
