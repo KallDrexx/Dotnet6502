@@ -83,9 +83,12 @@ public class StackHandlers : InstructionHandler
                 ilGenerator.Emit(OpCodes.Ldc_I4, 0x0100);
                 ilGenerator.Emit(OpCodes.Add);
 
+                var addressLocal = ilGenerator.DeclareLocal(typeof(ushort));
+                ilGenerator.Emit(OpCodes.Stloc, addressLocal);
+
                 // Read from memory
                 ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
-                ilGenerator.Emit(OpCodes.Ldarg_1); // Load address
+                ilGenerator.Emit(OpCodes.Ldloc, addressLocal); // Load address
                 var readMemoryMethod = typeof(NesHal).GetMethod(nameof(NesHal.ReadMemory));
                 if (readMemoryMethod != null)
                 {
@@ -113,12 +116,15 @@ public class StackHandlers : InstructionHandler
                     ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
                     ilGenerator.Emit(OpCodes.Callvirt, getStatusMethod);
 
+                    var statusLocal = ilGenerator.DeclareLocal(typeof(byte));
+                    ilGenerator.Emit(OpCodes.Stloc, statusLocal);
+
                     // Push to stack using hardware method
                     var pushStackMethod = typeof(NesHal).GetMethod(nameof(NesHal.PushStack));
                     if (pushStackMethod != null)
                     {
                         ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
-                        ilGenerator.Emit(OpCodes.Ldarg_1); // Load status value
+                        ilGenerator.Emit(OpCodes.Ldloc, statusLocal); // Load status value
                         ilGenerator.Emit(OpCodes.Callvirt, pushStackMethod);
                     }
                 }
@@ -137,9 +143,12 @@ public class StackHandlers : InstructionHandler
                     ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
                     ilGenerator.Emit(OpCodes.Callvirt, pullStackMethod);
 
+                    var statusLocal = ilGenerator.DeclareLocal(typeof(byte));
+                    ilGenerator.Emit(OpCodes.Stloc, statusLocal);
+
                     // Set processor status
                     ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
-                    ilGenerator.Emit(OpCodes.Ldarg_1); // Load status value
+                    ilGenerator.Emit(OpCodes.Ldloc, statusLocal); // Load status value
                     ilGenerator.Emit(OpCodes.Callvirt, setStatusMethod);
                 }
                 break;

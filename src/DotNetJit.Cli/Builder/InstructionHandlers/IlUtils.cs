@@ -106,9 +106,12 @@ public static class IlUtils
         ilGenerator.Emit(OpCodes.Ldc_I4_0);
         ilGenerator.Emit(OpCodes.Cgt_Un); // 1 if value > 0, 0 if value == 0
 
+        var local = ilGenerator.DeclareLocal(typeof(bool));
+        ilGenerator.Emit(OpCodes.Stloc, local);
+
         ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
         ilGenerator.Emit(OpCodes.Ldc_I4, (int)flag);
-        ilGenerator.Emit(OpCodes.Ldarg_1); // Load the boolean result
+        ilGenerator.Emit(OpCodes.Stloc, local); // Load the boolean result
         ilGenerator.Emit(OpCodes.Callvirt, setFlagMethod);
     }
 

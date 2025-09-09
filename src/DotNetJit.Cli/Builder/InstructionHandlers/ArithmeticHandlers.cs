@@ -117,6 +117,7 @@ public class ArithmeticHandlers : InstructionHandler
 
         var resultLocal = ilGenerator.DeclareLocal(typeof(int));
         var carryLocal = ilGenerator.DeclareLocal(typeof(int));
+        var compareLocal = ilGenerator.DeclareLocal(typeof(bool));
 
         // Load accumulator
         ilGenerator.Emit(OpCodes.Ldsfld, gameClass.Registers.Accumulator);
@@ -168,10 +169,11 @@ public class ArithmeticHandlers : InstructionHandler
         ilGenerator.Emit(OpCodes.Ldloc, resultLocal);
         ilGenerator.Emit(OpCodes.Ldc_I4, 0xFF);
         ilGenerator.Emit(OpCodes.Cgt);
+        ilGenerator.Emit(OpCodes.Stloc, compareLocal);
 
         ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
         ilGenerator.Emit(OpCodes.Ldc_I4, (int)CpuStatusFlags.Carry);
-        ilGenerator.Emit(OpCodes.Ldarg_1);
+        ilGenerator.Emit(OpCodes.Ldloc, compareLocal);
         ilGenerator.Emit(OpCodes.Callvirt, setFlagMethod);
 
         // Mask result to 8 bits and store in accumulator
@@ -200,6 +202,7 @@ public class ArithmeticHandlers : InstructionHandler
 
         var resultLocal = ilGenerator.DeclareLocal(typeof(int));
         var borrowLocal = ilGenerator.DeclareLocal(typeof(int));
+        var compareLocal = ilGenerator.DeclareLocal(typeof(bool));
 
         // Load accumulator
         ilGenerator.Emit(OpCodes.Ldsfld, gameClass.Registers.Accumulator);
@@ -253,10 +256,11 @@ public class ArithmeticHandlers : InstructionHandler
         ilGenerator.Emit(OpCodes.Clt); // 1 if result < 0, 0 if result >= 0
         ilGenerator.Emit(OpCodes.Ldc_I4_1);
         ilGenerator.Emit(OpCodes.Xor); // Invert: 0 if result < 0, 1 if result >= 0
+        ilGenerator.Emit(OpCodes.Stloc, compareLocal);
 
         ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
         ilGenerator.Emit(OpCodes.Ldc_I4, (int)CpuStatusFlags.Carry);
-        ilGenerator.Emit(OpCodes.Ldarg_1);
+        ilGenerator.Emit(OpCodes.Ldloc, compareLocal);
         ilGenerator.Emit(OpCodes.Callvirt, setFlagMethod);
 
         // Mask result to 8 bits and store in accumulator
