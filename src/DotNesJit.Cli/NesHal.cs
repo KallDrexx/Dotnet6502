@@ -1,9 +1,9 @@
-using DotNetJit.Cli.Emulation;
+using DotNesJit.Cli.Emulation;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace DotNetJit.Cli;
+namespace DotNesJit.Cli;
 
 /// <summary>
 /// Complete Hardware Abstraction Layer with full NES emulation and proper interrupt handling

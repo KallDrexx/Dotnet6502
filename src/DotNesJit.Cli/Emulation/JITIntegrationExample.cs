@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Reflection;
-using DotNetJit.Cli.Builder;
+using DotNesJit.Cli.Builder;
 using NESDecompiler.Core.Decompilation;
 using NESDecompiler.Core.Disassembly;
 
-namespace DotNetJit.Cli.Emulation
+namespace DotNesJit.Cli.Emulation
 {
     /// <summary>
     /// Example usage showing how to integrate JIT compilation with the NES main loop

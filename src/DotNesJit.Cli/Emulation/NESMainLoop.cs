@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Collections.Generic;
 
-namespace DotNetJit.Cli.Emulation
+namespace DotNesJit.Cli.Emulation
 {
     /// <summary>
     /// Enhanced NES main loop implementation with multiple execution strategies

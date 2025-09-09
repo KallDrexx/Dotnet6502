@@ -1,6 +1,6 @@
-﻿using DotNetJit.Cli;
-using DotNetJit.Cli.Builder;
-using DotNetJit.Cli.Emulation;
+﻿using DotNesJit.Cli;
+using DotNesJit.Cli.Builder;
+using DotNesJit.Cli.Emulation;
 using NESDecompiler.Core.Decompilation;
 using NESDecompiler.Core.Disassembly;
 using NESDecompiler.Core.ROM;

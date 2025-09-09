@@ -1,7 +1,7 @@
 ﻿using System.Reflection.Emit;
 using NESDecompiler.Core.Disassembly;
 
-namespace DotNetJit.Cli.Builder.InstructionHandlers;
+namespace DotNesJit.Cli.Builder.InstructionHandlers;
 
 /// <summary>
 /// Handles register transfer instructions

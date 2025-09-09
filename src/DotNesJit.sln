@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNetJit.Cli", "DotNetJit.Cli\DotNetJit.Cli.csproj", "{8FEB9F57-1C65-4294-94C3-B606338F48A7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNesJit.Cli", "DotNesJit.Cli\DotNesJit.Cli.csproj", "{8FEB9F57-1C65-4294-94C3-B606338F48A7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NESDecompiler.Core", "..\NESDecompiler\NESDecompiler.Core\NESDecompiler.Core.csproj", "{CEED24BE-5974-4A57-BB21-3454F26A6804}"
 EndProject

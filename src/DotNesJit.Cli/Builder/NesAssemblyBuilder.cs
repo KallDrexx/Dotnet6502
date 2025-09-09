@@ -1,10 +1,10 @@
 using System.Reflection;
 using System.Reflection.Emit;
-using DotNetJit.Cli.Builder.InstructionHandlers;
+using DotNesJit.Cli.Builder.InstructionHandlers;
 using NESDecompiler.Core.Decompilation;
 using NESDecompiler.Core.Disassembly;
 
-namespace DotNetJit.Cli.Builder;
+namespace DotNesJit.Cli.Builder;
 
 public class NesAssemblyBuilder
 {

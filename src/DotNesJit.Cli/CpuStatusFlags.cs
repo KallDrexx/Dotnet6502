@@ -1,4 +1,4 @@
-namespace DotNetJit.Cli;
+namespace DotNesJit.Cli;
 
 public enum CpuStatusFlags
 {

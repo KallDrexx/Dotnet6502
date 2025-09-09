@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 
-namespace DotNetJit.Cli;
+namespace DotNesJit.Cli;
 
 public static class CommandLineHandler
 {
@@ -152,7 +152,7 @@ public static class CommandLineHandler
         Console.WriteLine("DotNet JIT Compiler and Emulator for NES ROMs");
         Console.WriteLine();
         Console.WriteLine("Usage:");
-        Console.WriteLine("  DotNetJit.Cli --rom <file> [options]");
+        Console.WriteLine("  DotNesJit.Cli --rom <file> [options]");
         Console.WriteLine();
         Console.WriteLine("Required:");
         Console.WriteLine("  --rom, -r <file>        The NES ROM file to process");
@@ -169,9 +169,9 @@ public static class CommandLineHandler
         Console.WriteLine("  --help, -h              Show this help message");
         Console.WriteLine();
         Console.WriteLine("Examples:");
-        Console.WriteLine("  DotNetJit.Cli --rom game.nes");
-        Console.WriteLine("  DotNetJit.Cli --rom game.nes --run --mode cycle-accurate");
-        Console.WriteLine("  DotNetJit.Cli --rom game.nes --run --verbose --output ./compiled");
+        Console.WriteLine("  DotNesJit.Cli --rom game.nes");
+        Console.WriteLine("  DotNesJit.Cli --rom game.nes --run --mode cycle-accurate");
+        Console.WriteLine("  DotNesJit.Cli --rom game.nes --run --verbose --output ./compiled");
     }
 
     private static bool IsValidEmulationMode(string mode)
