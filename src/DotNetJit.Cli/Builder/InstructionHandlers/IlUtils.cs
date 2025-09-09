@@ -129,10 +129,13 @@ public static class IlUtils
         ilGenerator.Emit(OpCodes.Ldc_I4_0);
         ilGenerator.Emit(OpCodes.Ceq); // 1 if equal to zero, 0 otherwise
 
+        var local = ilGenerator.DeclareLocal(typeof(bool));
+        ilGenerator.Emit(OpCodes.Stloc, local);
+
         // Call SetFlag with the result
         ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
         ilGenerator.Emit(OpCodes.Ldc_I4, (int)CpuStatusFlags.Zero);
-        ilGenerator.Emit(OpCodes.Ldarg_1); // The boolean result from above
+        ilGenerator.Emit(OpCodes.Ldloc, local); // The boolean result from above
         ilGenerator.Emit(OpCodes.Callvirt, setFlagMethod);
     }
 
@@ -155,10 +158,13 @@ public static class IlUtils
         ilGenerator.Emit(OpCodes.Ldc_I4_0);
         ilGenerator.Emit(OpCodes.Cgt_Un); // 1 if result > 0 (bit 7 set), 0 otherwise
 
+        var local = ilGenerator.DeclareLocal(typeof(bool));
+        ilGenerator.Emit(OpCodes.Stloc, local);
+
         // Call SetFlag with the result
         ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
         ilGenerator.Emit(OpCodes.Ldc_I4, (int)CpuStatusFlags.Negative);
-        ilGenerator.Emit(OpCodes.Ldarg_1); // The boolean result from above
+        ilGenerator.Emit(OpCodes.Ldloc, local); // The boolean result from above
         ilGenerator.Emit(OpCodes.Callvirt, setFlagMethod);
     }
 
@@ -181,10 +187,13 @@ public static class IlUtils
         ilGenerator.Emit(OpCodes.Ldc_I4_0);
         ilGenerator.Emit(OpCodes.Cgt_Un); // 1 if result > 0 (bit 6 set), 0 otherwise
 
+        var local = ilGenerator.DeclareLocal(typeof(bool));
+        ilGenerator.Emit(OpCodes.Stloc, local);
+
         // Call SetFlag with the result
         ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
         ilGenerator.Emit(OpCodes.Ldc_I4, (int)CpuStatusFlags.Overflow);
-        ilGenerator.Emit(OpCodes.Ldarg_1); // The boolean result from above
+        ilGenerator.Emit(OpCodes.Ldloc, local); // The boolean result from above
         ilGenerator.Emit(OpCodes.Callvirt, setFlagMethod);
     }
 
