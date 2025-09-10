@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using System.Reflection.Emit;
+﻿using System.Reflection.Emit;
 using NESDecompiler.Core.Disassembly;
 
 namespace DotNesJit.Cli.Builder.InstructionHandlers;

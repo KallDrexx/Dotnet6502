@@ -76,7 +76,6 @@ public class ArithmeticHandlers : InstructionHandler
         ilGenerator.Emit(OpCodes.And);
 
         // Store back to register and prepare for flag updates
-        ilGenerator.Emit(OpCodes.Dup); // For storing
         ilGenerator.Emit(OpCodes.Dup); // For zero flag
         ilGenerator.Emit(OpCodes.Dup); // For negative flag
         ilGenerator.Emit(OpCodes.Stsfld, register);
@@ -95,7 +94,6 @@ public class ArithmeticHandlers : InstructionHandler
         ilGenerator.Emit(OpCodes.And);
 
         // Store back to register and prepare for flag updates
-        ilGenerator.Emit(OpCodes.Dup); // For storing
         ilGenerator.Emit(OpCodes.Dup); // For zero flag
         ilGenerator.Emit(OpCodes.Dup); // For negative flag
         ilGenerator.Emit(OpCodes.Stsfld, register);
