@@ -1,4 +1,3 @@
-using System.Reflection;
 using System.Reflection.Emit;
 using NESDecompiler.Core.CPU;
 using NESDecompiler.Core.Disassembly;
@@ -52,8 +51,7 @@ public class LoadHandlers : InstructionHandler
         ilGenerator.Emit(OpCodes.Callvirt, getMemoryValueMethod);
 
         // Store the result and prepare for flag updates
-        ilGenerator.Emit(OpCodes.Dup); // Duplicate for storing
-        ilGenerator.Emit(OpCodes.Dup); // Duplicate for zero flag  
+        ilGenerator.Emit(OpCodes.Dup); // Duplicate for zero flag
         ilGenerator.Emit(OpCodes.Dup); // Duplicate for negative flag
         ilGenerator.Emit(OpCodes.Stsfld, targetRegister);
 
