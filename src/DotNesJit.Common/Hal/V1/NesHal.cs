@@ -132,6 +132,10 @@ public class NesHal : INesHal
 
     #region CPU State Management
 
+    public byte ARegister { get; set; }
+    public byte XRegister { get; set; }
+    public byte YRegister { get; set; }
+
     /// <summary>
     /// Sets a CPU status flag
     /// </summary>

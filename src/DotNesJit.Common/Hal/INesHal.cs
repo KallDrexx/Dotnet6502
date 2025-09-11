@@ -5,6 +5,10 @@ namespace DotNesJit.Common.Hal;
 /// </summary>
 public interface INesHal
 {
+    byte ARegister { get; set; }
+    byte XRegister { get; set; }
+    byte YRegister { get; set; }
+
     void SetFlag(CpuStatusFlags flag, bool value);
     bool GetFlag(CpuStatusFlags flag);
     byte GetProcessorStatus();

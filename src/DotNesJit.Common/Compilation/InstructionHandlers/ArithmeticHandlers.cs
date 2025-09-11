@@ -3,6 +3,7 @@ using System.Reflection.Emit;
 using DotNesJit.Common;
 using DotNesJit.Common.Compilation;
 using DotNesJit.Common.Compilation.InstructionHandlers;
+using DotNesJit.Common.Hal;
 using DotNesJit.Common.Hal.V1;
 using NESDecompiler.Core.CPU;
 using NESDecompiler.Core.Disassembly;
@@ -21,11 +22,11 @@ public class ArithmeticHandlers : InstructionHandler
         switch (instruction.Info.Mnemonic)
         {
             case "INX": // increment X register by 1
-                HandleRegisterIncrement(ilGenerator, gameClass.Registers.XIndex, gameClass, "X");
+                HandleRegisterIncrement(ilGenerator, typeof(INesHal).GetProperty(nameof(INesHal.XRegister))! , gameClass, "X");
                 break;
 
             case "INY": // Increment Y by 1
-                HandleRegisterIncrement(ilGenerator, gameClass.Registers.YIndex, gameClass, "Y");
+                HandleRegisterIncrement(ilGenerator, typeof(INesHal).GetProperty(nameof(INesHal.XRegister))!, gameClass, "Y");
                 break;
 
             case "DEX": // Decrement X by 1
@@ -70,21 +71,29 @@ public class ArithmeticHandlers : InstructionHandler
         }
     }
 
-    private void HandleRegisterIncrement(ILGenerator ilGenerator, FieldInfo register, GameClass gameClass, string regName)
+    private void HandleRegisterIncrement(ILGenerator ilGenerator, PropertyInfo register, GameClass gameClass, string regName)
     {
         // Load current register value
-        ilGenerator.Emit(OpCodes.Ldsfld, register);
+        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+        ilGenerator.Emit(OpCodes.Callvirt, register.GetMethod!);
+
         ilGenerator.Emit(OpCodes.Ldc_I4_1);
         ilGenerator.Emit(OpCodes.Add);
         ilGenerator.Emit(OpCodes.Ldc_I4, 0xFF); // Mask to byte
         ilGenerator.Emit(OpCodes.And);
 
-        // Store back to register and prepare for flag updates
-        ilGenerator.Emit(OpCodes.Dup); // For zero flag
-        ilGenerator.Emit(OpCodes.Dup); // For negative flag
-        ilGenerator.Emit(OpCodes.Stsfld, register);
+        var local = ilGenerator.DeclareLocal(typeof(byte));
+        ilGenerator.Emit(OpCodes.Stloc, local);
 
+        // Store back to register and prepare for flag updates
+        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+        ilGenerator.Emit(OpCodes.Ldloc, local);
+        ilGenerator.Emit(OpCodes.Callvirt, register.SetMethod!);
+
+        ilGenerator.Emit(OpCodes.Ldloc, local);
         IlUtils.UpdateZeroFlag(gameClass, ilGenerator);
+
+        ilGenerator.Emit(OpCodes.Ldloc, local);
         IlUtils.UpdateNegativeFlag(gameClass, ilGenerator);
     }
 
