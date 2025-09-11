@@ -41,30 +41,47 @@ public class CompareHandlers : InstructionHandler
 
         // Perform comparison (register - value)
         ilGenerator.Emit(OpCodes.Sub);
-        ilGenerator.Emit(OpCodes.Dup); // For zero flag
-        ilGenerator.Emit(OpCodes.Dup); // For negative flag
 
-        // Set carry flag if register >= value (no borrow)
-        ilGenerator.Emit(OpCodes.Ldsfld, sourceRegister);
-        if (instruction.Info.AddressingMode == AddressingMode.Immediate)
-        {
-            ilGenerator.Emit(OpCodes.Ldc_I4, (int)instruction.Operands[0]);
-        }
-        else
-        {
-            // Reload the memory value for comparison
-            var getMemoryValueMethod = typeof(INesHal).GetMethod(nameof(INesHal.ReadMemory));
-            ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
-            IlUtils.LoadAddressToStack(instruction, gameClass, ilGenerator);
-            ilGenerator.Emit(OpCodes.Callvirt, getMemoryValueMethod!);
-        }
-        ilGenerator.Emit(OpCodes.Clt); // 1 if register < value, 0 otherwise
-        ilGenerator.Emit(OpCodes.Ldc_I4_1);
-        ilGenerator.Emit(OpCodes.Xor); // Invert: 0 if register < value, 1 if register >= value
+        // Carry flag if register >= memory (subtraction >= 0)
+        IlUtils.AddMsilComment(ilGenerator, "Compare: set carry flag");
+        // ilGenerator.Emit(OpCodes.Dup);
+        CompareGreaterThanOrEqualToZero(ilGenerator);
         IlUtils.SetFlagFromIlStack(gameClass, ilGenerator, CpuStatusFlags.Carry);
 
-        // Update zero and negative flags
+        return;
+
+        var sourceRegisterLocal = ilGenerator.DeclareLocal(typeof(byte));
+        var memoryLocal = ilGenerator.DeclareLocal(typeof(byte));
+
+        ilGenerator.Emit(OpCodes.Stloc, memoryLocal);
+        ilGenerator.Emit(OpCodes.Stloc, sourceRegisterLocal);
+
+        // Set carry flag if register >= value (no borrow)
+        ilGenerator.Emit(OpCodes.Ldloc, sourceRegisterLocal);
+        ilGenerator.Emit(OpCodes.Ldloc, memoryLocal);
+        CompareGreaterThanOrEqualToZero(ilGenerator);
+
+
+        // Zero flag
+        ilGenerator.Emit(OpCodes.Ldloc, sourceRegisterLocal);
+        ilGenerator.Emit(OpCodes.Ldloc, memoryLocal);
+        ilGenerator.Emit(OpCodes.Ceq);
         IlUtils.UpdateZeroFlag(gameClass, ilGenerator);
+
+        // Negative flag
+        ilGenerator.Emit(OpCodes.Ldloc, sourceRegisterLocal);
+        ilGenerator.Emit(OpCodes.Ldloc, memoryLocal);
+        ilGenerator.Emit(OpCodes.Sub);
+        ilGenerator.Emit(OpCodes.Ldc_I4_0);
+        ilGenerator.Emit(OpCodes.Clt);
         IlUtils.UpdateNegativeFlag(gameClass, ilGenerator);
+    }
+
+    private static void CompareGreaterThanOrEqualToZero(ILGenerator ilGenerator)
+    {
+        ilGenerator.Emit(OpCodes.Ldc_I4_0);
+        ilGenerator.Emit(OpCodes.Clt); // 1 if value on the stack < 0, 0 otherwise
+        ilGenerator.Emit(OpCodes.Ldc_I4_1);
+        ilGenerator.Emit(OpCodes.Xor); // Invert: 0 if register < value, 1 if register >= value
     }
 }

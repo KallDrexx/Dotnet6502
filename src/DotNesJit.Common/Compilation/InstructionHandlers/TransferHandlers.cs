@@ -71,7 +71,7 @@ public class TransferHandlers : InstructionHandler
                 break;
 
             default:
-                ilGenerator.EmitWriteLine($"Unimplemented transfer instruction: {instruction.Info.Mnemonic}");
+                IlUtils.AddMsilComment(ilGenerator, $"Unimplemented transfer instruction: {instruction.Info.Mnemonic}");
                 break;
         }
     }

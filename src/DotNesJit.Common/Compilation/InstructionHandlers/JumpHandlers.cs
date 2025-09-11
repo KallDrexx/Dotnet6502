@@ -33,7 +33,7 @@ public class JumpHandlers : InstructionHandler
     {
         if (!instruction.TargetAddress.HasValue)
         {
-            ilGenerator.EmitWriteLine("Jump with unknown target - skipping");
+            IlUtils.AddMsilComment(ilGenerator, "Jump with unknown target - skipping");
             return;
         }
 
@@ -42,7 +42,7 @@ public class JumpHandlers : InstructionHandler
         if (instruction.Info.AddressingMode == AddressingMode.Absolute)
         {
             // Direct jump to absolute address: JMP $1234
-            ilGenerator.EmitWriteLine($"Absolute jump to ${targetAddress:X4}");
+            IlUtils.AddMsilComment(ilGenerator, $"Absolute jump to ${targetAddress:X4}");
 
             // SIMPLIFIED: Just call the hardware jump method instead of complex IL generation
             var jumpToAddressMethod = typeof(INesHal).GetMethod(nameof(INesHal.JumpToAddress));
@@ -54,13 +54,13 @@ public class JumpHandlers : InstructionHandler
             }
             else
             {
-                ilGenerator.EmitWriteLine($"// Would jump to ${targetAddress:X4} (method not found)");
+                IlUtils.AddMsilComment(ilGenerator, $"// Would jump to ${targetAddress:X4} (method not found)");
             }
         }
         else if (instruction.Info.AddressingMode == AddressingMode.Indirect)
         {
             // Indirect jump: JMP ($1234) - read address from memory
-            ilGenerator.EmitWriteLine($"Indirect jump via ${targetAddress:X4}");
+            IlUtils.AddMsilComment(ilGenerator, $"Indirect jump via ${targetAddress:X4}");
 
             // SIMPLIFIED: Use hardware methods instead of complex IL generation
             var readMemoryMethod = typeof(INesHal).GetMethod(nameof(INesHal.ReadMemory));
@@ -93,12 +93,12 @@ public class JumpHandlers : InstructionHandler
             }
             else
             {
-                ilGenerator.EmitWriteLine($"// Would perform indirect jump via ${targetAddress:X4} (methods not found)");
+                IlUtils.AddMsilComment(ilGenerator, $"// Would perform indirect jump via ${targetAddress:X4} (methods not found)");
             }
         }
         else
         {
-            ilGenerator.EmitWriteLine($"Unsupported jump addressing mode: {instruction.Info.AddressingMode}");
+            IlUtils.AddMsilComment(ilGenerator, $"Unsupported jump addressing mode: {instruction.Info.AddressingMode}");
         }
     }
 
@@ -106,13 +106,13 @@ public class JumpHandlers : InstructionHandler
     {
         if (!instruction.TargetAddress.HasValue)
         {
-            ilGenerator.EmitWriteLine("JSR with unknown target - skipping");
+            IlUtils.AddMsilComment(ilGenerator, "JSR with unknown target - skipping");
             return;
         }
 
         var targetAddress = instruction.TargetAddress.Value;
 
-        ilGenerator.EmitWriteLine($"Subroutine call to ${targetAddress:X4}");
+        IlUtils.AddMsilComment(ilGenerator, $"Subroutine call to ${targetAddress:X4}");
 
         // SIMPLIFIED: Use the hardware's built-in CallFunction method
         var callFunctionMethod = typeof(INesHal).GetMethod(nameof(INesHal.CallFunction));
@@ -124,119 +124,7 @@ public class JumpHandlers : InstructionHandler
         }
         else
         {
-            ilGenerator.EmitWriteLine($"// Would call subroutine at ${targetAddress:X4} (method not found)");
+            IlUtils.AddMsilComment(ilGenerator, $"// Would call subroutine at ${targetAddress:X4} (method not found)");
         }
-    }
-}
-
-/// <summary>
-/// Handles return instructions (RTS, RTI) - SIMPLIFIED VERSION
-/// FIXES: Removed complex IL generation that could cause label issues
-/// </summary>
-public class ReturnHandlers : InstructionHandler
-{
-    public override string[] Mnemonics => ["RTS", "RTI"];
-
-    protected override void HandleInternal(ILGenerator ilGenerator, DisassembledInstruction instruction, GameClass gameClass)
-    {
-        switch (instruction.Info.Mnemonic)
-        {
-            case "RTS":
-                HandleReturnFromSubroutine(ilGenerator, instruction, gameClass);
-                break;
-            case "RTI":
-                HandleReturnFromInterrupt(ilGenerator, instruction, gameClass);
-                break;
-            default:
-                throw new NotSupportedException(instruction.Info.Mnemonic);
-        }
-    }
-
-    private void HandleReturnFromSubroutine(ILGenerator ilGenerator, DisassembledInstruction instruction, GameClass gameClass)
-    {
-        ilGenerator.EmitWriteLine("Return from subroutine");
-
-        // SIMPLIFIED: Use hardware method instead of complex stack manipulation
-        var returnFromSubroutineMethod = typeof(INesHal).GetMethod(nameof(INesHal.ReturnFromSubroutine));
-        if (returnFromSubroutineMethod != null)
-        {
-            ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
-            ilGenerator.Emit(OpCodes.Callvirt, returnFromSubroutineMethod);
-        }
-        else
-        {
-            ilGenerator.EmitWriteLine("// Would return from subroutine (method not found)");
-        }
-
-        // Return from this method as well
-        ilGenerator.Emit(OpCodes.Ret);
-    }
-
-    private void HandleReturnFromInterrupt(ILGenerator ilGenerator, DisassembledInstruction instruction, GameClass gameClass)
-    {
-        ilGenerator.EmitWriteLine("Return from interrupt");
-
-        // SIMPLIFIED: Use hardware method instead of complex interrupt handling
-        var returnFromInterruptMethod = typeof(INesHal).GetMethod(nameof(INesHal.ReturnFromInterrupt));
-        if (returnFromInterruptMethod != null)
-        {
-            ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
-            ilGenerator.Emit(OpCodes.Callvirt, returnFromInterruptMethod);
-        }
-        else
-        {
-            ilGenerator.EmitWriteLine("// Would return from interrupt (method not found)");
-        }
-
-        // Return from this method as well
-        ilGenerator.Emit(OpCodes.Ret);
-    }
-}
-
-/// <summary>
-/// Handles interrupt and system instructions (BRK, NOP) - SIMPLIFIED VERSION
-/// FIXES: Removed complex IL generation that could cause label issues
-/// </summary>
-public class SystemHandlers : InstructionHandler
-{
-    public override string[] Mnemonics => ["BRK", "NOP"];
-
-    protected override void HandleInternal(ILGenerator ilGenerator, DisassembledInstruction instruction, GameClass gameClass)
-    {
-        switch (instruction.Info.Mnemonic)
-        {
-            case "BRK":
-                HandleSoftwareInterrupt(ilGenerator, instruction, gameClass);
-                break;
-            case "NOP":
-                HandleNoOperation(ilGenerator, instruction, gameClass);
-                break;
-            default:
-                throw new NotSupportedException(instruction.Info.Mnemonic);
-        }
-    }
-
-    private void HandleSoftwareInterrupt(ILGenerator ilGenerator, DisassembledInstruction instruction, GameClass gameClass)
-    {
-        ilGenerator.EmitWriteLine("Software interrupt (BRK)");
-
-        // SIMPLIFIED: Use hardware method instead of complex interrupt implementation
-        var triggerSoftwareInterruptMethod = typeof(INesHal).GetMethod(nameof(INesHal.TriggerSoftwareInterrupt));
-        if (triggerSoftwareInterruptMethod != null)
-        {
-            ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
-            ilGenerator.Emit(OpCodes.Callvirt, triggerSoftwareInterruptMethod);
-        }
-        else
-        {
-            ilGenerator.EmitWriteLine("// Would trigger software interrupt (method not found)");
-        }
-    }
-
-    private void HandleNoOperation(ILGenerator ilGenerator, DisassembledInstruction instruction, GameClass gameClass)
-    {
-        ilGenerator.EmitWriteLine("No operation");
-        // NOP literally does nothing except advance the PC, which is handled automatically
-        // We could add a cycle count here if needed for timing accuracy
     }
 }

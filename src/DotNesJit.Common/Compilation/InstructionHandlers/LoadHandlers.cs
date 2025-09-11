@@ -43,7 +43,7 @@ public class LoadHandlers : InstructionHandler
         var getMemoryValueMethod = typeof(INesHal).GetMethod(nameof(INesHal.ReadMemory));
         if (getMemoryValueMethod == null)
         {
-            ilGenerator.EmitWriteLine($"Error: ReadMemory method not found for {instruction.Info.Mnemonic}");
+            IlUtils.AddMsilComment(ilGenerator, $"Error: ReadMemory method not found for {instruction.Info.Mnemonic}");
             return;
         }
 

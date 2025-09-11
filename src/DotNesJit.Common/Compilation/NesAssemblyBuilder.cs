@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Reflection.Emit;
 using DotNesJit.Cli.Builder.InstructionHandlers;
+using DotNesJit.Common.Compilation.InstructionHandlers;
 using DotNesJit.Common.Hal;
 using NESDecompiler.Core.Decompilation;
 using NESDecompiler.Core.Disassembly;
@@ -112,8 +113,8 @@ public class NesAssemblyBuilder
             MethodAttributes.Public | MethodAttributes.Static);
         var ilGenerator = method.GetILGenerator();
 
-        ilGenerator.EmitWriteLine($"Stub function for {function.Name} at ${function.Address:X4}");
-        ilGenerator.EmitWriteLine("This function had compilation errors and was replaced with a stub");
+        IlUtils.AddMsilComment(ilGenerator, $"Stub function for {function.Name} at ${function.Address:X4}");
+        IlUtils.AddMsilComment(ilGenerator, "This function had compilation errors and was replaced with a stub");
         ilGenerator.Emit(OpCodes.Ret);
 
         return method;
@@ -171,7 +172,7 @@ public class NesAssemblyBuilder
         var noInterrupt = ilGenerator.DefineLabel();
         var endMethod = ilGenerator.DefineLabel();
 
-        ilGenerator.EmitWriteLine("=== Sophisticated Interrupt Check ===");
+        IlUtils.AddMsilComment(ilGenerator, "=== Sophisticated Interrupt Check ===");
 
         // Check if hardware is available
         ilGenerator.Emit(OpCodes.Ldsfld, _gameClass.CpuRegistersField);
@@ -245,7 +246,7 @@ public class NesAssemblyBuilder
 
         // Process NMI
         ilGenerator.MarkLabel(processNMI);
-        ilGenerator.EmitWriteLine("Processing NMI interrupt");
+        IlUtils.AddMsilComment(ilGenerator, "Processing NMI interrupt");
 
         // PROBLEM LINE: This tries to get a method that doesn't exist yet
         var handleNMIMethod = typeof(NesHal).GetMethod("HandleNMI") ??
@@ -274,7 +275,7 @@ public class NesAssemblyBuilder
 
         // Process IRQ
         ilGenerator.MarkLabel(processIRQ);
-        ilGenerator.EmitWriteLine("Processing IRQ interrupt");
+        IlUtils.AddMsilComment(ilGenerator, "Processing IRQ interrupt");
 
         var handleIRQMethod = typeof(NesHal).GetMethod("HandleIRQ") ??
                               _gameClass.Type.GetMethod("HandleIRQ"); // This fails
@@ -322,7 +323,7 @@ public class NesAssemblyBuilder
 
         var ilGenerator = method.GetILGenerator();
 
-        ilGenerator.EmitWriteLine("=== NMI Handler ===");
+        IlUtils.AddMsilComment(ilGenerator, "=== NMI Handler ===");
 
         // Get current PC and push to stack (NMI pushes PC, then status)
         var getPCMethod = typeof(NesHal).GetMethod(nameof(NesHal.GetProgramCounter));
@@ -388,11 +389,11 @@ public class NesAssemblyBuilder
             ilGenerator.Emit(OpCodes.Ldloc, nmiVectorLocal);
             ilGenerator.Emit(OpCodes.Callvirt, setPCMethod);
 
-            ilGenerator.EmitWriteLine("NMI processing complete");
+            IlUtils.AddMsilComment(ilGenerator, "NMI processing complete");
         }
         else
         {
-            ilGenerator.EmitWriteLine("NMI handling methods not available - using simplified approach");
+            IlUtils.AddMsilComment(ilGenerator, "NMI handling methods not available - using simplified approach");
         }
 
         ilGenerator.Emit(OpCodes.Ret);
@@ -412,7 +413,7 @@ public class NesAssemblyBuilder
 
         var ilGenerator = method.GetILGenerator();
 
-        ilGenerator.EmitWriteLine("=== IRQ Handler ===");
+        IlUtils.AddMsilComment(ilGenerator, "=== IRQ Handler ===");
 
         var getPCMethod = typeof(NesHal).GetMethod(nameof(NesHal.GetProgramCounter));
         var pushAddressMethod = typeof(NesHal).GetMethod(nameof(NesHal.PushAddress));
@@ -479,11 +480,11 @@ public class NesAssemblyBuilder
             ilGenerator.Emit(OpCodes.Ldloc, irqVectorLocal);
             ilGenerator.Emit(OpCodes.Callvirt, setPCMethod);
 
-            ilGenerator.EmitWriteLine("IRQ processing complete");
+            IlUtils.AddMsilComment(ilGenerator, "IRQ processing complete");
         }
         else
         {
-            ilGenerator.EmitWriteLine("IRQ handling methods not available - using simplified approach");
+            IlUtils.AddMsilComment(ilGenerator, "IRQ handling methods not available - using simplified approach");
         }
 
         ilGenerator.Emit(OpCodes.Ret);
@@ -498,8 +499,8 @@ public class NesAssemblyBuilder
 
         var ilGenerator = method.GetILGenerator();
 
-        ilGenerator.EmitWriteLine("Optimized VBlank wait detected");
-        ilGenerator.EmitWriteLine("// VBlank wait optimized - delegating to main loop");
+        IlUtils.AddMsilComment(ilGenerator, "Optimized VBlank wait detected");
+        IlUtils.AddMsilComment(ilGenerator, "// VBlank wait optimized - delegating to main loop");
         ilGenerator.Emit(OpCodes.Ret);
     }
 
@@ -514,8 +515,8 @@ public class NesAssemblyBuilder
 
         var ilGenerator = method.GetILGenerator();
 
-        ilGenerator.EmitWriteLine("Dispatching to address...");
-        ilGenerator.EmitWriteLine($"// Dispatch to address on stack");
+        IlUtils.AddMsilComment(ilGenerator, "Dispatching to address...");
+        IlUtils.AddMsilComment(ilGenerator, $"// Dispatch to address on stack");
         ilGenerator.Emit(OpCodes.Pop); // Remove address from stack
         ilGenerator.Emit(OpCodes.Ret);
     }
@@ -536,7 +537,7 @@ public class NesAssemblyBuilder
 
         var ilGenerator = method.GetILGenerator();
 
-        ilGenerator.EmitWriteLine("Executing CPU cycle with interrupt checking");
+        IlUtils.AddMsilComment(ilGenerator, "Executing CPU cycle with interrupt checking");
 
         // PROBLEM LINE: This tries to call a method that doesn't exist yet
         ilGenerator.Emit(OpCodes.Call, _gameClass.Type.GetMethod("CheckInterrupts")); // FAILS HERE
@@ -548,7 +549,7 @@ public class NesAssemblyBuilder
         ilGenerator.Emit(OpCodes.Ret);
 
         ilGenerator.MarkLabel(continueExecution);
-        ilGenerator.EmitWriteLine("No interrupts pending - continue normal execution");
+        IlUtils.AddMsilComment(ilGenerator, "No interrupts pending - continue normal execution");
 
         // Return true for successful execution
         ilGenerator.Emit(OpCodes.Ldc_I4_1);
@@ -571,7 +572,7 @@ public class NesAssemblyBuilder
         var vectorAddressLocal = ilGenerator.DeclareLocal(typeof(ushort));
         var vectorTypeLocal = ilGenerator.DeclareLocal(typeof(string));
 
-        ilGenerator.EmitWriteLine("=== Interrupt Vector Handler ===");
+        IlUtils.AddMsilComment(ilGenerator, "=== Interrupt Vector Handler ===");
 
         // Store parameters in locals for easier access
         ilGenerator.Emit(OpCodes.Ldarg_0); // Load vector address parameter
@@ -620,7 +621,7 @@ public class NesAssemblyBuilder
 
         // NMI Vector Handler
         ilGenerator.MarkLabel(nmiVectorLabel);
-        ilGenerator.EmitWriteLine("Processing NMI vector");
+        IlUtils.AddMsilComment(ilGenerator, "Processing NMI vector");
 
         var setPCMethod = typeof(INesHal).GetMethod(nameof(INesHal.SetProgramCounter));
         // COMMENTED OUT: This would try to call ProcessNMI method which doesn't exist yet
@@ -643,7 +644,7 @@ public class NesAssemblyBuilder
 
         // RESET Vector Handler
         ilGenerator.MarkLabel(resetVectorLabel);
-        ilGenerator.EmitWriteLine("Processing RESET vector");
+        IlUtils.AddMsilComment(ilGenerator, "Processing RESET vector");
 
         var resetMethod = typeof(INesHal).GetMethod("Reset");
         if (setPCMethod != null && resetMethod != null)
@@ -661,7 +662,7 @@ public class NesAssemblyBuilder
             var resetFunctionAddress = _decompiler.ROMInfo.ResetVector;
             if (_methods.ContainsKey(resetFunctionAddress))
             {
-                ilGenerator.EmitWriteLine($"Calling compiled reset function at ${resetFunctionAddress:X4}");
+                IlUtils.AddMsilComment(ilGenerator, $"Calling compiled reset function at ${resetFunctionAddress:X4}");
                 // Call the compiled reset function
                 var resetFunctionMethod = _methods[resetFunctionAddress];
                 ilGenerator.Emit(OpCodes.Call, resetFunctionMethod);
@@ -671,7 +672,7 @@ public class NesAssemblyBuilder
 
         // IRQ Vector Handler
         ilGenerator.MarkLabel(irqVectorLabel);
-        ilGenerator.EmitWriteLine("Processing IRQ vector");
+        IlUtils.AddMsilComment(ilGenerator, "Processing IRQ vector");
 
         // COMMENTED OUT: This would try to call ProcessIRQ method which doesn't exist yet
         // var processIRQMethod = _gameClass.Type.GetMethod("ProcessIRQ");
@@ -692,7 +693,7 @@ public class NesAssemblyBuilder
 
         // Unknown Vector Handler
         ilGenerator.MarkLabel(unknownVectorLabel);
-        ilGenerator.EmitWriteLine("Unknown interrupt vector type");
+        IlUtils.AddMsilComment(ilGenerator, "Unknown interrupt vector type");
         if (setPCMethod != null)
         {
             // Just set PC to the vector address
@@ -716,8 +717,8 @@ public class NesAssemblyBuilder
 
         var ilGenerator = method.GetILGenerator();
 
-        ilGenerator.EmitWriteLine("Performing stack operation");
-        ilGenerator.EmitWriteLine("// Stack operations delegated to hardware");
+        IlUtils.AddMsilComment(ilGenerator, "Performing stack operation");
+        IlUtils.AddMsilComment(ilGenerator, "// Stack operations delegated to hardware");
 
         ilGenerator.Emit(OpCodes.Ret);
     }
@@ -733,7 +734,7 @@ public class NesAssemblyBuilder
 
         var ilGenerator = method.GetILGenerator();
 
-        ilGenerator.EmitWriteLine("Memory access wrapper");
+        IlUtils.AddMsilComment(ilGenerator, "Memory access wrapper");
 
         // For now, just return 0
         ilGenerator.Emit(OpCodes.Ldc_I4_0);
@@ -750,18 +751,18 @@ public class NesAssemblyBuilder
         try
         {
             // Add method header comment
-            ilGenerator.EmitWriteLine($"=== Function: {function.Name} at ${function.Address:X4} ===");
+            IlUtils.AddMsilComment(ilGenerator, $"=== Function: {function.Name} at ${function.Address:X4} ===");
 
             // TEMPORARILY COMMENTED OUT: Add interrupt check at function entry
             // REASON: CheckInterrupts method doesn't exist yet and trying to reference it
             // causes "The invoked member is not supported before the type is created" error
             //
             // ORIGINAL CODE THAT FAILS:
-            // ilGenerator.EmitWriteLine("Checking for interrupts at function entry");
+            // IlUtils.AddMsilComment(ilGenerator, "Checking for interrupts at function entry");
             // ilGenerator.Emit(OpCodes.Call, _gameClass.Type.GetMethod("CheckInterrupts"));
             // var continueFunction = ilGenerator.DefineLabel();
             // ilGenerator.Emit(OpCodes.Brfalse, continueFunction);
-            // ilGenerator.EmitWriteLine("Interrupt processed - exiting function early");
+            // IlUtils.AddMsilComment(ilGenerator, "Interrupt processed - exiting function early");
             // ilGenerator.Emit(OpCodes.Ret);
             // ilGenerator.MarkLabel(continueFunction);
 
@@ -773,12 +774,12 @@ public class NesAssemblyBuilder
 
             if (functionInstructions.Count == 0)
             {
-                ilGenerator.EmitWriteLine($"Warning: No instructions found for function {function.Name}");
+                IlUtils.AddMsilComment(ilGenerator, $"Warning: No instructions found for function {function.Name}");
                 ilGenerator.Emit(OpCodes.Ret);
                 return method;
             }
 
-            ilGenerator.EmitWriteLine($"Processing {functionInstructions.Count} instructions");
+            IlUtils.AddMsilComment(ilGenerator, $"Processing {functionInstructions.Count} instructions");
 
             // TEMPORARILY COMMENTED OUT: Add periodic interrupt checks for long functions
             // REASON: Same issue as above - CheckInterrupts method doesn't exist yet
@@ -798,11 +799,11 @@ public class NesAssemblyBuilder
                     // ORIGINAL CODE:
                     // if (instructionCount > 0 && instructionCount % INTERRUPT_CHECK_INTERVAL == 0)
                     // {
-                    //     ilGenerator.EmitWriteLine($"Periodic interrupt check at instruction {instructionCount}");
+                    //     IlUtils.AddMsilComment(ilGenerator, $"Periodic interrupt check at instruction {instructionCount}");
                     //     ilGenerator.Emit(OpCodes.Call, _gameClass.Type.GetMethod("CheckInterrupts"));
                     //     var continueAfterCheck = ilGenerator.DefineLabel();
                     //     ilGenerator.Emit(OpCodes.Brfalse, continueAfterCheck);
-                    //     ilGenerator.EmitWriteLine("Interrupt processed during function execution");
+                    //     IlUtils.AddMsilComment(ilGenerator, "Interrupt processed during function execution");
                     //     ilGenerator.Emit(OpCodes.Ret);
                     //     ilGenerator.MarkLabel(continueAfterCheck);
                     // }
@@ -812,7 +813,7 @@ public class NesAssemblyBuilder
                 }
                 catch (Exception ex)
                 {
-                    ilGenerator.EmitWriteLine($"Error generating IL for {instruction}: {ex.Message}");
+                    IlUtils.AddMsilComment(ilGenerator, $"Error generating IL for {instruction}: {ex.Message}");
                     // Continue processing other instructions
                 }
             }
@@ -826,7 +827,7 @@ public class NesAssemblyBuilder
 
             // Generate a minimal fallback method
             ilGenerator = method.GetILGenerator();
-            ilGenerator.EmitWriteLine($"Error in function {function.Name}: {ex.Message}");
+            IlUtils.AddMsilComment(ilGenerator, $"Error in function {function.Name}: {ex.Message}");
             ilGenerator.Emit(OpCodes.Ret);
         }
 
@@ -835,11 +836,11 @@ public class NesAssemblyBuilder
 
     private void GenerateIl(ILGenerator ilGenerator, DisassembledInstruction instruction)
     {
-        ilGenerator.EmitWriteLine($"${instruction.CPUAddress:X4}: {instruction}");
+        IlUtils.AddMsilComment(ilGenerator, $"${instruction.CPUAddress:X4}: {instruction}");
 
         if (!_instructionHandlers.TryGetValue(instruction.Info.Mnemonic, out var handler))
         {
-            ilGenerator.EmitWriteLine($"Unsupported instruction: {instruction}");
+            IlUtils.AddMsilComment(ilGenerator, $"Unsupported instruction: {instruction}");
             return;
         }
 
@@ -849,7 +850,7 @@ public class NesAssemblyBuilder
         }
         catch (Exception ex)
         {
-            ilGenerator.EmitWriteLine($"Error handling {instruction.Info.Mnemonic}: {ex.Message}");
+            IlUtils.AddMsilComment(ilGenerator, $"Error handling {instruction.Info.Mnemonic}: {ex.Message}");
             // Don't rethrow - just log and continue
         }
     }

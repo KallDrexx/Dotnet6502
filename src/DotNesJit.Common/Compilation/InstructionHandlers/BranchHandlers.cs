@@ -18,7 +18,7 @@ public class BranchHandlers : InstructionHandler
         if (!instruction.TargetAddress.HasValue)
         {
             // Skip branches with unknown targets
-            ilGenerator.EmitWriteLine($"Skipping branch with unknown target: {instruction}");
+            IlUtils.AddMsilComment(ilGenerator, $"Skipping branch with unknown target: {instruction}");
             return;
         }
 
@@ -74,7 +74,7 @@ public class BranchHandlers : InstructionHandler
     /// </summary>
     private void GenerateVBlankWaitingCode(ILGenerator ilGenerator, DisassembledInstruction instruction, GameClass gameClass)
     {
-        ilGenerator.EmitWriteLine($"VBlank waiting pattern detected: {instruction}");
+        IlUtils.AddMsilComment(ilGenerator, $"VBlank waiting pattern detected: {instruction}");
 
         // Instead of a tight loop, call the main loop's VBlank detection
         var waitForVBlankMethod = typeof(INesHal).GetMethod("WaitForVBlank");
@@ -87,7 +87,7 @@ public class BranchHandlers : InstructionHandler
         else
         {
             // Fallback: generate normal branch but add a comment
-            ilGenerator.EmitWriteLine("// VBlank wait - consider optimizing");
+            IlUtils.AddMsilComment(ilGenerator, "// VBlank wait - consider optimizing");
             var flagToCheck = GetFlagForBranch(instruction.Info.Mnemonic);
             var shouldBranchIfSet = ShouldBranchIfFlagSet(instruction.Info.Mnemonic);
             GenerateSimpleBranchCode(ilGenerator, instruction, gameClass, flagToCheck, shouldBranchIfSet, instruction.TargetAddress!.Value);
@@ -105,7 +105,7 @@ public class BranchHandlers : InstructionHandler
         var getFlagMethod = typeof(INesHal).GetMethod(nameof(INesHal.GetFlag));
         if (getFlagMethod == null)
         {
-            ilGenerator.EmitWriteLine($"Error: GetFlag method not found for branch {instruction.Info.Mnemonic}");
+            IlUtils.AddMsilComment(ilGenerator, $"Error: GetFlag method not found for branch {instruction.Info.Mnemonic}");
             return;
         }
 
@@ -123,7 +123,7 @@ public class BranchHandlers : InstructionHandler
         var getFlagMethod = typeof(INesHal).GetMethod(nameof(INesHal.GetFlag));
         if (getFlagMethod == null)
         {
-            ilGenerator.EmitWriteLine($"Error: GetFlag method not found for branch {instruction.Info.Mnemonic}");
+            IlUtils.AddMsilComment(ilGenerator, $"Error: GetFlag method not found for branch {instruction.Info.Mnemonic}");
             return;
         }
 
@@ -165,13 +165,13 @@ public class BranchHandlers : InstructionHandler
                 comment = "Branch if overflow set";
                 break;
             default:
-                ilGenerator.EmitWriteLine($"Unknown branch instruction: {instruction.Info.Mnemonic}");
+                IlUtils.AddMsilComment(ilGenerator, $"Unknown branch instruction: {instruction.Info.Mnemonic}");
                 return;
         }
 
         // FIXED: Simple implementation without complex branching that caused label issues
-        ilGenerator.EmitWriteLine($"// {comment}");
-        ilGenerator.EmitWriteLine($"// Check flag condition: {condition}");
+        IlUtils.AddMsilComment(ilGenerator, $"// {comment}");
+        IlUtils.AddMsilComment(ilGenerator, $"// Check flag condition: {condition}");
 
         // Load hardware instance and flag enum
         ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
@@ -184,18 +184,18 @@ public class BranchHandlers : InstructionHandler
 
         if (shouldBranchIfSet)
         {
-            ilGenerator.EmitWriteLine($"// If flag is set, would branch to ${targetAddress:X4}");
+            IlUtils.AddMsilComment(ilGenerator, $"// If flag is set, would branch to ${targetAddress:X4}");
         }
         else
         {
-            ilGenerator.EmitWriteLine($"// If flag is clear, would branch to ${targetAddress:X4}");
+            IlUtils.AddMsilComment(ilGenerator, $"// If flag is clear, would branch to ${targetAddress:X4}");
         }
 
         // For now, we'll just pop the flag value from the stack to clean up
         ilGenerator.Emit(OpCodes.Pop);
 
         // TODO: Implement proper branch target handling once the basic JIT compilation works
-        ilGenerator.EmitWriteLine("// Branch target handling simplified to fix IL generation");
+        IlUtils.AddMsilComment(ilGenerator, "// Branch target handling simplified to fix IL generation");
     }
 
     /// <summary>

@@ -60,18 +60,18 @@ public static class IlUtils
 
             case AddressingMode.IndexedIndirect:
                 // ($nn,X) - zero page address + X, then read 16-bit address from there
-                ilGenerator.EmitWriteLine($"IndexedIndirect addressing not fully implemented for {instruction}");
+                AddMsilComment(ilGenerator, $"IndexedIndirect addressing not fully implemented for {instruction}");
                 ilGenerator.Emit(OpCodes.Ldc_I4, (int)instruction.Operands[0]);
                 break;
 
             case AddressingMode.IndirectIndexed:
                 // ($nn),Y - read 16-bit address from zero page, then add Y
-                ilGenerator.EmitWriteLine($"IndirectIndexed addressing not fully implemented for {instruction}");
+                AddMsilComment(ilGenerator, $"IndirectIndexed addressing not fully implemented for {instruction}");
                 ilGenerator.Emit(OpCodes.Ldc_I4, (int)instruction.Operands[0]);
                 break;
 
             default:
-                ilGenerator.EmitWriteLine($"Unsupported addressing mode: {instruction.Info.AddressingMode}");
+                AddMsilComment(ilGenerator, $"Unsupported addressing mode: {instruction.Info.AddressingMode}");
                 ilGenerator.Emit(OpCodes.Ldc_I4, 0); // Push dummy address
                 break;
         }
@@ -82,7 +82,7 @@ public static class IlUtils
         var setFlagMethod = typeof(INesHal).GetMethod(nameof(INesHal.SetFlag));
         if (setFlagMethod == null)
         {
-            ilGenerator.EmitWriteLine($"Error: SetFlag method not found");
+            AddMsilComment(ilGenerator, $"Error: SetFlag method not found");
             return;
         }
 
@@ -97,7 +97,7 @@ public static class IlUtils
         var setFlagMethod = typeof(INesHal).GetMethod(nameof(INesHal.SetFlag));
         if (setFlagMethod == null)
         {
-            ilGenerator.EmitWriteLine($"Error: SetFlag method not found");
+            AddMsilComment(ilGenerator, $"Error: SetFlag method not found");
             ilGenerator.Emit(OpCodes.Pop); // Remove value from stack to prevent stack corruption
             return;
         }
@@ -123,7 +123,7 @@ public static class IlUtils
         var setFlagMethod = typeof(INesHal).GetMethod(nameof(INesHal.SetFlag));
         if (setFlagMethod == null)
         {
-            ilGenerator.EmitWriteLine("Error: SetFlag method not found for zero flag");
+            AddMsilComment(ilGenerator, "Error: SetFlag method not found for zero flag");
             ilGenerator.Emit(OpCodes.Pop); // Remove value to prevent stack corruption
             return;
         }
@@ -150,7 +150,7 @@ public static class IlUtils
         var setFlagMethod = typeof(INesHal).GetMethod(nameof(INesHal.SetFlag));
         if (setFlagMethod == null)
         {
-            ilGenerator.EmitWriteLine("Error: SetFlag method not found for negative flag");
+            AddMsilComment(ilGenerator, "Error: SetFlag method not found for negative flag");
             ilGenerator.Emit(OpCodes.Pop); // Remove value to prevent stack corruption
             return;
         }
@@ -179,7 +179,7 @@ public static class IlUtils
         var setFlagMethod = typeof(INesHal).GetMethod(nameof(INesHal.SetFlag));
         if (setFlagMethod == null)
         {
-            ilGenerator.EmitWriteLine("Error: SetFlag method not found for overflow flag");
+            IlUtils.AddMsilComment(ilGenerator, "Error: SetFlag method not found for overflow flag");
             ilGenerator.Emit(OpCodes.Pop); // Remove value to prevent stack corruption
             return;
         }
@@ -206,6 +206,16 @@ public static class IlUtils
     public static void SafePopIfNeeded(ILGenerator ilGenerator, string context)
     {
         // This is a development helper - in production you'd want better stack tracking
-        ilGenerator.EmitWriteLine($"Stack checkpoint: {context}");
+        AddMsilComment(ilGenerator, $"Stack checkpoint: {context}");
+    }
+
+    /// <summary>
+    /// Writes a "comment" in the MSIL via emitting a `ldstr` with the comment, and immediately
+    /// popping it off. Just used to make IL inspection easier, and should be ignored by the jit.
+    /// </summary>
+    public static void AddMsilComment(ILGenerator ilGenerator, string comment)
+    {
+        ilGenerator.Emit(OpCodes.Ldstr, comment);
+        ilGenerator.Emit(OpCodes.Pop);
     }
 }

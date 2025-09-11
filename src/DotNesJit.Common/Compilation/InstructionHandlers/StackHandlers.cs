@@ -38,7 +38,7 @@ public class StackHandlers : InstructionHandler
 
             case "PHA":
                 // Push accumulator to stack
-                ilGenerator.EmitWriteLine("Push accumulator to stack");
+                IlUtils.AddMsilComment(ilGenerator, "Push accumulator to stack");
 
                 // Get current stack pointer
                 ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
@@ -71,7 +71,7 @@ public class StackHandlers : InstructionHandler
 
             case "PLA":
                 // Pull accumulator from stack
-                ilGenerator.EmitWriteLine("Pull accumulator from stack");
+                IlUtils.AddMsilComment(ilGenerator, "Pull accumulator from stack");
 
                 // Increment stack pointer first
                 ilGenerator.Emit(OpCodes.Ldsfld, gameClass.Registers.StackPointer);
@@ -110,7 +110,7 @@ public class StackHandlers : InstructionHandler
 
             case "PHP":
                 // Push processor status to stack
-                ilGenerator.EmitWriteLine("Push processor status to stack");
+                IlUtils.AddMsilComment(ilGenerator, "Push processor status to stack");
 
                 // Get processor status from hardware
                 var getStatusMethod = typeof(NesHal).GetMethod(nameof(NesHal.GetProcessorStatus));
@@ -135,7 +135,7 @@ public class StackHandlers : InstructionHandler
 
             case "PLP":
                 // Pull processor status from stack
-                ilGenerator.EmitWriteLine("Pull processor status from stack");
+                IlUtils.AddMsilComment(ilGenerator, "Pull processor status from stack");
 
                 var pullStackMethod = typeof(NesHal).GetMethod(nameof(NesHal.PullStack));
                 var setStatusMethod = typeof(NesHal).GetMethod(nameof(NesHal.SetProcessorStatus));

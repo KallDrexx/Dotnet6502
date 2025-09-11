@@ -65,7 +65,7 @@ public class ArithmeticHandlers : InstructionHandler
                 break;
 
             default:
-                ilGenerator.EmitWriteLine($"Unimplemented arithmetic instruction: {instruction.Info.Mnemonic}");
+                IlUtils.AddMsilComment(ilGenerator, $"Unimplemented arithmetic instruction: {instruction.Info.Mnemonic}");
                 break;
         }
     }
@@ -113,7 +113,7 @@ public class ArithmeticHandlers : InstructionHandler
 
         if (setFlagMethod == null || getFlagMethod == null)
         {
-            ilGenerator.EmitWriteLine("Error: SetFlag or GetFlag method not found for ADC");
+            IlUtils.AddMsilComment(ilGenerator, "Error: SetFlag or GetFlag method not found for ADC");
             return;
         }
 
@@ -198,7 +198,7 @@ public class ArithmeticHandlers : InstructionHandler
 
         if (setFlagMethod == null || getFlagMethod == null)
         {
-            ilGenerator.EmitWriteLine("Error: SetFlag or GetFlag method not found for SBC");
+            IlUtils.AddMsilComment(ilGenerator, "Error: SetFlag or GetFlag method not found for SBC");
             return;
         }
 
@@ -342,7 +342,7 @@ public class ArithmeticHandlers : InstructionHandler
 
         if (readMemoryMethod == null || writeMemoryMethod == null)
         {
-            ilGenerator.EmitWriteLine("Error: Memory access methods not found for INC");
+            IlUtils.AddMsilComment(ilGenerator, "Error: Memory access methods not found for INC");
             return;
         }
 
@@ -386,7 +386,7 @@ public class ArithmeticHandlers : InstructionHandler
 
         if (readMemoryMethod == null || writeMemoryMethod == null)
         {
-            ilGenerator.EmitWriteLine("Error: Memory access methods not found for DEC");
+            IlUtils.AddMsilComment(ilGenerator, "Error: Memory access methods not found for DEC");
             return;
         }
 
@@ -440,7 +440,7 @@ public class ArithmeticHandlers : InstructionHandler
             }
             else
             {
-                ilGenerator.EmitWriteLine("Error: ReadMemory method not found");
+                IlUtils.AddMsilComment(ilGenerator, "Error: ReadMemory method not found");
                 ilGenerator.Emit(OpCodes.Ldc_I4_0);
             }
         }
