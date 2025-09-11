@@ -20,9 +20,9 @@ namespace DotNesJit.Common.Hal.V1
         // CPU state tracking for JIT functions
         private readonly ushort _currentPc = 0x8000;
         public byte _accumulator = 0;
-        private byte _xRegister = 0;
-        private byte _yRegister = 0;
-        private byte _stackPointer = 0xFF;
+        // private byte _xRegister = 0;
+        // private byte _yRegister = 0;
+        // private byte _stackPointer = 0xFF;
 
         public JITIntegrationExample(object? gameInstance)
         {
