@@ -1,10 +1,11 @@
 using System.Reflection;
 using System.Reflection.Emit;
 using DotNesJit.Cli.Builder.InstructionHandlers;
+using DotNesJit.Common.Hal;
 using NESDecompiler.Core.Decompilation;
 using NESDecompiler.Core.Disassembly;
 
-namespace DotNesJit.Cli.Builder;
+namespace DotNesJit.Common.Compilation;
 
 public class NesAssemblyBuilder
 {
@@ -58,7 +59,7 @@ public class NesAssemblyBuilder
         var builder = module.DefineType($"{namespaceName}.Game", TypeAttributes.Public);
         var hardwareField = builder.DefineField(
             "Hardware",
-            typeof(NesHal),
+            typeof(INesHal),
             FieldAttributes.Public | FieldAttributes.Static);
 
         return new GameClass
@@ -621,7 +622,7 @@ public class NesAssemblyBuilder
         ilGenerator.MarkLabel(nmiVectorLabel);
         ilGenerator.EmitWriteLine("Processing NMI vector");
 
-        var setPCMethod = typeof(NesHal).GetMethod(nameof(NesHal.SetProgramCounter));
+        var setPCMethod = typeof(INesHal).GetMethod(nameof(INesHal.SetProgramCounter));
         // COMMENTED OUT: This would try to call ProcessNMI method which doesn't exist yet
         // var processNMIMethod = _gameClass.Type.GetMethod("ProcessNMI");
 
@@ -644,7 +645,7 @@ public class NesAssemblyBuilder
         ilGenerator.MarkLabel(resetVectorLabel);
         ilGenerator.EmitWriteLine("Processing RESET vector");
 
-        var resetMethod = typeof(NesHal).GetMethod("Reset");
+        var resetMethod = typeof(INesHal).GetMethod("Reset");
         if (setPCMethod != null && resetMethod != null)
         {
             // Reset system state

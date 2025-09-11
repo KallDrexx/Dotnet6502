@@ -1,7 +1,10 @@
 ﻿using System.Reflection.Emit;
+using DotNesJit.Cli.Builder.InstructionHandlers;
+using DotNesJit.Common.Hal;
+using DotNesJit.Common.Hal.V1;
 using NESDecompiler.Core.Disassembly;
 
-namespace DotNesJit.Cli.Builder.InstructionHandlers;
+namespace DotNesJit.Common.Compilation.InstructionHandlers;
 
 /// <summary>
 /// Handlers for stack operations (PHA, PLA, PHP, PLP, etc.)
@@ -51,7 +54,7 @@ public class StackHandlers : InstructionHandler
                 ilGenerator.Emit(OpCodes.Ldsfld, gameClass.Registers.Accumulator);
 
                 // Call WriteMemory(address, value)
-                var writeMemoryMethod = typeof(NesHal).GetMethod(nameof(NesHal.WriteMemory));
+                var writeMemoryMethod = typeof(INesHal).GetMethod(nameof(INesHal.WriteMemory));
                 if (writeMemoryMethod != null)
                 {
                     ilGenerator.Emit(OpCodes.Callvirt, writeMemoryMethod);

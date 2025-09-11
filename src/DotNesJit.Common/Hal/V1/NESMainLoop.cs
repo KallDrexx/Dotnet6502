@@ -1,8 +1,4 @@
-﻿using System;
-using System.Threading;
-using System.Collections.Generic;
-
-namespace DotNesJit.Cli.Emulation
+﻿namespace DotNesJit.Common.Hal.V1
 {
     /// <summary>
     /// Enhanced NES main loop implementation with multiple execution strategies
@@ -36,11 +32,11 @@ namespace DotNesJit.Cli.Emulation
         public delegate bool VBlankWaitDetectionDelegate();
 
         // Function pointers for JIT-compiled methods
-        public CPUStepDelegate CPUStep { get; set; }
-        public NMIHandlerDelegate NMIHandler { get; set; }
-        public IRQHandlerDelegate IRQHandler { get; set; }
-        public FrameCompleteDelegate FrameComplete { get; set; }
-        public VBlankWaitDetectionDelegate VBlankWaitDetection { get; set; }
+        public CPUStepDelegate? CPUStep { get; set; }
+        public NMIHandlerDelegate? NMIHandler { get; set; }
+        public IRQHandlerDelegate? IRQHandler { get; set; }
+        public FrameCompleteDelegate? FrameComplete { get; set; }
+        public VBlankWaitDetectionDelegate? VBlankWaitDetection { get; set; }
 
         // VBlank waiting pattern detection
         private readonly Queue<ushort> recentMemoryReads = new Queue<ushort>();

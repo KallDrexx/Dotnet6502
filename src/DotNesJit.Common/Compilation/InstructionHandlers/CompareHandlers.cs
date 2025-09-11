@@ -1,9 +1,10 @@
-﻿using System.Reflection;
-using System.Reflection.Emit;
+﻿using System.Reflection.Emit;
+using DotNesJit.Cli.Builder.InstructionHandlers;
+using DotNesJit.Common.Hal;
 using NESDecompiler.Core.CPU;
 using NESDecompiler.Core.Disassembly;
 
-namespace DotNesJit.Cli.Builder.InstructionHandlers;
+namespace DotNesJit.Common.Compilation.InstructionHandlers;
 
 /// <summary>
 /// Handles compare instructions (CMP, CPX, CPY)
@@ -32,7 +33,7 @@ public class CompareHandlers : InstructionHandler
         }
         else
         {
-            var getMemoryValueMethod = typeof(NesHal).GetMethod(nameof(NesHal.ReadMemory));
+            var getMemoryValueMethod = typeof(INesHal).GetMethod(nameof(INesHal.ReadMemory));
             ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
             IlUtils.LoadAddressToStack(instruction, gameClass, ilGenerator);
             ilGenerator.Emit(OpCodes.Callvirt, getMemoryValueMethod!);
@@ -52,7 +53,7 @@ public class CompareHandlers : InstructionHandler
         else
         {
             // Reload the memory value for comparison
-            var getMemoryValueMethod = typeof(NesHal).GetMethod(nameof(NesHal.ReadMemory));
+            var getMemoryValueMethod = typeof(INesHal).GetMethod(nameof(INesHal.ReadMemory));
             ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
             IlUtils.LoadAddressToStack(instruction, gameClass, ilGenerator);
             ilGenerator.Emit(OpCodes.Callvirt, getMemoryValueMethod!);

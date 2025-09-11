@@ -1,9 +1,9 @@
-﻿using System.Reflection;
-using System.Reflection.Emit;
-using NESDecompiler.Core.CPU;
+﻿using System.Reflection.Emit;
+using DotNesJit.Cli.Builder.InstructionHandlers;
+using DotNesJit.Common.Hal;
 using NESDecompiler.Core.Disassembly;
 
-namespace DotNesJit.Cli.Builder.InstructionHandlers;
+namespace DotNesJit.Common.Compilation.InstructionHandlers;
 
 /// <summary>
 /// Handles branch instructions with VBlank waiting pattern detection - FIXED VERSION
@@ -77,7 +77,7 @@ public class BranchHandlers : InstructionHandler
         ilGenerator.EmitWriteLine($"VBlank waiting pattern detected: {instruction}");
 
         // Instead of a tight loop, call the main loop's VBlank detection
-        var waitForVBlankMethod = typeof(NesHal).GetMethod("WaitForVBlank");
+        var waitForVBlankMethod = typeof(INesHal).GetMethod("WaitForVBlank");
 
         if (waitForVBlankMethod != null)
         {
@@ -90,7 +90,7 @@ public class BranchHandlers : InstructionHandler
             ilGenerator.EmitWriteLine("// VBlank wait - consider optimizing");
             var flagToCheck = GetFlagForBranch(instruction.Info.Mnemonic);
             var shouldBranchIfSet = ShouldBranchIfFlagSet(instruction.Info.Mnemonic);
-            GenerateSimpleBranchCode(ilGenerator, instruction, gameClass, flagToCheck, shouldBranchIfSet, instruction.TargetAddress.Value);
+            GenerateSimpleBranchCode(ilGenerator, instruction, gameClass, flagToCheck, shouldBranchIfSet, instruction.TargetAddress!.Value);
         }
     }
 
@@ -102,7 +102,7 @@ public class BranchHandlers : InstructionHandler
         GameClass gameClass, CpuStatusFlags flagToCheck, bool shouldBranchIfSet, ushort targetAddress)
     {
         // Get flag checking method
-        var getFlagMethod = typeof(NesHal).GetMethod(nameof(NesHal.GetFlag));
+        var getFlagMethod = typeof(INesHal).GetMethod(nameof(INesHal.GetFlag));
         if (getFlagMethod == null)
         {
             ilGenerator.EmitWriteLine($"Error: GetFlag method not found for branch {instruction.Info.Mnemonic}");
@@ -120,7 +120,7 @@ public class BranchHandlers : InstructionHandler
     private void GenerateSimpleBranchCode(ILGenerator ilGenerator, DisassembledInstruction instruction,
         GameClass gameClass, CpuStatusFlags flagToCheck, bool shouldBranchIfSet, ushort targetAddress)
     {
-        var getFlagMethod = typeof(NesHal).GetMethod(nameof(NesHal.GetFlag));
+        var getFlagMethod = typeof(INesHal).GetMethod(nameof(INesHal.GetFlag));
         if (getFlagMethod == null)
         {
             ilGenerator.EmitWriteLine($"Error: GetFlag method not found for branch {instruction.Info.Mnemonic}");

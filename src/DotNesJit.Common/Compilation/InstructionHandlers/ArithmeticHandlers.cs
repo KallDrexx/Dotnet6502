@@ -1,5 +1,9 @@
 using System.Reflection;
 using System.Reflection.Emit;
+using DotNesJit.Common;
+using DotNesJit.Common.Compilation;
+using DotNesJit.Common.Compilation.InstructionHandlers;
+using DotNesJit.Common.Hal.V1;
 using NESDecompiler.Core.CPU;
 using NESDecompiler.Core.Disassembly;
 

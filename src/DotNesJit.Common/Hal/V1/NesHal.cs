@@ -1,19 +1,14 @@
-using DotNesJit.Cli.Emulation;
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-
-namespace DotNesJit.Cli;
+namespace DotNesJit.Common.Hal.V1;
 
 /// <summary>
 /// Complete Hardware Abstraction Layer with full NES emulation and proper interrupt handling
 /// </summary>
-public class NesHal
+public class NesHal : INesHal
 {
     private readonly byte[] _memory = new byte[0x10000]; // 64KB of memory
     private readonly byte[] _prgRom;
     private readonly byte[] _chrRom;
-    private NESMainLoop _mainLoop;
+    private NESMainLoop? _mainLoop;
 
     // CPU state
     private byte _stackPointer = 0xFF;
@@ -70,7 +65,7 @@ public class NesHal
     private ushort _resetVector = 0;
     private ushort _irqVector = 0;
 
-    public NesHal(byte[] prgRom, byte[] chrRom = null)
+    public NesHal(byte[]? prgRom, byte[]? chrRom = null)
     {
         _prgRom = prgRom ?? throw new ArgumentNullException(nameof(prgRom));
         _chrRom = chrRom ?? Array.Empty<byte>();
@@ -468,9 +463,6 @@ public class NesHal
             // PRG ROM ($8000-$FFFF)
             case >= 0x8000:
                 return _memory[address];
-
-            default:
-                return 0; // Open bus
         }
     }
 

@@ -1,7 +1,7 @@
 using System.Reflection;
 using System.Reflection.Emit;
 
-namespace DotNesJit.Cli.Builder;
+namespace DotNesJit.Common.Compilation;
 
 public class GameClass
 {

@@ -1,29 +1,33 @@
-﻿using System;
-using System.Reflection;
-using DotNesJit.Cli.Builder;
+﻿using System.Reflection;
+using DotNesJit.Common.Compilation;
 using NESDecompiler.Core.Decompilation;
 using NESDecompiler.Core.Disassembly;
 
-namespace DotNesJit.Cli.Emulation
+namespace DotNesJit.Common.Hal.V1
 {
     /// <summary>
     /// Example usage showing how to integrate JIT compilation with the NES main loop
     /// </summary>
     public class JITIntegrationExample
     {
-        private NESMainLoop mainLoop;
-        private NesHal hardware;
-        private Assembly jitAssembly;
-        private object gameInstance;
-        private MethodInfo resetFunction;
-        private MethodInfo nmiFunction;
+        private NESMainLoop? _mainLoop;
+        private NesHal? _hardware;
+        private Assembly? _jitAssembly;
+        private object? _gameInstance;
+        private MethodInfo? _resetFunction;
+        private MethodInfo? _nmiFunction;
 
         // CPU state tracking for JIT functions
-        private ushort currentPC = 0x8000;
-        private byte accumulator = 0;
-        private byte xRegister = 0;
-        private byte yRegister = 0;
-        private byte stackPointer = 0xFF;
+        private readonly ushort _currentPc = 0x8000;
+        public byte _accumulator = 0;
+        private byte _xRegister = 0;
+        private byte _yRegister = 0;
+        private byte _stackPointer = 0xFF;
+
+        public JITIntegrationExample(object? gameInstance)
+        {
+            this._gameInstance = gameInstance;
+        }
 
         public void RunGame(string romPath)
         {
@@ -32,7 +36,7 @@ namespace DotNesJit.Cli.Emulation
                 Console.WriteLine($"Loading and JIT compiling ROM: {romPath}");
 
                 // Load and compile the ROM
-                var compiledAssembly = CompileROM(romPath);
+                var compiledAssembly = CompileRom(romPath);
                 if (compiledAssembly == null)
                 {
                     Console.WriteLine("Failed to compile ROM");
@@ -52,7 +56,7 @@ namespace DotNesJit.Cli.Emulation
                     try
                     {
                         // Use event-driven approach as recommended
-                        mainLoop.RunEventDriven();
+                        _mainLoop!.RunEventDriven();
                     }
                     catch (Exception ex)
                     {
@@ -66,7 +70,7 @@ namespace DotNesJit.Cli.Emulation
                 HandleUserInput();
 
                 // Clean shutdown
-                mainLoop.Stop();
+                _mainLoop!.Stop();
                 emulationThread.Join(5000); // Wait up to 5 seconds
 
                 Console.WriteLine("Emulation finished.");
@@ -81,7 +85,7 @@ namespace DotNesJit.Cli.Emulation
         /// <summary>
         /// Compiles the ROM using JIT compilation
         /// </summary>
-        private Assembly CompileROM(string romPath)
+        private Assembly? CompileRom(string romPath)
         {
             try
             {
@@ -99,13 +103,13 @@ namespace DotNesJit.Cli.Emulation
                 var builder = new NesAssemblyBuilder("JITGame", decompiler);
 
                 // Save to memory stream and load
-                using var memoryStream = new System.IO.MemoryStream();
+                using var memoryStream = new MemoryStream();
                 builder.Save(memoryStream);
 
-                jitAssembly = Assembly.Load(memoryStream.ToArray());
+                _jitAssembly = Assembly.Load(memoryStream.ToArray());
 
                 Console.WriteLine($"Successfully compiled {decompiler.Functions.Count} functions");
-                return jitAssembly;
+                return _jitAssembly;
             }
             catch (Exception ex)
             {
@@ -125,9 +129,9 @@ namespace DotNesJit.Cli.Emulation
             var prgRom = loader.GetPRGROMData();
             var chrRom = loader.GetCHRROMData();
 
-            hardware = new NesHal(prgRom, chrRom);
-            mainLoop = new NESMainLoop(hardware);
-            hardware.SetMainLoop(mainLoop);
+            _hardware = new NesHal(prgRom, chrRom);
+            _mainLoop = new NESMainLoop(_hardware);
+            _hardware.SetMainLoop(_mainLoop);
 
             // Get the game class from JIT assembly
             var gameType = compiledAssembly.GetType("JITGame.Game");
@@ -138,17 +142,17 @@ namespace DotNesJit.Cli.Emulation
 
             // Set up static hardware field
             var hardwareField = gameType.GetField("Hardware", BindingFlags.Public | BindingFlags.Static);
-            hardwareField?.SetValue(null, hardware);
+            hardwareField?.SetValue(null, _hardware);
 
             // Find key functions
-            resetFunction = FindFunction(gameType, romInfo.ResetVector);
-            nmiFunction = FindNMIFunction(gameType);
+            _resetFunction = FindFunction(gameType, romInfo.ResetVector);
+            _nmiFunction = FindNmiFunction(gameType);
 
             // Set up main loop delegates
-            mainLoop.CPUStep = ExecuteJITCompiledInstruction;
-            mainLoop.NMIHandler = ExecuteJITCompiledNMIHandler;
-            mainLoop.FrameComplete = OnFrameComplete;
-            mainLoop.VBlankWaitDetection = DetectVBlankWaitingCustom;
+            _mainLoop.CPUStep = ExecuteJitCompiledInstruction;
+            _mainLoop.NMIHandler = ExecuteJitCompiledNmiHandler;
+            _mainLoop.FrameComplete = OnFrameComplete;
+            _mainLoop.VBlankWaitDetection = DetectVBlankWaitingCustom;
 
             Console.WriteLine("Emulation setup complete");
         }
@@ -156,7 +160,7 @@ namespace DotNesJit.Cli.Emulation
         /// <summary>
         /// Finds a function by its entry address
         /// </summary>
-        private MethodInfo FindFunction(Type gameType, ushort address)
+        private MethodInfo? FindFunction(Type gameType, ushort address)
         {
             var methods = gameType.GetMethods(BindingFlags.Public | BindingFlags.Static);
 
@@ -184,7 +188,7 @@ namespace DotNesJit.Cli.Emulation
         /// <summary>
         /// Finds the NMI handler function
         /// </summary>
-        private MethodInfo FindNMIFunction(Type gameType)
+        private MethodInfo? FindNmiFunction(Type gameType)
         {
             var methods = gameType.GetMethods(BindingFlags.Public | BindingFlags.Static);
 
@@ -202,7 +206,7 @@ namespace DotNesJit.Cli.Emulation
         /// <summary>
         /// Executes JIT-compiled CPU instructions
         /// </summary>
-        private void ExecuteJITCompiledInstruction()
+        private void ExecuteJitCompiledInstruction()
         {
             try
             {
@@ -212,23 +216,23 @@ namespace DotNesJit.Cli.Emulation
                 // For now, just call the reset function repeatedly
                 // TODO: Implement proper instruction dispatching
                 // In a real implementation, you'd track PC and call appropriate functions
-                resetFunction?.Invoke(null, null);
+                _resetFunction?.Invoke(null, null);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"JIT execution error: {ex.Message}");
-                mainLoop.Stop();
+                _mainLoop!.Stop();
             }
         }
 
         /// <summary>
         /// Executes JIT-compiled NMI handler
         /// </summary>
-        private void ExecuteJITCompiledNMIHandler()
+        private void ExecuteJitCompiledNmiHandler()
         {
             try
             {
-                nmiFunction?.Invoke(null, null);
+                _nmiFunction?.Invoke(null, null);
             }
             catch (Exception ex)
             {
@@ -245,9 +249,9 @@ namespace DotNesJit.Cli.Emulation
             // This could analyze the current PC, recent memory accesses, etc.
 
             // For now, use a simple heuristic
-            return hardware.GetMemory()[currentPC] == 0xAD && // LDA absolute
-                   hardware.GetMemory()[currentPC + 1] == 0x02 && // Low byte of $2002
-                   hardware.GetMemory()[currentPC + 2] == 0x20;   // High byte of $2002
+            return _hardware!.GetMemory()[_currentPc] == 0xAD && // LDA absolute
+                   _hardware.GetMemory()[_currentPc + 1] == 0x02 && // Low byte of $2002
+                   _hardware.GetMemory()[_currentPc + 2] == 0x20;   // High byte of $2002
         }
 
         /// <summary>
@@ -303,7 +307,7 @@ namespace DotNesJit.Cli.Emulation
                 }
             }
 
-            hardware.SetControllerState(1, controller);
+            _hardware!.SetControllerState(1, controller);
         }
 
         /// <summary>
@@ -329,7 +333,7 @@ namespace DotNesJit.Cli.Emulation
 
                         case 'r':
                         case 'R':
-                            mainLoop.Reset();
+                            _mainLoop!.Reset();
                             Console.WriteLine("System reset");
                             break;
 
@@ -350,11 +354,11 @@ namespace DotNesJit.Cli.Emulation
         /// </summary>
         private void ShowStats()
         {
-            var stats = mainLoop.GetStats();
+            var stats = _mainLoop!.GetStats();
             Console.WriteLine("\n=== Emulation Statistics ===");
             Console.WriteLine(stats.ToString());
-            Console.WriteLine($"System State: {mainLoop.GetSystemState()}");
-            Console.WriteLine($"PPU State: {hardware.GetPPUStatus()}");
+            Console.WriteLine($"System State: {_mainLoop.GetSystemState()}");
+            Console.WriteLine($"PPU State: {_hardware!.GetPPUStatus()}");
             Console.WriteLine("============================\n");
         }
 
@@ -363,30 +367,29 @@ namespace DotNesJit.Cli.Emulation
         /// </summary>
         public class JITFunctionDispatcher
         {
-            private readonly Dictionary<ushort, MethodInfo> functionMap;
-            private readonly Type gameType;
+            private readonly Dictionary<ushort, MethodInfo> _functionMap;
 
             public JITFunctionDispatcher(Assembly jitAssembly, Decompiler decompiler)
             {
-                gameType = jitAssembly.GetType("JITGame.Game");
-                functionMap = new Dictionary<ushort, MethodInfo>();
+                var gameType1 = jitAssembly.GetType("JITGame.Game")!;
+                _functionMap = new Dictionary<ushort, MethodInfo>();
 
                 // Map function addresses to JIT methods
                 foreach (var function in decompiler.Functions.Values)
                 {
-                    var method = gameType.GetMethod(function.Name, BindingFlags.Public | BindingFlags.Static);
+                    var method = gameType1.GetMethod(function.Name, BindingFlags.Public | BindingFlags.Static);
                     if (method != null)
                     {
-                        functionMap[function.Address] = method;
+                        _functionMap[function.Address] = method;
                     }
                 }
 
-                Console.WriteLine($"Mapped {functionMap.Count} JIT functions");
+                Console.WriteLine($"Mapped {_functionMap.Count} JIT functions");
             }
 
             public void CallFunction(ushort address)
             {
-                if (functionMap.TryGetValue(address, out var method))
+                if (_functionMap.TryGetValue(address, out var method))
                 {
                     method.Invoke(null, null);
                 }
@@ -398,7 +401,7 @@ namespace DotNesJit.Cli.Emulation
 
             public bool HasFunction(ushort address)
             {
-                return functionMap.ContainsKey(address);
+                return _functionMap.ContainsKey(address);
             }
         }
     }

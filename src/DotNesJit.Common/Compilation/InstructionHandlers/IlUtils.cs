@@ -1,9 +1,9 @@
-using System.Reflection;
 using System.Reflection.Emit;
+using DotNesJit.Common.Hal;
 using NESDecompiler.Core.CPU;
 using NESDecompiler.Core.Disassembly;
 
-namespace DotNesJit.Cli.Builder.InstructionHandlers;
+namespace DotNesJit.Common.Compilation.InstructionHandlers;
 
 public static class IlUtils
 {
@@ -79,7 +79,7 @@ public static class IlUtils
 
     public static void SetFlag(GameClass gameClass, ILGenerator ilGenerator, CpuStatusFlags flag, bool value)
     {
-        var setFlagMethod = typeof(NesHal).GetMethod(nameof(NesHal.SetFlag));
+        var setFlagMethod = typeof(INesHal).GetMethod(nameof(INesHal.SetFlag));
         if (setFlagMethod == null)
         {
             ilGenerator.EmitWriteLine($"Error: SetFlag method not found");
@@ -94,7 +94,7 @@ public static class IlUtils
 
     public static void SetFlagFromIlStack(GameClass gameClass, ILGenerator ilGenerator, CpuStatusFlags flag)
     {
-        var setFlagMethod = typeof(NesHal).GetMethod(nameof(NesHal.SetFlag));
+        var setFlagMethod = typeof(INesHal).GetMethod(nameof(INesHal.SetFlag));
         if (setFlagMethod == null)
         {
             ilGenerator.EmitWriteLine($"Error: SetFlag method not found");
@@ -120,7 +120,7 @@ public static class IlUtils
     /// </summary>
     public static void UpdateZeroFlag(GameClass gameClass, ILGenerator ilGenerator)
     {
-        var setFlagMethod = typeof(NesHal).GetMethod(nameof(NesHal.SetFlag));
+        var setFlagMethod = typeof(INesHal).GetMethod(nameof(INesHal.SetFlag));
         if (setFlagMethod == null)
         {
             ilGenerator.EmitWriteLine("Error: SetFlag method not found for zero flag");
@@ -147,7 +147,7 @@ public static class IlUtils
     /// </summary>
     public static void UpdateNegativeFlag(GameClass gameClass, ILGenerator ilGenerator)
     {
-        var setFlagMethod = typeof(NesHal).GetMethod(nameof(NesHal.SetFlag));
+        var setFlagMethod = typeof(INesHal).GetMethod(nameof(INesHal.SetFlag));
         if (setFlagMethod == null)
         {
             ilGenerator.EmitWriteLine("Error: SetFlag method not found for negative flag");
@@ -176,7 +176,7 @@ public static class IlUtils
     /// </summary>
     public static void UpdateOverflowFlag(GameClass gameClass, ILGenerator ilGenerator)
     {
-        var setFlagMethod = typeof(NesHal).GetMethod(nameof(NesHal.SetFlag));
+        var setFlagMethod = typeof(INesHal).GetMethod(nameof(INesHal.SetFlag));
         if (setFlagMethod == null)
         {
             ilGenerator.EmitWriteLine("Error: SetFlag method not found for overflow flag");

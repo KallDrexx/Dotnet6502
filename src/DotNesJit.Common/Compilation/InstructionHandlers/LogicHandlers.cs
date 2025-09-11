@@ -1,4 +1,7 @@
 using System.Reflection.Emit;
+using DotNesJit.Common.Compilation;
+using DotNesJit.Common.Compilation.InstructionHandlers;
+using DotNesJit.Common.Hal;
 using NESDecompiler.Core.Disassembly;
 
 namespace DotNesJit.Cli.Builder.InstructionHandlers;
@@ -12,7 +15,7 @@ public class LogicHandlers : InstructionHandler
 
     protected override void HandleInternal(ILGenerator ilGenerator, DisassembledInstruction instruction, GameClass gameClass)
     {
-        var getMemoryValueMethod = typeof(NesHal).GetMethod(nameof(NesHal.ReadMemory));
+        var getMemoryValueMethod = typeof(INesHal).GetMethod(nameof(INesHal.ReadMemory));
 
         switch (instruction.Info.Mnemonic)
         {

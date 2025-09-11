@@ -1,7 +1,9 @@
 using System.Reflection.Emit;
+using DotNesJit.Cli.Builder.InstructionHandlers;
+using DotNesJit.Common.Hal;
 using NESDecompiler.Core.Disassembly;
 
-namespace DotNesJit.Cli.Builder.InstructionHandlers;
+namespace DotNesJit.Common.Compilation.InstructionHandlers;
 
 /// <summary>
 /// Handles the core store opcodes
@@ -22,7 +24,7 @@ public class StoreHandlers : InstructionHandler
 
 
         // Call HAL to write to that memory location
-        var setMemoryMethod = typeof(NesHal).GetMethod(nameof(NesHal.WriteMemory));
+        var setMemoryMethod = typeof(INesHal).GetMethod(nameof(INesHal.WriteMemory));
 
         ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
         IlUtils.LoadAddressToStack(instruction, gameClass, ilGenerator);

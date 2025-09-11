@@ -1,9 +1,10 @@
-﻿using System.Reflection;
-using System.Reflection.Emit;
+﻿using System.Reflection.Emit;
+using DotNesJit.Cli.Builder.InstructionHandlers;
+using DotNesJit.Common.Hal;
 using NESDecompiler.Core.CPU;
 using NESDecompiler.Core.Disassembly;
 
-namespace DotNesJit.Cli.Builder.InstructionHandlers;
+namespace DotNesJit.Common.Compilation.InstructionHandlers;
 
 /// <summary>
 /// Handles jump and call instructions - SIMPLIFIED VERSION
@@ -44,7 +45,7 @@ public class JumpHandlers : InstructionHandler
             ilGenerator.EmitWriteLine($"Absolute jump to ${targetAddress:X4}");
 
             // SIMPLIFIED: Just call the hardware jump method instead of complex IL generation
-            var jumpToAddressMethod = typeof(NesHal).GetMethod(nameof(NesHal.JumpToAddress));
+            var jumpToAddressMethod = typeof(INesHal).GetMethod(nameof(INesHal.JumpToAddress));
             if (jumpToAddressMethod != null)
             {
                 ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
@@ -62,8 +63,8 @@ public class JumpHandlers : InstructionHandler
             ilGenerator.EmitWriteLine($"Indirect jump via ${targetAddress:X4}");
 
             // SIMPLIFIED: Use hardware methods instead of complex IL generation
-            var readMemoryMethod = typeof(NesHal).GetMethod(nameof(NesHal.ReadMemory));
-            var jumpToAddressMethod = typeof(NesHal).GetMethod(nameof(NesHal.JumpToAddress));
+            var readMemoryMethod = typeof(INesHal).GetMethod(nameof(INesHal.ReadMemory));
+            var jumpToAddressMethod = typeof(INesHal).GetMethod(nameof(INesHal.JumpToAddress));
 
             if (readMemoryMethod != null && jumpToAddressMethod != null)
             {
@@ -114,7 +115,7 @@ public class JumpHandlers : InstructionHandler
         ilGenerator.EmitWriteLine($"Subroutine call to ${targetAddress:X4}");
 
         // SIMPLIFIED: Use the hardware's built-in CallFunction method
-        var callFunctionMethod = typeof(NesHal).GetMethod(nameof(NesHal.CallFunction));
+        var callFunctionMethod = typeof(INesHal).GetMethod(nameof(INesHal.CallFunction));
         if (callFunctionMethod != null)
         {
             ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
@@ -156,7 +157,7 @@ public class ReturnHandlers : InstructionHandler
         ilGenerator.EmitWriteLine("Return from subroutine");
 
         // SIMPLIFIED: Use hardware method instead of complex stack manipulation
-        var returnFromSubroutineMethod = typeof(NesHal).GetMethod(nameof(NesHal.ReturnFromSubroutine));
+        var returnFromSubroutineMethod = typeof(INesHal).GetMethod(nameof(INesHal.ReturnFromSubroutine));
         if (returnFromSubroutineMethod != null)
         {
             ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
@@ -176,7 +177,7 @@ public class ReturnHandlers : InstructionHandler
         ilGenerator.EmitWriteLine("Return from interrupt");
 
         // SIMPLIFIED: Use hardware method instead of complex interrupt handling
-        var returnFromInterruptMethod = typeof(NesHal).GetMethod(nameof(NesHal.ReturnFromInterrupt));
+        var returnFromInterruptMethod = typeof(INesHal).GetMethod(nameof(INesHal.ReturnFromInterrupt));
         if (returnFromInterruptMethod != null)
         {
             ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
@@ -220,7 +221,7 @@ public class SystemHandlers : InstructionHandler
         ilGenerator.EmitWriteLine("Software interrupt (BRK)");
 
         // SIMPLIFIED: Use hardware method instead of complex interrupt implementation
-        var triggerSoftwareInterruptMethod = typeof(NesHal).GetMethod(nameof(NesHal.TriggerSoftwareInterrupt));
+        var triggerSoftwareInterruptMethod = typeof(INesHal).GetMethod(nameof(INesHal.TriggerSoftwareInterrupt));
         if (triggerSoftwareInterruptMethod != null)
         {
             ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);

@@ -1,8 +1,10 @@
 using System.Reflection.Emit;
+using DotNesJit.Cli.Builder.InstructionHandlers;
+using DotNesJit.Common.Hal;
 using NESDecompiler.Core.CPU;
 using NESDecompiler.Core.Disassembly;
 
-namespace DotNesJit.Cli.Builder.InstructionHandlers;
+namespace DotNesJit.Common.Compilation.InstructionHandlers;
 
 /// <summary>
 /// Handles load related instructions - FIXED VERSION
@@ -38,7 +40,7 @@ public class LoadHandlers : InstructionHandler
         }
 
         // For memory addressing modes, call the memory read handler
-        var getMemoryValueMethod = typeof(NesHal).GetMethod(nameof(NesHal.ReadMemory));
+        var getMemoryValueMethod = typeof(INesHal).GetMethod(nameof(INesHal.ReadMemory));
         if (getMemoryValueMethod == null)
         {
             ilGenerator.EmitWriteLine($"Error: ReadMemory method not found for {instruction.Info.Mnemonic}");
