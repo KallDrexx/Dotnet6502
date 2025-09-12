@@ -1,6 +1,9 @@
 namespace DotNesJit.Common.Compilation.Syntax;
 
-public static class NesAst
+/// <summary>
+/// Intermediary representation of NES (6502) instructions
+/// </summary>
+public static class NesIr
 {
     public abstract record Instruction;
 
@@ -9,10 +12,6 @@ public static class NesAst
     public record Copy(Value Source, Value Destination) : Instruction;
 
     public record Return : Instruction;
-
-    public record SetFlag(Flag Flag, Value Value) : Instruction;
-
-    public record GetFlag(Flag Flag, Variable Variable) : Instruction;
 
     public record Binary(BinaryOperator Operator, Value Left, Value Right, Value Destination) : Instruction;
 
@@ -26,9 +25,11 @@ public static class NesAst
 
     public record Register(RegisterName Name) : Value;
 
+    public record Flag(FlagName FlagName) : Value;
+    
     public enum RegisterName { Accumulator, XIndex, YIndex }
 
-    public enum Flag { Carry, Zero, InterruptDisable, BFlag, Decimal, Overflow, Negative }
+    public enum FlagName { Carry, Zero, InterruptDisable, BFlag, Decimal, Overflow, Negative }
 
     public enum BinaryOperator
     {

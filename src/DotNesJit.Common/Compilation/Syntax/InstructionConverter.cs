@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using NESDecompiler.Core.CPU;
 using NESDecompiler.Core.Disassembly;
 
@@ -11,7 +10,7 @@ public class InstructionConverter
 {
     private int _variableCount;
 
-    public NesAst.Instruction[] Convert(DisassembledInstruction instruction)
+    public NesIr.Instruction[] Convert(DisassembledInstruction instruction)
     {
         switch (instruction.Info.Mnemonic)
         {
@@ -23,82 +22,85 @@ public class InstructionConverter
         }
     }
 
-    private NesAst.Instruction[] ConvertAdc(DisassembledInstruction instruction)
+    private NesIr.Instruction[] ConvertAdc(DisassembledInstruction instruction)
     {
-        var accumulator = new NesAst.Register(NesAst.RegisterName.Accumulator);
+        var accumulator = new NesIr.Register(NesIr.RegisterName.Accumulator);
         var operand = ParseOperand(instruction.Info.AddressingMode, instruction.Operands);
         var addVariable = NextVariable();
-        var carryVariable = NextVariable();
         var isNewCarryVariable = NextVariable();
         var isZero = NextVariable();
         var isNegative = NextVariable();
 
-        var getCarry = new NesAst.GetFlag(NesAst.Flag.Carry, carryVariable);
-        var firstAdd = new NesAst.Binary(NesAst.BinaryOperator.Add, accumulator, operand, addVariable);
-        var carryAdd = new NesAst.Binary(NesAst.BinaryOperator.Add, addVariable, carryVariable, accumulator);
-        var checkForOverflow = new NesAst.Binary(
-            NesAst.BinaryOperator.GreaterThan,
+        var firstAdd = new NesIr.Binary(NesIr.BinaryOperator.Add, accumulator, operand, addVariable);
+        var carryAdd = new NesIr.Binary(
+            NesIr.BinaryOperator.Add,
             addVariable,
-            new NesAst.Constant(255),
+            new NesIr.Flag(NesIr.FlagName.Carry),
+            accumulator);
+
+        var checkForOverflow = new NesIr.Binary(
+            NesIr.BinaryOperator.GreaterThan,
+            addVariable,
+            new NesIr.Constant(255),
             isNewCarryVariable);
 
-        var checkForZero = new NesAst.Binary(
-            NesAst.BinaryOperator.Equals,
+        var checkForZero = new NesIr.Binary(
+            NesIr.BinaryOperator.Equals,
             addVariable,
-            new NesAst.Constant(0),
+            new NesIr.Constant(0),
             isZero);
 
-        var checkForNegative = new NesAst.Binary(
-            NesAst.BinaryOperator.And,
+        var checkForNegative = new NesIr.Binary(
+            NesIr.BinaryOperator.And,
             addVariable,
-            new NesAst.Constant(0x80),
+            new NesIr.Constant(0x80),
             isNegative);
 
-        var setOverflow = new NesAst.SetFlag(NesAst.Flag.Overflow, isNewCarryVariable);
-        var setNegative = new NesAst.SetFlag(NesAst.Flag.Negative, isNegative);
-        var setZero = new NesAst.SetFlag(NesAst.Flag.Zero, isZero);
+        var setOverflow = new NesIr.Copy(isNewCarryVariable, new NesIr.Flag(NesIr.FlagName.Carry));
+        var setNegative = new NesIr.Copy(isNegative, new NesIr.Flag(NesIr.FlagName.Negative));
+        var setZero = new NesIr.Copy(isZero, new NesIr.Flag(NesIr.FlagName.Zero));
 
-        var storeAccumulator = new NesAst.Copy(addVariable, accumulator);
+        var storeAccumulator = new NesIr.Copy(addVariable, accumulator);
 
         return
         [
-            getCarry, firstAdd, carryAdd, checkForOverflow, checkForZero, checkForNegative, setOverflow, setZero,
+            firstAdd, carryAdd, checkForOverflow, checkForZero, checkForNegative, setOverflow, setZero,
             setNegative, storeAccumulator
         ];
     }
 
-    private NesAst.Value ParseOperand(AddressingMode addressingMode, byte[] operands)
+    private NesIr.Value ParseOperand(AddressingMode addressingMode, byte[] operands)
     {
         switch (addressingMode)
         {
             case AddressingMode.Immediate:
-                return new NesAst.Constant(operands[0]);
+                return new NesIr.Constant(operands[0]);
 
             case AddressingMode.ZeroPage:
-                return new NesAst.Memory(operands[0], null);
+                return new NesIr.Memory(operands[0], null);
 
             case AddressingMode.ZeroPageX:
-                return new NesAst.Memory(operands[0], NesAst.RegisterName.XIndex);
+                return new NesIr.Memory(operands[0], NesIr.RegisterName.XIndex);
 
             case AddressingMode.ZeroPageY:
-                return new NesAst.Memory(operands[0], NesAst.RegisterName.YIndex);
+                return new NesIr.Memory(operands[0], NesIr.RegisterName.YIndex);
 
             case AddressingMode.Absolute:
             {
                 var fullAddress = (ushort)((operands[1] << 8) | operands[0]);
-                return new NesAst.Memory(fullAddress, null);
+                return new NesIr.Memory(fullAddress, null);
             }
 
             case AddressingMode.AbsoluteX:
             {
                 var fullAddress = (ushort)((operands[1] << 8) | operands[0]);
-                return new NesAst.Memory(fullAddress, NesAst.RegisterName.XIndex);
+                return new NesIr.Memory(fullAddress, NesIr.RegisterName.XIndex);
             }
 
             case AddressingMode.AbsoluteY:
             {
                 var fullAddress = (ushort)((operands[1] << 8) | operands[0]);
-                return new NesAst.Memory(fullAddress, NesAst.RegisterName.YIndex);
+                return new NesIr.Memory(fullAddress, NesIr.RegisterName.YIndex);
             }
 
             default:
@@ -106,8 +108,8 @@ public class InstructionConverter
         }
     }
 
-    private NesAst.Variable NextVariable()
+    private NesIr.Variable NextVariable()
     {
-        return new NesAst.Variable($"var_{++_variableCount}");
+        return new NesIr.Variable($"var_{++_variableCount}");
     }
 }
