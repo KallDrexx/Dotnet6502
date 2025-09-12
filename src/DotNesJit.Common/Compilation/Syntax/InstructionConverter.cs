@@ -8,22 +8,33 @@ namespace DotNesJit.Common.Compilation.Syntax;
 /// </summary>
 public class InstructionConverter
 {
-    public NesIr.Instruction[] Convert(DisassembledInstruction instruction)
+    public IReadOnlyList<NesIr.Instruction> Convert(DisassembledInstruction instruction, Disassembler disassembler)
     {
+        var results = new List<NesIr.Instruction>();
+        if (instruction.Label != null)
+        {
+            results.Add(new NesIr.Label(new NesIr.Identifier(instruction.Label)));
+        }
+
         switch (instruction.Info.Mnemonic)
         {
-            case "ADC": return ConvertAdc(instruction);
-            case "AND": return ConvertAnd(instruction);
-            case "ASL": return ConvertAsl(instruction);
-            case "BIT": return ConvertBit(instruction);
-            case "CLC": return ConvertClc(instruction);
-            case "CLD": return ConvertCld(instruction);
-            case "CLI": return ConvertCli(instruction);
-            case "CLV": return ConvertClv(instruction);
+            case "ADC": results.AddRange(ConvertAdc(instruction)); break;
+            case "AND": results.AddRange(ConvertAnd(instruction)); break;
+            case "ASL": results.AddRange(ConvertAsl(instruction)); break;
+            case "BCC": results.AddRange(ConvertBcc(instruction, disassembler)); break;
+            case "BCS": results.AddRange(ConvertBcs(instruction, disassembler)); break;
+            case "BEQ": results.AddRange(ConvertBeq(instruction, disassembler)); break;
+            case "BIT": results.AddRange(ConvertBit(instruction)); break;
+            case "CLC": results.AddRange(ConvertClc(instruction)); break;
+            case "CLD": results.AddRange(ConvertCld(instruction)); break;
+            case "CLI": results.AddRange(ConvertCli(instruction)); break;
+            case "CLV": results.AddRange(ConvertClv(instruction)); break;
 
             default:
                 throw new NotSupportedException(instruction.Info.Mnemonic);
         }
+
+        return results;
     }
 
     private NesIr.Instruction[] ConvertAdc(DisassembledInstruction instruction)
@@ -42,7 +53,7 @@ public class InstructionConverter
             new NesIr.Flag(NesIr.FlagName.Carry),
             accumulator);
 
-        var adjustForOverflow = new NesIr.AdjustIfOverflowed(addVariable, new NesIr.Flag(NesIr.FlagName.Overflow));
+        var adjustForOverflow = new NesIr.WrapValueToByte(addVariable, new NesIr.Flag(NesIr.FlagName.Overflow));
         var checkForZero = new NesIr.Binary(
             NesIr.BinaryOperator.Equals,
             addVariable,
@@ -139,6 +150,30 @@ public class InstructionConverter
             new NesIr.Flag(NesIr.FlagName.Negative));
 
         return [carry, carryFlag, shift, zeroFlag, checkForNegative, setNegative];
+    }
+
+    private NesIr.Instruction[] ConvertBcc(DisassembledInstruction instruction, Disassembler disassembler)
+    {
+        var target = GetTargetLabel(instruction, disassembler);
+        var jump = new NesIr.JumpIfZero(new NesIr.Flag(NesIr.FlagName.Carry), target);
+
+        return [jump];
+    }
+
+    private NesIr.Instruction[] ConvertBcs(DisassembledInstruction instruction, Disassembler disassembler)
+    {
+        var target = GetTargetLabel(instruction, disassembler);
+        var jump = new NesIr.JumpIfNotZero(new NesIr.Flag(NesIr.FlagName.Carry), target);
+
+        return [jump];
+    }
+
+    private NesIr.Instruction[] ConvertBeq(DisassembledInstruction instruction, Disassembler disassembler)
+    {
+        var target = GetTargetLabel(instruction, disassembler);
+        var jump = new NesIr.JumpIfNotZero(new NesIr.Flag(NesIr.FlagName.Zero), target);
+
+        return [jump];
     }
 
     private NesIr.Instruction[] ConvertBit(DisassembledInstruction instruction)
@@ -244,5 +279,19 @@ public class InstructionConverter
             default:
                 throw new NotSupportedException(instruction.Info.AddressingMode.ToString());
         }
+    }
+
+    private static NesIr.Identifier GetTargetLabel(DisassembledInstruction instruction, Disassembler disassembler)
+    {
+        if (instruction.TargetAddress == null ||
+            !disassembler.Labels.TryGetValue(instruction.TargetAddress.Value, out var label))
+        {
+            var message = $"{instruction.Info.Mnemonic} instruction targeting address '{instruction.TargetAddress}' " +
+                          $"but that address has no known label";
+
+            throw new InvalidOperationException(message);
+        }
+
+        return new NesIr.Identifier(label);
     }
 }

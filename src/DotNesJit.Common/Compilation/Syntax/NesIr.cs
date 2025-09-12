@@ -7,7 +7,7 @@ public static class NesIr
 {
     public abstract record Instruction;
 
-    public record Function(string Name, ushort Address, IReadOnlyList<Instruction> Instructions);
+    public record Function(Identifier Name, ushort Address, IReadOnlyList<Instruction> Instructions);
 
     public record Copy(Value Source, Value Destination) : Instruction;
 
@@ -15,7 +15,15 @@ public static class NesIr
 
     public record Binary(BinaryOperator Operator, Value Left, Value Right, Value Destination) : Instruction;
 
-    public record AdjustIfOverflowed(Value PossibleOverflowedValue, Value FlagToSetIfOverflowed) : Instruction;
+    public record WrapValueToByte(Value PossibleOverflowedValue, Value FlagToSetIfOverflowed) : Instruction;
+
+    public record Label(Identifier Name) : Instruction;
+
+    public record Jump(Identifier Target) : Instruction;
+
+    public record JumpIfZero(Value Condition, Identifier Target) : Instruction;
+
+    public record JumpIfNotZero(Value Condition, Identifier Target) : Instruction;
 
     public abstract record Value;
 
@@ -28,6 +36,8 @@ public static class NesIr
     public record Register(RegisterName Name) : Value;
 
     public record Flag(FlagName FlagName) : Value;
+
+    public record Identifier(string Name);
     
     public enum RegisterName { Accumulator, XIndex, YIndex }
 
