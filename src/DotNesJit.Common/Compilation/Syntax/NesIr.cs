@@ -15,13 +15,15 @@ public static class NesIr
 
     public record Binary(BinaryOperator Operator, Value Left, Value Right, Value Destination) : Instruction;
 
+    public record AdjustIfOverflowed(Value PossibleOverflowedValue, Value FlagToSetIfOverflowed) : Instruction;
+
     public abstract record Value;
 
     public record Constant(byte Number) : Value;
 
     public record Memory(ushort Address, RegisterName? RegisterToAdd) : Value;
 
-    public record Variable(string Name) : Value;
+    public record Variable(int Index) : Value;
 
     public record Register(RegisterName Name) : Value;
 
@@ -34,6 +36,6 @@ public static class NesIr
     public enum BinaryOperator
     {
         Add, Subtract, Equals, NotEquals, GreaterThan, GreaterThanOrEqualTo, LessThan, LessThanOrEqualTo,
-        And, Or, Xor,
+        And, Or, Xor, ShiftLeft, ShiftRight,
     }
 }
