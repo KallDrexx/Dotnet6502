@@ -31,6 +31,8 @@ public static class NesIr
 
     public record PopStackValue(Value Destination) : Instruction;
 
+    public record InvokeSoftwareInterrupt : Instruction;
+
     public abstract record Value;
 
     public record Constant(byte Number) : Value;

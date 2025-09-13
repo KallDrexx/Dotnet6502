@@ -29,6 +29,12 @@ public static class InstructionConverter
             case "BCS": results.AddRange(ConvertBcs(instruction, disassembler)); break;
             case "BEQ": results.AddRange(ConvertBeq(instruction, disassembler)); break;
             case "BIT": results.AddRange(ConvertBit(instruction)); break;
+            case "BMI": results.AddRange(ConvertBmi(instruction, disassembler)); break;
+            case "BNE": results.AddRange(ConvertBne(instruction, disassembler)); break;
+            case "BPL": results.AddRange(ConvertBpl(instruction, disassembler)); break;
+            case "BRK": results.AddRange(ConvertBrk()); break;
+            case "BVC": results.AddRange(ConvertBvc(instruction, disassembler)); break;
+            case "BVS": results.AddRange(ConvertBvs(instruction, disassembler)); break;
             case "CLC": results.AddRange(ConvertClc()); break;
             case "CLD": results.AddRange(ConvertCld()); break;
             case "CLI": results.AddRange(ConvertCli()); break;
@@ -37,12 +43,12 @@ public static class InstructionConverter
             case "CPX": results.AddRange(ConvertCpx(instruction)); break;
             case "CPY": results.AddRange(ConvertCpy(instruction)); break;
             case "DEC": results.AddRange(ConvertDec(instruction)); break;
-            case "DEX": results.AddRange(ConvertDex(instruction)); break;
-            case "DEY": results.AddRange(ConvertDey(instruction)); break;
+            case "DEX": results.AddRange(ConvertDex()); break;
+            case "DEY": results.AddRange(ConvertDey()); break;
             case "EOR": results.AddRange(ConvertEor(instruction)); break;
             case "INC": results.AddRange(ConvertInc(instruction)); break;
-            case "INX": results.AddRange(ConvertInx(instruction)); break;
-            case "INY": results.AddRange(ConvertIny(instruction)); break;
+            case "INX": results.AddRange(ConvertInx()); break;
+            case "INY": results.AddRange(ConvertIny()); break;
             case "JMP": results.AddRange(ConvertJmp(instruction, disassembler)); break;
             case "JSR": results.AddRange(ConvertJsr(instruction, decompiler)); break;
             case "LDA": results.AddRange(ConvertLda(instruction)); break;
@@ -51,8 +57,8 @@ public static class InstructionConverter
             case "LSR": results.AddRange(ConvertLsr(instruction)); break;
             case "NOP": results.AddRange(ConvertNop()); break;
             case "ORA": results.AddRange(ConvertOra(instruction)); break;
-            case "PHA": results.AddRange(ConvertPha(instruction)); break;
-            case "PHP": results.AddRange(ConvertPhp(instruction)); break;
+            case "PHA": results.AddRange(ConvertPha()); break;
+            case "PHP": results.AddRange(ConvertPhp()); break;
             case "PLA": results.AddRange(ConvertPla()); break;
             case "PLP": results.AddRange(ConvertPlp()); break;
 
@@ -237,9 +243,19 @@ public static class InstructionConverter
     /// <summary>
     /// Break (software IRQ)
     /// </summary>
-    private static NesIr.Instruction[] ConvertBrk(DisassembledInstruction instruction)
+    private static NesIr.Instruction[] ConvertBrk()
     {
-        throw new NotImplementedException();
+        var pushFlags = new NesIr.PushStackValue(new NesIr.AllFlags());
+        var triggerInterrupt = new NesIr.InvokeSoftwareInterrupt();
+        var setInterruptDisable = new NesIr.Copy(
+            new NesIr.Constant(1),
+            new NesIr.Flag(NesIr.FlagName.InterruptDisable));
+
+        var setBFlag = new NesIr.Copy(
+            new NesIr.Constant(1),
+            new NesIr.Flag(NesIr.FlagName.BFlag));
+
+        return [pushFlags, setInterruptDisable, setBFlag, triggerInterrupt];
     }
 
     /// <summary>
@@ -269,7 +285,7 @@ public static class InstructionConverter
     /// </summary>
     private static NesIr.Instruction[] ConvertClc()
     {
-        var setCarry = new NesIr.Copy(new NesIr.Flag(NesIr.FlagName.Carry), new NesIr.Constant(0));
+        var setCarry = new NesIr.Copy(new NesIr.Constant(0), new NesIr.Flag(NesIr.FlagName.Carry));
 
         return [setCarry];
     }
@@ -279,7 +295,7 @@ public static class InstructionConverter
     /// </summary>
     private static NesIr.Instruction[] ConvertCld()
     {
-        var setDecimal = new NesIr.Copy(new NesIr.Flag(NesIr.FlagName.Decimal), new NesIr.Constant(0));
+        var setDecimal = new NesIr.Copy(new NesIr.Constant(0), new NesIr.Flag(NesIr.FlagName.Decimal));
 
         return [setDecimal];
     }
@@ -289,7 +305,7 @@ public static class InstructionConverter
     /// </summary>
     private static NesIr.Instruction[] ConvertCli()
     {
-        var setInterrupt = new NesIr.Copy(new NesIr.Flag(NesIr.FlagName.InterruptDisable), new NesIr.Constant(0));
+        var setInterrupt = new NesIr.Copy(new NesIr.Constant(0), new NesIr.Flag(NesIr.FlagName.InterruptDisable));
 
         return [setInterrupt];
     }
@@ -299,7 +315,7 @@ public static class InstructionConverter
     /// </summary>
     private static NesIr.Instruction[] ConvertClv()
     {
-        var setOverflow = new NesIr.Copy(new NesIr.Flag(NesIr.FlagName.Overflow), new NesIr.Constant(0));
+        var setOverflow = new NesIr.Copy(new NesIr.Constant(0), new NesIr.Flag(NesIr.FlagName.Overflow));
 
         return [setOverflow];
     }
@@ -408,7 +424,7 @@ public static class InstructionConverter
     /// <summary>
     /// Decrement x
     /// </summary>
-    private static NesIr.Instruction[] ConvertDex(DisassembledInstruction instruction)
+    private static NesIr.Instruction[] ConvertDex()
     {
         var xIndex = new NesIr.Register(NesIr.RegisterName.XIndex);
         var variable = new NesIr.Variable(0);
@@ -429,7 +445,7 @@ public static class InstructionConverter
     /// <summary>
     /// Decrement y
     /// </summary>
-    private static NesIr.Instruction[] ConvertDey(DisassembledInstruction instruction)
+    private static NesIr.Instruction[] ConvertDey()
     {
         var yIndex = new NesIr.Register(NesIr.RegisterName.YIndex);
         var variable = new NesIr.Variable(0);
@@ -481,7 +497,7 @@ public static class InstructionConverter
     /// <summary>
     /// Increment X
     /// </summary>
-    private static NesIr.Instruction[] ConvertInx(DisassembledInstruction instruction)
+    private static NesIr.Instruction[] ConvertInx()
     {
         var xIndex = new NesIr.Register(NesIr.RegisterName.XIndex);
         var variable = new NesIr.Variable(0);
@@ -496,7 +512,7 @@ public static class InstructionConverter
     /// <summary>
     /// Increment Y
     /// </summary>
-    private static NesIr.Instruction[] ConvertIny(DisassembledInstruction instruction)
+    private static NesIr.Instruction[] ConvertIny()
     {
         var yIndex = new NesIr.Register(NesIr.RegisterName.YIndex);
         var variable = new NesIr.Variable(0);
@@ -650,7 +666,7 @@ public static class InstructionConverter
     /// <summary>
     /// Push A
     /// </summary>
-    private static NesIr.Instruction[] ConvertPha(DisassembledInstruction instruction)
+    private static NesIr.Instruction[] ConvertPha()
     {
         var push = new NesIr.PushStackValue(new NesIr.Register(NesIr.RegisterName.Accumulator));
 
@@ -660,7 +676,7 @@ public static class InstructionConverter
     /// <summary>
     /// Push processor status
     /// </summary>
-    private static NesIr.Instruction[] ConvertPhp(DisassembledInstruction instruction)
+    private static NesIr.Instruction[] ConvertPhp()
     {
         var variable = new NesIr.Variable(0);
 
@@ -695,6 +711,116 @@ public static class InstructionConverter
         var pop = new NesIr.PopStackValue(new NesIr.AllFlags());
 
         return [pop];
+    }
+
+    /// <summary>
+    /// Rotate left
+    /// </summary>
+    private static NesIr.Instruction[] ConvertRol(DisassembledInstruction instruction)
+    {
+        var operand = ParseAddress(instruction);
+        var oldCarry = new NesIr.Variable(0);
+        var tempVariable = new NesIr.Variable(1);
+
+        var copyCarry = new NesIr.Copy(new NesIr.Flag(NesIr.FlagName.Carry), oldCarry);
+        var compareLastBit = new NesIr.Binary(
+            NesIr.BinaryOperator.And,
+            operand,
+            new NesIr.Constant(0x80),
+            tempVariable);
+
+        var setCarry = new NesIr.Binary(
+            NesIr.BinaryOperator.Equals,
+            tempVariable,
+            new NesIr.Constant(0x80),
+            new NesIr.Flag(NesIr.FlagName.Carry));
+
+        var shift = new NesIr.Binary(
+            NesIr.BinaryOperator.ShiftLeft,
+            operand,
+            new NesIr.Constant(1),
+            operand);
+
+        var setBit0 = new NesIr.Binary(
+            NesIr.BinaryOperator.Or,
+            operand,
+            oldCarry,
+            operand);
+
+        var zero = ZeroFlagInstruction(operand);
+        var (checkNegative, setNegative) = NegativeFlagInstructions(operand, tempVariable);
+
+        return [copyCarry, compareLastBit, setCarry, shift, setBit0, zero, checkNegative, setNegative];
+    }
+
+    /// <summary>
+    /// Rotate right
+    /// </summary>
+    private static NesIr.Instruction[] ConvertRor(DisassembledInstruction instruction)
+    {
+        var operand = ParseAddress(instruction);
+        var oldCarry = new NesIr.Variable(0);
+        var tempVariable = new NesIr.Variable(1);
+
+        var copyCarry = new NesIr.Copy(new NesIr.Flag(NesIr.FlagName.Carry), oldCarry);
+        var compareLastBit = new NesIr.Binary(
+            NesIr.BinaryOperator.And,
+            operand,
+            new NesIr.Constant(0x01),
+            tempVariable);
+
+        var setCarry = new NesIr.Binary(
+            NesIr.BinaryOperator.Equals,
+            tempVariable,
+            new NesIr.Constant(0x01),
+            new NesIr.Flag(NesIr.FlagName.Carry));
+
+        var shiftOperand = new NesIr.Binary(
+            NesIr.BinaryOperator.ShiftRight,
+            operand,
+            new NesIr.Constant(1),
+            operand);
+
+        var shiftOldCarry = new NesIr.Binary(
+            NesIr.BinaryOperator.ShiftLeft,
+            oldCarry,
+            new NesIr.Constant(7),
+            oldCarry);
+
+        var setBit7 = new NesIr.Binary(
+            NesIr.BinaryOperator.Or,
+            operand,
+            oldCarry,
+            operand);
+
+        var zero = ZeroFlagInstruction(operand);
+        var (checkNegative, setNegative) = NegativeFlagInstructions(operand, tempVariable);
+
+        return
+        [
+            copyCarry, compareLastBit, setCarry, shiftOperand, shiftOldCarry, setBit7, zero, checkNegative, setNegative
+        ];
+    }
+
+    /// <summary>
+    /// Return from interrupt
+    /// </summary>
+    private static NesIr.Instruction[] ConvertRti()
+    {
+        var pop = new NesIr.PopStackValue(new NesIr.AllFlags());
+        var ret = new NesIr.Return();
+
+        return [pop, ret];
+    }
+
+    /// <summary>
+    /// Return from subroutine
+    /// </summary>
+    private static NesIr.Instruction[] ConvertRts()
+    {
+        var ret = new NesIr.Return();
+
+        return [ret];
     }
 
     private static NesIr.Value ParseAddress(DisassembledInstruction instruction)
