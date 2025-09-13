@@ -19,11 +19,17 @@ public static class NesIr
 
     public record Label(Identifier Name) : Instruction;
 
+    public record CallFunction(Identifier Name) : Instruction;
+
     public record Jump(Identifier Target) : Instruction;
 
     public record JumpIfZero(Value Condition, Identifier Target) : Instruction;
 
     public record JumpIfNotZero(Value Condition, Identifier Target) : Instruction;
+
+    public record PushStackValue(Value Source) : Instruction;
+
+    public record PopStackValue(Value Destination) : Instruction;
 
     public abstract record Value;
 
@@ -36,6 +42,8 @@ public static class NesIr
     public record Register(RegisterName Name) : Value;
 
     public record Flag(FlagName FlagName) : Value;
+
+    public record AllFlags : Value;
 
     public record Identifier(string Name);
     
