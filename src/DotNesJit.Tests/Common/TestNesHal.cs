@@ -55,6 +55,16 @@ public class TestNesHal : INesHal
         ProgramCounter = value;
     }
 
+    public void PushToStack(byte value)
+    {
+        throw new NotImplementedException();
+    }
+
+    public byte PopFromStack()
+    {
+        throw new NotImplementedException();
+    }
+
     public void TriggerSoftwareInterrupt()
     {
         throw new NotImplementedException();

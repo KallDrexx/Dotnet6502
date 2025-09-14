@@ -51,7 +51,7 @@ public static class NesIr
 
     public record StackPointer : Value;
 
-    public record Identifier(string Name);
+    public record Identifier(string Characters);
     
     public enum RegisterName { Accumulator, XIndex, YIndex }
 

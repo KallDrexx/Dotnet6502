@@ -9,18 +9,19 @@ public interface INesHal
     byte XRegister { get; set; }
     byte YRegister { get; set; }
     byte ProcessorStatus { get; set; }
+    byte StackPointer { get; set; }
 
     void SetFlag(CpuStatusFlags flag, bool value);
     bool GetFlag(CpuStatusFlags flag);
-
-    byte GetStackPointer();
-    void SetStackPointer(byte value);
 
     byte ReadMemory(ushort address);
     void WriteMemory(ushort address, byte value);
 
     ushort GetProgramCounter();
     void SetProgramCounter(ushort value);
+
+    void PushToStack(byte value);
+    byte PopFromStack();
 
     public void TriggerSoftwareInterrupt();
     public void JumpToAddress(ushort address);

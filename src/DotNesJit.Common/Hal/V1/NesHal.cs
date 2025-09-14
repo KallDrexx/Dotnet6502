@@ -136,6 +136,7 @@ public class NesHal : INesHal
     public byte XRegister { get; set; }
     public byte YRegister { get; set; }
     public byte ProcessorStatus { get; set; }
+    public byte StackPointer { get; set; }
 
     /// <summary>
     /// Sets a CPU status flag
@@ -320,7 +321,7 @@ public class NesHal : INesHal
 
             // Push current PC and status
             PushAddress(_programCounter);
-            PushStack(GetProcessorStatus());
+            PushToStack(GetProcessorStatus());
 
             // Set interrupt disable flag
             SetFlag(CpuStatusFlags.InterruptDisable, true);
@@ -354,7 +355,7 @@ public class NesHal : INesHal
             PushAddress(_programCounter);
             var status = GetProcessorStatus();
             status = (byte)(status & ~0x10); // Clear B flag for IRQ
-            PushStack(status);
+            PushToStack(status);
 
             // Set interrupt disable flag
             SetFlag(CpuStatusFlags.InterruptDisable, true);
@@ -892,10 +893,15 @@ public class NesHal : INesHal
     /// <summary>
     /// Pushes a byte onto the 6502 stack
     /// </summary>
-    public void PushStack(byte value)
+    public void PushToStack(byte value)
     {
         WriteMemory((ushort)(0x0100 + _stackPointer), value);
         _stackPointer--;
+    }
+
+    public byte PopFromStack()
+    {
+        throw new NotImplementedException();
     }
 
     /// <summary>
@@ -912,8 +918,8 @@ public class NesHal : INesHal
     /// </summary>
     public void PushAddress(ushort address)
     {
-        PushStack((byte)(address >> 8));   // High byte first
-        PushStack((byte)(address & 0xFF)); // Low byte second
+        PushToStack((byte)(address >> 8));   // High byte first
+        PushToStack((byte)(address & 0xFF)); // Low byte second
     }
 
     /// <summary>
@@ -1079,7 +1085,7 @@ public class NesHal : INesHal
 
         var status = GetProcessorStatus();
         status |= 0x10; // Set B flag
-        PushStack(status);
+        PushToStack(status);
 
         // Set interrupt disable flag
         SetFlag(CpuStatusFlags.InterruptDisable, true);

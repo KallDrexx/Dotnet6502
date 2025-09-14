@@ -123,7 +123,7 @@ public class StackHandlers : InstructionHandler
                     ilGenerator.Emit(OpCodes.Stloc, statusLocal);
 
                     // Push to stack using hardware method
-                    var pushStackMethod = typeof(NesHal).GetMethod(nameof(NesHal.PushStack));
+                    var pushStackMethod = typeof(NesHal).GetMethod(nameof(NesHal.PushToStack));
                     if (pushStackMethod != null)
                     {
                         ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
