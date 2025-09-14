@@ -13,6 +13,8 @@ public static class NesIr
 
     public record Return : Instruction;
 
+    public record Unary(UnaryOperator Operator, Value Source, Value Destination) : Instruction;
+
     public record Binary(BinaryOperator Operator, Value Left, Value Right, Value Destination) : Instruction;
 
     public record WrapValueToByte(Value PossibleOverflowedValue, Value FlagToSetIfOverflowed) : Instruction;
@@ -47,11 +49,15 @@ public static class NesIr
 
     public record AllFlags : Value;
 
+    public record StackPointer : Value;
+
     public record Identifier(string Name);
     
     public enum RegisterName { Accumulator, XIndex, YIndex }
 
     public enum FlagName { Carry, Zero, InterruptDisable, BFlag, Decimal, Overflow, Negative }
+
+    public enum UnaryOperator { BitwiseNot }
 
     public enum BinaryOperator
     {

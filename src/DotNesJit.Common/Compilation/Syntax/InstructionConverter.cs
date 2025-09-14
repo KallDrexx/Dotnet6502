@@ -61,6 +61,23 @@ public static class InstructionConverter
             case "PHP": results.AddRange(ConvertPhp()); break;
             case "PLA": results.AddRange(ConvertPla()); break;
             case "PLP": results.AddRange(ConvertPlp()); break;
+            case "ROL": results.AddRange(ConvertRol(instruction)); break;
+            case "ROR": results.AddRange(ConvertRor(instruction)); break;
+            case "RTI": results.AddRange(ConvertRti()); break;
+            case "RTS": results.AddRange(ConvertRts()); break;
+            case "SBC": results.AddRange(ConvertSbc(instruction)); break;
+            case "SEC": results.AddRange(ConvertSec()); break;
+            case "SED": results.AddRange(ConvertSed()); break;
+            case "SEI": results.AddRange(ConvertSei()); break;
+            case "STA": results.AddRange(ConvertSta(instruction)); break;
+            case "STX": results.AddRange(ConvertStx(instruction)); break;
+            case "STY": results.AddRange(ConvertSty(instruction)); break;
+            case "TAX": results.AddRange(ConvertTax()); break;
+            case "TAY": results.AddRange(ConvertTay()); break;
+            case "TSX": results.AddRange(ConvertTsx()); break;
+            case "TXA": results.AddRange(ConvertTxa()); break;
+            case "TXS": results.AddRange(ConvertTxs()); break;
+            case "TYA": results.AddRange(ConvertTya()); break;
 
             default:
                 throw new NotSupportedException(instruction.Info.Mnemonic);
@@ -821,6 +838,212 @@ public static class InstructionConverter
         var ret = new NesIr.Return();
 
         return [ret];
+    }
+
+    /// <summary>
+    /// Subtract with carry
+    /// </summary>
+    private static NesIr.Instruction[] ConvertSbc(DisassembledInstruction instruction)
+    {
+        var accumulator = new NesIr.Register(NesIr.RegisterName.Accumulator);
+        var operand = ParseAddress(instruction);
+        var subVariable = new NesIr.Variable(0);
+        var tempVariable = new NesIr.Variable(1);
+
+        var notCarry = new NesIr.Unary(
+            NesIr.UnaryOperator.BitwiseNot,
+            new NesIr.Flag(NesIr.FlagName.Carry),
+            tempVariable);
+
+        var subtractOperand = new NesIr.Binary(
+            NesIr.BinaryOperator.Subtract,
+            accumulator,
+            operand,
+            subVariable);
+
+        var subtractNotCarry = new NesIr.Binary(
+            NesIr.BinaryOperator.Subtract,
+            accumulator,
+            tempVariable,
+            subVariable);
+
+        // This is normally calculated as ~(result < $00), i.e. carry if it didn't underflow.
+        // Since the MSIL variables are more than one byte, we know it didn't underflow if it's
+        // still under 255 (I think?).
+        var carryCheck = new NesIr.Binary(
+            NesIr.BinaryOperator.LessThanOrEqualTo,
+            subVariable,
+            new NesIr.Constant(255),
+            new NesIr.Flag(NesIr.FlagName.Carry));
+
+        var adjustForOverflow = new NesIr.WrapValueToByte(subVariable, new NesIr.Flag(NesIr.FlagName.Overflow));
+        var setAccumulator = new NesIr.Copy(subVariable, accumulator);
+        var zero = ZeroFlagInstruction(accumulator);
+        var (checkNegative, setNegative) = NegativeFlagInstructions(accumulator, tempVariable);
+
+        return
+        [
+            notCarry, subtractOperand, subtractNotCarry, carryCheck, adjustForOverflow, setAccumulator, zero,
+            checkNegative, setNegative
+        ];
+    }
+
+    /// <summary>
+    /// Set Carry
+    /// </summary>
+    private static NesIr.Instruction[] ConvertSec()
+    {
+        var copy = new NesIr.Copy(new NesIr.Constant(1), new NesIr.Flag(NesIr.FlagName.Carry));
+
+        return [copy];
+    }
+
+    /// <summary>
+    /// Set Decimal
+    /// </summary>
+    private static NesIr.Instruction[] ConvertSed()
+    {
+        var copy = new NesIr.Copy(new NesIr.Constant(1), new NesIr.Flag(NesIr.FlagName.Decimal));
+
+        return [copy];
+    }
+
+    /// <summary>
+    /// Set interrupt disable
+    /// </summary>
+    private static NesIr.Instruction[] ConvertSei()
+    {
+        var copy = new NesIr.Copy(new NesIr.Constant(1), new NesIr.Flag(NesIr.FlagName.InterruptDisable));
+
+        return [copy];
+    }
+
+    /// <summary>
+    /// Store A
+    /// </summary>
+    private static NesIr.Instruction[] ConvertSta(DisassembledInstruction instruction)
+    {
+        var register = new NesIr.Register(NesIr.RegisterName.Accumulator);
+        var operand = ParseAddress(instruction);
+        var copy = new NesIr.Copy(register, operand);
+
+        return [copy];
+    }
+
+    /// <summary>
+    /// Store X
+    /// </summary>
+    private static NesIr.Instruction[] ConvertStx(DisassembledInstruction instruction)
+    {
+        var register = new NesIr.Register(NesIr.RegisterName.XIndex);
+        var operand = ParseAddress(instruction);
+        var copy = new NesIr.Copy(register, operand);
+
+        return [copy];
+    }
+
+    /// <summary>
+    /// Store Y
+    /// </summary>
+    private static NesIr.Instruction[] ConvertSty(DisassembledInstruction instruction)
+    {
+        var register = new NesIr.Register(NesIr.RegisterName.YIndex);
+        var operand = ParseAddress(instruction);
+        var copy = new NesIr.Copy(register, operand);
+
+        return [copy];
+    }
+
+    /// <summary>
+    /// Transfer A To X
+    /// </summary>
+    private static NesIr.Instruction[] ConvertTax()
+    {
+        var source = new NesIr.Register(NesIr.RegisterName.Accumulator);
+        var dest = new NesIr.Register(NesIr.RegisterName.XIndex);
+        var copy = new NesIr.Copy(source, dest);
+
+        var tempVariable = new NesIr.Variable(0);
+        var zero = ZeroFlagInstruction(dest);
+        var (checkNegative, setNegative) = NegativeFlagInstructions(dest, tempVariable);
+
+        return [copy, zero, checkNegative, setNegative];
+    }
+
+    /// <summary>
+    /// Transfer A To Y
+    /// </summary>
+    private static NesIr.Instruction[] ConvertTay()
+    {
+        var source = new NesIr.Register(NesIr.RegisterName.Accumulator);
+        var dest = new NesIr.Register(NesIr.RegisterName.YIndex);
+        var copy = new NesIr.Copy(source, dest);
+
+        var tempVariable = new NesIr.Variable(0);
+        var zero = ZeroFlagInstruction(dest);
+        var (checkNegative, setNegative) = NegativeFlagInstructions(dest, tempVariable);
+
+        return [copy, zero, checkNegative, setNegative];
+    }
+
+    /// <summary>
+    /// Transfer stack pointer to X
+    /// </summary>
+    private static NesIr.Instruction[] ConvertTsx()
+    {
+        var source = new NesIr.StackPointer();
+        var dest = new NesIr.Register(NesIr.RegisterName.YIndex);
+        var copy = new NesIr.Copy(source, dest);
+
+        var tempVariable = new NesIr.Variable(0);
+        var zero = ZeroFlagInstruction(dest);
+        var (checkNegative, setNegative) = NegativeFlagInstructions(dest, tempVariable);
+
+        return [copy, zero, checkNegative, setNegative];
+    }
+
+    /// <summary>
+    /// Transfer X To A
+    /// </summary>
+    private static NesIr.Instruction[] ConvertTxa()
+    {
+        var source = new NesIr.Register(NesIr.RegisterName.XIndex);
+        var dest = new NesIr.Register(NesIr.RegisterName.Accumulator);
+        var copy = new NesIr.Copy(source, dest);
+
+        var tempVariable = new NesIr.Variable(0);
+        var zero = ZeroFlagInstruction(dest);
+        var (checkNegative, setNegative) = NegativeFlagInstructions(dest, tempVariable);
+
+        return [copy, zero, checkNegative, setNegative];
+    }
+
+    /// <summary>
+    /// Transfer X To stack pointer
+    /// </summary>
+    private static NesIr.Instruction[] ConvertTxs()
+    {
+        var source = new NesIr.Register(NesIr.RegisterName.XIndex);
+        var dest = new NesIr.StackPointer();
+        var copy = new NesIr.Copy(source, dest);
+
+        return [copy];
+    }
+
+    /// <summary>
+    /// Transfer Y To A
+    /// </summary>
+    private static NesIr.Instruction[] ConvertTya()
+    {
+        var source = new NesIr.Register(NesIr.RegisterName.Accumulator);
+        var dest = new NesIr.Register(NesIr.RegisterName.YIndex);
+        var copy = new NesIr.Copy(source, dest);
+
+        var tempVariable = new NesIr.Variable(0);
+        var zero = ZeroFlagInstruction(dest);
+        var (checkNegative, setNegative) = NegativeFlagInstructions(dest, tempVariable);
+
+        return [copy, zero, checkNegative, setNegative];
     }
 
     private static NesIr.Value ParseAddress(DisassembledInstruction instruction)
