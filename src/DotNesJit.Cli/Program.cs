@@ -70,7 +70,7 @@ try
 
     try
     {
-        var builder = new NesAssemblyBuilder(Path.GetFileNameWithoutExtension(romFile.Name), decompiler);
+        var builder = new NesGameClass(Path.GetFileNameWithoutExtension(romFile.Name), decompiler, disassembler);
 
         var outputDir = commandLineValues.OutputDirectory ?? romFile.DirectoryName!;
         dllFileName = Path.Combine(outputDir, Path.GetFileNameWithoutExtension(romFile.Name) + ".dll");
@@ -93,7 +93,7 @@ try
             try
             {
                 using var dllFile = File.Create(dllFileName);
-                builder.Save(dllFile);
+                builder.WriteAssemblyTo(dllFile);
                 dllFile.Close();
                 Console.WriteLine($"  [CHECKMARK] Generated: {dllFileName}");
             }

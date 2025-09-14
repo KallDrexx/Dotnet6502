@@ -100,11 +100,11 @@ namespace DotNesJit.Common.Hal.V1
                 var decompiler = new Decompiler(romInfo, disassembler);
                 decompiler.Decompile();
 
-                var builder = new NesAssemblyBuilder("JITGame", decompiler);
+                var gameClass = new NesGameClass("JitGame", decompiler, disassembler);
 
                 // Save to memory stream and load
                 using var memoryStream = new MemoryStream();
-                builder.Save(memoryStream);
+                gameClass.WriteAssemblyTo(memoryStream);
 
                 _jitAssembly = Assembly.Load(memoryStream.ToArray());
 

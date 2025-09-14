@@ -7,8 +7,6 @@ public static class NesIr
 {
     public abstract record Instruction;
 
-    public record Function(Identifier Name, ushort Address, IReadOnlyList<Instruction> Instructions);
-
     public record Copy(Value Source, Value Destination) : Instruction;
 
     public record Return : Instruction;

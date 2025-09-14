@@ -1,5 +1,6 @@
 using System.Reflection.Emit;
 using DotNesJit.Common.Hal;
+using DotNesJit.Common.Hal.V1;
 
 namespace DotNesJit.Common.Compilation;
 
@@ -23,24 +24,24 @@ public class MsilGenerator
         _labels = labels;
     }
 
-    public void Generate(NesIr.Instruction instruction, ILGenerator ilGenerator, GameClass gameClass)
+    public void Generate(NesIr.Instruction instruction, ILGenerator ilGenerator, NesGameClass nesGameClass)
     {
         switch (instruction)
         {
             case NesIr.Binary binary:
-                GenerateBinary(binary, ilGenerator, gameClass);
+                GenerateBinary(binary, ilGenerator, nesGameClass);
                 break;
 
             case NesIr.CallFunction callFunction:
-                GenerateCallFunction(callFunction, ilGenerator, gameClass);
+                GenerateCallFunction(callFunction, ilGenerator, nesGameClass);
                 break;
 
             case NesIr.Copy copy:
-                GenerateCopy(copy, ilGenerator, gameClass);
+                GenerateCopy(copy, ilGenerator, nesGameClass);
                 break;
 
             case NesIr.InvokeSoftwareInterrupt:
-                GenerateInvokeIrq(ilGenerator, gameClass);
+                GenerateInvokeIrq(ilGenerator, nesGameClass);
                 break;
 
             case NesIr.Jump jump:
@@ -48,11 +49,11 @@ public class MsilGenerator
                 break;
 
             case NesIr.JumpIfNotZero jump:
-                GenerateJumpIfNotZero(jump, ilGenerator, gameClass);
+                GenerateJumpIfNotZero(jump, ilGenerator, nesGameClass);
                 break;
 
             case NesIr.JumpIfZero jump:
-                GenerateJumpIfZero(jump, ilGenerator, gameClass);
+                GenerateJumpIfZero(jump, ilGenerator, nesGameClass);
                 break;
 
             case NesIr.Label label:
@@ -60,11 +61,11 @@ public class MsilGenerator
                 break;
 
             case NesIr.PopStackValue pop:
-                GeneratePopStackValue(pop, ilGenerator, gameClass);
+                GeneratePopStackValue(pop, ilGenerator, nesGameClass);
                 break;
 
             case NesIr.PushStackValue push:
-                GeneratePushStackValue(push, ilGenerator, gameClass);
+                GeneratePushStackValue(push, ilGenerator, nesGameClass);
                 break;
 
             case NesIr.Return:
@@ -72,11 +73,11 @@ public class MsilGenerator
                 break;
 
             case NesIr.Unary unary:
-                GenerateUnary(unary, ilGenerator, gameClass);
+                GenerateUnary(unary, ilGenerator, nesGameClass);
                 break;
 
             case NesIr.WrapValueToByte wrap:
-                GenerateWrapToByte(wrap, ilGenerator, gameClass);
+                GenerateWrapToByte(wrap, ilGenerator, nesGameClass);
                 break;
 
             default:
@@ -84,13 +85,13 @@ public class MsilGenerator
         }
     }
 
-    private static void GenerateBinary(NesIr.Binary binary, ILGenerator ilGenerator, GameClass gameClass)
+    private static void GenerateBinary(NesIr.Binary binary, ILGenerator ilGenerator, NesGameClass nesGameClass)
     {
-        LoadValueToStack(binary.Left, ilGenerator, gameClass);
-        LoadValueToStack(binary.Right, ilGenerator, gameClass);
+        LoadValueToStack(binary.Left, ilGenerator, nesGameClass);
+        LoadValueToStack(binary.Right, ilGenerator, nesGameClass);
         EmitBinaryOperator();
         SaveStackToTempLocal(ilGenerator);
-        WriteTempLocalToValue(binary.Destination, ilGenerator, gameClass);
+        WriteTempLocalToValue(binary.Destination, ilGenerator, nesGameClass);
         return;
 
         void EmitBinaryOperator()
@@ -158,29 +159,38 @@ public class MsilGenerator
         }
     }
 
-    private static void GenerateCallFunction(NesIr.CallFunction callFunction, ILGenerator ilGenerator, GameClass gameClass)
+    private static void GenerateCallFunction(NesIr.CallFunction callFunction, ILGenerator ilGenerator, NesGameClass nesGameClass)
     {
-        if (!gameClass.NesMethods.TryGetValue(callFunction.Name.Characters, out var methodInfo))
+        var methodInfo = nesGameClass.GetMethodInfo(callFunction.Name.Characters);
+        if (methodInfo == null)
         {
             var message = $"No known method with the name '{callFunction.Name.Characters}' exists";
             throw new InvalidOperationException(message);
         }
 
-        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
+        ilGenerator.Emit(OpCodes.Ldsfld, nesGameClass.HardwareField);
         ilGenerator.Emit(OpCodes.Callvirt, methodInfo);
     }
 
-    private static void GenerateCopy(NesIr.Copy copy, ILGenerator ilGenerator, GameClass gameClass)
+    private static void GenerateCopy(NesIr.Copy copy, ILGenerator ilGenerator, NesGameClass nesGameClass)
     {
-        LoadValueToStack(copy.Source, ilGenerator, gameClass);
+        ilGenerator.Emit(OpCodes.Ldstr, "LoadValueToStack");
+        ilGenerator.Emit(OpCodes.Pop);
+        LoadValueToStack(copy.Source, ilGenerator, nesGameClass);
+        ilGenerator.Emit(OpCodes.Ldstr, "SaveStackToTempLocal");
+        ilGenerator.Emit(OpCodes.Pop);
         SaveStackToTempLocal(ilGenerator);
-        WriteTempLocalToValue(copy.Destination, ilGenerator, gameClass);
+        ilGenerator.Emit(OpCodes.Ldstr, "WriteTempLocalToValue");
+        ilGenerator.Emit(OpCodes.Pop);
+        WriteTempLocalToValue(copy.Destination, ilGenerator, nesGameClass);
+        ilGenerator.Emit(OpCodes.Ldstr, "Done");
+        ilGenerator.Emit(OpCodes.Pop);
     }
 
-    private static void GenerateInvokeIrq(ILGenerator ilGenerator, GameClass gameClass)
+    private static void GenerateInvokeIrq(ILGenerator ilGenerator, NesGameClass nesGameClass)
     {
         var invokeMethod = typeof(INesHal).GetMethod(nameof(INesHal.TriggerSoftwareInterrupt))!;
-        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
+        ilGenerator.Emit(OpCodes.Ldsfld, nesGameClass.HardwareField);
         ilGenerator.Emit(OpCodes.Callvirt, invokeMethod);
     }
 
@@ -195,7 +205,7 @@ public class MsilGenerator
         ilGenerator.Emit(OpCodes.Br, label);
     }
 
-    private void GenerateJumpIfZero(NesIr.JumpIfZero jump, ILGenerator ilGenerator, GameClass gameClass)
+    private void GenerateJumpIfZero(NesIr.JumpIfZero jump, ILGenerator ilGenerator, NesGameClass nesGameClass)
     {
         if (!_labels.TryGetValue(jump.Target, out var label))
         {
@@ -203,11 +213,11 @@ public class MsilGenerator
             throw new InvalidOperationException(message);
         }
 
-        LoadValueToStack(jump.Condition, ilGenerator, gameClass);
+        LoadValueToStack(jump.Condition, ilGenerator, nesGameClass);
         ilGenerator.Emit(OpCodes.Brfalse, label);
     }
 
-    private void GenerateJumpIfNotZero(NesIr.JumpIfNotZero jump, ILGenerator ilGenerator, GameClass gameClass)
+    private void GenerateJumpIfNotZero(NesIr.JumpIfNotZero jump, ILGenerator ilGenerator, NesGameClass nesGameClass)
     {
         if (!_labels.TryGetValue(jump.Target, out var label))
         {
@@ -215,7 +225,7 @@ public class MsilGenerator
             throw new InvalidOperationException(message);
         }
 
-        LoadValueToStack(jump.Condition, ilGenerator, gameClass);
+        LoadValueToStack(jump.Condition, ilGenerator, nesGameClass);
         ilGenerator.Emit(OpCodes.Brtrue, label);
     }
 
@@ -233,20 +243,20 @@ public class MsilGenerator
         ilGenerator.MarkLabel(ilLabel);
     }
 
-    private static void GeneratePopStackValue(NesIr.PopStackValue pop, ILGenerator ilGenerator, GameClass gameClass)
+    private static void GeneratePopStackValue(NesIr.PopStackValue pop, ILGenerator ilGenerator, NesGameClass nesGameClass)
     {
         var popMethod = typeof(INesHal).GetMethod(nameof(INesHal.PopFromStack))!;
-        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
+        ilGenerator.Emit(OpCodes.Ldsfld, nesGameClass.HardwareField);
         ilGenerator.Emit(OpCodes.Callvirt, popMethod);
         SaveStackToTempLocal(ilGenerator);
-        WriteTempLocalToValue(pop.Destination, ilGenerator, gameClass);
+        WriteTempLocalToValue(pop.Destination, ilGenerator, nesGameClass);
     }
 
-    private static void GeneratePushStackValue(NesIr.PushStackValue push, ILGenerator ilGenerator, GameClass gameClass)
+    private static void GeneratePushStackValue(NesIr.PushStackValue push, ILGenerator ilGenerator, NesGameClass nesGameClass)
     {
         var pushMethod = typeof(INesHal).GetMethod(nameof(INesHal.PushToStack))!;
-        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
-        LoadValueToStack(push.Source, ilGenerator, gameClass);
+        ilGenerator.Emit(OpCodes.Ldsfld, nesGameClass.HardwareField);
+        LoadValueToStack(push.Source, ilGenerator, nesGameClass);
         ilGenerator.Emit(OpCodes.Callvirt, pushMethod);
     }
 
@@ -255,9 +265,9 @@ public class MsilGenerator
         ilGenerator.Emit(OpCodes.Ret);
     }
 
-    private static void GenerateUnary(NesIr.Unary unary, ILGenerator ilGenerator, GameClass gameClass)
+    private static void GenerateUnary(NesIr.Unary unary, ILGenerator ilGenerator, NesGameClass nesGameClass)
     {
-        LoadValueToStack(unary.Source, ilGenerator, gameClass);
+        LoadValueToStack(unary.Source, ilGenerator, nesGameClass);
 
         switch (unary.Operator)
         {
@@ -270,15 +280,15 @@ public class MsilGenerator
         }
         
         SaveStackToTempLocal(ilGenerator);
-        WriteTempLocalToValue(unary.Destination, ilGenerator, gameClass);
+        WriteTempLocalToValue(unary.Destination, ilGenerator, nesGameClass);
     }
 
-    private static void GenerateWrapToByte(NesIr.WrapValueToByte wrap, ILGenerator ilGenerator, GameClass gameClass)
+    private static void GenerateWrapToByte(NesIr.WrapValueToByte wrap, ILGenerator ilGenerator, NesGameClass nesGameClass)
     {
         throw new NotImplementedException();
     }
     
-    private static void LoadValueToStack(NesIr.Value value, ILGenerator ilGenerator, GameClass gameClass)
+    private static void LoadValueToStack(NesIr.Value value, ILGenerator ilGenerator, NesGameClass nesGameClass)
     {
         switch (value)
         {
@@ -287,17 +297,17 @@ public class MsilGenerator
                     .GetProperty(nameof(INesHal.ProcessorStatus))!
                     .GetMethod!;
 
-                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
+                ilGenerator.Emit(OpCodes.Ldsfld, nesGameClass.HardwareField);
                 ilGenerator.Emit(OpCodes.Callvirt, getStatusMethod);
                 break;
 
             case NesIr.Constant constant:
-                ilGenerator.Emit(OpCodes.Ldc_I4, constant.Number);
+                ilGenerator.Emit(OpCodes.Ldc_I4, (int)constant.Number);
                 break;
 
             case NesIr.Flag flag:
                 var getFlagMethod = typeof(INesHal).GetMethod(nameof(INesHal.GetFlag))!;
-                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
+                ilGenerator.Emit(OpCodes.Ldsfld, nesGameClass.HardwareField);
                 ilGenerator.Emit(OpCodes.Ldc_I4, (int)flag.FlagName);
                 ilGenerator.Emit(OpCodes.Callvirt, getFlagMethod);
                 break;
@@ -305,12 +315,12 @@ public class MsilGenerator
             case NesIr.Memory memory:
                 var readMemoryMethod = typeof(INesHal).GetMethod(nameof(INesHal.ReadMemory))!;
 
-                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
+                ilGenerator.Emit(OpCodes.Ldsfld, nesGameClass.HardwareField);
                 ilGenerator.Emit(OpCodes.Ldc_I4, memory.Address);
 
                 if (memory.RegisterToAdd != null)
                 {
-                    LoadRegisterToStack(memory.RegisterToAdd.Value, ilGenerator, gameClass);
+                    LoadRegisterToStack(memory.RegisterToAdd.Value, ilGenerator, nesGameClass);
                     ilGenerator.Emit(OpCodes.Add);
                 }
 
@@ -318,7 +328,7 @@ public class MsilGenerator
                 break;
 
             case NesIr.Register register:
-                LoadRegisterToStack(register.Name, ilGenerator, gameClass);
+                LoadRegisterToStack(register.Name, ilGenerator, nesGameClass);
                 break;
 
             case NesIr.StackPointer:
@@ -326,7 +336,7 @@ public class MsilGenerator
                     .GetProperty(nameof(INesHal.StackPointer))!
                     .GetMethod!;
 
-                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
+                ilGenerator.Emit(OpCodes.Ldsfld, nesGameClass.HardwareField);
                 ilGenerator.Emit(OpCodes.Callvirt, getStackPointerMethod);
                 break;
 
@@ -339,7 +349,7 @@ public class MsilGenerator
         }
     }
 
-    private static void WriteTempLocalToValue(NesIr.Value destination, ILGenerator ilGenerator, GameClass gameClass)
+    private static void WriteTempLocalToValue(NesIr.Value destination, ILGenerator ilGenerator, NesGameClass nesGameClass)
     {
         switch (destination)
         {
@@ -348,7 +358,7 @@ public class MsilGenerator
                     .GetProperty(nameof(INesHal.ProcessorStatus))!
                     .SetMethod!;
 
-                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
+                ilGenerator.Emit(OpCodes.Ldsfld, nesGameClass.HardwareField);
                 LoadTempLocalToStack(ilGenerator);
                 ilGenerator.Emit(OpCodes.Callvirt, setStatusMethod);
                 break;
@@ -358,7 +368,7 @@ public class MsilGenerator
 
             case NesIr.Flag flag:
                 var setFlagMethod = typeof(INesHal).GetMethod(nameof(INesHal.SetFlag))!;
-                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
+                ilGenerator.Emit(OpCodes.Ldsfld, nesGameClass.HardwareField);
                 ilGenerator.Emit(OpCodes.Ldc_I4, (int)flag.FlagName);
                 LoadTempLocalToStack(ilGenerator);
                 ilGenerator.Emit(OpCodes.Callvirt, setFlagMethod);
@@ -367,12 +377,12 @@ public class MsilGenerator
             case NesIr.Memory memory:
                 var writeMemoryMethod = typeof(INesHal).GetMethod(nameof(INesHal.WriteMemory))!;
 
-                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
+                ilGenerator.Emit(OpCodes.Ldsfld, nesGameClass.HardwareField);
                 ilGenerator.Emit(OpCodes.Ldc_I4, memory.Address);
 
                 if (memory.RegisterToAdd != null)
                 {
-                    LoadRegisterToStack(memory.RegisterToAdd.Value, ilGenerator, gameClass);
+                    LoadRegisterToStack(memory.RegisterToAdd.Value, ilGenerator, nesGameClass);
                     ilGenerator.Emit(OpCodes.Add);
                 }
 
@@ -398,7 +408,7 @@ public class MsilGenerator
                     _ => throw new NotSupportedException(register.Name.ToString()),
                 };
 
-                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
+                ilGenerator.Emit(OpCodes.Ldsfld, nesGameClass.HardwareField);
                 LoadTempLocalToStack(ilGenerator);
                 ilGenerator.Emit(OpCodes.Callvirt, setMethod);
 
@@ -409,7 +419,7 @@ public class MsilGenerator
                     .GetProperty(nameof(INesHal.StackPointer))!
                     .SetMethod!;
 
-                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
+                ilGenerator.Emit(OpCodes.Ldsfld, nesGameClass.HardwareField);
                 LoadTempLocalToStack(ilGenerator);
                 ilGenerator.Emit(OpCodes.Callvirt, setStackPointerMethod);
                 break;
@@ -429,7 +439,7 @@ public class MsilGenerator
     private static void LoadRegisterToStack(
         NesIr.RegisterName registerName,
         ILGenerator ilGenerator,
-        GameClass gameClass)
+        NesGameClass nesGameClass)
     {
         var getMethod = registerName switch
         {
@@ -448,7 +458,7 @@ public class MsilGenerator
             _ => throw new NotSupportedException(registerName.ToString()),
         };
 
-        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
+        ilGenerator.Emit(OpCodes.Ldsfld, nesGameClass.HardwareField);
         ilGenerator.Emit(OpCodes.Callvirt, getMethod);
     }
 }
