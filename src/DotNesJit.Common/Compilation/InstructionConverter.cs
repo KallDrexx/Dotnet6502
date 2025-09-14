@@ -2,7 +2,7 @@ using NESDecompiler.Core.CPU;
 using NESDecompiler.Core.Decompilation;
 using NESDecompiler.Core.Disassembly;
 
-namespace DotNesJit.Common.Compilation.Syntax;
+namespace DotNesJit.Common.Compilation;
 
 /// <summary>
 /// Converts a disassembled 6502 instruction into an AST instruction

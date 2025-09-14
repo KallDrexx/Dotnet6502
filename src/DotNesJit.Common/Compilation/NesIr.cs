@@ -1,4 +1,4 @@
-namespace DotNesJit.Common.Compilation.Syntax;
+namespace DotNesJit.Common.Compilation;
 
 /// <summary>
 /// Intermediary representation of NES (6502) instructions
