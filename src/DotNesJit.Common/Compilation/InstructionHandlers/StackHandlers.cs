@@ -41,7 +41,7 @@ public class StackHandlers : InstructionHandler
                 IlUtils.AddMsilComment(ilGenerator, "Push accumulator to stack");
 
                 // Get current stack pointer
-                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
 
                 // Load stack base address (0x0100)
                 ilGenerator.Emit(OpCodes.Ldc_I4, 0x0100);
@@ -90,7 +90,7 @@ public class StackHandlers : InstructionHandler
                 ilGenerator.Emit(OpCodes.Stloc, addressLocal);
 
                 // Read from memory
-                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
                 ilGenerator.Emit(OpCodes.Ldloc, addressLocal); // Load address
                 var readMemoryMethod = typeof(NesHal).GetMethod(nameof(NesHal.ReadMemory));
                 if (readMemoryMethod != null)
@@ -116,7 +116,7 @@ public class StackHandlers : InstructionHandler
                 var getStatusMethod = typeof(NesHal).GetMethod(nameof(NesHal.GetProcessorStatus));
                 if (getStatusMethod != null)
                 {
-                    ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+                    ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
                     ilGenerator.Emit(OpCodes.Callvirt, getStatusMethod);
 
                     var statusLocal = ilGenerator.DeclareLocal(typeof(byte));
@@ -126,7 +126,7 @@ public class StackHandlers : InstructionHandler
                     var pushStackMethod = typeof(NesHal).GetMethod(nameof(NesHal.PushStack));
                     if (pushStackMethod != null)
                     {
-                        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+                        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
                         ilGenerator.Emit(OpCodes.Ldloc, statusLocal); // Load status value
                         ilGenerator.Emit(OpCodes.Callvirt, pushStackMethod);
                     }
@@ -143,14 +143,14 @@ public class StackHandlers : InstructionHandler
                 if (pullStackMethod != null && setStatusMethod != null)
                 {
                     // Pull value from stack
-                    ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+                    ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
                     ilGenerator.Emit(OpCodes.Callvirt, pullStackMethod);
 
                     var statusLocal = ilGenerator.DeclareLocal(typeof(byte));
                     ilGenerator.Emit(OpCodes.Stloc, statusLocal);
 
                     // Set processor status
-                    ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+                    ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
                     ilGenerator.Emit(OpCodes.Ldloc, statusLocal); // Load status value
                     ilGenerator.Emit(OpCodes.Callvirt, setStatusMethod);
                 }

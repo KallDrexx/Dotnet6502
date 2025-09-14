@@ -48,7 +48,7 @@ public class LoadHandlers : InstructionHandler
         }
 
         // Load hardware instance and address onto stack
-        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
         IlUtils.LoadAddressToStack(instruction, gameClass, ilGenerator);
         ilGenerator.Emit(OpCodes.Callvirt, getMemoryValueMethod);
 

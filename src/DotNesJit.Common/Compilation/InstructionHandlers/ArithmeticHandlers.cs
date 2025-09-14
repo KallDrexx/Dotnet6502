@@ -74,7 +74,7 @@ public class ArithmeticHandlers : InstructionHandler
     private void HandleRegisterIncrement(ILGenerator ilGenerator, PropertyInfo register, GameClass gameClass, string regName)
     {
         // Load current register value
-        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
         ilGenerator.Emit(OpCodes.Callvirt, register.GetMethod!);
 
         ilGenerator.Emit(OpCodes.Ldc_I4_1);
@@ -86,7 +86,7 @@ public class ArithmeticHandlers : InstructionHandler
         ilGenerator.Emit(OpCodes.Stloc, local);
 
         // Store back to register and prepare for flag updates
-        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
         ilGenerator.Emit(OpCodes.Ldloc, local);
         ilGenerator.Emit(OpCodes.Callvirt, register.SetMethod!);
 
@@ -143,7 +143,7 @@ public class ArithmeticHandlers : InstructionHandler
             var readMemoryMethod = typeof(NesHal).GetMethod(nameof(NesHal.ReadMemory));
             if (readMemoryMethod != null)
             {
-                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
                 IlUtils.LoadAddressToStack(instruction, gameClass, ilGenerator);
                 ilGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
             }
@@ -154,7 +154,7 @@ public class ArithmeticHandlers : InstructionHandler
         }
 
         // Load carry flag value
-        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
         ilGenerator.Emit(OpCodes.Ldc_I4, (int)CpuStatusFlags.Carry);
         ilGenerator.Emit(OpCodes.Callvirt, getFlagMethod);
 
@@ -182,7 +182,7 @@ public class ArithmeticHandlers : InstructionHandler
         ilGenerator.Emit(OpCodes.Cgt);
         ilGenerator.Emit(OpCodes.Stloc, compareLocal);
 
-        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
         ilGenerator.Emit(OpCodes.Ldc_I4, (int)CpuStatusFlags.Carry);
         ilGenerator.Emit(OpCodes.Ldloc, compareLocal);
         ilGenerator.Emit(OpCodes.Callvirt, setFlagMethod);
@@ -228,7 +228,7 @@ public class ArithmeticHandlers : InstructionHandler
             var readMemoryMethod = typeof(NesHal).GetMethod(nameof(NesHal.ReadMemory));
             if (readMemoryMethod != null)
             {
-                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
                 IlUtils.LoadAddressToStack(instruction, gameClass, ilGenerator);
                 ilGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
             }
@@ -239,7 +239,7 @@ public class ArithmeticHandlers : InstructionHandler
         }
 
         // Load carry flag (inverted for borrow: 0 = borrow, 1 = no borrow)
-        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
         ilGenerator.Emit(OpCodes.Ldc_I4, (int)CpuStatusFlags.Carry);
         ilGenerator.Emit(OpCodes.Callvirt, getFlagMethod);
 
@@ -269,7 +269,7 @@ public class ArithmeticHandlers : InstructionHandler
         ilGenerator.Emit(OpCodes.Xor); // Invert: 0 if result < 0, 1 if result >= 0
         ilGenerator.Emit(OpCodes.Stloc, compareLocal);
 
-        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
         ilGenerator.Emit(OpCodes.Ldc_I4, (int)CpuStatusFlags.Carry);
         ilGenerator.Emit(OpCodes.Ldloc, compareLocal);
         ilGenerator.Emit(OpCodes.Callvirt, setFlagMethod);
@@ -359,12 +359,12 @@ public class ArithmeticHandlers : InstructionHandler
         var valueLocal = ilGenerator.DeclareLocal(typeof(byte));
 
         // Calculate and store address
-        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
         IlUtils.LoadAddressToStack(instruction, gameClass, ilGenerator);
         ilGenerator.Emit(OpCodes.Stloc, addressLocal);
 
         // Read current value
-        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
         ilGenerator.Emit(OpCodes.Ldloc, addressLocal);
         ilGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
 
@@ -376,7 +376,7 @@ public class ArithmeticHandlers : InstructionHandler
         ilGenerator.Emit(OpCodes.Stloc, valueLocal);
 
         // Write back to memory
-        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
         ilGenerator.Emit(OpCodes.Ldloc, addressLocal);
         ilGenerator.Emit(OpCodes.Ldloc, valueLocal);
         ilGenerator.Emit(OpCodes.Callvirt, writeMemoryMethod);
@@ -403,12 +403,12 @@ public class ArithmeticHandlers : InstructionHandler
         var valueLocal = ilGenerator.DeclareLocal(typeof(byte));
 
         // Calculate and store address
-        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
         IlUtils.LoadAddressToStack(instruction, gameClass, ilGenerator);
         ilGenerator.Emit(OpCodes.Stloc, addressLocal);
 
         // Read current value
-        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
         ilGenerator.Emit(OpCodes.Ldloc, addressLocal);
         ilGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
 
@@ -420,7 +420,7 @@ public class ArithmeticHandlers : InstructionHandler
         ilGenerator.Emit(OpCodes.Stloc, valueLocal);
 
         // Write back to memory
-        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
         ilGenerator.Emit(OpCodes.Ldloc, addressLocal);
         ilGenerator.Emit(OpCodes.Ldloc, valueLocal);
         ilGenerator.Emit(OpCodes.Callvirt, writeMemoryMethod);
@@ -443,7 +443,7 @@ public class ArithmeticHandlers : InstructionHandler
             var readMemoryMethod = typeof(NesHal).GetMethod(nameof(NesHal.ReadMemory));
             if (readMemoryMethod != null)
             {
-                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
                 IlUtils.LoadAddressToStack(instruction, gameClass, ilGenerator);
                 ilGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
             }

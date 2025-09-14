@@ -7,13 +7,13 @@ public class TestNesHal : INesHal
 {
     public Dictionary<CpuStatusFlags, bool> Flags { get; } = new();
     public Dictionary<ushort, byte> MemoryValues { get; } = new();
-    public byte FullStatusValue { get; set; }
     public byte StackPointer { get; set; }
     public ushort ProgramCounter { get; set; }
 
     public byte ARegister { get; set; }
     public byte XRegister { get; set; }
     public byte YRegister { get; set; }
+    public byte ProcessorStatus { get; set; }
 
     public void SetFlag(CpuStatusFlags flag, bool value)
     {
@@ -23,16 +23,6 @@ public class TestNesHal : INesHal
     public bool GetFlag(CpuStatusFlags flag)
     {
         return Flags.GetValueOrDefault(flag);
-    }
-
-    public byte GetProcessorStatus()
-    {
-        return FullStatusValue;
-    }
-
-    public void SetProcessorStatus(byte status)
-    {
-        FullStatusValue = status;
     }
 
     public byte GetStackPointer()

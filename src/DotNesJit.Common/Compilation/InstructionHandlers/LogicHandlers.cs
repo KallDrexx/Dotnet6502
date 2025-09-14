@@ -21,7 +21,7 @@ public class LogicHandlers : InstructionHandler
         {
             case "BIT":
                 ilGenerator.Emit(OpCodes.Ldsfld, gameClass.Registers.Accumulator);
-                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
                 IlUtils.LoadAddressToStack(instruction, gameClass, ilGenerator);
                 ilGenerator.Emit(OpCodes.Callvirt, getMemoryValueMethod!); // Load the value in memory
                 ilGenerator.Emit(OpCodes.And); // for negative flag

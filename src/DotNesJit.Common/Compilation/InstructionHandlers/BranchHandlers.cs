@@ -81,7 +81,7 @@ public class BranchHandlers : InstructionHandler
 
         if (waitForVBlankMethod != null)
         {
-            ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+            ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
             ilGenerator.Emit(OpCodes.Callvirt, waitForVBlankMethod);
         }
         else
@@ -174,7 +174,7 @@ public class BranchHandlers : InstructionHandler
         IlUtils.AddMsilComment(ilGenerator, $"// Check flag condition: {condition}");
 
         // Load hardware instance and flag enum
-        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
         ilGenerator.Emit(OpCodes.Ldc_I4, (int)flagToCheck);
         ilGenerator.Emit(OpCodes.Callvirt, getFlagMethod);
 

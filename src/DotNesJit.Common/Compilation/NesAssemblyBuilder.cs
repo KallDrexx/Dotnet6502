@@ -66,7 +66,7 @@ public class NesAssemblyBuilder
         return new GameClass
         {
             Type = builder,
-            CpuRegistersField = hardwareField,
+            HardwareField = hardwareField,
             Registers = Hardware,
         };
     }
@@ -581,7 +581,7 @@ public class NesAssemblyBuilder
         ilGenerator.Emit(OpCodes.Stloc, vectorTypeLocal);
 
         // Check hardware availability
-        ilGenerator.Emit(OpCodes.Ldsfld, _gameClass.CpuRegistersField);
+        ilGenerator.Emit(OpCodes.Ldsfld, _gameClass.HardwareField);
         var endMethod = ilGenerator.DefineLabel();
         ilGenerator.Emit(OpCodes.Brfalse, endMethod);
 
@@ -630,7 +630,7 @@ public class NesAssemblyBuilder
         if (setPCMethod != null)
         {
             // Set PC to NMI vector address
-            ilGenerator.Emit(OpCodes.Ldsfld, _gameClass.CpuRegistersField);
+            ilGenerator.Emit(OpCodes.Ldsfld, _gameClass.HardwareField);
             ilGenerator.Emit(OpCodes.Ldloc, vectorAddressLocal);
             ilGenerator.Emit(OpCodes.Callvirt, setPCMethod);
 
@@ -650,11 +650,11 @@ public class NesAssemblyBuilder
         if (setPCMethod != null && resetMethod != null)
         {
             // Reset system state
-            ilGenerator.Emit(OpCodes.Ldsfld, _gameClass.CpuRegistersField);
+            ilGenerator.Emit(OpCodes.Ldsfld, _gameClass.HardwareField);
             ilGenerator.Emit(OpCodes.Callvirt, resetMethod);
 
             // Set PC to reset vector
-            ilGenerator.Emit(OpCodes.Ldsfld, _gameClass.CpuRegistersField);
+            ilGenerator.Emit(OpCodes.Ldsfld, _gameClass.HardwareField);
             ilGenerator.Emit(OpCodes.Ldloc, vectorAddressLocal);
             ilGenerator.Emit(OpCodes.Callvirt, setPCMethod);
 
@@ -679,7 +679,7 @@ public class NesAssemblyBuilder
         if (setPCMethod != null)
         {
             // Set PC to IRQ vector address
-            ilGenerator.Emit(OpCodes.Ldsfld, _gameClass.CpuRegistersField);
+            ilGenerator.Emit(OpCodes.Ldsfld, _gameClass.HardwareField);
             ilGenerator.Emit(OpCodes.Ldloc, vectorAddressLocal);
             ilGenerator.Emit(OpCodes.Callvirt, setPCMethod);
 
@@ -697,7 +697,7 @@ public class NesAssemblyBuilder
         if (setPCMethod != null)
         {
             // Just set PC to the vector address
-            ilGenerator.Emit(OpCodes.Ldsfld, _gameClass.CpuRegistersField);
+            ilGenerator.Emit(OpCodes.Ldsfld, _gameClass.HardwareField);
             ilGenerator.Emit(OpCodes.Ldloc, vectorAddressLocal);
             ilGenerator.Emit(OpCodes.Callvirt, setPCMethod);
         }

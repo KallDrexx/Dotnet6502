@@ -36,7 +36,7 @@ public class ReturnHandlers : InstructionHandler
         var returnFromSubroutineMethod = typeof(INesHal).GetMethod(nameof(INesHal.ReturnFromSubroutine));
         if (returnFromSubroutineMethod != null)
         {
-            ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+            ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
             ilGenerator.Emit(OpCodes.Callvirt, returnFromSubroutineMethod);
         }
         else
@@ -56,7 +56,7 @@ public class ReturnHandlers : InstructionHandler
         var returnFromInterruptMethod = typeof(INesHal).GetMethod(nameof(INesHal.ReturnFromInterrupt));
         if (returnFromInterruptMethod != null)
         {
-            ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+            ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
             ilGenerator.Emit(OpCodes.Callvirt, returnFromInterruptMethod);
         }
         else

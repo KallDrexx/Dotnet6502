@@ -36,7 +36,7 @@ public class SystemHandlers : InstructionHandler
         var triggerSoftwareInterruptMethod = typeof(INesHal).GetMethod(nameof(INesHal.TriggerSoftwareInterrupt));
         if (triggerSoftwareInterruptMethod != null)
         {
-            ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+            ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
             ilGenerator.Emit(OpCodes.Callvirt, triggerSoftwareInterruptMethod);
         }
         else

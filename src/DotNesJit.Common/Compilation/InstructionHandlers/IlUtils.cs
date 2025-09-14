@@ -86,7 +86,7 @@ public static class IlUtils
             return;
         }
 
-        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
         ilGenerator.Emit(OpCodes.Ldc_I4, (int)flag);
         ilGenerator.Emit(OpCodes.Ldc_I4, value ? 1 : 0);
         ilGenerator.Emit(OpCodes.Callvirt, setFlagMethod);
@@ -109,7 +109,7 @@ public static class IlUtils
         var local = ilGenerator.DeclareLocal(typeof(bool));
         ilGenerator.Emit(OpCodes.Stloc, local);
 
-        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
         ilGenerator.Emit(OpCodes.Ldc_I4, (int)flag);
         ilGenerator.Emit(OpCodes.Stloc, local); // Load the boolean result
         ilGenerator.Emit(OpCodes.Callvirt, setFlagMethod);
@@ -136,7 +136,7 @@ public static class IlUtils
         ilGenerator.Emit(OpCodes.Stloc, local);
 
         // Call SetFlag with the result
-        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
         ilGenerator.Emit(OpCodes.Ldc_I4, (int)CpuStatusFlags.Zero);
         ilGenerator.Emit(OpCodes.Ldloc, local); // The boolean result from above
         ilGenerator.Emit(OpCodes.Callvirt, setFlagMethod);
@@ -165,7 +165,7 @@ public static class IlUtils
         ilGenerator.Emit(OpCodes.Stloc, local);
 
         // Call SetFlag with the result
-        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
         ilGenerator.Emit(OpCodes.Ldc_I4, (int)CpuStatusFlags.Negative);
         ilGenerator.Emit(OpCodes.Ldloc, local); // The boolean result from above
         ilGenerator.Emit(OpCodes.Callvirt, setFlagMethod);
@@ -194,7 +194,7 @@ public static class IlUtils
         ilGenerator.Emit(OpCodes.Stloc, local);
 
         // Call SetFlag with the result
-        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
         ilGenerator.Emit(OpCodes.Ldc_I4, (int)CpuStatusFlags.Overflow);
         ilGenerator.Emit(OpCodes.Ldloc, local); // The boolean result from above
         ilGenerator.Emit(OpCodes.Callvirt, setFlagMethod);

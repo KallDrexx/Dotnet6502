@@ -8,11 +8,10 @@ public interface INesHal
     byte ARegister { get; set; }
     byte XRegister { get; set; }
     byte YRegister { get; set; }
+    byte ProcessorStatus { get; set; }
 
     void SetFlag(CpuStatusFlags flag, bool value);
     bool GetFlag(CpuStatusFlags flag);
-    byte GetProcessorStatus();
-    void SetProcessorStatus(byte status);
 
     byte GetStackPointer();
     void SetStackPointer(byte value);

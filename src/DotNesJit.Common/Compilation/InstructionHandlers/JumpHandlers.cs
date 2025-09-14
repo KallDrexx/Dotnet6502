@@ -48,7 +48,7 @@ public class JumpHandlers : InstructionHandler
             var jumpToAddressMethod = typeof(INesHal).GetMethod(nameof(INesHal.JumpToAddress));
             if (jumpToAddressMethod != null)
             {
-                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
                 ilGenerator.Emit(OpCodes.Ldc_I4, (int)targetAddress);
                 ilGenerator.Emit(OpCodes.Callvirt, jumpToAddressMethod);
             }
@@ -71,12 +71,12 @@ public class JumpHandlers : InstructionHandler
                 var localAddr = ilGenerator.DeclareLocal(typeof(ushort));
 
                 // Read low byte from target address
-                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
                 ilGenerator.Emit(OpCodes.Ldc_I4, (int)targetAddress);
                 ilGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
 
                 // Read high byte from target address + 1
-                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
                 ilGenerator.Emit(OpCodes.Ldc_I4, (int)(targetAddress + 1));
                 ilGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
 
@@ -87,7 +87,7 @@ public class JumpHandlers : InstructionHandler
                 ilGenerator.Emit(OpCodes.Stloc, localAddr);
 
                 // Jump to the computed address
-                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+                ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
                 ilGenerator.Emit(OpCodes.Ldloc, localAddr);
                 ilGenerator.Emit(OpCodes.Callvirt, jumpToAddressMethod);
             }
@@ -118,7 +118,7 @@ public class JumpHandlers : InstructionHandler
         var callFunctionMethod = typeof(INesHal).GetMethod(nameof(INesHal.CallFunction));
         if (callFunctionMethod != null)
         {
-            ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+            ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
             ilGenerator.Emit(OpCodes.Ldc_I4, (int)targetAddress);
             ilGenerator.Emit(OpCodes.Callvirt, callFunctionMethod);
         }

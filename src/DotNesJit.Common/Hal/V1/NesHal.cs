@@ -135,6 +135,7 @@ public class NesHal : INesHal
     public byte ARegister { get; set; }
     public byte XRegister { get; set; }
     public byte YRegister { get; set; }
+    public byte ProcessorStatus { get; set; }
 
     /// <summary>
     /// Sets a CPU status flag

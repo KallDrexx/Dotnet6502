@@ -39,7 +39,7 @@ public class InstructionTestRunner
         }
 
         // Add the HAL
-        var field = gameClassInstance.GetType().GetField(_gameClass.CpuRegistersField.Name);
+        var field = gameClassInstance.GetType().GetField(_gameClass.HardwareField.Name);
         if (field == null)
         {
             throw new InvalidOperationException("HAL field not found on game class instance");
@@ -67,7 +67,7 @@ public class InstructionTestRunner
         var gameClass = new GameClass
         {
             Type = gameType,
-            CpuRegistersField = hardwareField,
+            HardwareField = hardwareField,
             Registers = cpuRegistersField,
         };
 

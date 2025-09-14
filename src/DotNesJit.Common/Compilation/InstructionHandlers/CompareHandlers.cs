@@ -34,7 +34,7 @@ public class CompareHandlers : InstructionHandler
         else
         {
             var getMemoryValueMethod = typeof(INesHal).GetMethod(nameof(INesHal.ReadMemory));
-            ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+            ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
             IlUtils.LoadAddressToStack(instruction, gameClass, ilGenerator);
             ilGenerator.Emit(OpCodes.Callvirt, getMemoryValueMethod!);
         }

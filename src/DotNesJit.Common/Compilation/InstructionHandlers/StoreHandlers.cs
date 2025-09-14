@@ -26,7 +26,7 @@ public class StoreHandlers : InstructionHandler
         // Call HAL to write to that memory location
         var setMemoryMethod = typeof(INesHal).GetMethod(nameof(INesHal.WriteMemory));
 
-        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.CpuRegistersField);
+        ilGenerator.Emit(OpCodes.Ldsfld, gameClass.HardwareField);
         IlUtils.LoadAddressToStack(instruction, gameClass, ilGenerator);
         ilGenerator.Emit(OpCodes.Ldsfld, sourceRegister);
         ilGenerator.Emit(OpCodes.Callvirt, setMemoryMethod!);
