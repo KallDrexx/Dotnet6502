@@ -121,7 +121,8 @@ public class MsilGenerator
 
                 case NesIr.BinaryOperator.GreaterThanOrEqualTo:
                     context.IlGenerator.Emit(OpCodes.Clt);
-                    context.IlGenerator.Emit(OpCodes.Neg);
+                    context.IlGenerator.Emit(OpCodes.Ldc_I4_0);
+                    context.IlGenerator.Emit(OpCodes.Ceq);
                     break;
 
                 case NesIr.BinaryOperator.LessThan:
@@ -130,12 +131,14 @@ public class MsilGenerator
 
                 case NesIr.BinaryOperator.LessThanOrEqualTo:
                     context.IlGenerator.Emit(OpCodes.Cgt);
-                    context.IlGenerator.Emit(OpCodes.Neg);
+                    context.IlGenerator.Emit(OpCodes.Ldc_I4_0);
+                    context.IlGenerator.Emit(OpCodes.Ceq);
                     break;
 
                 case NesIr.BinaryOperator.NotEquals:
                     context.IlGenerator.Emit(OpCodes.Ceq);
-                    context.IlGenerator.Emit(OpCodes.Neg);
+                    context.IlGenerator.Emit(OpCodes.Ldc_I4_0);
+                    context.IlGenerator.Emit(OpCodes.Ceq);
                     break;
 
                 case NesIr.BinaryOperator.Or:
