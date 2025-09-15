@@ -132,12 +132,15 @@ public class NesGameClass
         }
 
         var msilGenerator = new MsilGenerator(ilLabels);
+        var context = new MsilGenerator.Context(ilGenerator, HardwareField, GetMethodInfo);
         foreach (var instruction in nesIrInstructions)
         {
             ilGenerator.Emit(OpCodes.Ldstr, $"{instruction}");
             ilGenerator.Emit(OpCodes.Pop);
 
-            msilGenerator.Generate(instruction, ilGenerator, this);
+            msilGenerator.Generate(instruction, context);
         }
+
+        ilGenerator.Emit(OpCodes.Ret);
     }
 }
