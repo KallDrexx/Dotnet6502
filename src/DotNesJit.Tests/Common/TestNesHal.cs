@@ -5,6 +5,8 @@ namespace DotNesJit.Tests.Common;
 
 public class TestNesHal : INesHal
 {
+    private readonly Stack<byte> _stack = new();
+
     public Dictionary<CpuStatusFlags, bool> Flags { get; } = new();
     public Dictionary<ushort, byte> MemoryValues { get; } = new();
     public byte StackPointer { get; set; }
@@ -57,12 +59,12 @@ public class TestNesHal : INesHal
 
     public void PushToStack(byte value)
     {
-        throw new NotImplementedException();
+        _stack.Push(value);
     }
 
     public byte PopFromStack()
     {
-        throw new NotImplementedException();
+        return _stack.Pop();
     }
 
     public void TriggerSoftwareInterrupt()
