@@ -313,8 +313,9 @@ public class MsilGenerator
             case NesIr.Flag flag:
                 var getFlagMethod = typeof(INesHal).GetMethod(nameof(INesHal.GetFlag))!;
                 context.IlGenerator.Emit(OpCodes.Ldsfld, context.HardwareField);
-                context.IlGenerator.Emit(OpCodes.Ldc_I4, (int)flag.FlagName);
+                context.IlGenerator.Emit(OpCodes.Ldc_I4, (int)ConvertFlagName(flag.FlagName));
                 context.IlGenerator.Emit(OpCodes.Callvirt, getFlagMethod);
+                context.IlGenerator.Emit(OpCodes.Conv_I4);
                 break;
 
             case NesIr.Memory memory:
@@ -330,10 +331,12 @@ public class MsilGenerator
                 }
 
                 context.IlGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
+                context.IlGenerator.Emit(OpCodes.Conv_I4);
                 break;
 
             case NesIr.Register register:
                 LoadRegisterToStack(register.Name, context);
+                context.IlGenerator.Emit(OpCodes.Conv_I4);
                 break;
 
             case NesIr.StackPointer:
@@ -365,6 +368,7 @@ public class MsilGenerator
 
                 context.IlGenerator.Emit(OpCodes.Ldsfld, context.HardwareField);
                 LoadTempLocalToStack(context);
+                context.IlGenerator.Emit(OpCodes.Conv_U1); // Convert int to byte
                 context.IlGenerator.Emit(OpCodes.Callvirt, setStatusMethod);
                 break;
 
@@ -374,8 +378,11 @@ public class MsilGenerator
             case NesIr.Flag flag:
                 var setFlagMethod = typeof(INesHal).GetMethod(nameof(INesHal.SetFlag))!;
                 context.IlGenerator.Emit(OpCodes.Ldsfld, context.HardwareField);
-                context.IlGenerator.Emit(OpCodes.Ldc_I4, (int)flag.FlagName);
+                context.IlGenerator.Emit(OpCodes.Ldc_I4, (int)ConvertFlagName(flag.FlagName));
                 LoadTempLocalToStack(context);
+                // Convert int to bool (0 = false, anything else = true)
+                context.IlGenerator.Emit(OpCodes.Ldc_I4_0);
+                context.IlGenerator.Emit(OpCodes.Cgt_Un);
                 context.IlGenerator.Emit(OpCodes.Callvirt, setFlagMethod);
                 break;
 
@@ -392,6 +399,7 @@ public class MsilGenerator
                 }
 
                 LoadTempLocalToStack(context);
+                context.IlGenerator.Emit(OpCodes.Conv_U1); // Convert int to byte
                 context.IlGenerator.Emit(OpCodes.Callvirt, writeMemoryMethod);
                 break;
 
@@ -415,6 +423,7 @@ public class MsilGenerator
 
                 context.IlGenerator.Emit(OpCodes.Ldsfld, context.HardwareField);
                 LoadTempLocalToStack(context);
+                context.IlGenerator.Emit(OpCodes.Conv_U1); // Convert int to byte
                 context.IlGenerator.Emit(OpCodes.Callvirt, setMethod);
 
                 break;
@@ -426,10 +435,12 @@ public class MsilGenerator
 
                 context.IlGenerator.Emit(OpCodes.Ldsfld, context.HardwareField);
                 LoadTempLocalToStack(context);
+                context.IlGenerator.Emit(OpCodes.Conv_U1); // Convert int to byte
                 context.IlGenerator.Emit(OpCodes.Callvirt, setStackPointerMethod);
                 break;
 
             case NesIr.Variable variable:
+                LoadTempLocalToStack(context);
                 context.IlGenerator.Emit(OpCodes.Stloc, variable.Index + TemporaryLocalsRequired);
                 break;
 
@@ -462,5 +473,20 @@ public class MsilGenerator
 
         context.IlGenerator.Emit(OpCodes.Ldsfld, context.HardwareField);
         context.IlGenerator.Emit(OpCodes.Callvirt, getMethod);
+    }
+
+    private static CpuStatusFlags ConvertFlagName(NesIr.FlagName flagName)
+    {
+        return flagName switch
+        {
+            NesIr.FlagName.Carry => CpuStatusFlags.Carry,
+            NesIr.FlagName.Zero => CpuStatusFlags.Zero,
+            NesIr.FlagName.InterruptDisable => CpuStatusFlags.InterruptDisable,
+            NesIr.FlagName.BFlag => CpuStatusFlags.BFlag,
+            NesIr.FlagName.Decimal => CpuStatusFlags.Decimal,
+            NesIr.FlagName.Overflow => CpuStatusFlags.Overflow,
+            NesIr.FlagName.Negative => CpuStatusFlags.Negative,
+            _ => throw new NotSupportedException(flagName.ToString())
+        };
     }
 }

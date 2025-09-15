@@ -81,9 +81,6 @@ public class InstructionTestRunner
 
         foreach (var instruction in instructions)
         {
-            ilGenerator.Emit(OpCodes.Ldstr, $"{instruction}");
-            ilGenerator.Emit(OpCodes.Pop);
-
             msilGenerator.Generate(instruction, context);
         }
 
