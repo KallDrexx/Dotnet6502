@@ -5,7 +5,7 @@ using DotNesJit.Common.Compilation;
 using DotNesJit.Common.Hal;
 using Shouldly;
 
-namespace DotNesJit.Tests.Common.MsilGeneration;
+namespace DotNesJit.Tests.Common.Compilation;
 
 public class InstructionTestRunner
 {

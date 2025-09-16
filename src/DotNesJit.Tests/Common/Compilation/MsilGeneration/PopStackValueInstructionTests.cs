@@ -2,7 +2,7 @@ using DotNesJit.Common;
 using DotNesJit.Common.Compilation;
 using Shouldly;
 
-namespace DotNesJit.Tests.Common.MsilGeneration;
+namespace DotNesJit.Tests.Common.Compilation.MsilGeneration;
 
 public class PopStackValueInstructionTests
 {
