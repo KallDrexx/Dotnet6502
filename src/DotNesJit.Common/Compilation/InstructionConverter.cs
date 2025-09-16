@@ -9,10 +9,13 @@ namespace DotNesJit.Common.Compilation;
 /// </summary>
 public static class InstructionConverter
 {
+    public record Context(
+        IReadOnlyDictionary<ushort, string> Labels,
+        IReadOnlyDictionary<ushort, Function> Functions);
+
     public static IReadOnlyList<NesIr.Instruction> Convert(
         DisassembledInstruction instruction,
-        Disassembler disassembler,
-        Decompiler decompiler)
+        Context context)
     {
         var results = new List<NesIr.Instruction>();
         if (instruction.Label != null)
@@ -25,16 +28,16 @@ public static class InstructionConverter
             case "ADC": results.AddRange(ConvertAdc(instruction)); break;
             case "AND": results.AddRange(ConvertAnd(instruction)); break;
             case "ASL": results.AddRange(ConvertAsl(instruction)); break;
-            case "BCC": results.AddRange(ConvertBcc(instruction, disassembler)); break;
-            case "BCS": results.AddRange(ConvertBcs(instruction, disassembler)); break;
-            case "BEQ": results.AddRange(ConvertBeq(instruction, disassembler)); break;
+            case "BCC": results.AddRange(ConvertBcc(instruction, context)); break;
+            case "BCS": results.AddRange(ConvertBcs(instruction, context)); break;
+            case "BEQ": results.AddRange(ConvertBeq(instruction, context)); break;
             case "BIT": results.AddRange(ConvertBit(instruction)); break;
-            case "BMI": results.AddRange(ConvertBmi(instruction, disassembler)); break;
-            case "BNE": results.AddRange(ConvertBne(instruction, disassembler)); break;
-            case "BPL": results.AddRange(ConvertBpl(instruction, disassembler)); break;
+            case "BMI": results.AddRange(ConvertBmi(instruction, context)); break;
+            case "BNE": results.AddRange(ConvertBne(instruction, context)); break;
+            case "BPL": results.AddRange(ConvertBpl(instruction, context)); break;
             case "BRK": results.AddRange(ConvertBrk()); break;
-            case "BVC": results.AddRange(ConvertBvc(instruction, disassembler)); break;
-            case "BVS": results.AddRange(ConvertBvs(instruction, disassembler)); break;
+            case "BVC": results.AddRange(ConvertBvc(instruction, context)); break;
+            case "BVS": results.AddRange(ConvertBvs(instruction, context)); break;
             case "CLC": results.AddRange(ConvertClc()); break;
             case "CLD": results.AddRange(ConvertCld()); break;
             case "CLI": results.AddRange(ConvertCli()); break;
@@ -49,8 +52,8 @@ public static class InstructionConverter
             case "INC": results.AddRange(ConvertInc(instruction)); break;
             case "INX": results.AddRange(ConvertInx()); break;
             case "INY": results.AddRange(ConvertIny()); break;
-            case "JMP": results.AddRange(ConvertJmp(instruction, disassembler)); break;
-            case "JSR": results.AddRange(ConvertJsr(instruction, decompiler)); break;
+            case "JMP": results.AddRange(ConvertJmp(instruction, context)); break;
+            case "JSR": results.AddRange(ConvertJsr(instruction, context)); break;
             case "LDA": results.AddRange(ConvertLda(instruction)); break;
             case "LDX": results.AddRange(ConvertLdx(instruction)); break;
             case "LDY": results.AddRange(ConvertLdy(instruction)); break;
@@ -174,9 +177,9 @@ public static class InstructionConverter
     /// <summary>
     /// Branch if carry clear
     /// </summary>
-    private static NesIr.Instruction[] ConvertBcc(DisassembledInstruction instruction, Disassembler disassembler)
+    private static NesIr.Instruction[] ConvertBcc(DisassembledInstruction instruction, Context context)
     {
-        var target = GetTargetLabel(instruction, disassembler);
+        var target = GetTargetLabel(instruction, context);
         var jump = new NesIr.JumpIfZero(new NesIr.Flag(NesIr.FlagName.Carry), target);
 
         return [jump];
@@ -185,9 +188,9 @@ public static class InstructionConverter
     /// <summary>
     /// Branch if carry set
     /// </summary>
-    private static NesIr.Instruction[] ConvertBcs(DisassembledInstruction instruction, Disassembler disassembler)
+    private static NesIr.Instruction[] ConvertBcs(DisassembledInstruction instruction, Context context)
     {
-        var target = GetTargetLabel(instruction, disassembler);
+        var target = GetTargetLabel(instruction, context);
         var jump = new NesIr.JumpIfNotZero(new NesIr.Flag(NesIr.FlagName.Carry), target);
 
         return [jump];
@@ -196,9 +199,9 @@ public static class InstructionConverter
     /// <summary>
     /// Branch if equal
     /// </summary>
-    private static NesIr.Instruction[] ConvertBeq(DisassembledInstruction instruction, Disassembler disassembler)
+    private static NesIr.Instruction[] ConvertBeq(DisassembledInstruction instruction, Context context)
     {
-        var target = GetTargetLabel(instruction, disassembler);
+        var target = GetTargetLabel(instruction, context);
         var jump = new NesIr.JumpIfNotZero(new NesIr.Flag(NesIr.FlagName.Zero), target);
 
         return [jump];
@@ -243,9 +246,9 @@ public static class InstructionConverter
     /// <summary>
     /// Branch if minus
     /// </summary>
-    private static NesIr.Instruction[] ConvertBmi(DisassembledInstruction instruction, Disassembler disassembler)
+    private static NesIr.Instruction[] ConvertBmi(DisassembledInstruction instruction, Context context)
     {
-        var target = GetTargetLabel(instruction, disassembler);
+        var target = GetTargetLabel(instruction, context);
         var jump = new NesIr.JumpIfNotZero(new NesIr.Flag(NesIr.FlagName.Negative), target);
 
         return [jump];
@@ -254,9 +257,9 @@ public static class InstructionConverter
     /// <summary>
     /// Branch if not equal
     /// </summary>
-    private static NesIr.Instruction[] ConvertBne(DisassembledInstruction instruction, Disassembler disassembler)
+    private static NesIr.Instruction[] ConvertBne(DisassembledInstruction instruction, Context context)
     {
-        var target = GetTargetLabel(instruction, disassembler);
+        var target = GetTargetLabel(instruction, context);
         var jump = new NesIr.JumpIfZero(new NesIr.Flag(NesIr.FlagName.Zero), target);
 
         return [jump];
@@ -265,9 +268,9 @@ public static class InstructionConverter
     /// <summary>
     /// Branch if plus
     /// </summary>
-    private static NesIr.Instruction[] ConvertBpl(DisassembledInstruction instruction, Disassembler disassembler)
+    private static NesIr.Instruction[] ConvertBpl(DisassembledInstruction instruction, Context context)
     {
-        var target = GetTargetLabel(instruction, disassembler);
+        var target = GetTargetLabel(instruction, context);
         var jump = new NesIr.JumpIfZero(new NesIr.Flag(NesIr.FlagName.Negative), target);
 
         return [jump];
@@ -294,9 +297,9 @@ public static class InstructionConverter
     /// <summary>
     /// Branch if overflow clear
     /// </summary>
-    private static NesIr.Instruction[] ConvertBvc(DisassembledInstruction instruction, Disassembler disassembler)
+    private static NesIr.Instruction[] ConvertBvc(DisassembledInstruction instruction, Context context)
     {
-        var target = GetTargetLabel(instruction, disassembler);
+        var target = GetTargetLabel(instruction, context);
         var jump = new NesIr.JumpIfZero(new NesIr.Flag(NesIr.FlagName.Overflow), target);
 
         return [jump];
@@ -305,9 +308,9 @@ public static class InstructionConverter
     /// <summary>
     /// Branch if overflow set
     /// </summary>
-    private static NesIr.Instruction[] ConvertBvs(DisassembledInstruction instruction, Disassembler disassembler)
+    private static NesIr.Instruction[] ConvertBvs(DisassembledInstruction instruction, Context context)
     {
-        var target = GetTargetLabel(instruction, disassembler);
+        var target = GetTargetLabel(instruction, context);
         var jump = new NesIr.JumpIfNotZero(new NesIr.Flag(NesIr.FlagName.Overflow), target);
 
         return [jump];
@@ -562,9 +565,9 @@ public static class InstructionConverter
     /// <summary>
     /// Jump
     /// </summary>
-    private static NesIr.Instruction[] ConvertJmp(DisassembledInstruction instruction, Disassembler disassembler)
+    private static NesIr.Instruction[] ConvertJmp(DisassembledInstruction instruction, Context context)
     {
-        var target = GetTargetLabel(instruction, disassembler);
+        var target = GetTargetLabel(instruction, context);
         var jump = new NesIr.Jump(target);
 
         return [jump];
@@ -573,7 +576,7 @@ public static class InstructionConverter
     /// <summary>
     /// Jump to subroutine
     /// </summary>
-    private static NesIr.Instruction[] ConvertJsr(DisassembledInstruction instruction, Decompiler decompiler)
+    private static NesIr.Instruction[] ConvertJsr(DisassembledInstruction instruction, Context context)
     {
         if (!instruction.TargetAddress.HasValue)
         {
@@ -581,7 +584,7 @@ public static class InstructionConverter
             throw new InvalidOperationException(message);
         }
 
-        if (!decompiler.Functions.TryGetValue(instruction.TargetAddress.Value, out var function))
+        if (!context.Functions.TryGetValue(instruction.TargetAddress.Value, out var function))
         {
             var message = $"JSR instruction to address '{instruction.TargetAddress}' but that address is " +
                           $"not tied to a known function";
@@ -1102,10 +1105,10 @@ public static class InstructionConverter
         }
     }
 
-    private static NesIr.Identifier GetTargetLabel(DisassembledInstruction instruction, Disassembler disassembler)
+    private static NesIr.Identifier GetTargetLabel(DisassembledInstruction instruction, Context context)
     {
         if (instruction.TargetAddress == null ||
-            !disassembler.Labels.TryGetValue(instruction.TargetAddress.Value, out var label))
+            !context.Labels.TryGetValue(instruction.TargetAddress.Value, out var label))
         {
             var message = $"{instruction.Info.Mnemonic} instruction targeting address '{instruction.TargetAddress}' " +
                           $"but that address has no known label";

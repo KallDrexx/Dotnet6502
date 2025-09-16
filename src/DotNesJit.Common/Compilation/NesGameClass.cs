@@ -109,14 +109,12 @@ public class NesGameClass
             .OrderBy(inst => inst.CPUAddress)
             .ToArray();
 
+        var instructionConverterContext = new InstructionConverter.Context(disassembler.Labels, _decompiler.Functions);
         var nesIrInstructions = new List<NesIr.Instruction>();
         foreach (var disassembledInstruction in disassembledInstructions)
         {
             nesIrInstructions.AddRange(
-                InstructionConverter.Convert(
-                    disassembledInstruction,
-                    disassembler,
-                    _decompiler));
+                InstructionConverter.Convert(disassembledInstruction, instructionConverterContext));
         }
 
         // We need to pull out all labels so they can be pre-defined, since they need to be
