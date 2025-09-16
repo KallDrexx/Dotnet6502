@@ -101,6 +101,15 @@ public static class InstructionConverter
         // Don't store the value in the accumulator so we don't lose track of if it overflowed due to byte precision
         var addVariable = new NesIr.Variable(1);
 
+        // Variables for 6502 overflow calculation: (A^result) & (M^result) & 0x80
+        var originalAccumulator = new NesIr.Variable(2);
+        var aXorResult = new NesIr.Variable(3);
+        var mXorResult = new NesIr.Variable(4);
+        var overflowTemp = new NesIr.Variable(5);
+
+        // Preserve original accumulator value for overflow calculation
+        var preserveAccumulator = new NesIr.Copy(accumulator, originalAccumulator);
+
         var firstAdd = new NesIr.Binary(NesIr.BinaryOperator.Add, accumulator, operand, addVariable);
         var carryAdd = new NesIr.Binary(
             NesIr.BinaryOperator.Add,
@@ -114,15 +123,53 @@ public static class InstructionConverter
             new NesIr.Constant(0xFF),
             new NesIr.Flag(NesIr.FlagName.Carry));
 
-        var adjustForOverflow = new NesIr.WrapValueToByte(addVariable, new NesIr.Flag(NesIr.FlagName.Overflow));
+        // Implement 6502 overflow logic: (A^result) & (M^result) & 0x80 != 0
+        // First wrap to byte for proper 8-bit result comparison
+        var wrapToByte = new NesIr.WrapValueToByte(addVariable, new NesIr.Variable(6));
+
+        // A^result: XOR original accumulator with final result
+        var calcAXorResult = new NesIr.Binary(
+            NesIr.BinaryOperator.Xor,
+            originalAccumulator,
+            addVariable,
+            aXorResult);
+
+        // M^result: XOR operand with final result
+        var calcMXorResult = new NesIr.Binary(
+            NesIr.BinaryOperator.Xor,
+            operand,
+            addVariable,
+            mXorResult);
+
+        // (A^result) & (M^result)
+        var andXorResults = new NesIr.Binary(
+            NesIr.BinaryOperator.And,
+            aXorResult,
+            mXorResult,
+            overflowTemp);
+
+        // ((A^result) & (M^result)) & 0x80
+        var maskSignBit = new NesIr.Binary(
+            NesIr.BinaryOperator.And,
+            overflowTemp,
+            new NesIr.Constant(0x80),
+            overflowTemp);
+
+        // Set overflow flag if result equals 0x80 (signed overflow occurred)
+        var setOverflow = new NesIr.Binary(
+            NesIr.BinaryOperator.Equals,
+            overflowTemp,
+            new NesIr.Constant(0x80),
+            new NesIr.Flag(NesIr.FlagName.Overflow));
+
         var checkForZero = ZeroFlagInstruction(addVariable);
         var (checkForNegative, setNegative) = NegativeFlagInstructions(addVariable, isNegative);
         var storeAccumulator = new NesIr.Copy(addVariable, accumulator);
 
         return
         [
-            firstAdd, carryAdd, setCarry, adjustForOverflow, checkForZero, checkForNegative, setNegative,
-            storeAccumulator
+            preserveAccumulator, firstAdd, carryAdd, setCarry, wrapToByte, calcAXorResult, calcMXorResult,
+            andXorResults, maskSignBit, setOverflow, checkForZero, checkForNegative, setNegative, storeAccumulator
         ];
     }
 
@@ -871,9 +918,21 @@ public static class InstructionConverter
         var subVariable = new NesIr.Variable(0);
         var tempVariable = new NesIr.Variable(1);
 
-        // SBC = A - M - (1 - C) = A - M - ~C
-        var notCarry = new NesIr.Unary(
-            NesIr.UnaryOperator.BitwiseNot,
+        // Variables for 6502 SBC overflow calculation: (result^A) & (result^~M) & 0x80
+        var originalAccumulator = new NesIr.Variable(2);
+        var resultXorA = new NesIr.Variable(3);
+        var notMemory = new NesIr.Variable(4);
+        var resultXorNotMemory = new NesIr.Variable(5);
+        var overflowTemp = new NesIr.Variable(6);
+
+        // Preserve original accumulator value for overflow calculation
+        var preserveAccumulator = new NesIr.Copy(accumulator, originalAccumulator);
+
+        // SBC = A - M - (1 - C)
+        // Calculate (1 - C) properly
+        var oneMinusCarry = new NesIr.Binary(
+            NesIr.BinaryOperator.Subtract,
+            new NesIr.Constant(1),
             new NesIr.Flag(NesIr.FlagName.Carry),
             tempVariable);
 
@@ -883,28 +942,76 @@ public static class InstructionConverter
             operand,
             subVariable);
 
-        var subtractNotCarry = new NesIr.Binary(
+        var subtractBorrow = new NesIr.Binary(
             NesIr.BinaryOperator.Subtract,
             subVariable,
             tempVariable,
             subVariable);
 
-        // Carry flag is set if no borrow occurred (result >= 0)
+        // Carry flag is set if no borrow occurred
+        // For SBC, carry is cleared (0) when borrow occurs (result < 0)
+        // Since we check after arithmetic, use > 255 to detect borrow (like ADC uses > 255 for carry)
+        // But SBC needs to check if result went negative, so use < 0
         var carryCheck = new NesIr.Binary(
             NesIr.BinaryOperator.GreaterThanOrEqualTo,
             subVariable,
             new NesIr.Constant(0),
             new NesIr.Flag(NesIr.FlagName.Carry));
 
-        var adjustForOverflow = new NesIr.WrapValueToByte(subVariable, new NesIr.Flag(NesIr.FlagName.Overflow));
+        // Implement 6502 SBC overflow logic: (result^A) & (result^~M) & 0x80 != 0
+        // First wrap to byte for proper 8-bit result comparison
+        var wrapToByte = new NesIr.WrapValueToByte(subVariable, new NesIr.Variable(7));
+
+        // result^A: XOR final result with original accumulator
+        var calcResultXorA = new NesIr.Binary(
+            NesIr.BinaryOperator.Xor,
+            subVariable,
+            originalAccumulator,
+            resultXorA);
+
+        // ~M: Bitwise NOT of operand
+        var calcNotMemory = new NesIr.Unary(
+            NesIr.UnaryOperator.BitwiseNot,
+            operand,
+            notMemory);
+
+        // result^~M: XOR final result with NOT of operand
+        var calcResultXorNotMemory = new NesIr.Binary(
+            NesIr.BinaryOperator.Xor,
+            subVariable,
+            notMemory,
+            resultXorNotMemory);
+
+        // (result^A) & (result^~M)
+        var andXorResults = new NesIr.Binary(
+            NesIr.BinaryOperator.And,
+            resultXorA,
+            resultXorNotMemory,
+            overflowTemp);
+
+        // ((A^result) & (M^result)) & 0x80
+        var maskSignBit = new NesIr.Binary(
+            NesIr.BinaryOperator.And,
+            overflowTemp,
+            new NesIr.Constant(0x80),
+            overflowTemp);
+
+        // Set overflow flag if result equals 0x80 (signed overflow occurred)
+        var setOverflow = new NesIr.Binary(
+            NesIr.BinaryOperator.Equals,
+            overflowTemp,
+            new NesIr.Constant(0x80),
+            new NesIr.Flag(NesIr.FlagName.Overflow));
+
         var setAccumulator = new NesIr.Copy(subVariable, accumulator);
         var zero = ZeroFlagInstruction(subVariable);
         var (checkNegative, setNegative) = NegativeFlagInstructions(subVariable, tempVariable);
 
         return
         [
-            notCarry, subtractOperand, subtractNotCarry, carryCheck, adjustForOverflow, setAccumulator, zero,
-            checkNegative, setNegative
+            preserveAccumulator, oneMinusCarry, subtractOperand, subtractBorrow, carryCheck, wrapToByte,
+            calcResultXorA, calcNotMemory, calcResultXorNotMemory, andXorResults, maskSignBit, setOverflow,
+            setAccumulator, zero, checkNegative, setNegative
         ];
     }
 
