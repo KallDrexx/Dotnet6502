@@ -521,11 +521,12 @@ public static class InstructionConverter
         var operand = ParseAddress(instruction);
         var variable = new NesIr.Variable(0);
 
-        var increment = new NesIr.Binary(NesIr.BinaryOperator.Add, operand, new NesIr.Constant(1), operand);
-        var zero = ZeroFlagInstruction(operand);
-        var (checkNegative, setNegative) = NegativeFlagInstructions(operand, variable);
+        var increment = new NesIr.Binary(NesIr.BinaryOperator.Add, operand, new NesIr.Constant(1), variable);
+        var store = new NesIr.Copy(variable, operand);
+        var zero = ZeroFlagInstruction(variable);
+        var (checkNegative, setNegative) = NegativeFlagInstructions(variable, variable);
 
-        return [increment, zero, checkNegative, setNegative];
+        return [increment, store, zero, checkNegative, setNegative];
     }
 
     /// <summary>
