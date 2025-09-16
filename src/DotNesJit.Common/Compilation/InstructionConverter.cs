@@ -105,6 +105,12 @@ public static class InstructionConverter
             new NesIr.Flag(NesIr.FlagName.Carry),
             accumulator);
 
+        var setCarry = new NesIr.Binary(
+            NesIr.BinaryOperator.GreaterThan,
+            addVariable,
+            new NesIr.Constant(0xFF),
+            new NesIr.Flag(NesIr.FlagName.Carry));
+
         var adjustForOverflow = new NesIr.WrapValueToByte(addVariable, new NesIr.Flag(NesIr.FlagName.Overflow));
         var checkForZero = ZeroFlagInstruction(addVariable);
         var (checkForNegative, setNegative) = NegativeFlagInstructions(addVariable, isNegative);
@@ -112,7 +118,8 @@ public static class InstructionConverter
 
         return
         [
-            firstAdd, carryAdd, adjustForOverflow, checkForZero, checkForNegative, setNegative, storeAccumulator
+            firstAdd, carryAdd, setCarry, adjustForOverflow, checkForZero, checkForNegative, setNegative,
+            storeAccumulator
         ];
     }
 
