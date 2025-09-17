@@ -176,8 +176,15 @@ public class MsilGenerator
             throw new InvalidOperationException(message);
         }
 
-        context.IlGenerator.Emit(OpCodes.Ldsfld, context.HardwareField);
-        context.IlGenerator.Emit(OpCodes.Callvirt, methodInfo);
+        if (methodInfo.IsStatic)
+        {
+            context.IlGenerator.Emit(OpCodes.Call, methodInfo);
+        }
+        else
+        {
+            context.IlGenerator.Emit(OpCodes.Ldsfld, context.HardwareField);
+            context.IlGenerator.Emit(OpCodes.Callvirt, methodInfo);
+        }
     }
 
     private static void GenerateCopy(NesIr.Copy copy, Context context)
