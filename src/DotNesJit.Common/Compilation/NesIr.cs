@@ -15,8 +15,6 @@ public static class NesIr
 
     public record Binary(BinaryOperator Operator, Value Left, Value Right, Value Destination) : Instruction;
 
-    public record WrapValueToByte(Value PossibleOverflowedValue, Value FlagToSetIfOverflowed) : Instruction;
-
     public record Label(Identifier Name) : Instruction;
 
     public record CallFunction(Identifier Name) : Instruction;
@@ -30,6 +28,8 @@ public static class NesIr
     public record PushStackValue(Value Source) : Instruction;
 
     public record PopStackValue(Value Destination) : Instruction;
+
+    public record ConvertVariableToByte(Variable Variable) : Instruction;
 
     public record InvokeSoftwareInterrupt : Instruction;
 

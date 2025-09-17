@@ -123,10 +123,10 @@ public static class InstructionConverter
             new NesIr.Constant(0xFF),
             new NesIr.Flag(NesIr.FlagName.Carry));
 
-        // Implement 6502 overflow logic: (A^result) & (M^result) & 0x80 != 0
-        // First wrap to byte for proper 8-bit result comparison
-        var wrapToByte = new NesIr.WrapValueToByte(addVariable, new NesIr.Variable(6));
+        // Make sure an underflow or overflow doesn't cause comparisons to be incorrect
+        var convertToByte = new NesIr.ConvertVariableToByte(addVariable);
 
+        // Implement 6502 overflow logic: (A^result) & (M^result) & 0x80 != 0
         // A^result: XOR original accumulator with final result
         var calcAXorResult = new NesIr.Binary(
             NesIr.BinaryOperator.Xor,
@@ -168,7 +168,7 @@ public static class InstructionConverter
 
         return
         [
-            preserveAccumulator, firstAdd, carryAdd, setCarry, wrapToByte, calcAXorResult, calcMXorResult,
+            preserveAccumulator, firstAdd, carryAdd, setCarry, convertToByte, calcAXorResult, calcMXorResult,
             andXorResults, maskSignBit, setOverflow, checkForZero, checkForNegative, setNegative, storeAccumulator
         ];
     }
@@ -959,10 +959,6 @@ public static class InstructionConverter
             new NesIr.Flag(NesIr.FlagName.Carry));
 
         // Implement 6502 SBC overflow logic: (result^A) & (result^~M) & 0x80 != 0
-        // First wrap to byte for proper 8-bit result comparison
-        var wrapToByte = new NesIr.WrapValueToByte(subVariable, new NesIr.Variable(7));
-
-        // result^A: XOR final result with original accumulator
         var calcResultXorA = new NesIr.Binary(
             NesIr.BinaryOperator.Xor,
             subVariable,
@@ -1009,7 +1005,7 @@ public static class InstructionConverter
 
         return
         [
-            preserveAccumulator, oneMinusCarry, subtractOperand, subtractBorrow, carryCheck, wrapToByte,
+            preserveAccumulator, oneMinusCarry, subtractOperand, subtractBorrow, carryCheck,
             calcResultXorA, calcNotMemory, calcResultXorNotMemory, andXorResults, maskSignBit, setOverflow,
             setAccumulator, zero, checkNegative, setNegative
         ];

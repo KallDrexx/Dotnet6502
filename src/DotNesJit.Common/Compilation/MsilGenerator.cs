@@ -41,6 +41,10 @@ public class MsilGenerator
                 GenerateCallFunction(callFunction, context);
                 break;
 
+            case NesIr.ConvertVariableToByte convertVariableToByte:
+                GenerateConvertToByte(convertVariableToByte, context);
+                break;
+
             case NesIr.Copy copy:
                 GenerateCopy(copy, context);
                 break;
@@ -79,10 +83,6 @@ public class MsilGenerator
 
             case NesIr.Unary unary:
                 GenerateUnary(unary, context);
-                break;
-
-            case NesIr.WrapValueToByte wrap:
-                GenerateWrapToByte(wrap, context);
                 break;
 
             default:
@@ -291,38 +291,14 @@ public class MsilGenerator
         WriteTempLocalToValue(unary.Destination, context);
     }
 
-    private static void GenerateWrapToByte(NesIr.WrapValueToByte wrap, Context context)
+    private static void GenerateConvertToByte(NesIr.ConvertVariableToByte convertVariableToByte, Context context)
     {
-        LoadValueToStack(wrap.PossibleOverflowedValue, context);
-
-        // Duplicate the value for both overflow check and wrapping
-        context.IlGenerator.Emit(OpCodes.Dup);
-
-        // Check if any bits beyond the lower 8 bits are set
-        // Load mask for upper bits (~0xFF = 0xFFFFFF00)
-        context.IlGenerator.Emit(OpCodes.Ldc_I4, unchecked((int)0xFFFFFF00));
-        context.IlGenerator.Emit(OpCodes.And);
-
-        // Check if result is not zero (meaning overflow occurred)
-        context.IlGenerator.Emit(OpCodes.Ldc_I4_0);
-        context.IlGenerator.Emit(OpCodes.Ceq);
-        context.IlGenerator.Emit(OpCodes.Ldc_I4_0);
-        context.IlGenerator.Emit(OpCodes.Ceq); // Double CEQ to get true if original comparison was false
-
-        // Save overflow flag result to temp local
+        LoadValueToStack(convertVariableToByte.Variable, context);
+        context.IlGenerator.Emit(OpCodes.Conv_U1);
         SaveStackToTempLocal(context);
-        WriteTempLocalToValue(wrap.FlagToSetIfOverflowed, context);
-
-        // The original value is still on the stack (from the Dup)
-        // Now wrap the value to byte range
-        context.IlGenerator.Emit(OpCodes.Ldc_I4, 0xFF);
-        context.IlGenerator.Emit(OpCodes.And);
-
-        // Save wrapped result back to the original value
-        SaveStackToTempLocal(context);
-        WriteTempLocalToValue(wrap.PossibleOverflowedValue, context);
+        WriteTempLocalToValue(convertVariableToByte.Variable, context);
     }
-    
+
     private static void LoadValueToStack(NesIr.Value value, Context context)
     {
         switch (value)
