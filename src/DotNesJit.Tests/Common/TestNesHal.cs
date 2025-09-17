@@ -7,7 +7,18 @@ public class TestNesHal : INesHal
 {
     private readonly Stack<byte> _stack = new();
 
-    public Dictionary<CpuStatusFlags, bool> Flags { get; } = new();
+    public Dictionary<CpuStatusFlags, bool> Flags { get; } = new()
+    {
+        { CpuStatusFlags.Always1, true },
+        { CpuStatusFlags.BFlag, false },
+        { CpuStatusFlags.Carry, false },
+        { CpuStatusFlags.Decimal, false },
+        { CpuStatusFlags.InterruptDisable, false },
+        { CpuStatusFlags.Negative, false },
+        { CpuStatusFlags.Overflow, false },
+        { CpuStatusFlags.Zero, false },
+    };
+
     public Dictionary<ushort, byte> MemoryValues { get; } = new();
     public byte StackPointer { get; set; }
     public ushort ProgramCounter { get; set; }
@@ -26,7 +37,7 @@ public class TestNesHal : INesHal
 
     public bool GetFlag(CpuStatusFlags flag)
     {
-        return Flags.GetValueOrDefault(flag);
+        return Flags[flag];
     }
 
     public byte GetStackPointer()

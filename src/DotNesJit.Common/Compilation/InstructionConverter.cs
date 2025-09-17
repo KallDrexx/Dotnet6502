@@ -572,11 +572,12 @@ public static class InstructionConverter
         var variable = new NesIr.Variable(0);
 
         var increment = new NesIr.Binary(NesIr.BinaryOperator.Add, operand, new NesIr.Constant(1), variable);
+        var convertToByte = new NesIr.ConvertVariableToByte(variable);
         var store = new NesIr.Copy(variable, operand);
         var zero = ZeroFlagInstruction(variable);
         var (checkNegative, setNegative) = NegativeFlagInstructions(variable, variable);
 
-        return [increment, store, zero, checkNegative, setNegative];
+        return [increment, convertToByte, store, zero, checkNegative, setNegative];
     }
 
     /// <summary>
