@@ -17,6 +17,8 @@ public class TestNesHal : INesHal
     public byte YRegister { get; set; }
     public byte ProcessorStatus { get; set; }
 
+    public bool SoftwareInterruptTriggered { get; private set; }
+
     public void SetFlag(CpuStatusFlags flag, bool value)
     {
         Flags[flag] = value;
@@ -69,7 +71,7 @@ public class TestNesHal : INesHal
 
     public void TriggerSoftwareInterrupt()
     {
-        throw new NotImplementedException();
+        SoftwareInterruptTriggered = true;
     }
 
     public void JumpToAddress(ushort address)

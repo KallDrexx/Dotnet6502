@@ -7,7 +7,7 @@ namespace DotNesJit.Tests.Common.Compilation.MsilGeneration;
 public class ReturnInstructionTests
 {
     [Fact]
-    public void Return_Stops_Multiple_Different_Instruction_Types()
+    public void Return_Stops_Before_Subsequent_Instructions()
     {
         var setAccumulator = new NesIr.Copy(
             new NesIr.Constant(77),
