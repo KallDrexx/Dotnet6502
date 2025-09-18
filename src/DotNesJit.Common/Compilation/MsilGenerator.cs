@@ -189,17 +189,9 @@ public class MsilGenerator
 
     private static void GenerateCopy(NesIr.Copy copy, Context context)
     {
-        context.IlGenerator.Emit(OpCodes.Ldstr, "LoadValueToStack");
-        context.IlGenerator.Emit(OpCodes.Pop);
         LoadValueToStack(copy.Source, context);
-        context.IlGenerator.Emit(OpCodes.Ldstr, "SaveStackToTempLocal");
-        context.IlGenerator.Emit(OpCodes.Pop);
         SaveStackToTempLocal(context);
-        context.IlGenerator.Emit(OpCodes.Ldstr, "WriteTempLocalToValue");
-        context.IlGenerator.Emit(OpCodes.Pop);
         WriteTempLocalToValue(copy.Destination, context);
-        context.IlGenerator.Emit(OpCodes.Ldstr, "Done");
-        context.IlGenerator.Emit(OpCodes.Pop);
     }
 
     private static void GenerateInvokeIrq(Context context)
