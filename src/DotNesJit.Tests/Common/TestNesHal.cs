@@ -26,7 +26,30 @@ public class TestNesHal : INesHal
     public byte ARegister { get; set; }
     public byte XRegister { get; set; }
     public byte YRegister { get; set; }
-    public byte ProcessorStatus { get; set; }
+
+    public byte ProcessorStatus
+    {
+        get => (byte)(
+            (Convert.ToByte(Flags[CpuStatusFlags.Negative]) << 7) |
+            (Convert.ToByte(Flags[CpuStatusFlags.Overflow]) << 6) |
+            (Convert.ToByte(Flags[CpuStatusFlags.Always1]) << 5) |
+            (Convert.ToByte(Flags[CpuStatusFlags.BFlag]) << 4) |
+            (Convert.ToByte(Flags[CpuStatusFlags.Decimal]) << 3) |
+            (Convert.ToByte(Flags[CpuStatusFlags.InterruptDisable]) << 2) |
+            (Convert.ToByte(Flags[CpuStatusFlags.Zero]) << 1) |
+            (Convert.ToByte(Flags[CpuStatusFlags.Carry]) << 0));
+        set
+        {
+            Flags[CpuStatusFlags.Negative] =         (value & 0b10000000) == 0b10000000;
+            Flags[CpuStatusFlags.Overflow] =         (value & 0b01000000) == 0b01000000;
+            Flags[CpuStatusFlags.Always1] =          (value & 0b00100000) == 0b00100000;
+            Flags[CpuStatusFlags.BFlag] =            (value & 0b00010000) == 0b00010000;
+            Flags[CpuStatusFlags.Decimal] =          (value & 0b00001000) == 0b00001000;
+            Flags[CpuStatusFlags.InterruptDisable] = (value & 0b00000100) == 0b00000100;
+            Flags[CpuStatusFlags.Zero] =             (value & 0b00000010) == 0b00000010;
+            Flags[CpuStatusFlags.Carry] =            (value & 0b00000001) == 0b00000001;
+        }
+    }
 
     public bool SoftwareInterruptTriggered { get; private set; }
 

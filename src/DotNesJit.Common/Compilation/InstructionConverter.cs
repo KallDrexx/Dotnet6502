@@ -784,9 +784,14 @@ public static class InstructionConverter
     /// </summary>
     private static NesIr.Instruction[] ConvertPla()
     {
-        var pop = new NesIr.PopStackValue(new NesIr.Register(NesIr.RegisterName.Accumulator));
+        var accumulator = new NesIr.Register(NesIr.RegisterName.Accumulator);
+        var tempVariable = new NesIr.Variable(0);
 
-        return [pop];
+        var pop = new NesIr.PopStackValue(accumulator);
+        var zero = ZeroFlagInstruction(accumulator);
+        var (checkNegative, setNegative) = NegativeFlagInstructions(accumulator, tempVariable);
+
+        return [pop, zero, checkNegative, setNegative];
     }
 
     /// <summary>
