@@ -1178,30 +1178,30 @@ public static class InstructionConverter
                 return new NesIr.Constant(instruction.Operands[0]);
 
             case AddressingMode.ZeroPage:
-                return new NesIr.Memory(instruction.Operands[0], null);
+                return new NesIr.Memory(instruction.Operands[0], null, true);
 
             case AddressingMode.ZeroPageX:
-                return new NesIr.Memory(instruction.Operands[0], NesIr.RegisterName.XIndex);
+                return new NesIr.Memory(instruction.Operands[0], NesIr.RegisterName.XIndex, true);
 
             case AddressingMode.ZeroPageY:
-                return new NesIr.Memory(instruction.Operands[0], NesIr.RegisterName.YIndex);
+                return new NesIr.Memory(instruction.Operands[0], NesIr.RegisterName.YIndex, true);
 
             case AddressingMode.Absolute:
             {
                 var fullAddress = (ushort)((instruction.Operands[1] << 8) | instruction.Operands[0]);
-                return new NesIr.Memory(fullAddress, null);
+                return new NesIr.Memory(fullAddress, null, false);
             }
 
             case AddressingMode.AbsoluteX:
             {
                 var fullAddress = (ushort)((instruction.Operands[1] << 8) | instruction.Operands[0]);
-                return new NesIr.Memory(fullAddress, NesIr.RegisterName.XIndex);
+                return new NesIr.Memory(fullAddress, NesIr.RegisterName.XIndex, false);
             }
 
             case AddressingMode.AbsoluteY:
             {
                 var fullAddress = (ushort)((instruction.Operands[1] << 8) | instruction.Operands[0]);
-                return new NesIr.Memory(fullAddress, NesIr.RegisterName.YIndex);
+                return new NesIr.Memory(fullAddress, NesIr.RegisterName.YIndex, false);
             }
 
             default:

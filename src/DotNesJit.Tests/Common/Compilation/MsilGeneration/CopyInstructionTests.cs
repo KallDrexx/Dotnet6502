@@ -50,7 +50,7 @@ public class CopyInstructionTests
     {
         var instruction = new NesIr.Copy(
             new NesIr.Constant(77),
-            new NesIr.Memory(0x1000, null));
+            new NesIr.Memory(0x1000, null, false));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.RunTestMethod();
@@ -67,7 +67,7 @@ public class CopyInstructionTests
 
         var instruction2 = new NesIr.Copy(
             new NesIr.Variable(0),
-            new NesIr.Memory(0x3434, null));
+            new NesIr.Memory(0x3434, null, false));
 
         var testRunner = new InstructionTestRunner([instruction, instruction2]);
         testRunner.RunTestMethod();
@@ -108,8 +108,13 @@ public class CopyInstructionTests
             new NesIr.Register(NesIr.RegisterName.Accumulator),
             new NesIr.Register(NesIr.RegisterName.XIndex));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.ARegister = 55;
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            NesHal =
+            {
+                ARegister = 55
+            }
+        };
         testRunner.RunTestMethod();
 
         testRunner.NesHal.XRegister.ShouldBe((byte)55);
@@ -122,8 +127,13 @@ public class CopyInstructionTests
             new NesIr.Register(NesIr.RegisterName.Accumulator),
             new NesIr.Register(NesIr.RegisterName.YIndex));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.ARegister = 66;
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            NesHal =
+            {
+                ARegister = 66
+            }
+        };
         testRunner.RunTestMethod();
 
         testRunner.NesHal.YRegister.ShouldBe((byte)66);
@@ -136,8 +146,13 @@ public class CopyInstructionTests
             new NesIr.Register(NesIr.RegisterName.XIndex),
             new NesIr.Register(NesIr.RegisterName.Accumulator));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.XRegister = 33;
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            NesHal =
+            {
+                XRegister = 33
+            }
+        };
         testRunner.RunTestMethod();
 
         testRunner.NesHal.ARegister.ShouldBe((byte)33);
@@ -150,8 +165,13 @@ public class CopyInstructionTests
             new NesIr.Register(NesIr.RegisterName.XIndex),
             new NesIr.Register(NesIr.RegisterName.YIndex));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.XRegister = 44;
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            NesHal =
+            {
+                XRegister = 44
+            }
+        };
         testRunner.RunTestMethod();
 
         testRunner.NesHal.YRegister.ShouldBe((byte)44);
@@ -164,8 +184,13 @@ public class CopyInstructionTests
             new NesIr.Register(NesIr.RegisterName.YIndex),
             new NesIr.Register(NesIr.RegisterName.Accumulator));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.YRegister = 77;
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            NesHal =
+            {
+                YRegister = 77
+            }
+        };
         testRunner.RunTestMethod();
 
         testRunner.NesHal.ARegister.ShouldBe((byte)77);
@@ -178,8 +203,13 @@ public class CopyInstructionTests
             new NesIr.Register(NesIr.RegisterName.YIndex),
             new NesIr.Register(NesIr.RegisterName.XIndex));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.YRegister = 88;
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            NesHal =
+            {
+                YRegister = 88
+            }
+        };
         testRunner.RunTestMethod();
 
         testRunner.NesHal.XRegister.ShouldBe((byte)88);
@@ -192,8 +222,13 @@ public class CopyInstructionTests
             new NesIr.Register(NesIr.RegisterName.Accumulator),
             new NesIr.Register(NesIr.RegisterName.Accumulator));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.ARegister = 123;
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            NesHal =
+            {
+                ARegister = 123
+            }
+        };
         testRunner.RunTestMethod();
 
         testRunner.NesHal.ARegister.ShouldBe((byte)123);
@@ -203,7 +238,7 @@ public class CopyInstructionTests
     public void Can_Copy_Memory_To_Register()
     {
         var instruction = new NesIr.Copy(
-            new NesIr.Memory(0x2000, null),
+            new NesIr.Memory(0x2000, null, false),
             new NesIr.Register(NesIr.RegisterName.Accumulator));
 
         var testRunner = new InstructionTestRunner([instruction]);
@@ -214,14 +249,61 @@ public class CopyInstructionTests
     }
 
     [Fact]
+    public void Can_Copy_Memory_With_Offset_To_Register_Via_16_Bit_Address()
+    {
+        var instruction = new NesIr.Copy(
+            new NesIr.Memory(0x00FF, NesIr.RegisterName.XIndex, false),
+            new NesIr.Register(NesIr.RegisterName.Accumulator));
+
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            NesHal =
+            {
+                XRegister = 10,
+            }
+        };
+
+        testRunner.NesHal.WriteMemory(0x0109, 156);
+        testRunner.RunTestMethod();
+
+        testRunner.NesHal.ARegister.ShouldBe((byte)156);
+    }
+
+    [Fact]
+    public void Can_Copy_Memory_With_Offset_To_Register_Via_8_Bit_Address()
+    {
+        var instruction = new NesIr.Copy(
+            new NesIr.Memory(0x00FF, NesIr.RegisterName.XIndex, true),
+            new NesIr.Register(NesIr.RegisterName.Accumulator));
+
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            NesHal =
+            {
+                XRegister = 10,
+            }
+        };
+
+        testRunner.NesHal.WriteMemory(0x0009, 156);
+        testRunner.RunTestMethod();
+
+        testRunner.NesHal.ARegister.ShouldBe((byte)156);
+    }
+
+    [Fact]
     public void Can_Copy_Register_To_Memory()
     {
         var instruction = new NesIr.Copy(
             new NesIr.Register(NesIr.RegisterName.XIndex),
-            new NesIr.Memory(0x3000, null));
+            new NesIr.Memory(0x3000, null, false));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.XRegister = 199;
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            NesHal =
+            {
+                XRegister = 199
+            }
+        };
         testRunner.RunTestMethod();
 
         testRunner.NesHal.ReadMemory(0x3000).ShouldBe((byte)199);
@@ -231,11 +313,16 @@ public class CopyInstructionTests
     public void Can_Copy_Memory_With_Register_Offset()
     {
         var instruction = new NesIr.Copy(
-            new NesIr.Memory(0x4000, NesIr.RegisterName.XIndex),
+            new NesIr.Memory(0x4000, NesIr.RegisterName.XIndex, false),
             new NesIr.Register(NesIr.RegisterName.Accumulator));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.XRegister = 5;
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            NesHal =
+            {
+                XRegister = 5
+            }
+        };
         testRunner.NesHal.WriteMemory(0x4005, 211);
         testRunner.RunTestMethod();
 
@@ -243,26 +330,51 @@ public class CopyInstructionTests
     }
 
     [Fact]
-    public void Can_Copy_To_Memory_With_Register_Offset()
+    public void Can_Copy_To_Memory_With_Register_Offset_As_16_Bit_Address()
     {
         var instruction = new NesIr.Copy(
             new NesIr.Register(NesIr.RegisterName.YIndex),
-            new NesIr.Memory(0x5000, NesIr.RegisterName.XIndex));
+            new NesIr.Memory(0x00FF, NesIr.RegisterName.XIndex, false));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.XRegister = 10;
-        testRunner.NesHal.YRegister = 222;
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            NesHal =
+            {
+                XRegister = 10,
+                YRegister = 222
+            }
+        };
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.ReadMemory(0x500A).ShouldBe((byte)222);
+        testRunner.NesHal.ReadMemory(0x0109).ShouldBe((byte)222);
+    }
+
+    [Fact]
+    public void Can_Copy_To_Memory_With_Register_Offset_As_8_Bit_Address()
+    {
+        var instruction = new NesIr.Copy(
+            new NesIr.Register(NesIr.RegisterName.YIndex),
+            new NesIr.Memory(0x00FF, NesIr.RegisterName.XIndex, true));
+
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            NesHal =
+            {
+                XRegister = 10,
+                YRegister = 222
+            }
+        };
+        testRunner.RunTestMethod();
+
+        testRunner.NesHal.ReadMemory(0x0009).ShouldBe((byte)222);
     }
 
     [Fact]
     public void Can_Copy_Memory_To_Memory()
     {
         var instruction = new NesIr.Copy(
-            new NesIr.Memory(0x6000, null),
-            new NesIr.Memory(0x7000, null));
+            new NesIr.Memory(0x6000, null, false),
+            new NesIr.Memory(0x7000, null, false));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.NesHal.WriteMemory(0x6000, 133);
@@ -297,8 +409,13 @@ public class CopyInstructionTests
             new NesIr.Variable(1),
             new NesIr.Register(NesIr.RegisterName.YIndex));
 
-        var testRunner = new InstructionTestRunner([copyToVar, copyFromVar]);
-        testRunner.NesHal.XRegister = 177;
+        var testRunner = new InstructionTestRunner([copyToVar, copyFromVar])
+        {
+            NesHal =
+            {
+                XRegister = 177
+            }
+        };
         testRunner.RunTestMethod();
 
         testRunner.NesHal.YRegister.ShouldBe((byte)177);
@@ -312,7 +429,7 @@ public class CopyInstructionTests
             new NesIr.Variable(2));
         var copyFromVar = new NesIr.Copy(
             new NesIr.Variable(2),
-            new NesIr.Memory(0x8000, null));
+            new NesIr.Memory(0x8000, null, false));
 
         var testRunner = new InstructionTestRunner([copyToVar, copyFromVar]);
         testRunner.RunTestMethod();
@@ -360,8 +477,13 @@ public class CopyInstructionTests
             new NesIr.Register(NesIr.RegisterName.Accumulator),
             new NesIr.Flag(NesIr.FlagName.Negative));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.ARegister = 1;
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            NesHal =
+            {
+                ARegister = 1
+            }
+        };
         testRunner.RunTestMethod();
 
         testRunner.NesHal.GetFlag(CpuStatusFlags.Negative).ShouldBe(true);
@@ -385,7 +507,7 @@ public class CopyInstructionTests
     {
         var instruction = new NesIr.Copy(
             new NesIr.Flag(NesIr.FlagName.Carry),
-            new NesIr.Memory(0x9000, null));
+            new NesIr.Memory(0x9000, null, false));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.NesHal.SetFlag(CpuStatusFlags.Carry, true);
@@ -398,7 +520,7 @@ public class CopyInstructionTests
     public void Can_Copy_Memory_To_Flag()
     {
         var instruction = new NesIr.Copy(
-            new NesIr.Memory(0xA000, null),
+            new NesIr.Memory(0xA000, null, false),
             new NesIr.Flag(NesIr.FlagName.InterruptDisable));
 
         var testRunner = new InstructionTestRunner([instruction]);
@@ -432,8 +554,13 @@ public class CopyInstructionTests
             new NesIr.AllFlags(),
             new NesIr.Register(NesIr.RegisterName.Accumulator));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.ProcessorStatus = 0xC3;
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            NesHal =
+            {
+                ProcessorStatus = 0xC3
+            }
+        };
         testRunner.RunTestMethod();
 
         testRunner.NesHal.ARegister.ShouldBe((byte)0xC3);
@@ -446,8 +573,13 @@ public class CopyInstructionTests
             new NesIr.Register(NesIr.RegisterName.Accumulator),
             new NesIr.AllFlags());
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.ARegister = 0x81;
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            NesHal =
+            {
+                ARegister = 0x81
+            }
+        };
         testRunner.RunTestMethod();
 
         testRunner.NesHal.ProcessorStatus.ShouldBe((byte)0x81);
@@ -458,10 +590,15 @@ public class CopyInstructionTests
     {
         var instruction = new NesIr.Copy(
             new NesIr.AllFlags(),
-            new NesIr.Memory(0xB000, null));
+            new NesIr.Memory(0xB000, null, false));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.ProcessorStatus = 0x5A;
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            NesHal =
+            {
+                ProcessorStatus = 0x5A
+            }
+        };
         testRunner.RunTestMethod();
 
         testRunner.NesHal.ReadMemory(0xB000).ShouldBe((byte)0x5A);
@@ -471,7 +608,7 @@ public class CopyInstructionTests
     public void Can_Copy_Memory_To_AllFlags()
     {
         var instruction = new NesIr.Copy(
-            new NesIr.Memory(0xC000, null),
+            new NesIr.Memory(0xC000, null, false),
             new NesIr.AllFlags());
 
         var testRunner = new InstructionTestRunner([instruction]);
@@ -488,8 +625,13 @@ public class CopyInstructionTests
             new NesIr.StackPointer(),
             new NesIr.Register(NesIr.RegisterName.XIndex));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.StackPointer = 0xF8;
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            NesHal =
+            {
+                StackPointer = 0xF8
+            }
+        };
         testRunner.RunTestMethod();
 
         testRunner.NesHal.XRegister.ShouldBe((byte)0xF8);
@@ -502,8 +644,13 @@ public class CopyInstructionTests
             new NesIr.Register(NesIr.RegisterName.YIndex),
             new NesIr.StackPointer());
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.YRegister = 0xE5;
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            NesHal =
+            {
+                YRegister = 0xE5
+            }
+        };
         testRunner.RunTestMethod();
 
         testRunner.NesHal.StackPointer.ShouldBe((byte)0xE5);
@@ -514,10 +661,15 @@ public class CopyInstructionTests
     {
         var instruction = new NesIr.Copy(
             new NesIr.StackPointer(),
-            new NesIr.Memory(0xD000, null));
+            new NesIr.Memory(0xD000, null, false));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.StackPointer = 0xCC;
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            NesHal =
+            {
+                StackPointer = 0xCC
+            }
+        };
         testRunner.RunTestMethod();
 
         testRunner.NesHal.ReadMemory(0xD000).ShouldBe((byte)0xCC);
@@ -527,7 +679,7 @@ public class CopyInstructionTests
     public void Can_Copy_Memory_To_StackPointer()
     {
         var instruction = new NesIr.Copy(
-            new NesIr.Memory(0xE000, null),
+            new NesIr.Memory(0xE000, null, false),
             new NesIr.StackPointer());
 
         var testRunner = new InstructionTestRunner([instruction]);

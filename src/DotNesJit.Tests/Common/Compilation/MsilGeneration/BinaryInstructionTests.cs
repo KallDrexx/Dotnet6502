@@ -328,10 +328,15 @@ public class BinaryInstructionTests
             NesIr.BinaryOperator.Add,
             new NesIr.Register(NesIr.RegisterName.Accumulator),
             new NesIr.Constant(10),
-            new NesIr.Memory(0x1000, null));
+            new NesIr.Memory(0x1000, null, false));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.ARegister = 25;
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            NesHal =
+            {
+                ARegister = 25
+            }
+        };
         testRunner.RunTestMethod();
 
         testRunner.NesHal.ReadMemory(0x1000).ShouldBe((byte)35);
@@ -361,8 +366,8 @@ public class BinaryInstructionTests
     {
         var instruction = new NesIr.Binary(
             NesIr.BinaryOperator.Add,
-            new NesIr.Memory(0x2000, null),
-            new NesIr.Memory(0x2001, null),
+            new NesIr.Memory(0x2000, null, false),
+            new NesIr.Memory(0x2001, null, false),
             new NesIr.Register(NesIr.RegisterName.XIndex));
 
         var testRunner = new InstructionTestRunner([instruction]);
@@ -378,12 +383,17 @@ public class BinaryInstructionTests
     {
         var instruction = new NesIr.Binary(
             NesIr.BinaryOperator.Add,
-            new NesIr.Memory(0x3000, NesIr.RegisterName.XIndex),
+            new NesIr.Memory(0x3000, NesIr.RegisterName.XIndex, false),
             new NesIr.Constant(5),
             new NesIr.Register(NesIr.RegisterName.YIndex));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.XRegister = 10;
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            NesHal =
+            {
+                XRegister = 10
+            }
+        };
         testRunner.NesHal.WriteMemory(0x300A, 30);
         testRunner.RunTestMethod();
 
@@ -437,8 +447,13 @@ public class BinaryInstructionTests
             new NesIr.Constant(10),
             new NesIr.Register(NesIr.RegisterName.YIndex));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.ProcessorStatus = 0x20;
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            NesHal =
+            {
+                ProcessorStatus = 0x20
+            }
+        };
         testRunner.RunTestMethod();
 
         testRunner.NesHal.YRegister.ShouldBe((byte)42);
@@ -453,8 +468,13 @@ public class BinaryInstructionTests
             new NesIr.Constant(5),
             new NesIr.Register(NesIr.RegisterName.Accumulator));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.StackPointer = 0xF0;
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            NesHal =
+            {
+                StackPointer = 0xF0
+            }
+        };
         testRunner.RunTestMethod();
 
         testRunner.NesHal.ARegister.ShouldBe((byte)0xF5);
@@ -512,10 +532,15 @@ public class BinaryInstructionTests
             NesIr.BinaryOperator.Add,
             new NesIr.Constant(10),
             new NesIr.Constant(20),
-            new NesIr.Memory(0x4000, NesIr.RegisterName.YIndex));
+            new NesIr.Memory(0x4000, NesIr.RegisterName.YIndex, false));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.YRegister = 15;
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            NesHal =
+            {
+                YRegister = 15
+            }
+        };
         testRunner.RunTestMethod();
 
         testRunner.NesHal.ReadMemory(0x400F).ShouldBe((byte)30);

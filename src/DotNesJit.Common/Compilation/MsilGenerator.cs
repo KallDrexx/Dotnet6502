@@ -341,6 +341,10 @@ public class MsilGenerator
                 {
                     LoadRegisterToStack(memory.RegisterToAdd.Value, context);
                     context.IlGenerator.Emit(OpCodes.Add);
+                    if (memory.SingleByteAddress)
+                    {
+                        context.IlGenerator.Emit(OpCodes.Conv_I1);
+                    }
                 }
 
                 context.IlGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
@@ -409,6 +413,10 @@ public class MsilGenerator
                 {
                     LoadRegisterToStack(memory.RegisterToAdd.Value, context);
                     context.IlGenerator.Emit(OpCodes.Add);
+                    if (memory.SingleByteAddress)
+                    {
+                        context.IlGenerator.Emit(OpCodes.Conv_I1);
+                    }
                 }
 
                 LoadTempLocalToStack(context);

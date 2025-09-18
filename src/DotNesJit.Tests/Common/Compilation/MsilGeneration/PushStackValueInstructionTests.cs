@@ -22,8 +22,13 @@ public class PushStackValueInstructionTests
     {
         var instruction = new NesIr.PushStackValue(new NesIr.Register(NesIr.RegisterName.Accumulator));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.ARegister = 123;
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            NesHal =
+            {
+                ARegister = 123
+            }
+        };
         testRunner.RunTestMethod();
 
         testRunner.NesHal.PopFromStack().ShouldBe((byte)123);
@@ -34,8 +39,13 @@ public class PushStackValueInstructionTests
     {
         var instruction = new NesIr.PushStackValue(new NesIr.Register(NesIr.RegisterName.XIndex));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.XRegister = 55;
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            NesHal =
+            {
+                XRegister = 55
+            }
+        };
         testRunner.RunTestMethod();
 
         testRunner.NesHal.PopFromStack().ShouldBe((byte)55);
@@ -46,8 +56,13 @@ public class PushStackValueInstructionTests
     {
         var instruction = new NesIr.PushStackValue(new NesIr.Register(NesIr.RegisterName.YIndex));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.YRegister = 88;
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            NesHal =
+            {
+                YRegister = 88
+            }
+        };
         testRunner.RunTestMethod();
 
         testRunner.NesHal.PopFromStack().ShouldBe((byte)88);
@@ -56,7 +71,7 @@ public class PushStackValueInstructionTests
     [Fact]
     public void Can_Push_Memory_To_Stack()
     {
-        var instruction = new NesIr.PushStackValue(new NesIr.Memory(0x2000, null));
+        var instruction = new NesIr.PushStackValue(new NesIr.Memory(0x2000, null, false));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.NesHal.WriteMemory(0x2000, 156);
@@ -68,10 +83,15 @@ public class PushStackValueInstructionTests
     [Fact]
     public void Can_Push_Memory_With_Register_Offset_To_Stack()
     {
-        var instruction = new NesIr.PushStackValue(new NesIr.Memory(0x4000, NesIr.RegisterName.XIndex));
+        var instruction = new NesIr.PushStackValue(new NesIr.Memory(0x4000, NesIr.RegisterName.XIndex, false));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.XRegister = 5;
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            NesHal =
+            {
+                XRegister = 5
+            }
+        };
         testRunner.NesHal.WriteMemory(0x4005, 211);
         testRunner.RunTestMethod();
 
@@ -157,8 +177,13 @@ public class PushStackValueInstructionTests
     {
         var instruction = new NesIr.PushStackValue(new NesIr.AllFlags());
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.ProcessorStatus = 0xC3;
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            NesHal =
+            {
+                ProcessorStatus = 0xC3
+            }
+        };
         testRunner.RunTestMethod();
 
         testRunner.NesHal.PopFromStack().ShouldBe((byte)0xC3);
@@ -169,8 +194,13 @@ public class PushStackValueInstructionTests
     {
         var instruction = new NesIr.PushStackValue(new NesIr.StackPointer());
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.StackPointer = 0xF8;
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            NesHal =
+            {
+                StackPointer = 0xF8
+            }
+        };
         testRunner.RunTestMethod();
 
         testRunner.NesHal.PopFromStack().ShouldBe((byte)0xF8);

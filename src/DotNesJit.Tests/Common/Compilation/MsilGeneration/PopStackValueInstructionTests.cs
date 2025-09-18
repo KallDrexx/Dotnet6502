@@ -45,7 +45,7 @@ public class PopStackValueInstructionTests
     [Fact]
     public void Can_Pop_To_Memory()
     {
-        var instruction = new NesIr.PopStackValue(new NesIr.Memory(0x3000, null));
+        var instruction = new NesIr.PopStackValue(new NesIr.Memory(0x3000, null, false));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.NesHal.PushToStack(199);
@@ -57,10 +57,15 @@ public class PopStackValueInstructionTests
     [Fact]
     public void Can_Pop_To_Memory_With_Register_Offset()
     {
-        var instruction = new NesIr.PopStackValue(new NesIr.Memory(0x5000, NesIr.RegisterName.XIndex));
+        var instruction = new NesIr.PopStackValue(new NesIr.Memory(0x5000, NesIr.RegisterName.XIndex, false));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.XRegister = 10;
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            NesHal =
+            {
+                XRegister = 10
+            }
+        };
         testRunner.NesHal.PushToStack(222);
         testRunner.RunTestMethod();
 

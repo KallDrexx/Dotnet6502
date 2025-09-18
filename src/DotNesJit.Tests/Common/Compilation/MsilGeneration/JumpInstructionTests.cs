@@ -183,9 +183,9 @@ public class JumpInstructionTests
     {
         var setMemory = new NesIr.Copy(
             new NesIr.Constant(0),
-            new NesIr.Memory(0x2000, null));
+            new NesIr.Memory(0x2000, null, false));
         var jumpIfZero = new NesIr.JumpIfZero(
-            new NesIr.Memory(0x2000, null),
+            new NesIr.Memory(0x2000, null, false),
             new NesIr.Identifier("jump_target"));
         var skipInstruction = new NesIr.Copy(
             new NesIr.Constant(100),

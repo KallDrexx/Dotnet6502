@@ -15,7 +15,7 @@ public class ReturnInstructionTests
 
         var setMemory = new NesIr.Copy(
             new NesIr.Constant(88),
-            new NesIr.Memory(0x4000, null));
+            new NesIr.Memory(0x4000, null, false));
 
         var setFlag = new NesIr.Copy(
             new NesIr.Constant(1),
@@ -32,7 +32,7 @@ public class ReturnInstructionTests
 
         var modifyMemory = new NesIr.Copy(
             new NesIr.Constant(22),
-            new NesIr.Memory(0x4000, null));
+            new NesIr.Memory(0x4000, null, false));
 
         var clearFlag = new NesIr.Copy(
             new NesIr.Constant(0),

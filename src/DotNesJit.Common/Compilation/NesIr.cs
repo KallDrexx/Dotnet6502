@@ -37,7 +37,7 @@ public static class NesIr
 
     public record Constant(byte Number) : Value;
 
-    public record Memory(ushort Address, RegisterName? RegisterToAdd) : Value;
+    public record Memory(ushort Address, RegisterName? RegisterToAdd, bool SingleByteAddress) : Value;
 
     public record Variable(int Index) : Value;
 

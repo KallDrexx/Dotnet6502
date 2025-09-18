@@ -66,7 +66,7 @@ public class ConvertVariableToByteInstructionTests
         var convertInstruction = new NesIr.ConvertVariableToByte(new NesIr.Variable(0));
         var writeToMemory = new NesIr.Copy(
             new NesIr.Variable(0),
-            new NesIr.Memory(0x2000, null));
+            new NesIr.Memory(0x2000, null, false));
 
         var testRunner = new InstructionTestRunner([setupVar, convertInstruction, writeToMemory]);
         testRunner.RunTestMethod();
