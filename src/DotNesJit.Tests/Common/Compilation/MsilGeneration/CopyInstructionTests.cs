@@ -310,6 +310,26 @@ public class CopyInstructionTests
     }
 
     [Fact]
+    public void Can_Copy_Register_To_Memory_With_Zero_Page_Y_Indexing()
+    {
+        var instruction = new NesIr.Copy(
+            new NesIr.Register(NesIr.RegisterName.XIndex),
+            new NesIr.Memory(0x0000, NesIr.RegisterName.YIndex, true));
+
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            NesHal =
+            {
+                XRegister = 199,
+                YRegister = 0xFF,
+            }
+        };
+        testRunner.RunTestMethod();
+
+        testRunner.NesHal.ReadMemory(0x00FF).ShouldBe((byte)199);
+    }
+
+    [Fact]
     public void Can_Copy_Memory_With_Register_Offset()
     {
         var instruction = new NesIr.Copy(

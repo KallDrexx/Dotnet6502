@@ -343,7 +343,7 @@ public class MsilGenerator
                     context.IlGenerator.Emit(OpCodes.Add);
                     if (memory.SingleByteAddress)
                     {
-                        context.IlGenerator.Emit(OpCodes.Conv_I1);
+                        context.IlGenerator.Emit(OpCodes.Conv_U1);
                     }
                 }
 
@@ -415,7 +415,7 @@ public class MsilGenerator
                     context.IlGenerator.Emit(OpCodes.Add);
                     if (memory.SingleByteAddress)
                     {
-                        context.IlGenerator.Emit(OpCodes.Conv_I1);
+                        context.IlGenerator.Emit(OpCodes.Conv_U1);
                     }
                 }
 
