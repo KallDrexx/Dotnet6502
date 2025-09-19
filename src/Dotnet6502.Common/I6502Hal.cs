@@ -1,4 +1,4 @@
-namespace Dotnet6502.Common.Hal;
+namespace Dotnet6502.Common;
 
 /// <summary>
 /// 6502 Processor Hardware Abstraction Layer interface
@@ -17,15 +17,8 @@ public interface I6502Hal
     byte ReadMemory(ushort address);
     void WriteMemory(ushort address, byte value);
 
-    ushort GetProgramCounter();
-    void SetProgramCounter(ushort value);
-
     void PushToStack(byte value);
     byte PopFromStack();
 
     public void TriggerSoftwareInterrupt();
-    public void JumpToAddress(ushort address);
-    public void CallFunction(ushort address);
-    public void ReturnFromSubroutine();
-    public void ReturnFromInterrupt();
 }

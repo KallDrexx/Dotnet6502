@@ -1,5 +1,4 @@
 using Dotnet6502.Common;
-using Dotnet6502.Common.Hal;
 
 namespace Dotnet6502.Tests.Common;
 

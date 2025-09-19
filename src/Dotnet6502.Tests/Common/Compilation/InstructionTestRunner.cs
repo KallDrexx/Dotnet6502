@@ -1,8 +1,8 @@
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.Loader;
+using Dotnet6502.Common;
 using Dotnet6502.Common.Compilation;
-using Dotnet6502.Common.Hal;
 using Shouldly;
 
 namespace Dotnet6502.Tests.Common.Compilation;

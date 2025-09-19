@@ -1,6 +1,5 @@
 using System.Reflection;
 using System.Reflection.Emit;
-using Dotnet6502.Common.Hal;
 
 namespace Dotnet6502.Common.Compilation;
 

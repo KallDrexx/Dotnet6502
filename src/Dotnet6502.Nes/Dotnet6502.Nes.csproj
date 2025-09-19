@@ -7,11 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\NESDecompiler\NESDecompiler.Core\NESDecompiler.Core.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Hal\" />
+      <ProjectReference Include="..\Dotnet6502.Common\Dotnet6502.Common.csproj" />
     </ItemGroup>
 
 </Project>
