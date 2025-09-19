@@ -20,7 +20,6 @@ public class Test6502Hal : I6502Hal
 
     public Dictionary<ushort, byte> MemoryValues { get; } = new();
     public byte StackPointer { get; set; }
-    public ushort ProgramCounter { get; set; }
 
     public byte ARegister { get; set; }
     public byte XRegister { get; set; }
@@ -62,16 +61,6 @@ public class Test6502Hal : I6502Hal
         return Flags[flag];
     }
 
-    public byte GetStackPointer()
-    {
-        return StackPointer;
-    }
-
-    public void SetStackPointer(byte value)
-    {
-        StackPointer = value;
-    }
-
     public byte ReadMemory(ushort address)
     {
         return MemoryValues.GetValueOrDefault(address);
@@ -80,16 +69,6 @@ public class Test6502Hal : I6502Hal
     public void WriteMemory(ushort address, byte value)
     {
         MemoryValues[address] = value;
-    }
-
-    public ushort GetProgramCounter()
-    {
-        return ProgramCounter;
-    }
-
-    public void SetProgramCounter(ushort value)
-    {
-        ProgramCounter = value;
     }
 
     public void PushToStack(byte value)
@@ -105,25 +84,5 @@ public class Test6502Hal : I6502Hal
     public void TriggerSoftwareInterrupt()
     {
         SoftwareInterruptTriggered = true;
-    }
-
-    public void JumpToAddress(ushort address)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void CallFunction(ushort address)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void ReturnFromSubroutine()
-    {
-        throw new NotImplementedException();
-    }
-
-    public void ReturnFromInterrupt()
-    {
-        throw new NotImplementedException();
     }
 }

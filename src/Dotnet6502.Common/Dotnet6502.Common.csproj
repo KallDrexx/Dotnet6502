@@ -10,8 +10,4 @@
       <ProjectReference Include="..\..\NESDecompiler\NESDecompiler.Core\NESDecompiler.Core.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Hal\" />
-    </ItemGroup>
-
 </Project>
