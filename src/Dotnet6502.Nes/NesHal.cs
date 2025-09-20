@@ -92,4 +92,9 @@ public class NesHal : I6502Hal
     {
         throw new NotImplementedException();
     }
+
+    public void IncrementCpuCycleCount(int count)
+    {
+
+    }
 }

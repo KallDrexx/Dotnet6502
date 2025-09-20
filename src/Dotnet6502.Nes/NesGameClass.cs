@@ -15,6 +15,12 @@ public class NesGameClass
 {
     private record NesMethod(Function NesFunction, MethodBuilder Builder);
 
+    private record ConvertedInstruction(
+        DisassembledInstruction OriginalInstruction,
+        IReadOnlyList<Ir6502.Instruction> Ir6502Instructions);
+
+    private record IncrementCycleCount(int Cycles) : Ir6502.Instruction;
+
     private readonly PersistedAssemblyBuilder _assemblyBuilder;
     private readonly Dictionary<string, NesMethod> _methods = new();
     private readonly Decompiler _decompiler;
@@ -110,35 +116,77 @@ public class NesGameClass
             .ToArray();
 
         var instructionConverterContext = new InstructionConverter.Context(disassembler.Labels, _decompiler.Functions);
-        var nesIrInstructions = new List<Ir6502.Instruction>();
+        var convertedInstructions = new List<ConvertedInstruction>();
         foreach (var disassembledInstruction in disassembledInstructions)
         {
-            nesIrInstructions.AddRange(
-                InstructionConverter.Convert(disassembledInstruction, instructionConverterContext));
+            var nesIrInstructions = InstructionConverter.Convert(disassembledInstruction, instructionConverterContext);
+
+            // Prepend cycle count instruction. This has to be done first, otherwise it will get missed
+            // by branch/jump calls.
+            var instructionsWithCycleCount = new List<Ir6502.Instruction>(
+                [new IncrementCycleCount(disassembledInstruction.Info.Cycles)]
+            ).Concat(nesIrInstructions).ToArray();
+
+            convertedInstructions.Add(new ConvertedInstruction(disassembledInstruction, instructionsWithCycleCount));
         }
 
         // We need to pull out all labels so they can be pre-defined, since they need to be
         // defined before they can be marked or referenced
-        var ilLabels = nesIrInstructions
+        var ilLabels = convertedInstructions
+            .SelectMany(x => x.Ir6502Instructions)
             .OfType<Ir6502.Label>()
             .ToDictionary(x => x.Name, x => ilGenerator.DefineLabel());
 
-        var localCount = GetMaxLocalCount(nesIrInstructions) + MsilGenerator.TemporaryLocalsRequired;
+        var localCount = GetMaxLocalCount(convertedInstructions.SelectMany(x => x.Ir6502Instructions).ToArray());
+        localCount += MsilGenerator.TemporaryLocalsRequired;
+
         for (var x = 0; x < localCount; x++)
         {
             ilGenerator.DeclareLocal(typeof(int));
         }
 
-        var msilGenerator = new MsilGenerator(ilLabels, []);
-        var context = new MsilGenerator.Context(ilGenerator, HardwareField, GetMethodInfo);
-        foreach (var instruction in nesIrInstructions)
+        var customIlGenerators = new Dictionary<Type, MsilGenerator.CustomIlGenerator>
         {
-            ilGenerator.Emit(OpCodes.Ldstr, $"{instruction}");
+            { typeof(IncrementCycleCount), CreateCycleCountIlGenerator() }
+        };
+        var msilGenerator = new MsilGenerator(ilLabels, customIlGenerators);
+        var context = new MsilGenerator.Context(ilGenerator, HardwareField, GetMethodInfo);
+        foreach (var convertedInstruction in convertedInstructions)
+        {
+            ilGenerator.Emit(OpCodes.Ldstr, $"{convertedInstruction.OriginalInstruction}");
             ilGenerator.Emit(OpCodes.Pop);
-
-            msilGenerator.Generate(instruction, context);
+            foreach (var irInstruction in convertedInstruction.Ir6502Instructions)
+            {
+                msilGenerator.Generate(irInstruction, context);
+            }
         }
 
         ilGenerator.Emit(OpCodes.Ret);
+    }
+
+    private static MsilGenerator.CustomIlGenerator CreateCycleCountIlGenerator()
+    {
+        return (instruction, context) =>
+        {
+            if (instruction is IncrementCycleCount incrementCycleCount)
+            {
+                // Load the hardware field
+                context.IlGenerator.Emit(OpCodes.Ldsfld, context.HardwareField);
+
+                // Cast from I6502Hal interface to NesHal concrete type
+                context.IlGenerator.Emit(OpCodes.Castclass, typeof(NesHal));
+
+                // Load the cycle count as a constant
+                context.IlGenerator.Emit(OpCodes.Ldc_I4, incrementCycleCount.Cycles);
+
+                // Call NesHal.IncrementCpuCycleCount(int count)
+                var incrementMethod = typeof(NesHal).GetMethod(nameof(NesHal.IncrementCpuCycleCount))!;
+                context.IlGenerator.Emit(OpCodes.Callvirt, incrementMethod);
+            }
+            else
+            {
+                throw new NotSupportedException(instruction.GetType().FullName);
+            }
+        };
     }
 }
