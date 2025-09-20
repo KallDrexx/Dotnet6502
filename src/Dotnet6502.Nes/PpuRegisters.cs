@@ -1,9 +1,7 @@
-using System.Collections.ObjectModel;
-
 namespace Dotnet6502.Nes;
 
 /// <summary>
-/// NES Picture Processing Unit implementation
+/// Manages the reading and writing of the NES PPU registers
 /// </summary>
 public class PpuRegisters
 {
@@ -22,7 +20,7 @@ public class PpuRegisters
         OamDma,
     }
 
-    private static readonly IReadOnlySet<RegisterName> _writableRegisters = new HashSet<RegisterName>([
+    private static readonly IReadOnlySet<RegisterName> WritableRegisters = new HashSet<RegisterName>([
         RegisterName.PpuCtrl,
         RegisterName.PpuMask,
         RegisterName.OamAddr,
@@ -35,21 +33,23 @@ public class PpuRegisters
         RegisterName.OamDma,
     ]);
 
-    private static readonly IReadOnlySet<RegisterName> _readableRegisters = new HashSet<RegisterName>([
+    private static readonly IReadOnlySet<RegisterName> ReadableRegisters = new HashSet<RegisterName>([
         RegisterName.PpuStatus,
         RegisterName.OamData,
         RegisterName.PpuData,
     ]);
 
-    private bool _scrollValueOnY;
-    private bool _ppuAddrOnByte2;
+    /// <summary>
+    /// Controls if the next write is for the first or second bit for scroll or addr registers
+    /// </summary>
+    private bool _wRegister;
 
     public readonly Dictionary<RegisterName, ushort> RegisterValues = new();
 
     public void Write(ushort address, byte value)
     {
         var register = GetRegister(address);
-        if (_writableRegisters.Contains(register))
+        if (WritableRegisters.Contains(register))
         {
             RegisterValues[register] = value;
         }
@@ -58,7 +58,7 @@ public class PpuRegisters
     public byte Read(ushort address)
     {
         var register = GetRegister(address);
-        if (_readableRegisters.Contains(register))
+        if (ReadableRegisters.Contains(register))
         {
             return (byte) RegisterValues[register];
         }
@@ -82,13 +82,13 @@ public class PpuRegisters
             case 3: return RegisterName.OamAddr;
             case 4: return RegisterName.OamData;
             case 5:
-                var scrollRegister = _scrollValueOnY ? RegisterName.PpuScrollY : RegisterName.PpuScrollX;
-                _scrollValueOnY = !_scrollValueOnY;
+                var scrollRegister = _wRegister ? RegisterName.PpuScrollY : RegisterName.PpuScrollX;
+                _wRegister = !_wRegister;
                 return scrollRegister;
 
             case 6:
-                var addrRegister = _ppuAddrOnByte2 ? RegisterName.PpuAddrByte2 : RegisterName.PpuAddrByte1;
-                _ppuAddrOnByte2 = !_ppuAddrOnByte2;
+                var addrRegister = _wRegister ? RegisterName.PpuAddrByte2 : RegisterName.PpuAddrByte1;
+                _wRegister = !_wRegister;
                 return addrRegister;
 
             case 7:
