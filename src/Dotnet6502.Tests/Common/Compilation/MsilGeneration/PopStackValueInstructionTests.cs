@@ -9,7 +9,7 @@ public class PopStackValueInstructionTests
     [Fact]
     public void Can_Pop_To_Accumulator()
     {
-        var instruction = new NesIr.PopStackValue(new NesIr.Register(NesIr.RegisterName.Accumulator));
+        var instruction = new Ir6502.PopStackValue(new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.NesHal.PushToStack(123);
@@ -21,7 +21,7 @@ public class PopStackValueInstructionTests
     [Fact]
     public void Can_Pop_To_XIndex()
     {
-        var instruction = new NesIr.PopStackValue(new NesIr.Register(NesIr.RegisterName.XIndex));
+        var instruction = new Ir6502.PopStackValue(new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.NesHal.PushToStack(55);
@@ -33,7 +33,7 @@ public class PopStackValueInstructionTests
     [Fact]
     public void Can_Pop_To_YIndex()
     {
-        var instruction = new NesIr.PopStackValue(new NesIr.Register(NesIr.RegisterName.YIndex));
+        var instruction = new Ir6502.PopStackValue(new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.NesHal.PushToStack(88);
@@ -45,7 +45,7 @@ public class PopStackValueInstructionTests
     [Fact]
     public void Can_Pop_To_Memory()
     {
-        var instruction = new NesIr.PopStackValue(new NesIr.Memory(0x3000, null, false));
+        var instruction = new Ir6502.PopStackValue(new Ir6502.Memory(0x3000, null, false));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.NesHal.PushToStack(199);
@@ -57,7 +57,7 @@ public class PopStackValueInstructionTests
     [Fact]
     public void Can_Pop_To_Memory_With_Register_Offset()
     {
-        var instruction = new NesIr.PopStackValue(new NesIr.Memory(0x5000, NesIr.RegisterName.XIndex, false));
+        var instruction = new Ir6502.PopStackValue(new Ir6502.Memory(0x5000, Ir6502.RegisterName.XIndex, false));
 
         var testRunner = new InstructionTestRunner([instruction])
         {
@@ -75,10 +75,10 @@ public class PopStackValueInstructionTests
     [Fact]
     public void Can_Pop_To_Variable()
     {
-        var popInstruction = new NesIr.PopStackValue(new NesIr.Variable(0));
-        var copyInstruction = new NesIr.Copy(
-            new NesIr.Variable(0),
-            new NesIr.Register(NesIr.RegisterName.Accumulator));
+        var popInstruction = new Ir6502.PopStackValue(new Ir6502.Variable(0));
+        var copyInstruction = new Ir6502.Copy(
+            new Ir6502.Variable(0),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
         var testRunner = new InstructionTestRunner([popInstruction, copyInstruction]);
         testRunner.NesHal.PushToStack(177);
@@ -90,7 +90,7 @@ public class PopStackValueInstructionTests
     [Fact]
     public void Can_Pop_To_Carry_Flag()
     {
-        var instruction = new NesIr.PopStackValue(new NesIr.Flag(NesIr.FlagName.Carry));
+        var instruction = new Ir6502.PopStackValue(new Ir6502.Flag(Ir6502.FlagName.Carry));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.NesHal.PushToStack(1);
@@ -102,7 +102,7 @@ public class PopStackValueInstructionTests
     [Fact]
     public void Can_Pop_To_Zero_Flag()
     {
-        var instruction = new NesIr.PopStackValue(new NesIr.Flag(NesIr.FlagName.Zero));
+        var instruction = new Ir6502.PopStackValue(new Ir6502.Flag(Ir6502.FlagName.Zero));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.NesHal.PushToStack(0);
@@ -114,7 +114,7 @@ public class PopStackValueInstructionTests
     [Fact]
     public void Can_Pop_To_InterruptDisable_Flag()
     {
-        var instruction = new NesIr.PopStackValue(new NesIr.Flag(NesIr.FlagName.InterruptDisable));
+        var instruction = new Ir6502.PopStackValue(new Ir6502.Flag(Ir6502.FlagName.InterruptDisable));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.NesHal.PushToStack(1);
@@ -126,7 +126,7 @@ public class PopStackValueInstructionTests
     [Fact]
     public void Can_Pop_To_BFlag_Flag()
     {
-        var instruction = new NesIr.PopStackValue(new NesIr.Flag(NesIr.FlagName.BFlag));
+        var instruction = new Ir6502.PopStackValue(new Ir6502.Flag(Ir6502.FlagName.BFlag));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.NesHal.PushToStack(1);
@@ -138,7 +138,7 @@ public class PopStackValueInstructionTests
     [Fact]
     public void Can_Pop_To_Decimal_Flag()
     {
-        var instruction = new NesIr.PopStackValue(new NesIr.Flag(NesIr.FlagName.Decimal));
+        var instruction = new Ir6502.PopStackValue(new Ir6502.Flag(Ir6502.FlagName.Decimal));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.NesHal.PushToStack(1);
@@ -150,7 +150,7 @@ public class PopStackValueInstructionTests
     [Fact]
     public void Can_Pop_To_Overflow_Flag()
     {
-        var instruction = new NesIr.PopStackValue(new NesIr.Flag(NesIr.FlagName.Overflow));
+        var instruction = new Ir6502.PopStackValue(new Ir6502.Flag(Ir6502.FlagName.Overflow));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.NesHal.PushToStack(1);
@@ -162,7 +162,7 @@ public class PopStackValueInstructionTests
     [Fact]
     public void Can_Pop_To_Negative_Flag()
     {
-        var instruction = new NesIr.PopStackValue(new NesIr.Flag(NesIr.FlagName.Negative));
+        var instruction = new Ir6502.PopStackValue(new Ir6502.Flag(Ir6502.FlagName.Negative));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.NesHal.PushToStack(1);
@@ -174,7 +174,7 @@ public class PopStackValueInstructionTests
     [Fact]
     public void Can_Pop_To_AllFlags()
     {
-        var instruction = new NesIr.PopStackValue(new NesIr.AllFlags());
+        var instruction = new Ir6502.PopStackValue(new Ir6502.AllFlags());
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.NesHal.PushToStack(0x81);
@@ -186,7 +186,7 @@ public class PopStackValueInstructionTests
     [Fact]
     public void Can_Pop_To_StackPointer()
     {
-        var instruction = new NesIr.PopStackValue(new NesIr.StackPointer());
+        var instruction = new Ir6502.PopStackValue(new Ir6502.StackPointer());
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.NesHal.PushToStack(0xE5);

@@ -21,66 +21,66 @@ public class MsilGenerator
     /// </summary>
     public const int TemporaryLocalsRequired = 1;
 
-    private readonly IReadOnlyDictionary<NesIr.Identifier, Label> _labels;
+    private readonly IReadOnlyDictionary<Ir6502.Identifier, Label> _labels;
 
-    public MsilGenerator(IReadOnlyDictionary<NesIr.Identifier, Label> labels)
+    public MsilGenerator(IReadOnlyDictionary<Ir6502.Identifier, Label> labels)
     {
         _labels = labels;
     }
 
-    public void Generate(NesIr.Instruction instruction, Context context)
+    public void Generate(Ir6502.Instruction instruction, Context context)
     {
         switch (instruction)
         {
-            case NesIr.Binary binary:
+            case Ir6502.Binary binary:
                 GenerateBinary(binary, context);
                 break;
 
-            case NesIr.CallFunction callFunction:
+            case Ir6502.CallFunction callFunction:
                 GenerateCallFunction(callFunction, context);
                 break;
 
-            case NesIr.ConvertVariableToByte convertVariableToByte:
+            case Ir6502.ConvertVariableToByte convertVariableToByte:
                 GenerateConvertToByte(convertVariableToByte, context);
                 break;
 
-            case NesIr.Copy copy:
+            case Ir6502.Copy copy:
                 GenerateCopy(copy, context);
                 break;
 
-            case NesIr.InvokeSoftwareInterrupt:
+            case Ir6502.InvokeSoftwareInterrupt:
                 GenerateInvokeIrq(context);
                 break;
 
-            case NesIr.Jump jump:
+            case Ir6502.Jump jump:
                 GenerateJump(jump, context);
                 break;
 
-            case NesIr.JumpIfNotZero jump:
+            case Ir6502.JumpIfNotZero jump:
                 GenerateJumpIfNotZero(jump, context);
                 break;
 
-            case NesIr.JumpIfZero jump:
+            case Ir6502.JumpIfZero jump:
                 GenerateJumpIfZero(jump, context);
                 break;
 
-            case NesIr.Label label:
+            case Ir6502.Label label:
                 GenerateLabel(label, context);
                 break;
 
-            case NesIr.PopStackValue pop:
+            case Ir6502.PopStackValue pop:
                 GeneratePopStackValue(pop, context);
                 break;
 
-            case NesIr.PushStackValue push:
+            case Ir6502.PushStackValue push:
                 GeneratePushStackValue(push, context);
                 break;
 
-            case NesIr.Return:
+            case Ir6502.Return:
                 GenerateReturn(context);
                 break;
 
-            case NesIr.Unary unary:
+            case Ir6502.Unary unary:
                 GenerateUnary(unary, context);
                 break;
 
@@ -89,7 +89,7 @@ public class MsilGenerator
         }
     }
 
-    private static void GenerateBinary(NesIr.Binary binary, Context context)
+    private static void GenerateBinary(Ir6502.Binary binary, Context context)
     {
         LoadValueToStack(binary.Left, context);
         LoadValueToStack(binary.Right, context);
@@ -102,61 +102,61 @@ public class MsilGenerator
         {
             switch (binary.Operator)
             {
-                case NesIr.BinaryOperator.Add:
+                case Ir6502.BinaryOperator.Add:
                     context.IlGenerator.Emit(OpCodes.Add);
                     break;
 
-                case NesIr.BinaryOperator.And:
+                case Ir6502.BinaryOperator.And:
                     context.IlGenerator.Emit(OpCodes.And);
                     break;
 
-                case NesIr.BinaryOperator.Equals:
+                case Ir6502.BinaryOperator.Equals:
                     context.IlGenerator.Emit(OpCodes.Ceq);
                     break;
 
-                case NesIr.BinaryOperator.GreaterThan:
+                case Ir6502.BinaryOperator.GreaterThan:
                     context.IlGenerator.Emit(OpCodes.Cgt);
                     break;
 
-                case NesIr.BinaryOperator.GreaterThanOrEqualTo:
+                case Ir6502.BinaryOperator.GreaterThanOrEqualTo:
                     context.IlGenerator.Emit(OpCodes.Clt);
                     context.IlGenerator.Emit(OpCodes.Ldc_I4_0);
                     context.IlGenerator.Emit(OpCodes.Ceq);
                     break;
 
-                case NesIr.BinaryOperator.LessThan:
+                case Ir6502.BinaryOperator.LessThan:
                     context.IlGenerator.Emit(OpCodes.Clt);
                     break;
 
-                case NesIr.BinaryOperator.LessThanOrEqualTo:
+                case Ir6502.BinaryOperator.LessThanOrEqualTo:
                     context.IlGenerator.Emit(OpCodes.Cgt);
                     context.IlGenerator.Emit(OpCodes.Ldc_I4_0);
                     context.IlGenerator.Emit(OpCodes.Ceq);
                     break;
 
-                case NesIr.BinaryOperator.NotEquals:
+                case Ir6502.BinaryOperator.NotEquals:
                     context.IlGenerator.Emit(OpCodes.Ceq);
                     context.IlGenerator.Emit(OpCodes.Ldc_I4_0);
                     context.IlGenerator.Emit(OpCodes.Ceq);
                     break;
 
-                case NesIr.BinaryOperator.Or:
+                case Ir6502.BinaryOperator.Or:
                     context.IlGenerator.Emit(OpCodes.Or);
                     break;
 
-                case NesIr.BinaryOperator.ShiftLeft:
+                case Ir6502.BinaryOperator.ShiftLeft:
                     context.IlGenerator.Emit(OpCodes.Shl);
                     break;
             
-                case NesIr.BinaryOperator.ShiftRight:
+                case Ir6502.BinaryOperator.ShiftRight:
                     context.IlGenerator.Emit(OpCodes.Shr);
                     break;
             
-                case NesIr.BinaryOperator.Subtract:
+                case Ir6502.BinaryOperator.Subtract:
                     context.IlGenerator.Emit(OpCodes.Sub);
                     break;
             
-                case NesIr.BinaryOperator.Xor:
+                case Ir6502.BinaryOperator.Xor:
                     context.IlGenerator.Emit(OpCodes.Xor);
                     break;
             
@@ -166,7 +166,7 @@ public class MsilGenerator
         }
     }
 
-    private static void GenerateCallFunction(NesIr.CallFunction callFunction, Context context)
+    private static void GenerateCallFunction(Ir6502.CallFunction callFunction, Context context)
     {
         var methodInfo = context.GetMethodInfo(callFunction.Name.Characters);
         if (methodInfo == null)
@@ -186,7 +186,7 @@ public class MsilGenerator
         }
     }
 
-    private static void GenerateCopy(NesIr.Copy copy, Context context)
+    private static void GenerateCopy(Ir6502.Copy copy, Context context)
     {
         LoadValueToStack(copy.Source, context);
         SaveStackToTempLocal(context);
@@ -200,7 +200,7 @@ public class MsilGenerator
         context.IlGenerator.Emit(OpCodes.Callvirt, invokeMethod);
     }
 
-    private void GenerateJump(NesIr.Jump jump, Context context)
+    private void GenerateJump(Ir6502.Jump jump, Context context)
     {
         if (!_labels.TryGetValue(jump.Target, out var label))
         {
@@ -211,7 +211,7 @@ public class MsilGenerator
         context.IlGenerator.Emit(OpCodes.Br, label);
     }
 
-    private void GenerateJumpIfZero(NesIr.JumpIfZero jump, Context context)
+    private void GenerateJumpIfZero(Ir6502.JumpIfZero jump, Context context)
     {
         if (!_labels.TryGetValue(jump.Target, out var label))
         {
@@ -223,7 +223,7 @@ public class MsilGenerator
         context.IlGenerator.Emit(OpCodes.Brfalse, label);
     }
 
-    private void GenerateJumpIfNotZero(NesIr.JumpIfNotZero jump, Context context)
+    private void GenerateJumpIfNotZero(Ir6502.JumpIfNotZero jump, Context context)
     {
         if (!_labels.TryGetValue(jump.Target, out var label))
         {
@@ -235,7 +235,7 @@ public class MsilGenerator
         context.IlGenerator.Emit(OpCodes.Brtrue, label);
     }
 
-    private void GenerateLabel(NesIr.Label label, Context context)
+    private void GenerateLabel(Ir6502.Label label, Context context)
     {
         // This does not define the label, but instead marks the label at the current spot. This
         // means the label must already have been defined.
@@ -249,7 +249,7 @@ public class MsilGenerator
         context.IlGenerator.MarkLabel(ilLabel);
     }
 
-    private static void GeneratePopStackValue(NesIr.PopStackValue pop, Context context)
+    private static void GeneratePopStackValue(Ir6502.PopStackValue pop, Context context)
     {
         var popMethod = typeof(I6502Hal).GetMethod(nameof(I6502Hal.PopFromStack))!;
         context.IlGenerator.Emit(OpCodes.Ldsfld, context.HardwareField);
@@ -258,7 +258,7 @@ public class MsilGenerator
         WriteTempLocalToValue(pop.Destination, context);
     }
 
-    private static void GeneratePushStackValue(NesIr.PushStackValue push, Context context)
+    private static void GeneratePushStackValue(Ir6502.PushStackValue push, Context context)
     {
         var pushMethod = typeof(I6502Hal).GetMethod(nameof(I6502Hal.PushToStack))!;
         context.IlGenerator.Emit(OpCodes.Ldsfld, context.HardwareField);
@@ -271,13 +271,13 @@ public class MsilGenerator
         context.IlGenerator.Emit(OpCodes.Ret);
     }
 
-    private static void GenerateUnary(NesIr.Unary unary, Context context)
+    private static void GenerateUnary(Ir6502.Unary unary, Context context)
     {
         LoadValueToStack(unary.Source, context);
 
         switch (unary.Operator)
         {
-            case NesIr.UnaryOperator.BitwiseNot:
+            case Ir6502.UnaryOperator.BitwiseNot:
                 context.IlGenerator.Emit(OpCodes.Not);
                 break;
             
@@ -289,7 +289,7 @@ public class MsilGenerator
         WriteTempLocalToValue(unary.Destination, context);
     }
 
-    private static void GenerateConvertToByte(NesIr.ConvertVariableToByte convertVariableToByte, Context context)
+    private static void GenerateConvertToByte(Ir6502.ConvertVariableToByte convertVariableToByte, Context context)
     {
         LoadValueToStack(convertVariableToByte.Variable, context);
         context.IlGenerator.Emit(OpCodes.Conv_U1);
@@ -297,11 +297,11 @@ public class MsilGenerator
         WriteTempLocalToValue(convertVariableToByte.Variable, context);
     }
 
-    private static void LoadValueToStack(NesIr.Value value, Context context)
+    private static void LoadValueToStack(Ir6502.Value value, Context context)
     {
         switch (value)
         {
-            case NesIr.AllFlags:
+            case Ir6502.AllFlags:
                 var getStatusMethod = typeof(I6502Hal)
                     .GetProperty(nameof(I6502Hal.ProcessorStatus))!
                     .GetMethod!;
@@ -310,11 +310,11 @@ public class MsilGenerator
                 context.IlGenerator.Emit(OpCodes.Callvirt, getStatusMethod);
                 break;
 
-            case NesIr.Constant constant:
+            case Ir6502.Constant constant:
                 context.IlGenerator.Emit(OpCodes.Ldc_I4, (int)constant.Number);
                 break;
 
-            case NesIr.Flag flag:
+            case Ir6502.Flag flag:
                 var getFlagMethod = typeof(I6502Hal).GetMethod(nameof(I6502Hal.GetFlag))!;
                 context.IlGenerator.Emit(OpCodes.Ldsfld, context.HardwareField);
                 context.IlGenerator.Emit(OpCodes.Ldc_I4, (int)ConvertFlagName(flag.FlagName));
@@ -322,7 +322,7 @@ public class MsilGenerator
                 context.IlGenerator.Emit(OpCodes.Conv_I4);
                 break;
 
-            case NesIr.Memory memory:
+            case Ir6502.Memory memory:
                 var readMemoryMethod = typeof(I6502Hal).GetMethod(nameof(I6502Hal.ReadMemory))!;
 
                 context.IlGenerator.Emit(OpCodes.Ldsfld, context.HardwareField);
@@ -342,12 +342,12 @@ public class MsilGenerator
                 context.IlGenerator.Emit(OpCodes.Conv_I4);
                 break;
 
-            case NesIr.Register register:
+            case Ir6502.Register register:
                 LoadRegisterToStack(register.Name, context);
                 context.IlGenerator.Emit(OpCodes.Conv_I4);
                 break;
 
-            case NesIr.StackPointer:
+            case Ir6502.StackPointer:
                 var getStackPointerMethod = typeof(I6502Hal)
                     .GetProperty(nameof(I6502Hal.StackPointer))!
                     .GetMethod!;
@@ -356,7 +356,7 @@ public class MsilGenerator
                 context.IlGenerator.Emit(OpCodes.Callvirt, getStackPointerMethod);
                 break;
 
-            case NesIr.Variable variable:
+            case Ir6502.Variable variable:
                 context.IlGenerator.Emit(OpCodes.Ldloc, variable.Index + TemporaryLocalsRequired);
                 break;
 
@@ -365,11 +365,11 @@ public class MsilGenerator
         }
     }
 
-    private static void WriteTempLocalToValue(NesIr.Value destination, Context context)
+    private static void WriteTempLocalToValue(Ir6502.Value destination, Context context)
     {
         switch (destination)
         {
-            case NesIr.AllFlags:
+            case Ir6502.AllFlags:
                 var setStatusMethod = typeof(I6502Hal)
                     .GetProperty(nameof(I6502Hal.ProcessorStatus))!
                     .SetMethod!;
@@ -380,10 +380,10 @@ public class MsilGenerator
                 context.IlGenerator.Emit(OpCodes.Callvirt, setStatusMethod);
                 break;
 
-            case NesIr.Constant constant:
+            case Ir6502.Constant constant:
                 throw new InvalidOperationException("Can't write to constant");
 
-            case NesIr.Flag flag:
+            case Ir6502.Flag flag:
                 var setFlagMethod = typeof(I6502Hal).GetMethod(nameof(I6502Hal.SetFlag))!;
                 context.IlGenerator.Emit(OpCodes.Ldsfld, context.HardwareField);
                 context.IlGenerator.Emit(OpCodes.Ldc_I4, (int)ConvertFlagName(flag.FlagName));
@@ -394,7 +394,7 @@ public class MsilGenerator
                 context.IlGenerator.Emit(OpCodes.Callvirt, setFlagMethod);
                 break;
 
-            case NesIr.Memory memory:
+            case Ir6502.Memory memory:
                 var writeMemoryMethod = typeof(I6502Hal).GetMethod(nameof(I6502Hal.WriteMemory))!;
 
                 context.IlGenerator.Emit(OpCodes.Ldsfld, context.HardwareField);
@@ -415,18 +415,18 @@ public class MsilGenerator
                 context.IlGenerator.Emit(OpCodes.Callvirt, writeMemoryMethod);
                 break;
 
-            case NesIr.Register register:
+            case Ir6502.Register register:
                 var setMethod = register.Name switch
                 {
-                    NesIr.RegisterName.Accumulator => typeof(I6502Hal)
+                    Ir6502.RegisterName.Accumulator => typeof(I6502Hal)
                         .GetProperty(nameof(I6502Hal.ARegister))!
                         .SetMethod!,
 
-                    NesIr.RegisterName.XIndex => typeof(I6502Hal)
+                    Ir6502.RegisterName.XIndex => typeof(I6502Hal)
                         .GetProperty(nameof(I6502Hal.XRegister))!
                         .SetMethod!,
 
-                    NesIr.RegisterName.YIndex => typeof(I6502Hal)
+                    Ir6502.RegisterName.YIndex => typeof(I6502Hal)
                         .GetProperty(nameof(I6502Hal.YRegister))!
                         .SetMethod!,
 
@@ -440,7 +440,7 @@ public class MsilGenerator
 
                 break;
 
-            case NesIr.StackPointer:
+            case Ir6502.StackPointer:
                 var setStackPointerMethod = typeof(I6502Hal)
                     .GetProperty(nameof(I6502Hal.StackPointer))!
                     .SetMethod!;
@@ -451,7 +451,7 @@ public class MsilGenerator
                 context.IlGenerator.Emit(OpCodes.Callvirt, setStackPointerMethod);
                 break;
 
-            case NesIr.Variable variable:
+            case Ir6502.Variable variable:
                 LoadTempLocalToStack(context);
                 context.IlGenerator.Emit(OpCodes.Stloc, variable.Index + TemporaryLocalsRequired);
                 break;
@@ -464,19 +464,19 @@ public class MsilGenerator
     private static void LoadTempLocalToStack(Context context) => context.IlGenerator.Emit(OpCodes.Ldloc_0);
     private static void SaveStackToTempLocal(Context context) => context.IlGenerator.Emit(OpCodes.Stloc_0);
 
-    private static void LoadRegisterToStack(NesIr.RegisterName registerName, Context context)
+    private static void LoadRegisterToStack(Ir6502.RegisterName registerName, Context context)
     {
         var getMethod = registerName switch
         {
-            NesIr.RegisterName.Accumulator => typeof(I6502Hal)
+            Ir6502.RegisterName.Accumulator => typeof(I6502Hal)
                 .GetProperty(nameof(I6502Hal.ARegister))!
                 .GetMethod!,
 
-            NesIr.RegisterName.XIndex => typeof(I6502Hal)
+            Ir6502.RegisterName.XIndex => typeof(I6502Hal)
                 .GetProperty(nameof(I6502Hal.XRegister))!
                 .GetMethod!,
 
-            NesIr.RegisterName.YIndex => typeof(I6502Hal)
+            Ir6502.RegisterName.YIndex => typeof(I6502Hal)
                 .GetProperty(nameof(I6502Hal.YRegister))!
                 .GetMethod!,
 
@@ -487,17 +487,17 @@ public class MsilGenerator
         context.IlGenerator.Emit(OpCodes.Callvirt, getMethod);
     }
 
-    private static CpuStatusFlags ConvertFlagName(NesIr.FlagName flagName)
+    private static CpuStatusFlags ConvertFlagName(Ir6502.FlagName flagName)
     {
         return flagName switch
         {
-            NesIr.FlagName.Carry => CpuStatusFlags.Carry,
-            NesIr.FlagName.Zero => CpuStatusFlags.Zero,
-            NesIr.FlagName.InterruptDisable => CpuStatusFlags.InterruptDisable,
-            NesIr.FlagName.BFlag => CpuStatusFlags.BFlag,
-            NesIr.FlagName.Decimal => CpuStatusFlags.Decimal,
-            NesIr.FlagName.Overflow => CpuStatusFlags.Overflow,
-            NesIr.FlagName.Negative => CpuStatusFlags.Negative,
+            Ir6502.FlagName.Carry => CpuStatusFlags.Carry,
+            Ir6502.FlagName.Zero => CpuStatusFlags.Zero,
+            Ir6502.FlagName.InterruptDisable => CpuStatusFlags.InterruptDisable,
+            Ir6502.FlagName.BFlag => CpuStatusFlags.BFlag,
+            Ir6502.FlagName.Decimal => CpuStatusFlags.Decimal,
+            Ir6502.FlagName.Overflow => CpuStatusFlags.Overflow,
+            Ir6502.FlagName.Negative => CpuStatusFlags.Negative,
             _ => throw new NotSupportedException(flagName.ToString())
         };
     }

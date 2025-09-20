@@ -9,44 +9,44 @@ public class ReturnInstructionTests
     [Fact]
     public void Return_Stops_Before_Subsequent_Instructions()
     {
-        var setAccumulator = new NesIr.Copy(
-            new NesIr.Constant(77),
-            new NesIr.Register(NesIr.RegisterName.Accumulator));
+        var setAccumulator = new Ir6502.Copy(
+            new Ir6502.Constant(77),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var setMemory = new NesIr.Copy(
-            new NesIr.Constant(88),
-            new NesIr.Memory(0x4000, null, false));
+        var setMemory = new Ir6502.Copy(
+            new Ir6502.Constant(88),
+            new Ir6502.Memory(0x4000, null, false));
 
-        var setFlag = new NesIr.Copy(
-            new NesIr.Constant(1),
-            new NesIr.Flag(NesIr.FlagName.Negative));
+        var setFlag = new Ir6502.Copy(
+            new Ir6502.Constant(1),
+            new Ir6502.Flag(Ir6502.FlagName.Negative));
 
-        var setVariable = new NesIr.Copy(
-            new NesIr.Constant(99),
-            new NesIr.Variable(0));
+        var setVariable = new Ir6502.Copy(
+            new Ir6502.Constant(99),
+            new Ir6502.Variable(0));
 
-        var returnInstruction = new NesIr.Return();
-        var modifyAccumulator = new NesIr.Copy(
-            new NesIr.Constant(11),
-            new NesIr.Register(NesIr.RegisterName.Accumulator));
+        var returnInstruction = new Ir6502.Return();
+        var modifyAccumulator = new Ir6502.Copy(
+            new Ir6502.Constant(11),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var modifyMemory = new NesIr.Copy(
-            new NesIr.Constant(22),
-            new NesIr.Memory(0x4000, null, false));
+        var modifyMemory = new Ir6502.Copy(
+            new Ir6502.Constant(22),
+            new Ir6502.Memory(0x4000, null, false));
 
-        var clearFlag = new NesIr.Copy(
-            new NesIr.Constant(0),
-            new NesIr.Flag(NesIr.FlagName.Negative));
+        var clearFlag = new Ir6502.Copy(
+            new Ir6502.Constant(0),
+            new Ir6502.Flag(Ir6502.FlagName.Negative));
 
-        var binaryOperation = new NesIr.Binary(
-            NesIr.BinaryOperator.Add,
-            new NesIr.Variable(0),
-            new NesIr.Constant(50),
-            new NesIr.Variable(1));
+        var binaryOperation = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Add,
+            new Ir6502.Variable(0),
+            new Ir6502.Constant(50),
+            new Ir6502.Variable(1));
 
-        var copyVariableToRegister = new NesIr.Copy(
-            new NesIr.Variable(1),
-            new NesIr.Register(NesIr.RegisterName.YIndex));
+        var copyVariableToRegister = new Ir6502.Copy(
+            new Ir6502.Variable(1),
+            new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
         var testRunner = new InstructionTestRunner([
             setAccumulator, setMemory, setFlag, setVariable,

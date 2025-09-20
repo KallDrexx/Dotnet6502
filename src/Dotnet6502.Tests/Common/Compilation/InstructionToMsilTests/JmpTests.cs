@@ -38,19 +38,19 @@ public class JmpTests
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
         // Add setup and target instructions around the jump
-        var allInstructions = new List<NesIr.Instruction>
+        var allInstructions = new List<Ir6502.Instruction>
         {
             // Add the JMP instruction
             nesIrInstructions[0],
 
             // Instruction that should be skipped (never reached)
-            new NesIr.Copy(new NesIr.Constant(99), new NesIr.Register(NesIr.RegisterName.XIndex)),
+            new Ir6502.Copy(new Ir6502.Constant(99), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
             // Target label
-            new NesIr.Label(new NesIr.Identifier("jump_target")),
+            new Ir6502.Label(new Ir6502.Identifier("jump_target")),
 
             // Instruction that should be executed at jump target
-            new NesIr.Copy(new NesIr.Constant(42), new NesIr.Register(NesIr.RegisterName.Accumulator))
+            new Ir6502.Copy(new Ir6502.Constant(42), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
         };
 
         var testRunner = new InstructionTestRunner(allInstructions);
@@ -80,19 +80,19 @@ public class JmpTests
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
         // Add setup and target instructions around the jump
-        var allInstructions = new List<NesIr.Instruction>
+        var allInstructions = new List<Ir6502.Instruction>
         {
             // Add the JMP indirect instruction
             nesIrInstructions[0],
 
             // Instruction that should be skipped (never reached)
-            new NesIr.Copy(new NesIr.Constant(99), new NesIr.Register(NesIr.RegisterName.XIndex)),
+            new Ir6502.Copy(new Ir6502.Constant(99), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
             // Target label
-            new NesIr.Label(new NesIr.Identifier("jump_target")),
+            new Ir6502.Label(new Ir6502.Identifier("jump_target")),
 
             // Instruction that should be executed at jump target
-            new NesIr.Copy(new NesIr.Constant(77), new NesIr.Register(NesIr.RegisterName.Accumulator))
+            new Ir6502.Copy(new Ir6502.Constant(77), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
         };
 
         var testRunner = new InstructionTestRunner(allInstructions);
@@ -121,19 +121,19 @@ public class JmpTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
-        var allInstructions = new List<NesIr.Instruction>
+        var allInstructions = new List<Ir6502.Instruction>
         {
             // Set all flags to known state
-            new NesIr.Copy(new NesIr.Constant(1), new NesIr.Flag(NesIr.FlagName.Carry)),
-            new NesIr.Copy(new NesIr.Constant(1), new NesIr.Flag(NesIr.FlagName.Zero)),
-            new NesIr.Copy(new NesIr.Constant(1), new NesIr.Flag(NesIr.FlagName.Negative)),
-            new NesIr.Copy(new NesIr.Constant(1), new NesIr.Flag(NesIr.FlagName.Overflow)),
+            new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Carry)),
+            new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Zero)),
+            new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Negative)),
+            new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Overflow)),
 
             // Add the JMP instruction
             nesIrInstructions[0],
 
             // Target label
-            new NesIr.Label(new NesIr.Identifier("target"))
+            new Ir6502.Label(new Ir6502.Identifier("target"))
         };
 
         var testRunner = new InstructionTestRunner(allInstructions);
@@ -175,19 +175,19 @@ public class JmpTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
-        var allInstructions = new List<NesIr.Instruction>
+        var allInstructions = new List<Ir6502.Instruction>
         {
             // Set all flags to known state
-            new NesIr.Copy(new NesIr.Constant(1), new NesIr.Flag(NesIr.FlagName.Carry)),
-            new NesIr.Copy(new NesIr.Constant(1), new NesIr.Flag(NesIr.FlagName.Zero)),
-            new NesIr.Copy(new NesIr.Constant(1), new NesIr.Flag(NesIr.FlagName.Negative)),
-            new NesIr.Copy(new NesIr.Constant(1), new NesIr.Flag(NesIr.FlagName.Overflow)),
+            new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Carry)),
+            new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Zero)),
+            new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Negative)),
+            new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Overflow)),
 
             // Add the JMP indirect instruction
             nesIrInstructions[0],
 
             // Target label
-            new NesIr.Label(new NesIr.Identifier("target"))
+            new Ir6502.Label(new Ir6502.Identifier("target"))
         };
 
         var testRunner = new InstructionTestRunner(allInstructions);
@@ -229,13 +229,13 @@ public class JmpTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
-        var allInstructions = new List<NesIr.Instruction>
+        var allInstructions = new List<Ir6502.Instruction>
         {
             // Add the JMP instruction
             nesIrInstructions[0],
 
             // Target label
-            new NesIr.Label(new NesIr.Identifier("target"))
+            new Ir6502.Label(new Ir6502.Identifier("target"))
         };
 
         var testRunner = new InstructionTestRunner(allInstructions);
@@ -273,13 +273,13 @@ public class JmpTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
-        var allInstructions = new List<NesIr.Instruction>
+        var allInstructions = new List<Ir6502.Instruction>
         {
             // Add the JMP indirect instruction
             nesIrInstructions[0],
 
             // Target label
-            new NesIr.Label(new NesIr.Identifier("target"))
+            new Ir6502.Label(new Ir6502.Identifier("target"))
         };
 
         var testRunner = new InstructionTestRunner(allInstructions);
@@ -317,19 +317,19 @@ public class JmpTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
-        var allInstructions = new List<NesIr.Instruction>
+        var allInstructions = new List<Ir6502.Instruction>
         {
             // Add the JMP instruction
             nesIrInstructions[0],
 
             // This should be skipped
-            new NesIr.Copy(new NesIr.Constant(111), new NesIr.Register(NesIr.RegisterName.XIndex)),
+            new Ir6502.Copy(new Ir6502.Constant(111), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
             // Target label
-            new NesIr.Label(new NesIr.Identifier("far_target")),
+            new Ir6502.Label(new Ir6502.Identifier("far_target")),
 
             // This should be executed
-            new NesIr.Copy(new NesIr.Constant(222), new NesIr.Register(NesIr.RegisterName.Accumulator))
+            new Ir6502.Copy(new Ir6502.Constant(222), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
         };
 
         var testRunner = new InstructionTestRunner(allInstructions);
@@ -358,19 +358,19 @@ public class JmpTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
-        var allInstructions = new List<NesIr.Instruction>
+        var allInstructions = new List<Ir6502.Instruction>
         {
             // Add the JMP indirect instruction
             nesIrInstructions[0],
 
             // This should be skipped
-            new NesIr.Copy(new NesIr.Constant(123), new NesIr.Register(NesIr.RegisterName.YIndex)),
+            new Ir6502.Copy(new Ir6502.Constant(123), new Ir6502.Register(Ir6502.RegisterName.YIndex)),
 
             // Target label
-            new NesIr.Label(new NesIr.Identifier("zp_target")),
+            new Ir6502.Label(new Ir6502.Identifier("zp_target")),
 
             // This should be executed
-            new NesIr.Copy(new NesIr.Constant(210), new NesIr.Register(NesIr.RegisterName.Accumulator))
+            new Ir6502.Copy(new Ir6502.Constant(210), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
         };
 
         var testRunner = new InstructionTestRunner(allInstructions);
@@ -399,19 +399,19 @@ public class JmpTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
-        var allInstructions = new List<NesIr.Instruction>
+        var allInstructions = new List<Ir6502.Instruction>
         {
             // Add the JMP instruction
             nesIrInstructions[0],
 
             // This should be skipped
-            new NesIr.Copy(new NesIr.Constant(88), new NesIr.Register(NesIr.RegisterName.XIndex)),
+            new Ir6502.Copy(new Ir6502.Constant(88), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
             // Target label
-            new NesIr.Label(new NesIr.Identifier("low_target")),
+            new Ir6502.Label(new Ir6502.Identifier("low_target")),
 
             // This should be executed
-            new NesIr.Copy(new NesIr.Constant(99), new NesIr.Register(NesIr.RegisterName.Accumulator))
+            new Ir6502.Copy(new Ir6502.Constant(99), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
         };
 
         var testRunner = new InstructionTestRunner(allInstructions);
@@ -447,25 +447,25 @@ public class JmpTests
         foreach (bool negativeState in new[] { true, false })
         foreach (bool overflowState in new[] { true, false })
         {
-            var allInstructions = new List<NesIr.Instruction>
+            var allInstructions = new List<Ir6502.Instruction>
             {
                 // Set up various flag states
-                new NesIr.Copy(new NesIr.Constant((byte)(carryState ? 1 : 0)), new NesIr.Flag(NesIr.FlagName.Carry)),
-                new NesIr.Copy(new NesIr.Constant((byte)(zeroState ? 1 : 0)), new NesIr.Flag(NesIr.FlagName.Zero)),
-                new NesIr.Copy(new NesIr.Constant((byte)(negativeState ? 1 : 0)), new NesIr.Flag(NesIr.FlagName.Negative)),
-                new NesIr.Copy(new NesIr.Constant((byte)(overflowState ? 1 : 0)), new NesIr.Flag(NesIr.FlagName.Overflow)),
+                new Ir6502.Copy(new Ir6502.Constant((byte)(carryState ? 1 : 0)), new Ir6502.Flag(Ir6502.FlagName.Carry)),
+                new Ir6502.Copy(new Ir6502.Constant((byte)(zeroState ? 1 : 0)), new Ir6502.Flag(Ir6502.FlagName.Zero)),
+                new Ir6502.Copy(new Ir6502.Constant((byte)(negativeState ? 1 : 0)), new Ir6502.Flag(Ir6502.FlagName.Negative)),
+                new Ir6502.Copy(new Ir6502.Constant((byte)(overflowState ? 1 : 0)), new Ir6502.Flag(Ir6502.FlagName.Overflow)),
 
                 // Add the JMP instruction
                 nesIrInstructions[0],
 
                 // This should always be skipped
-                new NesIr.Copy(new NesIr.Constant(44), new NesIr.Register(NesIr.RegisterName.XIndex)),
+                new Ir6502.Copy(new Ir6502.Constant(44), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
                 // Target label
-                new NesIr.Label(new NesIr.Identifier("always_target")),
+                new Ir6502.Label(new Ir6502.Identifier("always_target")),
 
                 // This should always be executed
-                new NesIr.Copy(new NesIr.Constant(55), new NesIr.Register(NesIr.RegisterName.Accumulator))
+                new Ir6502.Copy(new Ir6502.Constant(55), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
             };
 
             var testRunner = new InstructionTestRunner(allInstructions);

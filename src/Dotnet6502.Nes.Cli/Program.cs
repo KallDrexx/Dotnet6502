@@ -4,6 +4,7 @@ using NESDecompiler.Core.Disassembly;
 using NESDecompiler.Core.ROM;
 using System.Reflection;
 using Dotnet6502.Common.Compilation;
+using Dotnet6502.Nes;
 
 // Parse command line arguments
 var commandLineValues = CommandLineHandler.Parse(args);

@@ -9,7 +9,7 @@ public class PushStackValueInstructionTests
     [Fact]
     public void Can_Push_Constant_To_Stack()
     {
-        var instruction = new NesIr.PushStackValue(new NesIr.Constant(42));
+        var instruction = new Ir6502.PushStackValue(new Ir6502.Constant(42));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.RunTestMethod();
@@ -20,7 +20,7 @@ public class PushStackValueInstructionTests
     [Fact]
     public void Can_Push_Accumulator_To_Stack()
     {
-        var instruction = new NesIr.PushStackValue(new NesIr.Register(NesIr.RegisterName.Accumulator));
+        var instruction = new Ir6502.PushStackValue(new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
         var testRunner = new InstructionTestRunner([instruction])
         {
@@ -37,7 +37,7 @@ public class PushStackValueInstructionTests
     [Fact]
     public void Can_Push_XIndex_To_Stack()
     {
-        var instruction = new NesIr.PushStackValue(new NesIr.Register(NesIr.RegisterName.XIndex));
+        var instruction = new Ir6502.PushStackValue(new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
         var testRunner = new InstructionTestRunner([instruction])
         {
@@ -54,7 +54,7 @@ public class PushStackValueInstructionTests
     [Fact]
     public void Can_Push_YIndex_To_Stack()
     {
-        var instruction = new NesIr.PushStackValue(new NesIr.Register(NesIr.RegisterName.YIndex));
+        var instruction = new Ir6502.PushStackValue(new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
         var testRunner = new InstructionTestRunner([instruction])
         {
@@ -71,7 +71,7 @@ public class PushStackValueInstructionTests
     [Fact]
     public void Can_Push_Memory_To_Stack()
     {
-        var instruction = new NesIr.PushStackValue(new NesIr.Memory(0x2000, null, false));
+        var instruction = new Ir6502.PushStackValue(new Ir6502.Memory(0x2000, null, false));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.NesHal.WriteMemory(0x2000, 156);
@@ -83,7 +83,7 @@ public class PushStackValueInstructionTests
     [Fact]
     public void Can_Push_Memory_With_Register_Offset_To_Stack()
     {
-        var instruction = new NesIr.PushStackValue(new NesIr.Memory(0x4000, NesIr.RegisterName.XIndex, false));
+        var instruction = new Ir6502.PushStackValue(new Ir6502.Memory(0x4000, Ir6502.RegisterName.XIndex, false));
 
         var testRunner = new InstructionTestRunner([instruction])
         {
@@ -101,10 +101,10 @@ public class PushStackValueInstructionTests
     [Fact]
     public void Can_Push_Variable_To_Stack()
     {
-        var setupInstruction = new NesIr.Copy(
-            new NesIr.Constant(144),
-            new NesIr.Variable(0));
-        var pushInstruction = new NesIr.PushStackValue(new NesIr.Variable(0));
+        var setupInstruction = new Ir6502.Copy(
+            new Ir6502.Constant(144),
+            new Ir6502.Variable(0));
+        var pushInstruction = new Ir6502.PushStackValue(new Ir6502.Variable(0));
 
         var testRunner = new InstructionTestRunner([setupInstruction, pushInstruction]);
         testRunner.RunTestMethod();
@@ -115,7 +115,7 @@ public class PushStackValueInstructionTests
     [Fact]
     public void Can_Push_Carry_Flag_To_Stack()
     {
-        var instruction = new NesIr.PushStackValue(new NesIr.Flag(NesIr.FlagName.Carry));
+        var instruction = new Ir6502.PushStackValue(new Ir6502.Flag(Ir6502.FlagName.Carry));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.NesHal.SetFlag(CpuStatusFlags.Carry, true);
@@ -127,7 +127,7 @@ public class PushStackValueInstructionTests
     [Fact]
     public void Can_Push_Zero_Flag_To_Stack()
     {
-        var instruction = new NesIr.PushStackValue(new NesIr.Flag(NesIr.FlagName.Zero));
+        var instruction = new Ir6502.PushStackValue(new Ir6502.Flag(Ir6502.FlagName.Zero));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.NesHal.SetFlag(CpuStatusFlags.Zero, false);
@@ -139,7 +139,7 @@ public class PushStackValueInstructionTests
     [Fact]
     public void Can_Push_InterruptDisable_Flag_To_Stack()
     {
-        var instruction = new NesIr.PushStackValue(new NesIr.Flag(NesIr.FlagName.InterruptDisable));
+        var instruction = new Ir6502.PushStackValue(new Ir6502.Flag(Ir6502.FlagName.InterruptDisable));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.NesHal.SetFlag(CpuStatusFlags.InterruptDisable, true);
@@ -151,7 +151,7 @@ public class PushStackValueInstructionTests
     [Fact]
     public void Can_Push_Overflow_Flag_To_Stack()
     {
-        var instruction = new NesIr.PushStackValue(new NesIr.Flag(NesIr.FlagName.Overflow));
+        var instruction = new Ir6502.PushStackValue(new Ir6502.Flag(Ir6502.FlagName.Overflow));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.NesHal.SetFlag(CpuStatusFlags.Overflow, true);
@@ -163,7 +163,7 @@ public class PushStackValueInstructionTests
     [Fact]
     public void Can_Push_Negative_Flag_To_Stack()
     {
-        var instruction = new NesIr.PushStackValue(new NesIr.Flag(NesIr.FlagName.Negative));
+        var instruction = new Ir6502.PushStackValue(new Ir6502.Flag(Ir6502.FlagName.Negative));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.NesHal.SetFlag(CpuStatusFlags.Negative, true);
@@ -175,7 +175,7 @@ public class PushStackValueInstructionTests
     [Fact]
     public void Can_Push_AllFlags_To_Stack()
     {
-        var instruction = new NesIr.PushStackValue(new NesIr.AllFlags());
+        var instruction = new Ir6502.PushStackValue(new Ir6502.AllFlags());
 
         var testRunner = new InstructionTestRunner([instruction])
         {
@@ -192,7 +192,7 @@ public class PushStackValueInstructionTests
     [Fact]
     public void Can_Push_StackPointer_To_Stack()
     {
-        var instruction = new NesIr.PushStackValue(new NesIr.StackPointer());
+        var instruction = new Ir6502.PushStackValue(new Ir6502.StackPointer());
 
         var testRunner = new InstructionTestRunner([instruction])
         {

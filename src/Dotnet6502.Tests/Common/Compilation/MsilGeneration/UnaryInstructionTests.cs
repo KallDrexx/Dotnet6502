@@ -9,10 +9,10 @@ public class UnaryInstructionTests
     [Fact]
     public void Can_BitwiseNot_Constant_To_Register()
     {
-        var instruction = new NesIr.Unary(
-            NesIr.UnaryOperator.BitwiseNot,
-            new NesIr.Constant(0x55),
-            new NesIr.Register(NesIr.RegisterName.Accumulator));
+        var instruction = new Ir6502.Unary(
+            Ir6502.UnaryOperator.BitwiseNot,
+            new Ir6502.Constant(0x55),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.RunTestMethod();
@@ -23,10 +23,10 @@ public class UnaryInstructionTests
     [Fact]
     public void Can_BitwiseNot_Memory_To_Register()
     {
-        var instruction = new NesIr.Unary(
-            NesIr.UnaryOperator.BitwiseNot,
-            new NesIr.Memory(0x2000, null, false),
-            new NesIr.Register(NesIr.RegisterName.XIndex));
+        var instruction = new Ir6502.Unary(
+            Ir6502.UnaryOperator.BitwiseNot,
+            new Ir6502.Memory(0x2000, null, false),
+            new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.NesHal.WriteMemory(0x2000, 0x33);
@@ -38,13 +38,13 @@ public class UnaryInstructionTests
     [Fact]
     public void Can_BitwiseNot_Variable_To_Register()
     {
-        var setupVar = new NesIr.Copy(
-            new NesIr.Constant(0x0F),
-            new NesIr.Variable(0));
-        var instruction = new NesIr.Unary(
-            NesIr.UnaryOperator.BitwiseNot,
-            new NesIr.Variable(0),
-            new NesIr.Register(NesIr.RegisterName.YIndex));
+        var setupVar = new Ir6502.Copy(
+            new Ir6502.Constant(0x0F),
+            new Ir6502.Variable(0));
+        var instruction = new Ir6502.Unary(
+            Ir6502.UnaryOperator.BitwiseNot,
+            new Ir6502.Variable(0),
+            new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
         var testRunner = new InstructionTestRunner([setupVar, instruction]);
         testRunner.RunTestMethod();
@@ -55,10 +55,10 @@ public class UnaryInstructionTests
     [Fact]
     public void Can_BitwiseNot_Register_To_Register()
     {
-        var instruction = new NesIr.Unary(
-            NesIr.UnaryOperator.BitwiseNot,
-            new NesIr.Register(NesIr.RegisterName.Accumulator),
-            new NesIr.Register(NesIr.RegisterName.XIndex));
+        var instruction = new Ir6502.Unary(
+            Ir6502.UnaryOperator.BitwiseNot,
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator),
+            new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
         var testRunner = new InstructionTestRunner([instruction])
         {
@@ -75,10 +75,10 @@ public class UnaryInstructionTests
     [Fact]
     public void Can_BitwiseNot_Flag_To_Register()
     {
-        var instruction = new NesIr.Unary(
-            NesIr.UnaryOperator.BitwiseNot,
-            new NesIr.Flag(NesIr.FlagName.Carry),
-            new NesIr.Register(NesIr.RegisterName.Accumulator));
+        var instruction = new Ir6502.Unary(
+            Ir6502.UnaryOperator.BitwiseNot,
+            new Ir6502.Flag(Ir6502.FlagName.Carry),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.NesHal.SetFlag(CpuStatusFlags.Carry, true);
@@ -90,10 +90,10 @@ public class UnaryInstructionTests
     [Fact]
     public void Can_BitwiseNot_AllFlags_To_Register()
     {
-        var instruction = new NesIr.Unary(
-            NesIr.UnaryOperator.BitwiseNot,
-            new NesIr.AllFlags(),
-            new NesIr.Register(NesIr.RegisterName.Accumulator));
+        var instruction = new Ir6502.Unary(
+            Ir6502.UnaryOperator.BitwiseNot,
+            new Ir6502.AllFlags(),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
         var testRunner = new InstructionTestRunner([instruction])
         {
@@ -110,10 +110,10 @@ public class UnaryInstructionTests
     [Fact]
     public void Can_BitwiseNot_StackPointer_To_Register()
     {
-        var instruction = new NesIr.Unary(
-            NesIr.UnaryOperator.BitwiseNot,
-            new NesIr.StackPointer(),
-            new NesIr.Register(NesIr.RegisterName.XIndex));
+        var instruction = new Ir6502.Unary(
+            Ir6502.UnaryOperator.BitwiseNot,
+            new Ir6502.StackPointer(),
+            new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
         var testRunner = new InstructionTestRunner([instruction])
         {
@@ -130,10 +130,10 @@ public class UnaryInstructionTests
     [Fact]
     public void Can_BitwiseNot_Constant_To_Memory()
     {
-        var instruction = new NesIr.Unary(
-            NesIr.UnaryOperator.BitwiseNot,
-            new NesIr.Constant(0x77),
-            new NesIr.Memory(0x3000, null, false));
+        var instruction = new Ir6502.Unary(
+            Ir6502.UnaryOperator.BitwiseNot,
+            new Ir6502.Constant(0x77),
+            new Ir6502.Memory(0x3000, null, false));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.RunTestMethod();
@@ -144,13 +144,13 @@ public class UnaryInstructionTests
     [Fact]
     public void Can_BitwiseNot_Constant_To_Variable()
     {
-        var instruction = new NesIr.Unary(
-            NesIr.UnaryOperator.BitwiseNot,
-            new NesIr.Constant(0x88),
-            new NesIr.Variable(0));
-        var readVar = new NesIr.Copy(
-            new NesIr.Variable(0),
-            new NesIr.Memory(0x4000, null, false));
+        var instruction = new Ir6502.Unary(
+            Ir6502.UnaryOperator.BitwiseNot,
+            new Ir6502.Constant(0x88),
+            new Ir6502.Variable(0));
+        var readVar = new Ir6502.Copy(
+            new Ir6502.Variable(0),
+            new Ir6502.Memory(0x4000, null, false));
 
         var testRunner = new InstructionTestRunner([instruction, readVar]);
         testRunner.RunTestMethod();
@@ -161,10 +161,10 @@ public class UnaryInstructionTests
     [Fact]
     public void Can_BitwiseNot_Constant_To_Flag()
     {
-        var instruction = new NesIr.Unary(
-            NesIr.UnaryOperator.BitwiseNot,
-            new NesIr.Constant(0),
-            new NesIr.Flag(NesIr.FlagName.Zero));
+        var instruction = new Ir6502.Unary(
+            Ir6502.UnaryOperator.BitwiseNot,
+            new Ir6502.Constant(0),
+            new Ir6502.Flag(Ir6502.FlagName.Zero));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.RunTestMethod();
@@ -175,10 +175,10 @@ public class UnaryInstructionTests
     [Fact]
     public void Can_BitwiseNot_Constant_To_AllFlags()
     {
-        var instruction = new NesIr.Unary(
-            NesIr.UnaryOperator.BitwiseNot,
-            new NesIr.Constant(0x81),
-            new NesIr.AllFlags());
+        var instruction = new Ir6502.Unary(
+            Ir6502.UnaryOperator.BitwiseNot,
+            new Ir6502.Constant(0x81),
+            new Ir6502.AllFlags());
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.RunTestMethod();
@@ -189,10 +189,10 @@ public class UnaryInstructionTests
     [Fact]
     public void Can_BitwiseNot_Constant_To_StackPointer()
     {
-        var instruction = new NesIr.Unary(
-            NesIr.UnaryOperator.BitwiseNot,
-            new NesIr.Constant(0x07),
-            new NesIr.StackPointer());
+        var instruction = new Ir6502.Unary(
+            Ir6502.UnaryOperator.BitwiseNot,
+            new Ir6502.Constant(0x07),
+            new Ir6502.StackPointer());
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.RunTestMethod();
@@ -203,10 +203,10 @@ public class UnaryInstructionTests
     [Fact]
     public void Can_BitwiseNot_Memory_With_Register_Offset()
     {
-        var instruction = new NesIr.Unary(
-            NesIr.UnaryOperator.BitwiseNot,
-            new NesIr.Memory(0x5000, NesIr.RegisterName.XIndex, false),
-            new NesIr.Register(NesIr.RegisterName.Accumulator));
+        var instruction = new Ir6502.Unary(
+            Ir6502.UnaryOperator.BitwiseNot,
+            new Ir6502.Memory(0x5000, Ir6502.RegisterName.XIndex, false),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
         var testRunner = new InstructionTestRunner([instruction])
         {
@@ -224,10 +224,10 @@ public class UnaryInstructionTests
     [Fact]
     public void Can_BitwiseNot_To_Memory_With_Register_Offset()
     {
-        var instruction = new NesIr.Unary(
-            NesIr.UnaryOperator.BitwiseNot,
-            new NesIr.Constant(0x5A),
-            new NesIr.Memory(0x6000, NesIr.RegisterName.YIndex, false));
+        var instruction = new Ir6502.Unary(
+            Ir6502.UnaryOperator.BitwiseNot,
+            new Ir6502.Constant(0x5A),
+            new Ir6502.Memory(0x6000, Ir6502.RegisterName.YIndex, false));
 
         var testRunner = new InstructionTestRunner([instruction])
         {
@@ -244,10 +244,10 @@ public class UnaryInstructionTests
     [Fact]
     public void Can_BitwiseNot_Zero_To_Register()
     {
-        var instruction = new NesIr.Unary(
-            NesIr.UnaryOperator.BitwiseNot,
-            new NesIr.Constant(0x00),
-            new NesIr.Register(NesIr.RegisterName.Accumulator));
+        var instruction = new Ir6502.Unary(
+            Ir6502.UnaryOperator.BitwiseNot,
+            new Ir6502.Constant(0x00),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.RunTestMethod();
@@ -258,10 +258,10 @@ public class UnaryInstructionTests
     [Fact]
     public void Can_BitwiseNot_AllBitsSet_To_Register()
     {
-        var instruction = new NesIr.Unary(
-            NesIr.UnaryOperator.BitwiseNot,
-            new NesIr.Constant(0xFF),
-            new NesIr.Register(NesIr.RegisterName.Accumulator));
+        var instruction = new Ir6502.Unary(
+            Ir6502.UnaryOperator.BitwiseNot,
+            new Ir6502.Constant(0xFF),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.RunTestMethod();

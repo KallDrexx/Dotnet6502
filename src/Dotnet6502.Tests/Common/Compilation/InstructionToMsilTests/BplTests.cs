@@ -38,22 +38,22 @@ public class BplTests
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
         // Add setup and target instructions around the branch
-        var allInstructions = new List<NesIr.Instruction>
+        var allInstructions = new List<Ir6502.Instruction>
         {
             // Set up negative flag as clear (positive/zero result)
-            new NesIr.Copy(new NesIr.Constant(0), new NesIr.Flag(NesIr.FlagName.Negative)),
+            new Ir6502.Copy(new Ir6502.Constant(0), new Ir6502.Flag(Ir6502.FlagName.Negative)),
 
             // Add the BPL instruction
             nesIrInstructions[0],
 
             // Instruction that should be skipped if branch is taken
-            new NesIr.Copy(new NesIr.Constant(99), new NesIr.Register(NesIr.RegisterName.XIndex)),
+            new Ir6502.Copy(new Ir6502.Constant(99), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
             // Target label
-            new NesIr.Label(new NesIr.Identifier("branch_target")),
+            new Ir6502.Label(new Ir6502.Identifier("branch_target")),
 
             // Instruction that should be executed at branch target
-            new NesIr.Copy(new NesIr.Constant(42), new NesIr.Register(NesIr.RegisterName.Accumulator))
+            new Ir6502.Copy(new Ir6502.Constant(42), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
         };
 
         var testRunner = new InstructionTestRunner(allInstructions);
@@ -85,22 +85,22 @@ public class BplTests
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
         // Add setup and target instructions around the branch
-        var allInstructions = new List<NesIr.Instruction>
+        var allInstructions = new List<Ir6502.Instruction>
         {
             // Set up negative flag as set (negative result)
-            new NesIr.Copy(new NesIr.Constant(1), new NesIr.Flag(NesIr.FlagName.Negative)),
+            new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Negative)),
 
             // Add the BPL instruction
             nesIrInstructions[0],
 
             // Instruction that should be executed if branch is NOT taken
-            new NesIr.Copy(new NesIr.Constant(77), new NesIr.Register(NesIr.RegisterName.XIndex)),
+            new Ir6502.Copy(new Ir6502.Constant(77), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
             // Target label
-            new NesIr.Label(new NesIr.Identifier("branch_target")),
+            new Ir6502.Label(new Ir6502.Identifier("branch_target")),
 
             // Instruction that should be skipped if branch is not taken
-            new NesIr.Copy(new NesIr.Constant(88), new NesIr.Register(NesIr.RegisterName.Accumulator))
+            new Ir6502.Copy(new Ir6502.Constant(88), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
         };
 
         var testRunner = new InstructionTestRunner(allInstructions);
@@ -132,27 +132,27 @@ public class BplTests
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
         // Add setup for a loop-like scenario
-        var allInstructions = new List<NesIr.Instruction>
+        var allInstructions = new List<Ir6502.Instruction>
         {
             // Initialize counter
-            new NesIr.Copy(new NesIr.Constant(0), new NesIr.Register(NesIr.RegisterName.XIndex)),
+            new Ir6502.Copy(new Ir6502.Constant(0), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
             // Loop target
-            new NesIr.Label(new NesIr.Identifier("loop_start")),
+            new Ir6502.Label(new Ir6502.Identifier("loop_start")),
 
             // Increment counter
-            new NesIr.Binary(
-                NesIr.BinaryOperator.Add,
-                new NesIr.Register(NesIr.RegisterName.XIndex),
-                new NesIr.Constant(1),
-                new NesIr.Register(NesIr.RegisterName.XIndex)),
+            new Ir6502.Binary(
+                Ir6502.BinaryOperator.Add,
+                new Ir6502.Register(Ir6502.RegisterName.XIndex),
+                new Ir6502.Constant(1),
+                new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
             // Check if we should continue (clear negative flag if X < 3, set negative flag when X >= 3 to exit loop)
-            new NesIr.Binary(
-                NesIr.BinaryOperator.GreaterThanOrEqualTo,
-                new NesIr.Register(NesIr.RegisterName.XIndex),
-                new NesIr.Constant(3),
-                new NesIr.Flag(NesIr.FlagName.Negative)), // Set negative flag when X >= 3 (loop should exit)
+            new Ir6502.Binary(
+                Ir6502.BinaryOperator.GreaterThanOrEqualTo,
+                new Ir6502.Register(Ir6502.RegisterName.XIndex),
+                new Ir6502.Constant(3),
+                new Ir6502.Flag(Ir6502.FlagName.Negative)), // Set negative flag when X >= 3 (loop should exit)
 
             // Add the BPL instruction (will branch if negative flag is clear)
             nesIrInstructions[0]
@@ -184,19 +184,19 @@ public class BplTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
-        var allInstructions = new List<NesIr.Instruction>
+        var allInstructions = new List<Ir6502.Instruction>
         {
             // Set all flags to known state
-            new NesIr.Copy(new NesIr.Constant(0), new NesIr.Flag(NesIr.FlagName.Negative)), // Clear negative for branch
-            new NesIr.Copy(new NesIr.Constant(1), new NesIr.Flag(NesIr.FlagName.Carry)),
-            new NesIr.Copy(new NesIr.Constant(1), new NesIr.Flag(NesIr.FlagName.Zero)),
-            new NesIr.Copy(new NesIr.Constant(1), new NesIr.Flag(NesIr.FlagName.Overflow)),
+            new Ir6502.Copy(new Ir6502.Constant(0), new Ir6502.Flag(Ir6502.FlagName.Negative)), // Clear negative for branch
+            new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Carry)),
+            new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Zero)),
+            new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Overflow)),
 
             // Add the BPL instruction
             nesIrInstructions[0],
 
             // Target label
-            new NesIr.Label(new NesIr.Identifier("target"))
+            new Ir6502.Label(new Ir6502.Identifier("target"))
         };
 
         var testRunner = new InstructionTestRunner(allInstructions);
@@ -238,16 +238,16 @@ public class BplTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
-        var allInstructions = new List<NesIr.Instruction>
+        var allInstructions = new List<Ir6502.Instruction>
         {
             // Set negative flag clear for branch to occur
-            new NesIr.Copy(new NesIr.Constant(0), new NesIr.Flag(NesIr.FlagName.Negative)),
+            new Ir6502.Copy(new Ir6502.Constant(0), new Ir6502.Flag(Ir6502.FlagName.Negative)),
 
             // Add the BPL instruction
             nesIrInstructions[0],
 
             // Target label
-            new NesIr.Label(new NesIr.Identifier("target"))
+            new Ir6502.Label(new Ir6502.Identifier("target"))
         };
 
         var testRunner = new InstructionTestRunner(allInstructions);
@@ -286,22 +286,22 @@ public class BplTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
-        var allInstructions = new List<NesIr.Instruction>
+        var allInstructions = new List<Ir6502.Instruction>
         {
             // Clear negative flag
-            new NesIr.Copy(new NesIr.Constant(0), new NesIr.Flag(NesIr.FlagName.Negative)),
+            new Ir6502.Copy(new Ir6502.Constant(0), new Ir6502.Flag(Ir6502.FlagName.Negative)),
 
             // Add the BPL instruction
             nesIrInstructions[0],
 
             // This should be skipped
-            new NesIr.Copy(new NesIr.Constant(111), new NesIr.Register(NesIr.RegisterName.XIndex)),
+            new Ir6502.Copy(new Ir6502.Constant(111), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
             // Target label
-            new NesIr.Label(new NesIr.Identifier("far_target")),
+            new Ir6502.Label(new Ir6502.Identifier("far_target")),
 
             // This should be executed
-            new NesIr.Copy(new NesIr.Constant(222), new NesIr.Register(NesIr.RegisterName.Accumulator))
+            new Ir6502.Copy(new Ir6502.Constant(222), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
         };
 
         var testRunner = new InstructionTestRunner(allInstructions);
@@ -331,32 +331,32 @@ public class BplTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
-        var allInstructions = new List<NesIr.Instruction>
+        var allInstructions = new List<Ir6502.Instruction>
         {
             // Target label (at beginning for backward branch)
-            new NesIr.Label(new NesIr.Identifier("back_target")),
+            new Ir6502.Label(new Ir6502.Identifier("back_target")),
 
             // Mark that we reached the target
-            new NesIr.Copy(new NesIr.Constant(155), new NesIr.Register(NesIr.RegisterName.Accumulator)),
+            new Ir6502.Copy(new Ir6502.Constant(155), new Ir6502.Register(Ir6502.RegisterName.Accumulator)),
 
             // Set up a condition to branch only once
-            new NesIr.Binary(
-                NesIr.BinaryOperator.LessThan,
-                new NesIr.Register(NesIr.RegisterName.XIndex),
-                new NesIr.Constant(1),
-                new NesIr.Variable(0)),
-            new NesIr.Binary(
-                NesIr.BinaryOperator.Xor,
-                new NesIr.Variable(0),
-                new NesIr.Constant(1),
-                new NesIr.Flag(NesIr.FlagName.Negative)), // Clear negative flag if X < 1, set if X >= 1
+            new Ir6502.Binary(
+                Ir6502.BinaryOperator.LessThan,
+                new Ir6502.Register(Ir6502.RegisterName.XIndex),
+                new Ir6502.Constant(1),
+                new Ir6502.Variable(0)),
+            new Ir6502.Binary(
+                Ir6502.BinaryOperator.Xor,
+                new Ir6502.Variable(0),
+                new Ir6502.Constant(1),
+                new Ir6502.Flag(Ir6502.FlagName.Negative)), // Clear negative flag if X < 1, set if X >= 1
 
             // Increment X to prevent infinite loop
-            new NesIr.Binary(
-                NesIr.BinaryOperator.Add,
-                new NesIr.Register(NesIr.RegisterName.XIndex),
-                new NesIr.Constant(1),
-                new NesIr.Register(NesIr.RegisterName.XIndex)),
+            new Ir6502.Binary(
+                Ir6502.BinaryOperator.Add,
+                new Ir6502.Register(Ir6502.RegisterName.XIndex),
+                new Ir6502.Constant(1),
+                new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
             // Add the BPL instruction
             nesIrInstructions[0]
@@ -391,22 +391,22 @@ public class BplTests
 
         // Test case 1: After operation that sets negative flag (negative result)
         {
-            var allInstructions = new List<NesIr.Instruction>
+            var allInstructions = new List<Ir6502.Instruction>
             {
                 // Simulate operation that sets negative flag
-                new NesIr.Copy(new NesIr.Constant(1), new NesIr.Flag(NesIr.FlagName.Negative)),
+                new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Negative)),
 
                 // Add the BPL instruction
                 nesIrInstructions[0],
 
                 // This should execute (branch NOT taken)
-                new NesIr.Copy(new NesIr.Constant(50), new NesIr.Register(NesIr.RegisterName.XIndex)),
+                new Ir6502.Copy(new Ir6502.Constant(50), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
                 // Target label
-                new NesIr.Label(new NesIr.Identifier("target")),
+                new Ir6502.Label(new Ir6502.Identifier("target")),
 
                 // This should also execute
-                new NesIr.Copy(new NesIr.Constant(100), new NesIr.Register(NesIr.RegisterName.Accumulator))
+                new Ir6502.Copy(new Ir6502.Constant(100), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
             };
 
             var testRunner1 = new InstructionTestRunner(allInstructions);
@@ -420,22 +420,22 @@ public class BplTests
 
         // Test case 2: After operation that clears negative flag (positive/zero result)
         {
-            var allInstructions = new List<NesIr.Instruction>
+            var allInstructions = new List<Ir6502.Instruction>
             {
                 // Simulate operation that clears negative flag
-                new NesIr.Copy(new NesIr.Constant(0), new NesIr.Flag(NesIr.FlagName.Negative)),
+                new Ir6502.Copy(new Ir6502.Constant(0), new Ir6502.Flag(Ir6502.FlagName.Negative)),
 
                 // Add the BPL instruction
                 nesIrInstructions[0],
 
                 // This should be skipped (branch taken)
-                new NesIr.Copy(new NesIr.Constant(75), new NesIr.Register(NesIr.RegisterName.XIndex)),
+                new Ir6502.Copy(new Ir6502.Constant(75), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
                 // Target label
-                new NesIr.Label(new NesIr.Identifier("target")),
+                new Ir6502.Label(new Ir6502.Identifier("target")),
 
                 // This should execute
-                new NesIr.Copy(new NesIr.Constant(150), new NesIr.Register(NesIr.RegisterName.Accumulator))
+                new Ir6502.Copy(new Ir6502.Constant(150), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
             };
 
             var testRunner2 = new InstructionTestRunner(allInstructions);

@@ -13,14 +13,14 @@ public static class InstructionConverter
         IReadOnlyDictionary<ushort, string> Labels,
         IReadOnlyDictionary<ushort, Function> Functions);
 
-    public static IReadOnlyList<NesIr.Instruction> Convert(
+    public static IReadOnlyList<Ir6502.Instruction> Convert(
         DisassembledInstruction instruction,
         Context context)
     {
-        var results = new List<NesIr.Instruction>();
+        var results = new List<Ir6502.Instruction>();
         if (instruction.Label != null)
         {
-            results.Add(new NesIr.Label(new NesIr.Identifier(instruction.Label)));
+            results.Add(new Ir6502.Label(new Ir6502.Identifier(instruction.Label)));
         }
 
         switch (instruction.Info.Mnemonic)
@@ -92,79 +92,79 @@ public static class InstructionConverter
     /// <summary>
     /// Add with carry
     /// </summary>
-    private static NesIr.Instruction[] ConvertAdc(DisassembledInstruction instruction)
+    private static Ir6502.Instruction[] ConvertAdc(DisassembledInstruction instruction)
     {
-        var accumulator = new NesIr.Register(NesIr.RegisterName.Accumulator);
+        var accumulator = new Ir6502.Register(Ir6502.RegisterName.Accumulator);
         var operand = ParseAddress(instruction);
-        var isNegative = new NesIr.Variable(0);
+        var isNegative = new Ir6502.Variable(0);
 
         // Don't store the value in the accumulator so we don't lose track of if it overflowed due to byte precision
-        var addVariable = new NesIr.Variable(1);
+        var addVariable = new Ir6502.Variable(1);
 
         // Variables for 6502 overflow calculation: (A^result) & (M^result) & 0x80
-        var originalAccumulator = new NesIr.Variable(2);
-        var aXorResult = new NesIr.Variable(3);
-        var mXorResult = new NesIr.Variable(4);
-        var overflowTemp = new NesIr.Variable(5);
+        var originalAccumulator = new Ir6502.Variable(2);
+        var aXorResult = new Ir6502.Variable(3);
+        var mXorResult = new Ir6502.Variable(4);
+        var overflowTemp = new Ir6502.Variable(5);
 
         // Preserve original accumulator value for overflow calculation
-        var preserveAccumulator = new NesIr.Copy(accumulator, originalAccumulator);
+        var preserveAccumulator = new Ir6502.Copy(accumulator, originalAccumulator);
 
-        var firstAdd = new NesIr.Binary(NesIr.BinaryOperator.Add, accumulator, operand, addVariable);
-        var carryAdd = new NesIr.Binary(
-            NesIr.BinaryOperator.Add,
+        var firstAdd = new Ir6502.Binary(Ir6502.BinaryOperator.Add, accumulator, operand, addVariable);
+        var carryAdd = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Add,
             addVariable,
-            new NesIr.Flag(NesIr.FlagName.Carry),
+            new Ir6502.Flag(Ir6502.FlagName.Carry),
             addVariable);
 
-        var setCarry = new NesIr.Binary(
-            NesIr.BinaryOperator.GreaterThan,
+        var setCarry = new Ir6502.Binary(
+            Ir6502.BinaryOperator.GreaterThan,
             addVariable,
-            new NesIr.Constant(0xFF),
-            new NesIr.Flag(NesIr.FlagName.Carry));
+            new Ir6502.Constant(0xFF),
+            new Ir6502.Flag(Ir6502.FlagName.Carry));
 
         // Make sure an underflow or overflow doesn't cause comparisons to be incorrect
-        var convertToByte = new NesIr.ConvertVariableToByte(addVariable);
+        var convertToByte = new Ir6502.ConvertVariableToByte(addVariable);
 
         // Implement 6502 overflow logic: (A^result) & (M^result) & 0x80 != 0
         // A^result: XOR original accumulator with final result
-        var calcAXorResult = new NesIr.Binary(
-            NesIr.BinaryOperator.Xor,
+        var calcAXorResult = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Xor,
             originalAccumulator,
             addVariable,
             aXorResult);
 
         // M^result: XOR operand with final result
-        var calcMXorResult = new NesIr.Binary(
-            NesIr.BinaryOperator.Xor,
+        var calcMXorResult = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Xor,
             operand,
             addVariable,
             mXorResult);
 
         // (A^result) & (M^result)
-        var andXorResults = new NesIr.Binary(
-            NesIr.BinaryOperator.And,
+        var andXorResults = new Ir6502.Binary(
+            Ir6502.BinaryOperator.And,
             aXorResult,
             mXorResult,
             overflowTemp);
 
         // ((A^result) & (M^result)) & 0x80
-        var maskSignBit = new NesIr.Binary(
-            NesIr.BinaryOperator.And,
+        var maskSignBit = new Ir6502.Binary(
+            Ir6502.BinaryOperator.And,
             overflowTemp,
-            new NesIr.Constant(0x80),
+            new Ir6502.Constant(0x80),
             overflowTemp);
 
         // Set overflow flag if result equals 0x80 (signed overflow occurred)
-        var setOverflow = new NesIr.Binary(
-            NesIr.BinaryOperator.Equals,
+        var setOverflow = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Equals,
             overflowTemp,
-            new NesIr.Constant(0x80),
-            new NesIr.Flag(NesIr.FlagName.Overflow));
+            new Ir6502.Constant(0x80),
+            new Ir6502.Flag(Ir6502.FlagName.Overflow));
 
         var checkForZero = ZeroFlagInstruction(addVariable);
         var (checkForNegative, setNegative) = NegativeFlagInstructions(addVariable, isNegative);
-        var storeAccumulator = new NesIr.Copy(addVariable, accumulator);
+        var storeAccumulator = new Ir6502.Copy(addVariable, accumulator);
 
         return
         [
@@ -176,13 +176,13 @@ public static class InstructionConverter
     /// <summary>
     /// Bitwise AND
     /// </summary>
-    private static NesIr.Instruction[] ConvertAnd(DisassembledInstruction instruction)
+    private static Ir6502.Instruction[] ConvertAnd(DisassembledInstruction instruction)
     {
-        var accumulator = new NesIr.Register(NesIr.RegisterName.Accumulator);
+        var accumulator = new Ir6502.Register(Ir6502.RegisterName.Accumulator);
         var operand = ParseAddress(instruction);
-        var isNegative = new NesIr.Variable(1);
+        var isNegative = new Ir6502.Variable(1);
 
-        var andOperation = new NesIr.Binary(NesIr.BinaryOperator.And, accumulator, operand, accumulator);
+        var andOperation = new Ir6502.Binary(Ir6502.BinaryOperator.And, accumulator, operand, accumulator);
         var checkForZero = ZeroFlagInstruction(accumulator);
         var (checkForNegative, setNegative) = NegativeFlagInstructions(accumulator, isNegative);
 
@@ -192,27 +192,27 @@ public static class InstructionConverter
     /// <summary>
     /// Arithmetic Shift Left
     /// </summary>
-    private static NesIr.Instruction[] ConvertAsl(DisassembledInstruction instruction)
+    private static Ir6502.Instruction[] ConvertAsl(DisassembledInstruction instruction)
     {
         var operand = ParseAddress(instruction);
-        var tempVariable = new NesIr.Variable(0);
+        var tempVariable = new Ir6502.Variable(0);
 
-        var carry = new NesIr.Binary(
-            NesIr.BinaryOperator.And,
+        var carry = new Ir6502.Binary(
+            Ir6502.BinaryOperator.And,
             operand,
-            new NesIr.Constant(0x80),
+            new Ir6502.Constant(0x80),
             tempVariable);
 
-        var carryFlag = new NesIr.Binary(
-            NesIr.BinaryOperator.Equals,
+        var carryFlag = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Equals,
             tempVariable,
-            new NesIr.Constant(0x80),
-            new NesIr.Flag(NesIr.FlagName.Carry));
+            new Ir6502.Constant(0x80),
+            new Ir6502.Flag(Ir6502.FlagName.Carry));
 
-        var shift = new NesIr.Binary(
-            NesIr.BinaryOperator.ShiftLeft,
+        var shift = new Ir6502.Binary(
+            Ir6502.BinaryOperator.ShiftLeft,
             operand,
-            new NesIr.Constant(1),
+            new Ir6502.Constant(1),
             operand);
 
         var zeroFlag = ZeroFlagInstruction(operand);
@@ -224,10 +224,10 @@ public static class InstructionConverter
     /// <summary>
     /// Branch if carry clear
     /// </summary>
-    private static NesIr.Instruction[] ConvertBcc(DisassembledInstruction instruction, Context context)
+    private static Ir6502.Instruction[] ConvertBcc(DisassembledInstruction instruction, Context context)
     {
         var target = GetTargetLabel(instruction, context);
-        var jump = new NesIr.JumpIfZero(new NesIr.Flag(NesIr.FlagName.Carry), target);
+        var jump = new Ir6502.JumpIfZero(new Ir6502.Flag(Ir6502.FlagName.Carry), target);
 
         return [jump];
     }
@@ -235,10 +235,10 @@ public static class InstructionConverter
     /// <summary>
     /// Branch if carry set
     /// </summary>
-    private static NesIr.Instruction[] ConvertBcs(DisassembledInstruction instruction, Context context)
+    private static Ir6502.Instruction[] ConvertBcs(DisassembledInstruction instruction, Context context)
     {
         var target = GetTargetLabel(instruction, context);
-        var jump = new NesIr.JumpIfNotZero(new NesIr.Flag(NesIr.FlagName.Carry), target);
+        var jump = new Ir6502.JumpIfNotZero(new Ir6502.Flag(Ir6502.FlagName.Carry), target);
 
         return [jump];
     }
@@ -246,10 +246,10 @@ public static class InstructionConverter
     /// <summary>
     /// Branch if equal
     /// </summary>
-    private static NesIr.Instruction[] ConvertBeq(DisassembledInstruction instruction, Context context)
+    private static Ir6502.Instruction[] ConvertBeq(DisassembledInstruction instruction, Context context)
     {
         var target = GetTargetLabel(instruction, context);
-        var jump = new NesIr.JumpIfNotZero(new NesIr.Flag(NesIr.FlagName.Zero), target);
+        var jump = new Ir6502.JumpIfNotZero(new Ir6502.Flag(Ir6502.FlagName.Zero), target);
 
         return [jump];
     }
@@ -257,32 +257,32 @@ public static class InstructionConverter
     /// <summary>
     /// Bit test
     /// </summary>
-    private static NesIr.Instruction[] ConvertBit(DisassembledInstruction instruction)
+    private static Ir6502.Instruction[] ConvertBit(DisassembledInstruction instruction)
     {
-        var tempVariable = new NesIr.Variable(0);
-        var overflowTemp = new NesIr.Variable(1);
+        var tempVariable = new Ir6502.Variable(0);
+        var overflowTemp = new Ir6502.Variable(1);
         var operand = ParseAddress(instruction);
 
-        var andOp = new NesIr.Binary(
-            NesIr.BinaryOperator.And,
-            new NesIr.Register(NesIr.RegisterName.Accumulator),
+        var andOp = new Ir6502.Binary(
+            Ir6502.BinaryOperator.And,
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator),
             operand,
             tempVariable);
 
         var zeroFlag = ZeroFlagInstruction(tempVariable);
 
         // Overflow flag is set from bit 6 of the memory operand
-        var checkOverflow = new NesIr.Binary(
-            NesIr.BinaryOperator.And,
+        var checkOverflow = new Ir6502.Binary(
+            Ir6502.BinaryOperator.And,
             operand,
-            new NesIr.Constant(0x40),
+            new Ir6502.Constant(0x40),
             overflowTemp);
 
-        var setOverflow = new NesIr.Binary(
-            NesIr.BinaryOperator.Equals,
+        var setOverflow = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Equals,
             overflowTemp,
-            new NesIr.Constant(0x40),
-            new NesIr.Flag(NesIr.FlagName.Overflow));
+            new Ir6502.Constant(0x40),
+            new Ir6502.Flag(Ir6502.FlagName.Overflow));
 
         // Negative flag is set from bit 7 of the memory operand
         var (negativeFlag, setNegative) = NegativeFlagInstructions(operand, tempVariable);
@@ -293,10 +293,10 @@ public static class InstructionConverter
     /// <summary>
     /// Branch if minus
     /// </summary>
-    private static NesIr.Instruction[] ConvertBmi(DisassembledInstruction instruction, Context context)
+    private static Ir6502.Instruction[] ConvertBmi(DisassembledInstruction instruction, Context context)
     {
         var target = GetTargetLabel(instruction, context);
-        var jump = new NesIr.JumpIfNotZero(new NesIr.Flag(NesIr.FlagName.Negative), target);
+        var jump = new Ir6502.JumpIfNotZero(new Ir6502.Flag(Ir6502.FlagName.Negative), target);
 
         return [jump];
     }
@@ -304,10 +304,10 @@ public static class InstructionConverter
     /// <summary>
     /// Branch if not equal
     /// </summary>
-    private static NesIr.Instruction[] ConvertBne(DisassembledInstruction instruction, Context context)
+    private static Ir6502.Instruction[] ConvertBne(DisassembledInstruction instruction, Context context)
     {
         var target = GetTargetLabel(instruction, context);
-        var jump = new NesIr.JumpIfZero(new NesIr.Flag(NesIr.FlagName.Zero), target);
+        var jump = new Ir6502.JumpIfZero(new Ir6502.Flag(Ir6502.FlagName.Zero), target);
 
         return [jump];
     }
@@ -315,10 +315,10 @@ public static class InstructionConverter
     /// <summary>
     /// Branch if plus
     /// </summary>
-    private static NesIr.Instruction[] ConvertBpl(DisassembledInstruction instruction, Context context)
+    private static Ir6502.Instruction[] ConvertBpl(DisassembledInstruction instruction, Context context)
     {
         var target = GetTargetLabel(instruction, context);
-        var jump = new NesIr.JumpIfZero(new NesIr.Flag(NesIr.FlagName.Negative), target);
+        var jump = new Ir6502.JumpIfZero(new Ir6502.Flag(Ir6502.FlagName.Negative), target);
 
         return [jump];
     }
@@ -326,17 +326,17 @@ public static class InstructionConverter
     /// <summary>
     /// Break (software IRQ)
     /// </summary>
-    private static NesIr.Instruction[] ConvertBrk()
+    private static Ir6502.Instruction[] ConvertBrk()
     {
-        var pushFlags = new NesIr.PushStackValue(new NesIr.AllFlags());
-        var triggerInterrupt = new NesIr.InvokeSoftwareInterrupt();
-        var setInterruptDisable = new NesIr.Copy(
-            new NesIr.Constant(1),
-            new NesIr.Flag(NesIr.FlagName.InterruptDisable));
+        var pushFlags = new Ir6502.PushStackValue(new Ir6502.AllFlags());
+        var triggerInterrupt = new Ir6502.InvokeSoftwareInterrupt();
+        var setInterruptDisable = new Ir6502.Copy(
+            new Ir6502.Constant(1),
+            new Ir6502.Flag(Ir6502.FlagName.InterruptDisable));
 
-        var setBFlag = new NesIr.Copy(
-            new NesIr.Constant(1),
-            new NesIr.Flag(NesIr.FlagName.BFlag));
+        var setBFlag = new Ir6502.Copy(
+            new Ir6502.Constant(1),
+            new Ir6502.Flag(Ir6502.FlagName.BFlag));
 
         return [pushFlags, setInterruptDisable, setBFlag, triggerInterrupt];
     }
@@ -344,10 +344,10 @@ public static class InstructionConverter
     /// <summary>
     /// Branch if overflow clear
     /// </summary>
-    private static NesIr.Instruction[] ConvertBvc(DisassembledInstruction instruction, Context context)
+    private static Ir6502.Instruction[] ConvertBvc(DisassembledInstruction instruction, Context context)
     {
         var target = GetTargetLabel(instruction, context);
-        var jump = new NesIr.JumpIfZero(new NesIr.Flag(NesIr.FlagName.Overflow), target);
+        var jump = new Ir6502.JumpIfZero(new Ir6502.Flag(Ir6502.FlagName.Overflow), target);
 
         return [jump];
     }
@@ -355,10 +355,10 @@ public static class InstructionConverter
     /// <summary>
     /// Branch if overflow set
     /// </summary>
-    private static NesIr.Instruction[] ConvertBvs(DisassembledInstruction instruction, Context context)
+    private static Ir6502.Instruction[] ConvertBvs(DisassembledInstruction instruction, Context context)
     {
         var target = GetTargetLabel(instruction, context);
-        var jump = new NesIr.JumpIfNotZero(new NesIr.Flag(NesIr.FlagName.Overflow), target);
+        var jump = new Ir6502.JumpIfNotZero(new Ir6502.Flag(Ir6502.FlagName.Overflow), target);
 
         return [jump];
     }
@@ -366,9 +366,9 @@ public static class InstructionConverter
     /// <summary>
     /// Clear carry
     /// </summary>
-    private static NesIr.Instruction[] ConvertClc()
+    private static Ir6502.Instruction[] ConvertClc()
     {
-        var setCarry = new NesIr.Copy(new NesIr.Constant(0), new NesIr.Flag(NesIr.FlagName.Carry));
+        var setCarry = new Ir6502.Copy(new Ir6502.Constant(0), new Ir6502.Flag(Ir6502.FlagName.Carry));
 
         return [setCarry];
     }
@@ -376,9 +376,9 @@ public static class InstructionConverter
     /// <summary>
     /// Clear decimal
     /// </summary>
-    private static NesIr.Instruction[] ConvertCld()
+    private static Ir6502.Instruction[] ConvertCld()
     {
-        var setDecimal = new NesIr.Copy(new NesIr.Constant(0), new NesIr.Flag(NesIr.FlagName.Decimal));
+        var setDecimal = new Ir6502.Copy(new Ir6502.Constant(0), new Ir6502.Flag(Ir6502.FlagName.Decimal));
 
         return [setDecimal];
     }
@@ -386,9 +386,9 @@ public static class InstructionConverter
     /// <summary>
     /// Clear interrupt disable
     /// </summary>
-    private static NesIr.Instruction[] ConvertCli()
+    private static Ir6502.Instruction[] ConvertCli()
     {
-        var setInterrupt = new NesIr.Copy(new NesIr.Constant(0), new NesIr.Flag(NesIr.FlagName.InterruptDisable));
+        var setInterrupt = new Ir6502.Copy(new Ir6502.Constant(0), new Ir6502.Flag(Ir6502.FlagName.InterruptDisable));
 
         return [setInterrupt];
     }
@@ -396,9 +396,9 @@ public static class InstructionConverter
     /// <summary>
     /// Clear overflow
     /// </summary>
-    private static NesIr.Instruction[] ConvertClv()
+    private static Ir6502.Instruction[] ConvertClv()
     {
-        var setOverflow = new NesIr.Copy(new NesIr.Constant(0), new NesIr.Flag(NesIr.FlagName.Overflow));
+        var setOverflow = new Ir6502.Copy(new Ir6502.Constant(0), new Ir6502.Flag(Ir6502.FlagName.Overflow));
 
         return [setOverflow];
     }
@@ -406,24 +406,24 @@ public static class InstructionConverter
     /// <summary>
     /// Compare A
     /// </summary>
-    private static NesIr.Instruction[] ConvertCmp(DisassembledInstruction instruction)
+    private static Ir6502.Instruction[] ConvertCmp(DisassembledInstruction instruction)
     {
-        var accumulator = new NesIr.Register(NesIr.RegisterName.Accumulator);
+        var accumulator = new Ir6502.Register(Ir6502.RegisterName.Accumulator);
         var operand = ParseAddress(instruction);
-        var variable = new NesIr.Variable(0);
+        var variable = new Ir6502.Variable(0);
 
-        var subtract = new NesIr.Binary(
-            NesIr.BinaryOperator.Subtract,
+        var subtract = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Subtract,
             accumulator,
             operand,
             variable);
 
         var zero = ZeroFlagInstruction(variable);
-        var carry = new NesIr.Binary(
-            NesIr.BinaryOperator.GreaterThanOrEqualTo,
+        var carry = new Ir6502.Binary(
+            Ir6502.BinaryOperator.GreaterThanOrEqualTo,
             accumulator,
             operand,
-            new NesIr.Flag(NesIr.FlagName.Carry));
+            new Ir6502.Flag(Ir6502.FlagName.Carry));
 
         var (checkForNegative, setNegative) = NegativeFlagInstructions(variable, variable);
 
@@ -433,24 +433,24 @@ public static class InstructionConverter
     /// <summary>
     /// Compare X
     /// </summary>
-    private static NesIr.Instruction[] ConvertCpx(DisassembledInstruction instruction)
+    private static Ir6502.Instruction[] ConvertCpx(DisassembledInstruction instruction)
     {
-        var xIndex = new NesIr.Register(NesIr.RegisterName.XIndex);
+        var xIndex = new Ir6502.Register(Ir6502.RegisterName.XIndex);
         var operand = ParseAddress(instruction);
-        var variable = new NesIr.Variable(0);
+        var variable = new Ir6502.Variable(0);
 
-        var subtract = new NesIr.Binary(
-            NesIr.BinaryOperator.Subtract,
+        var subtract = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Subtract,
             xIndex,
             operand,
             variable);
 
         var zero = ZeroFlagInstruction(variable);
-        var carry = new NesIr.Binary(
-            NesIr.BinaryOperator.GreaterThanOrEqualTo,
+        var carry = new Ir6502.Binary(
+            Ir6502.BinaryOperator.GreaterThanOrEqualTo,
             xIndex,
             operand,
-            new NesIr.Flag(NesIr.FlagName.Carry));
+            new Ir6502.Flag(Ir6502.FlagName.Carry));
 
         var (checkForNegative, setNegative) = NegativeFlagInstructions(variable, variable);
 
@@ -460,24 +460,24 @@ public static class InstructionConverter
     /// <summary>
     /// Compare Y
     /// </summary>
-    private static NesIr.Instruction[] ConvertCpy(DisassembledInstruction instruction)
+    private static Ir6502.Instruction[] ConvertCpy(DisassembledInstruction instruction)
     {
-        var yIndex = new NesIr.Register(NesIr.RegisterName.YIndex);
+        var yIndex = new Ir6502.Register(Ir6502.RegisterName.YIndex);
         var operand = ParseAddress(instruction);
-        var variable = new NesIr.Variable(0);
+        var variable = new Ir6502.Variable(0);
 
-        var subtract = new NesIr.Binary(
-            NesIr.BinaryOperator.Subtract,
+        var subtract = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Subtract,
             yIndex,
             operand,
             variable);
 
         var zero = ZeroFlagInstruction(variable);
-        var carry = new NesIr.Binary(
-            NesIr.BinaryOperator.GreaterThanOrEqualTo,
+        var carry = new Ir6502.Binary(
+            Ir6502.BinaryOperator.GreaterThanOrEqualTo,
             yIndex,
             operand,
-            new NesIr.Flag(NesIr.FlagName.Carry));
+            new Ir6502.Flag(Ir6502.FlagName.Carry));
 
         var (checkForNegative, setNegative) = NegativeFlagInstructions(variable, variable);
 
@@ -487,18 +487,18 @@ public static class InstructionConverter
     /// <summary>
     /// Decrement memory
     /// </summary>
-    private static NesIr.Instruction[] ConvertDec(DisassembledInstruction instruction)
+    private static Ir6502.Instruction[] ConvertDec(DisassembledInstruction instruction)
     {
         var operand = ParseAddress(instruction);
-        var variable = new NesIr.Variable(0);
+        var variable = new Ir6502.Variable(0);
 
-        var subtract = new NesIr.Binary(
-            NesIr.BinaryOperator.Subtract,
+        var subtract = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Subtract,
             operand,
-            new NesIr.Constant(1),
+            new Ir6502.Constant(1),
             variable);
 
-        var store = new NesIr.Copy(variable, operand);
+        var store = new Ir6502.Copy(variable, operand);
         var zero = ZeroFlagInstruction(variable);
         var (checkNegative, setNegative) = NegativeFlagInstructions(variable, variable);
 
@@ -508,18 +508,18 @@ public static class InstructionConverter
     /// <summary>
     /// Decrement x
     /// </summary>
-    private static NesIr.Instruction[] ConvertDex()
+    private static Ir6502.Instruction[] ConvertDex()
     {
-        var xIndex = new NesIr.Register(NesIr.RegisterName.XIndex);
-        var variable = new NesIr.Variable(0);
+        var xIndex = new Ir6502.Register(Ir6502.RegisterName.XIndex);
+        var variable = new Ir6502.Variable(0);
 
-        var subtract = new NesIr.Binary(
-            NesIr.BinaryOperator.Subtract,
+        var subtract = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Subtract,
             xIndex,
-            new NesIr.Constant(1),
+            new Ir6502.Constant(1),
             variable);
 
-        var store = new NesIr.Copy(variable, xIndex);
+        var store = new Ir6502.Copy(variable, xIndex);
         var zero = ZeroFlagInstruction(variable);
         var (checkNegative, setNegative) = NegativeFlagInstructions(variable, variable);
 
@@ -529,18 +529,18 @@ public static class InstructionConverter
     /// <summary>
     /// Decrement y
     /// </summary>
-    private static NesIr.Instruction[] ConvertDey()
+    private static Ir6502.Instruction[] ConvertDey()
     {
-        var yIndex = new NesIr.Register(NesIr.RegisterName.YIndex);
-        var variable = new NesIr.Variable(0);
+        var yIndex = new Ir6502.Register(Ir6502.RegisterName.YIndex);
+        var variable = new Ir6502.Variable(0);
 
-        var subtract = new NesIr.Binary(
-            NesIr.BinaryOperator.Subtract,
+        var subtract = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Subtract,
             yIndex,
-            new NesIr.Constant(1),
+            new Ir6502.Constant(1),
             variable);
 
-        var store = new NesIr.Copy(variable, yIndex);
+        var store = new Ir6502.Copy(variable, yIndex);
         var zero = ZeroFlagInstruction(variable);
         var (checkNegative, setNegative) = NegativeFlagInstructions(variable, variable);
 
@@ -550,13 +550,13 @@ public static class InstructionConverter
     /// <summary>
     /// Bitwise Exclusive OR
     /// </summary>
-    private static NesIr.Instruction[] ConvertEor(DisassembledInstruction instruction)
+    private static Ir6502.Instruction[] ConvertEor(DisassembledInstruction instruction)
     {
         var operand = ParseAddress(instruction);
-        var accumulator = new NesIr.Register(NesIr.RegisterName.Accumulator);
-        var variable = new NesIr.Variable(0);
+        var accumulator = new Ir6502.Register(Ir6502.RegisterName.Accumulator);
+        var variable = new Ir6502.Variable(0);
 
-        var xor = new NesIr.Binary(NesIr.BinaryOperator.Xor, accumulator, operand, accumulator);
+        var xor = new Ir6502.Binary(Ir6502.BinaryOperator.Xor, accumulator, operand, accumulator);
         var zero = ZeroFlagInstruction(accumulator);
         var (checkNegative, setNegative) = NegativeFlagInstructions(accumulator, variable);
 
@@ -566,14 +566,14 @@ public static class InstructionConverter
     /// <summary>
     /// Increment memory
     /// </summary>
-    private static NesIr.Instruction[] ConvertInc(DisassembledInstruction instruction)
+    private static Ir6502.Instruction[] ConvertInc(DisassembledInstruction instruction)
     {
         var operand = ParseAddress(instruction);
-        var variable = new NesIr.Variable(0);
+        var variable = new Ir6502.Variable(0);
 
-        var increment = new NesIr.Binary(NesIr.BinaryOperator.Add, operand, new NesIr.Constant(1), variable);
-        var convertToByte = new NesIr.ConvertVariableToByte(variable);
-        var store = new NesIr.Copy(variable, operand);
+        var increment = new Ir6502.Binary(Ir6502.BinaryOperator.Add, operand, new Ir6502.Constant(1), variable);
+        var convertToByte = new Ir6502.ConvertVariableToByte(variable);
+        var store = new Ir6502.Copy(variable, operand);
         var zero = ZeroFlagInstruction(variable);
         var (checkNegative, setNegative) = NegativeFlagInstructions(variable, variable);
 
@@ -583,12 +583,12 @@ public static class InstructionConverter
     /// <summary>
     /// Increment X
     /// </summary>
-    private static NesIr.Instruction[] ConvertInx()
+    private static Ir6502.Instruction[] ConvertInx()
     {
-        var xIndex = new NesIr.Register(NesIr.RegisterName.XIndex);
-        var variable = new NesIr.Variable(0);
+        var xIndex = new Ir6502.Register(Ir6502.RegisterName.XIndex);
+        var variable = new Ir6502.Variable(0);
 
-        var increment = new NesIr.Binary(NesIr.BinaryOperator.Add, xIndex, new NesIr.Constant(1), xIndex);
+        var increment = new Ir6502.Binary(Ir6502.BinaryOperator.Add, xIndex, new Ir6502.Constant(1), xIndex);
         var zero = ZeroFlagInstruction(xIndex);
         var (checkNegative, setNegative) = NegativeFlagInstructions(xIndex, variable);
 
@@ -598,12 +598,12 @@ public static class InstructionConverter
     /// <summary>
     /// Increment Y
     /// </summary>
-    private static NesIr.Instruction[] ConvertIny()
+    private static Ir6502.Instruction[] ConvertIny()
     {
-        var yIndex = new NesIr.Register(NesIr.RegisterName.YIndex);
-        var variable = new NesIr.Variable(0);
+        var yIndex = new Ir6502.Register(Ir6502.RegisterName.YIndex);
+        var variable = new Ir6502.Variable(0);
 
-        var increment = new NesIr.Binary(NesIr.BinaryOperator.Add, yIndex, new NesIr.Constant(1), yIndex);
+        var increment = new Ir6502.Binary(Ir6502.BinaryOperator.Add, yIndex, new Ir6502.Constant(1), yIndex);
         var zero = ZeroFlagInstruction(yIndex);
         var (checkNegative, setNegative) = NegativeFlagInstructions(yIndex, variable);
 
@@ -613,10 +613,10 @@ public static class InstructionConverter
     /// <summary>
     /// Jump
     /// </summary>
-    private static NesIr.Instruction[] ConvertJmp(DisassembledInstruction instruction, Context context)
+    private static Ir6502.Instruction[] ConvertJmp(DisassembledInstruction instruction, Context context)
     {
         var target = GetTargetLabel(instruction, context);
-        var jump = new NesIr.Jump(target);
+        var jump = new Ir6502.Jump(target);
 
         return [jump];
     }
@@ -624,7 +624,7 @@ public static class InstructionConverter
     /// <summary>
     /// Jump to subroutine
     /// </summary>
-    private static NesIr.Instruction[] ConvertJsr(DisassembledInstruction instruction, Context context)
+    private static Ir6502.Instruction[] ConvertJsr(DisassembledInstruction instruction, Context context)
     {
         if (!instruction.TargetAddress.HasValue)
         {
@@ -640,7 +640,7 @@ public static class InstructionConverter
             throw new InvalidOperationException(message);
         }
 
-        var jump = new NesIr.CallFunction(new NesIr.Identifier(function.Name));
+        var jump = new Ir6502.CallFunction(new Ir6502.Identifier(function.Name));
 
         return [jump];
     }
@@ -648,13 +648,13 @@ public static class InstructionConverter
     /// <summary>
     /// Load A
     /// </summary>
-    private static NesIr.Instruction[] ConvertLda(DisassembledInstruction instruction)
+    private static Ir6502.Instruction[] ConvertLda(DisassembledInstruction instruction)
     {
-        var accumulator = new NesIr.Register(NesIr.RegisterName.Accumulator);
+        var accumulator = new Ir6502.Register(Ir6502.RegisterName.Accumulator);
         var operand = ParseAddress(instruction);
-        var variable = new NesIr.Variable(0);
+        var variable = new Ir6502.Variable(0);
 
-        var copy = new NesIr.Copy(operand, accumulator);
+        var copy = new Ir6502.Copy(operand, accumulator);
         var zero = ZeroFlagInstruction(accumulator);
         var (checkNegative, setNegative) = NegativeFlagInstructions(accumulator, variable);
 
@@ -664,13 +664,13 @@ public static class InstructionConverter
     /// <summary>
     /// Load X
     /// </summary>
-    private static NesIr.Instruction[] ConvertLdx(DisassembledInstruction instruction)
+    private static Ir6502.Instruction[] ConvertLdx(DisassembledInstruction instruction)
     {
-        var xIndex = new NesIr.Register(NesIr.RegisterName.XIndex);
+        var xIndex = new Ir6502.Register(Ir6502.RegisterName.XIndex);
         var operand = ParseAddress(instruction);
-        var variable = new NesIr.Variable(0);
+        var variable = new Ir6502.Variable(0);
 
-        var copy = new NesIr.Copy(operand, xIndex);
+        var copy = new Ir6502.Copy(operand, xIndex);
         var zero = ZeroFlagInstruction(xIndex);
         var (checkNegative, setNegative) = NegativeFlagInstructions(xIndex, variable);
 
@@ -680,13 +680,13 @@ public static class InstructionConverter
     /// <summary>
     /// Load Y
     /// </summary>
-    private static NesIr.Instruction[] ConvertLdy(DisassembledInstruction instruction)
+    private static Ir6502.Instruction[] ConvertLdy(DisassembledInstruction instruction)
     {
-        var yIndex = new NesIr.Register(NesIr.RegisterName.YIndex);
+        var yIndex = new Ir6502.Register(Ir6502.RegisterName.YIndex);
         var operand = ParseAddress(instruction);
-        var variable = new NesIr.Variable(0);
+        var variable = new Ir6502.Variable(0);
 
-        var copy = new NesIr.Copy(operand, yIndex);
+        var copy = new Ir6502.Copy(operand, yIndex);
         var zero = ZeroFlagInstruction(yIndex);
         var (checkNegative, setNegative) = NegativeFlagInstructions(yIndex, variable);
 
@@ -696,31 +696,31 @@ public static class InstructionConverter
     /// <summary>
     /// Logical shift right
     /// </summary>
-    private static NesIr.Instruction[] ConvertLsr(DisassembledInstruction instruction)
+    private static Ir6502.Instruction[] ConvertLsr(DisassembledInstruction instruction)
     {
         var operand = ParseAddress(instruction);
-        var tempVariable = new NesIr.Variable(0);
+        var tempVariable = new Ir6502.Variable(0);
 
-        var carry = new NesIr.Binary(
-            NesIr.BinaryOperator.And,
+        var carry = new Ir6502.Binary(
+            Ir6502.BinaryOperator.And,
             operand,
-            new NesIr.Constant(0x01),
+            new Ir6502.Constant(0x01),
             tempVariable);
 
-        var carryFlag = new NesIr.Binary(
-            NesIr.BinaryOperator.Equals,
+        var carryFlag = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Equals,
             tempVariable,
-            new NesIr.Constant(0x01),
-            new NesIr.Flag(NesIr.FlagName.Carry));
+            new Ir6502.Constant(0x01),
+            new Ir6502.Flag(Ir6502.FlagName.Carry));
 
-        var shift = new NesIr.Binary(
-            NesIr.BinaryOperator.ShiftRight,
+        var shift = new Ir6502.Binary(
+            Ir6502.BinaryOperator.ShiftRight,
             operand,
-            new NesIr.Constant(1),
+            new Ir6502.Constant(1),
             operand);
 
         var zero = ZeroFlagInstruction(operand);
-        var negative = new NesIr.Copy(new NesIr.Constant(0), new NesIr.Flag(NesIr.FlagName.Negative));
+        var negative = new Ir6502.Copy(new Ir6502.Constant(0), new Ir6502.Flag(Ir6502.FlagName.Negative));
 
         return [carry, carryFlag, shift, zero, negative];
     }
@@ -728,7 +728,7 @@ public static class InstructionConverter
     /// <summary>
     /// No Operation
     /// </summary>
-    private static NesIr.Instruction[] ConvertNop()
+    private static Ir6502.Instruction[] ConvertNop()
     {
         return [];
     }
@@ -736,13 +736,13 @@ public static class InstructionConverter
     /// <summary>
     /// Bitwise Or
     /// </summary>
-    private static NesIr.Instruction[] ConvertOra(DisassembledInstruction instruction)
+    private static Ir6502.Instruction[] ConvertOra(DisassembledInstruction instruction)
     {
-        var accumulator = new NesIr.Register(NesIr.RegisterName.Accumulator);
+        var accumulator = new Ir6502.Register(Ir6502.RegisterName.Accumulator);
         var operand = ParseAddress(instruction);
-        var variable = new NesIr.Variable(0);
+        var variable = new Ir6502.Variable(0);
 
-        var or = new NesIr.Binary(NesIr.BinaryOperator.Or, accumulator, operand, accumulator);
+        var or = new Ir6502.Binary(Ir6502.BinaryOperator.Or, accumulator, operand, accumulator);
         var zero = ZeroFlagInstruction(accumulator);
         var (checkNegative, setNegative) = NegativeFlagInstructions(accumulator, variable);
 
@@ -752,9 +752,9 @@ public static class InstructionConverter
     /// <summary>
     /// Push A
     /// </summary>
-    private static NesIr.Instruction[] ConvertPha()
+    private static Ir6502.Instruction[] ConvertPha()
     {
-        var push = new NesIr.PushStackValue(new NesIr.Register(NesIr.RegisterName.Accumulator));
+        var push = new Ir6502.PushStackValue(new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
         return [push];
     }
@@ -762,19 +762,19 @@ public static class InstructionConverter
     /// <summary>
     /// Push processor status
     /// </summary>
-    private static NesIr.Instruction[] ConvertPhp()
+    private static Ir6502.Instruction[] ConvertPhp()
     {
-        var variable = new NesIr.Variable(0);
+        var variable = new Ir6502.Variable(0);
 
         // B flag must be set as 1
-        var pullFlags = new NesIr.Copy(new NesIr.AllFlags(), variable);
-        var setBit = new NesIr.Binary(
-            NesIr.BinaryOperator.Or,
+        var pullFlags = new Ir6502.Copy(new Ir6502.AllFlags(), variable);
+        var setBit = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Or,
             variable,
-            new NesIr.Constant(0b00110000),
+            new Ir6502.Constant(0b00110000),
             variable);
 
-        var push = new NesIr.PushStackValue(variable);
+        var push = new Ir6502.PushStackValue(variable);
 
         return [pullFlags, setBit, push];
     }
@@ -782,12 +782,12 @@ public static class InstructionConverter
     /// <summary>
     /// Pull A
     /// </summary>
-    private static NesIr.Instruction[] ConvertPla()
+    private static Ir6502.Instruction[] ConvertPla()
     {
-        var accumulator = new NesIr.Register(NesIr.RegisterName.Accumulator);
-        var tempVariable = new NesIr.Variable(0);
+        var accumulator = new Ir6502.Register(Ir6502.RegisterName.Accumulator);
+        var tempVariable = new Ir6502.Variable(0);
 
-        var pop = new NesIr.PopStackValue(accumulator);
+        var pop = new Ir6502.PopStackValue(accumulator);
         var zero = ZeroFlagInstruction(accumulator);
         var (checkNegative, setNegative) = NegativeFlagInstructions(accumulator, tempVariable);
 
@@ -797,9 +797,9 @@ public static class InstructionConverter
     /// <summary>
     /// Pull processor status
     /// </summary>
-    private static NesIr.Instruction[] ConvertPlp()
+    private static Ir6502.Instruction[] ConvertPlp()
     {
-        var pop = new NesIr.PopStackValue(new NesIr.AllFlags());
+        var pop = new Ir6502.PopStackValue(new Ir6502.AllFlags());
 
         return [pop];
     }
@@ -807,33 +807,33 @@ public static class InstructionConverter
     /// <summary>
     /// Rotate left
     /// </summary>
-    private static NesIr.Instruction[] ConvertRol(DisassembledInstruction instruction)
+    private static Ir6502.Instruction[] ConvertRol(DisassembledInstruction instruction)
     {
         var operand = ParseAddress(instruction);
-        var oldCarry = new NesIr.Variable(0);
-        var tempVariable = new NesIr.Variable(1);
+        var oldCarry = new Ir6502.Variable(0);
+        var tempVariable = new Ir6502.Variable(1);
 
-        var copyCarry = new NesIr.Copy(new NesIr.Flag(NesIr.FlagName.Carry), oldCarry);
-        var compareLastBit = new NesIr.Binary(
-            NesIr.BinaryOperator.And,
+        var copyCarry = new Ir6502.Copy(new Ir6502.Flag(Ir6502.FlagName.Carry), oldCarry);
+        var compareLastBit = new Ir6502.Binary(
+            Ir6502.BinaryOperator.And,
             operand,
-            new NesIr.Constant(0x80),
+            new Ir6502.Constant(0x80),
             tempVariable);
 
-        var setCarry = new NesIr.Binary(
-            NesIr.BinaryOperator.Equals,
+        var setCarry = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Equals,
             tempVariable,
-            new NesIr.Constant(0x80),
-            new NesIr.Flag(NesIr.FlagName.Carry));
+            new Ir6502.Constant(0x80),
+            new Ir6502.Flag(Ir6502.FlagName.Carry));
 
-        var shift = new NesIr.Binary(
-            NesIr.BinaryOperator.ShiftLeft,
+        var shift = new Ir6502.Binary(
+            Ir6502.BinaryOperator.ShiftLeft,
             operand,
-            new NesIr.Constant(1),
+            new Ir6502.Constant(1),
             operand);
 
-        var setBit0 = new NesIr.Binary(
-            NesIr.BinaryOperator.Or,
+        var setBit0 = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Or,
             operand,
             oldCarry,
             operand);
@@ -847,39 +847,39 @@ public static class InstructionConverter
     /// <summary>
     /// Rotate right
     /// </summary>
-    private static NesIr.Instruction[] ConvertRor(DisassembledInstruction instruction)
+    private static Ir6502.Instruction[] ConvertRor(DisassembledInstruction instruction)
     {
         var operand = ParseAddress(instruction);
-        var oldCarry = new NesIr.Variable(0);
-        var tempVariable = new NesIr.Variable(1);
+        var oldCarry = new Ir6502.Variable(0);
+        var tempVariable = new Ir6502.Variable(1);
 
-        var copyCarry = new NesIr.Copy(new NesIr.Flag(NesIr.FlagName.Carry), oldCarry);
-        var compareLastBit = new NesIr.Binary(
-            NesIr.BinaryOperator.And,
+        var copyCarry = new Ir6502.Copy(new Ir6502.Flag(Ir6502.FlagName.Carry), oldCarry);
+        var compareLastBit = new Ir6502.Binary(
+            Ir6502.BinaryOperator.And,
             operand,
-            new NesIr.Constant(0x01),
+            new Ir6502.Constant(0x01),
             tempVariable);
 
-        var setCarry = new NesIr.Binary(
-            NesIr.BinaryOperator.Equals,
+        var setCarry = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Equals,
             tempVariable,
-            new NesIr.Constant(0x01),
-            new NesIr.Flag(NesIr.FlagName.Carry));
+            new Ir6502.Constant(0x01),
+            new Ir6502.Flag(Ir6502.FlagName.Carry));
 
-        var shiftOperand = new NesIr.Binary(
-            NesIr.BinaryOperator.ShiftRight,
+        var shiftOperand = new Ir6502.Binary(
+            Ir6502.BinaryOperator.ShiftRight,
             operand,
-            new NesIr.Constant(1),
+            new Ir6502.Constant(1),
             operand);
 
-        var shiftOldCarry = new NesIr.Binary(
-            NesIr.BinaryOperator.ShiftLeft,
+        var shiftOldCarry = new Ir6502.Binary(
+            Ir6502.BinaryOperator.ShiftLeft,
             oldCarry,
-            new NesIr.Constant(7),
+            new Ir6502.Constant(7),
             oldCarry);
 
-        var setBit7 = new NesIr.Binary(
-            NesIr.BinaryOperator.Or,
+        var setBit7 = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Or,
             operand,
             oldCarry,
             operand);
@@ -896,10 +896,10 @@ public static class InstructionConverter
     /// <summary>
     /// Return from interrupt
     /// </summary>
-    private static NesIr.Instruction[] ConvertRti()
+    private static Ir6502.Instruction[] ConvertRti()
     {
-        var pop = new NesIr.PopStackValue(new NesIr.AllFlags());
-        var ret = new NesIr.Return();
+        var pop = new Ir6502.PopStackValue(new Ir6502.AllFlags());
+        var ret = new Ir6502.Return();
 
         return [pop, ret];
     }
@@ -907,9 +907,9 @@ public static class InstructionConverter
     /// <summary>
     /// Return from subroutine
     /// </summary>
-    private static NesIr.Instruction[] ConvertRts()
+    private static Ir6502.Instruction[] ConvertRts()
     {
-        var ret = new NesIr.Return();
+        var ret = new Ir6502.Return();
 
         return [ret];
     }
@@ -917,39 +917,39 @@ public static class InstructionConverter
     /// <summary>
     /// Subtract with carry
     /// </summary>
-    private static NesIr.Instruction[] ConvertSbc(DisassembledInstruction instruction)
+    private static Ir6502.Instruction[] ConvertSbc(DisassembledInstruction instruction)
     {
-        var accumulator = new NesIr.Register(NesIr.RegisterName.Accumulator);
+        var accumulator = new Ir6502.Register(Ir6502.RegisterName.Accumulator);
         var operand = ParseAddress(instruction);
-        var subVariable = new NesIr.Variable(0);
-        var tempVariable = new NesIr.Variable(1);
+        var subVariable = new Ir6502.Variable(0);
+        var tempVariable = new Ir6502.Variable(1);
 
         // Variables for 6502 SBC overflow calculation: (result^A) & (result^~M) & 0x80
-        var originalAccumulator = new NesIr.Variable(2);
-        var resultXorA = new NesIr.Variable(3);
-        var notMemory = new NesIr.Variable(4);
-        var resultXorNotMemory = new NesIr.Variable(5);
-        var overflowTemp = new NesIr.Variable(6);
+        var originalAccumulator = new Ir6502.Variable(2);
+        var resultXorA = new Ir6502.Variable(3);
+        var notMemory = new Ir6502.Variable(4);
+        var resultXorNotMemory = new Ir6502.Variable(5);
+        var overflowTemp = new Ir6502.Variable(6);
 
         // Preserve original accumulator value for overflow calculation
-        var preserveAccumulator = new NesIr.Copy(accumulator, originalAccumulator);
+        var preserveAccumulator = new Ir6502.Copy(accumulator, originalAccumulator);
 
         // SBC = A - M - (1 - C)
         // Calculate (1 - C) properly
-        var oneMinusCarry = new NesIr.Binary(
-            NesIr.BinaryOperator.Subtract,
-            new NesIr.Constant(1),
-            new NesIr.Flag(NesIr.FlagName.Carry),
+        var oneMinusCarry = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Subtract,
+            new Ir6502.Constant(1),
+            new Ir6502.Flag(Ir6502.FlagName.Carry),
             tempVariable);
 
-        var subtractOperand = new NesIr.Binary(
-            NesIr.BinaryOperator.Subtract,
+        var subtractOperand = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Subtract,
             accumulator,
             operand,
             subVariable);
 
-        var subtractBorrow = new NesIr.Binary(
-            NesIr.BinaryOperator.Subtract,
+        var subtractBorrow = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Subtract,
             subVariable,
             tempVariable,
             subVariable);
@@ -958,54 +958,54 @@ public static class InstructionConverter
         // For SBC, carry is cleared (0) when borrow occurs (result < 0)
         // Since we check after arithmetic, use > 255 to detect borrow (like ADC uses > 255 for carry)
         // But SBC needs to check if result went negative, so use < 0
-        var carryCheck = new NesIr.Binary(
-            NesIr.BinaryOperator.GreaterThanOrEqualTo,
+        var carryCheck = new Ir6502.Binary(
+            Ir6502.BinaryOperator.GreaterThanOrEqualTo,
             subVariable,
-            new NesIr.Constant(0),
-            new NesIr.Flag(NesIr.FlagName.Carry));
+            new Ir6502.Constant(0),
+            new Ir6502.Flag(Ir6502.FlagName.Carry));
 
         // Implement 6502 SBC overflow logic: (result^A) & (result^~M) & 0x80 != 0
-        var calcResultXorA = new NesIr.Binary(
-            NesIr.BinaryOperator.Xor,
+        var calcResultXorA = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Xor,
             subVariable,
             originalAccumulator,
             resultXorA);
 
         // ~M: Bitwise NOT of operand
-        var calcNotMemory = new NesIr.Unary(
-            NesIr.UnaryOperator.BitwiseNot,
+        var calcNotMemory = new Ir6502.Unary(
+            Ir6502.UnaryOperator.BitwiseNot,
             operand,
             notMemory);
 
         // result^~M: XOR final result with NOT of operand
-        var calcResultXorNotMemory = new NesIr.Binary(
-            NesIr.BinaryOperator.Xor,
+        var calcResultXorNotMemory = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Xor,
             subVariable,
             notMemory,
             resultXorNotMemory);
 
         // (result^A) & (result^~M)
-        var andXorResults = new NesIr.Binary(
-            NesIr.BinaryOperator.And,
+        var andXorResults = new Ir6502.Binary(
+            Ir6502.BinaryOperator.And,
             resultXorA,
             resultXorNotMemory,
             overflowTemp);
 
         // ((A^result) & (M^result)) & 0x80
-        var maskSignBit = new NesIr.Binary(
-            NesIr.BinaryOperator.And,
+        var maskSignBit = new Ir6502.Binary(
+            Ir6502.BinaryOperator.And,
             overflowTemp,
-            new NesIr.Constant(0x80),
+            new Ir6502.Constant(0x80),
             overflowTemp);
 
         // Set overflow flag if result equals 0x80 (signed overflow occurred)
-        var setOverflow = new NesIr.Binary(
-            NesIr.BinaryOperator.Equals,
+        var setOverflow = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Equals,
             overflowTemp,
-            new NesIr.Constant(0x80),
-            new NesIr.Flag(NesIr.FlagName.Overflow));
+            new Ir6502.Constant(0x80),
+            new Ir6502.Flag(Ir6502.FlagName.Overflow));
 
-        var setAccumulator = new NesIr.Copy(subVariable, accumulator);
+        var setAccumulator = new Ir6502.Copy(subVariable, accumulator);
         var zero = ZeroFlagInstruction(subVariable);
         var (checkNegative, setNegative) = NegativeFlagInstructions(subVariable, tempVariable);
 
@@ -1020,9 +1020,9 @@ public static class InstructionConverter
     /// <summary>
     /// Set Carry
     /// </summary>
-    private static NesIr.Instruction[] ConvertSec()
+    private static Ir6502.Instruction[] ConvertSec()
     {
-        var copy = new NesIr.Copy(new NesIr.Constant(1), new NesIr.Flag(NesIr.FlagName.Carry));
+        var copy = new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Carry));
 
         return [copy];
     }
@@ -1030,9 +1030,9 @@ public static class InstructionConverter
     /// <summary>
     /// Set Decimal
     /// </summary>
-    private static NesIr.Instruction[] ConvertSed()
+    private static Ir6502.Instruction[] ConvertSed()
     {
-        var copy = new NesIr.Copy(new NesIr.Constant(1), new NesIr.Flag(NesIr.FlagName.Decimal));
+        var copy = new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Decimal));
 
         return [copy];
     }
@@ -1040,9 +1040,9 @@ public static class InstructionConverter
     /// <summary>
     /// Set interrupt disable
     /// </summary>
-    private static NesIr.Instruction[] ConvertSei()
+    private static Ir6502.Instruction[] ConvertSei()
     {
-        var copy = new NesIr.Copy(new NesIr.Constant(1), new NesIr.Flag(NesIr.FlagName.InterruptDisable));
+        var copy = new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.InterruptDisable));
 
         return [copy];
     }
@@ -1050,11 +1050,11 @@ public static class InstructionConverter
     /// <summary>
     /// Store A
     /// </summary>
-    private static NesIr.Instruction[] ConvertSta(DisassembledInstruction instruction)
+    private static Ir6502.Instruction[] ConvertSta(DisassembledInstruction instruction)
     {
-        var register = new NesIr.Register(NesIr.RegisterName.Accumulator);
+        var register = new Ir6502.Register(Ir6502.RegisterName.Accumulator);
         var operand = ParseAddress(instruction);
-        var copy = new NesIr.Copy(register, operand);
+        var copy = new Ir6502.Copy(register, operand);
 
         return [copy];
     }
@@ -1062,11 +1062,11 @@ public static class InstructionConverter
     /// <summary>
     /// Store X
     /// </summary>
-    private static NesIr.Instruction[] ConvertStx(DisassembledInstruction instruction)
+    private static Ir6502.Instruction[] ConvertStx(DisassembledInstruction instruction)
     {
-        var register = new NesIr.Register(NesIr.RegisterName.XIndex);
+        var register = new Ir6502.Register(Ir6502.RegisterName.XIndex);
         var operand = ParseAddress(instruction);
-        var copy = new NesIr.Copy(register, operand);
+        var copy = new Ir6502.Copy(register, operand);
 
         return [copy];
     }
@@ -1074,11 +1074,11 @@ public static class InstructionConverter
     /// <summary>
     /// Store Y
     /// </summary>
-    private static NesIr.Instruction[] ConvertSty(DisassembledInstruction instruction)
+    private static Ir6502.Instruction[] ConvertSty(DisassembledInstruction instruction)
     {
-        var register = new NesIr.Register(NesIr.RegisterName.YIndex);
+        var register = new Ir6502.Register(Ir6502.RegisterName.YIndex);
         var operand = ParseAddress(instruction);
-        var copy = new NesIr.Copy(register, operand);
+        var copy = new Ir6502.Copy(register, operand);
 
         return [copy];
     }
@@ -1086,13 +1086,13 @@ public static class InstructionConverter
     /// <summary>
     /// Transfer A To X
     /// </summary>
-    private static NesIr.Instruction[] ConvertTax()
+    private static Ir6502.Instruction[] ConvertTax()
     {
-        var source = new NesIr.Register(NesIr.RegisterName.Accumulator);
-        var dest = new NesIr.Register(NesIr.RegisterName.XIndex);
-        var copy = new NesIr.Copy(source, dest);
+        var source = new Ir6502.Register(Ir6502.RegisterName.Accumulator);
+        var dest = new Ir6502.Register(Ir6502.RegisterName.XIndex);
+        var copy = new Ir6502.Copy(source, dest);
 
-        var tempVariable = new NesIr.Variable(0);
+        var tempVariable = new Ir6502.Variable(0);
         var zero = ZeroFlagInstruction(dest);
         var (checkNegative, setNegative) = NegativeFlagInstructions(dest, tempVariable);
 
@@ -1102,13 +1102,13 @@ public static class InstructionConverter
     /// <summary>
     /// Transfer A To Y
     /// </summary>
-    private static NesIr.Instruction[] ConvertTay()
+    private static Ir6502.Instruction[] ConvertTay()
     {
-        var source = new NesIr.Register(NesIr.RegisterName.Accumulator);
-        var dest = new NesIr.Register(NesIr.RegisterName.YIndex);
-        var copy = new NesIr.Copy(source, dest);
+        var source = new Ir6502.Register(Ir6502.RegisterName.Accumulator);
+        var dest = new Ir6502.Register(Ir6502.RegisterName.YIndex);
+        var copy = new Ir6502.Copy(source, dest);
 
-        var tempVariable = new NesIr.Variable(0);
+        var tempVariable = new Ir6502.Variable(0);
         var zero = ZeroFlagInstruction(dest);
         var (checkNegative, setNegative) = NegativeFlagInstructions(dest, tempVariable);
 
@@ -1118,13 +1118,13 @@ public static class InstructionConverter
     /// <summary>
     /// Transfer stack pointer to X
     /// </summary>
-    private static NesIr.Instruction[] ConvertTsx()
+    private static Ir6502.Instruction[] ConvertTsx()
     {
-        var source = new NesIr.StackPointer();
-        var dest = new NesIr.Register(NesIr.RegisterName.XIndex);
-        var copy = new NesIr.Copy(source, dest);
+        var source = new Ir6502.StackPointer();
+        var dest = new Ir6502.Register(Ir6502.RegisterName.XIndex);
+        var copy = new Ir6502.Copy(source, dest);
 
-        var tempVariable = new NesIr.Variable(0);
+        var tempVariable = new Ir6502.Variable(0);
         var zero = ZeroFlagInstruction(dest);
         var (checkNegative, setNegative) = NegativeFlagInstructions(dest, tempVariable);
 
@@ -1134,13 +1134,13 @@ public static class InstructionConverter
     /// <summary>
     /// Transfer X To A
     /// </summary>
-    private static NesIr.Instruction[] ConvertTxa()
+    private static Ir6502.Instruction[] ConvertTxa()
     {
-        var source = new NesIr.Register(NesIr.RegisterName.XIndex);
-        var dest = new NesIr.Register(NesIr.RegisterName.Accumulator);
-        var copy = new NesIr.Copy(source, dest);
+        var source = new Ir6502.Register(Ir6502.RegisterName.XIndex);
+        var dest = new Ir6502.Register(Ir6502.RegisterName.Accumulator);
+        var copy = new Ir6502.Copy(source, dest);
 
-        var tempVariable = new NesIr.Variable(0);
+        var tempVariable = new Ir6502.Variable(0);
         var zero = ZeroFlagInstruction(dest);
         var (checkNegative, setNegative) = NegativeFlagInstructions(dest, tempVariable);
 
@@ -1150,11 +1150,11 @@ public static class InstructionConverter
     /// <summary>
     /// Transfer X To stack pointer
     /// </summary>
-    private static NesIr.Instruction[] ConvertTxs()
+    private static Ir6502.Instruction[] ConvertTxs()
     {
-        var source = new NesIr.Register(NesIr.RegisterName.XIndex);
-        var dest = new NesIr.StackPointer();
-        var copy = new NesIr.Copy(source, dest);
+        var source = new Ir6502.Register(Ir6502.RegisterName.XIndex);
+        var dest = new Ir6502.StackPointer();
+        var copy = new Ir6502.Copy(source, dest);
 
         return [copy];
     }
@@ -1162,51 +1162,51 @@ public static class InstructionConverter
     /// <summary>
     /// Transfer Y To A
     /// </summary>
-    private static NesIr.Instruction[] ConvertTya()
+    private static Ir6502.Instruction[] ConvertTya()
     {
-        var source = new NesIr.Register(NesIr.RegisterName.YIndex);
-        var dest = new NesIr.Register(NesIr.RegisterName.Accumulator);
-        var copy = new NesIr.Copy(source, dest);
+        var source = new Ir6502.Register(Ir6502.RegisterName.YIndex);
+        var dest = new Ir6502.Register(Ir6502.RegisterName.Accumulator);
+        var copy = new Ir6502.Copy(source, dest);
 
-        var tempVariable = new NesIr.Variable(0);
+        var tempVariable = new Ir6502.Variable(0);
         var zero = ZeroFlagInstruction(dest);
         var (checkNegative, setNegative) = NegativeFlagInstructions(dest, tempVariable);
 
         return [copy, zero, checkNegative, setNegative];
     }
 
-    private static NesIr.Value ParseAddress(DisassembledInstruction instruction)
+    private static Ir6502.Value ParseAddress(DisassembledInstruction instruction)
     {
         switch (instruction.Info.AddressingMode)
         {
             case AddressingMode.Immediate:
-                return new NesIr.Constant(instruction.Operands[0]);
+                return new Ir6502.Constant(instruction.Operands[0]);
 
             case AddressingMode.ZeroPage:
-                return new NesIr.Memory(instruction.Operands[0], null, true);
+                return new Ir6502.Memory(instruction.Operands[0], null, true);
 
             case AddressingMode.ZeroPageX:
-                return new NesIr.Memory(instruction.Operands[0], NesIr.RegisterName.XIndex, true);
+                return new Ir6502.Memory(instruction.Operands[0], Ir6502.RegisterName.XIndex, true);
 
             case AddressingMode.ZeroPageY:
-                return new NesIr.Memory(instruction.Operands[0], NesIr.RegisterName.YIndex, true);
+                return new Ir6502.Memory(instruction.Operands[0], Ir6502.RegisterName.YIndex, true);
 
             case AddressingMode.Absolute:
             {
                 var fullAddress = (ushort)((instruction.Operands[1] << 8) | instruction.Operands[0]);
-                return new NesIr.Memory(fullAddress, null, false);
+                return new Ir6502.Memory(fullAddress, null, false);
             }
 
             case AddressingMode.AbsoluteX:
             {
                 var fullAddress = (ushort)((instruction.Operands[1] << 8) | instruction.Operands[0]);
-                return new NesIr.Memory(fullAddress, NesIr.RegisterName.XIndex, false);
+                return new Ir6502.Memory(fullAddress, Ir6502.RegisterName.XIndex, false);
             }
 
             case AddressingMode.AbsoluteY:
             {
                 var fullAddress = (ushort)((instruction.Operands[1] << 8) | instruction.Operands[0]);
-                return new NesIr.Memory(fullAddress, NesIr.RegisterName.YIndex, false);
+                return new Ir6502.Memory(fullAddress, Ir6502.RegisterName.YIndex, false);
             }
 
             default:
@@ -1214,7 +1214,7 @@ public static class InstructionConverter
         }
     }
 
-    private static NesIr.Identifier GetTargetLabel(DisassembledInstruction instruction, Context context)
+    private static Ir6502.Identifier GetTargetLabel(DisassembledInstruction instruction, Context context)
     {
         if (instruction.TargetAddress == null ||
             !context.Labels.TryGetValue(instruction.TargetAddress.Value, out var label))
@@ -1225,27 +1225,27 @@ public static class InstructionConverter
             throw new InvalidOperationException(message);
         }
 
-        return new NesIr.Identifier(label);
+        return new Ir6502.Identifier(label);
     }
 
     /// <summary>
     /// Generates instructions to set the Negative flag based on the check instruction's 7th bit
     /// </summary>
-    private static (NesIr.Instruction check, NesIr.Instruction set) NegativeFlagInstructions(
-        NesIr.Value valueToCheck,
-        NesIr.Variable intermediaryVariable)
+    private static (Ir6502.Instruction check, Ir6502.Instruction set) NegativeFlagInstructions(
+        Ir6502.Value valueToCheck,
+        Ir6502.Variable intermediaryVariable)
     {
-        var checkForNegative = new NesIr.Binary(
-            NesIr.BinaryOperator.And,
+        var checkForNegative = new Ir6502.Binary(
+            Ir6502.BinaryOperator.And,
             valueToCheck,
-            new NesIr.Constant(0x80),
+            new Ir6502.Constant(0x80),
             intermediaryVariable);
 
-        var setNegative = new NesIr.Binary(
-            NesIr.BinaryOperator.Equals,
+        var setNegative = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Equals,
             intermediaryVariable,
-            new NesIr.Constant(0x80),
-            new NesIr.Flag(NesIr.FlagName.Negative));
+            new Ir6502.Constant(0x80),
+            new Ir6502.Flag(Ir6502.FlagName.Negative));
 
         return (checkForNegative, setNegative);
     }
@@ -1253,12 +1253,12 @@ public static class InstructionConverter
     /// <summary>
     /// Sets the zero flag based on the value passed in
     /// </summary>
-    private static NesIr.Instruction ZeroFlagInstruction(NesIr.Value basedOn)
+    private static Ir6502.Instruction ZeroFlagInstruction(Ir6502.Value basedOn)
     {
-        return new NesIr.Binary(
-            NesIr.BinaryOperator.Equals,
+        return new Ir6502.Binary(
+            Ir6502.BinaryOperator.Equals,
             basedOn,
-            new NesIr.Constant(0),
-            new NesIr.Flag(NesIr.FlagName.Zero));
+            new Ir6502.Constant(0),
+            new Ir6502.Flag(Ir6502.FlagName.Zero));
     }
 }

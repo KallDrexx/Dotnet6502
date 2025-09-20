@@ -1,10 +1,11 @@
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Runtime.InteropServices.ComTypes;
+using Dotnet6502.Common;
+using Dotnet6502.Common.Compilation;
 using NESDecompiler.Core.Decompilation;
 using NESDecompiler.Core.Disassembly;
 
-namespace Dotnet6502.Common.Compilation;
+namespace Dotnet6502.Nes;
 
 /// <summary>
 /// Builds an NES game class (and outer assembly) to hold the decompiled 6502 instructions and the
@@ -60,7 +61,7 @@ public class NesGameClass
         return _methods.GetValueOrDefault(name)?.Builder;
     }
 
-    private static int GetMaxLocalCount(IReadOnlyList<NesIr.Instruction> instructions)
+    private static int GetMaxLocalCount(IReadOnlyList<Ir6502.Instruction> instructions)
     {
         var largestLocalCount = 0;
         foreach (var instruction in instructions)
@@ -69,12 +70,12 @@ public class NesGameClass
             // and maintain that.
             var valueProperties = instruction.GetType()
                 .GetProperties()
-                .Where(x => x.PropertyType == typeof(NesIr.Value))
+                .Where(x => x.PropertyType == typeof(Ir6502.Value))
                 .ToArray();
 
             foreach (var property in valueProperties)
             {
-                if (property.GetValue(instruction) is NesIr.Variable variable)
+                if (property.GetValue(instruction) is Ir6502.Variable variable)
                 {
                     var variableCount = variable.Index + 1;
                     if (largestLocalCount < variableCount)
@@ -109,7 +110,7 @@ public class NesGameClass
             .ToArray();
 
         var instructionConverterContext = new InstructionConverter.Context(disassembler.Labels, _decompiler.Functions);
-        var nesIrInstructions = new List<NesIr.Instruction>();
+        var nesIrInstructions = new List<Ir6502.Instruction>();
         foreach (var disassembledInstruction in disassembledInstructions)
         {
             nesIrInstructions.AddRange(
@@ -119,7 +120,7 @@ public class NesGameClass
         // We need to pull out all labels so they can be pre-defined, since they need to be
         // defined before they can be marked or referenced
         var ilLabels = nesIrInstructions
-            .OfType<NesIr.Label>()
+            .OfType<Ir6502.Label>()
             .ToDictionary(x => x.Name, x => ilGenerator.DefineLabel());
 
         var localCount = GetMaxLocalCount(nesIrInstructions) + MsilGenerator.TemporaryLocalsRequired;

@@ -9,9 +9,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_Constant_To_Accumulator()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.Constant(23),
-            new NesIr.Register(NesIr.RegisterName.Accumulator));
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Constant(23),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.RunTestMethod();
@@ -22,9 +22,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_Constant_To_XIndex()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.Constant(42),
-            new NesIr.Register(NesIr.RegisterName.XIndex));
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Constant(42),
+            new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.RunTestMethod();
@@ -35,9 +35,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_Constant_To_YIndex()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.Constant(99),
-            new NesIr.Register(NesIr.RegisterName.YIndex));
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Constant(99),
+            new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.RunTestMethod();
@@ -48,9 +48,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_Constant_To_Memory()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.Constant(77),
-            new NesIr.Memory(0x1000, null, false));
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Constant(77),
+            new Ir6502.Memory(0x1000, null, false));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.RunTestMethod();
@@ -61,13 +61,13 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_Constant_To_Variable()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.Constant(88),
-            new NesIr.Variable(0));
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Constant(88),
+            new Ir6502.Variable(0));
 
-        var instruction2 = new NesIr.Copy(
-            new NesIr.Variable(0),
-            new NesIr.Memory(0x3434, null, false));
+        var instruction2 = new Ir6502.Copy(
+            new Ir6502.Variable(0),
+            new Ir6502.Memory(0x3434, null, false));
 
         var testRunner = new InstructionTestRunner([instruction, instruction2]);
         testRunner.RunTestMethod();
@@ -78,9 +78,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_Constant_To_Flag()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.Constant(1),
-            new NesIr.Flag(NesIr.FlagName.Carry));
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Constant(1),
+            new Ir6502.Flag(Ir6502.FlagName.Carry));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.RunTestMethod();
@@ -91,9 +91,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_Constant_To_StackPointer()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.Constant(0xFD),
-            new NesIr.StackPointer());
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Constant(0xFD),
+            new Ir6502.StackPointer());
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.RunTestMethod();
@@ -104,9 +104,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_Accumulator_To_XIndex()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.Register(NesIr.RegisterName.Accumulator),
-            new NesIr.Register(NesIr.RegisterName.XIndex));
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator),
+            new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
         var testRunner = new InstructionTestRunner([instruction])
         {
@@ -123,9 +123,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_Accumulator_To_YIndex()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.Register(NesIr.RegisterName.Accumulator),
-            new NesIr.Register(NesIr.RegisterName.YIndex));
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator),
+            new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
         var testRunner = new InstructionTestRunner([instruction])
         {
@@ -142,9 +142,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_XIndex_To_Accumulator()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.Register(NesIr.RegisterName.XIndex),
-            new NesIr.Register(NesIr.RegisterName.Accumulator));
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Register(Ir6502.RegisterName.XIndex),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
         var testRunner = new InstructionTestRunner([instruction])
         {
@@ -161,9 +161,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_XIndex_To_YIndex()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.Register(NesIr.RegisterName.XIndex),
-            new NesIr.Register(NesIr.RegisterName.YIndex));
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Register(Ir6502.RegisterName.XIndex),
+            new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
         var testRunner = new InstructionTestRunner([instruction])
         {
@@ -180,9 +180,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_YIndex_To_Accumulator()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.Register(NesIr.RegisterName.YIndex),
-            new NesIr.Register(NesIr.RegisterName.Accumulator));
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Register(Ir6502.RegisterName.YIndex),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
         var testRunner = new InstructionTestRunner([instruction])
         {
@@ -199,9 +199,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_YIndex_To_XIndex()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.Register(NesIr.RegisterName.YIndex),
-            new NesIr.Register(NesIr.RegisterName.XIndex));
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Register(Ir6502.RegisterName.YIndex),
+            new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
         var testRunner = new InstructionTestRunner([instruction])
         {
@@ -218,9 +218,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_Register_To_Itself()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.Register(NesIr.RegisterName.Accumulator),
-            new NesIr.Register(NesIr.RegisterName.Accumulator));
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
         var testRunner = new InstructionTestRunner([instruction])
         {
@@ -237,9 +237,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_Memory_To_Register()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.Memory(0x2000, null, false),
-            new NesIr.Register(NesIr.RegisterName.Accumulator));
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Memory(0x2000, null, false),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.NesHal.WriteMemory(0x2000, 156);
@@ -251,9 +251,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_Memory_With_Offset_To_Register_Via_16_Bit_Address()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.Memory(0x00FF, NesIr.RegisterName.XIndex, false),
-            new NesIr.Register(NesIr.RegisterName.Accumulator));
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Memory(0x00FF, Ir6502.RegisterName.XIndex, false),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
         var testRunner = new InstructionTestRunner([instruction])
         {
@@ -272,9 +272,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_Memory_With_Offset_To_Register_Via_8_Bit_Address()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.Memory(0x00FF, NesIr.RegisterName.XIndex, true),
-            new NesIr.Register(NesIr.RegisterName.Accumulator));
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Memory(0x00FF, Ir6502.RegisterName.XIndex, true),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
         var testRunner = new InstructionTestRunner([instruction])
         {
@@ -293,9 +293,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_Register_To_Memory()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.Register(NesIr.RegisterName.XIndex),
-            new NesIr.Memory(0x3000, null, false));
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Register(Ir6502.RegisterName.XIndex),
+            new Ir6502.Memory(0x3000, null, false));
 
         var testRunner = new InstructionTestRunner([instruction])
         {
@@ -312,9 +312,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_Register_To_Memory_With_Zero_Page_Y_Indexing()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.Register(NesIr.RegisterName.XIndex),
-            new NesIr.Memory(0x0000, NesIr.RegisterName.YIndex, true));
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Register(Ir6502.RegisterName.XIndex),
+            new Ir6502.Memory(0x0000, Ir6502.RegisterName.YIndex, true));
 
         var testRunner = new InstructionTestRunner([instruction])
         {
@@ -332,9 +332,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_Memory_With_Register_Offset()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.Memory(0x4000, NesIr.RegisterName.XIndex, false),
-            new NesIr.Register(NesIr.RegisterName.Accumulator));
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Memory(0x4000, Ir6502.RegisterName.XIndex, false),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
         var testRunner = new InstructionTestRunner([instruction])
         {
@@ -352,9 +352,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_To_Memory_With_Register_Offset_As_16_Bit_Address()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.Register(NesIr.RegisterName.YIndex),
-            new NesIr.Memory(0x00FF, NesIr.RegisterName.XIndex, false));
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Register(Ir6502.RegisterName.YIndex),
+            new Ir6502.Memory(0x00FF, Ir6502.RegisterName.XIndex, false));
 
         var testRunner = new InstructionTestRunner([instruction])
         {
@@ -372,9 +372,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_To_Memory_With_Register_Offset_As_8_Bit_Address()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.Register(NesIr.RegisterName.YIndex),
-            new NesIr.Memory(0x00FF, NesIr.RegisterName.XIndex, true));
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Register(Ir6502.RegisterName.YIndex),
+            new Ir6502.Memory(0x00FF, Ir6502.RegisterName.XIndex, true));
 
         var testRunner = new InstructionTestRunner([instruction])
         {
@@ -392,9 +392,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_Memory_To_Memory()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.Memory(0x6000, null, false),
-            new NesIr.Memory(0x7000, null, false));
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Memory(0x6000, null, false),
+            new Ir6502.Memory(0x7000, null, false));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.NesHal.WriteMemory(0x6000, 133);
@@ -406,12 +406,12 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_Variable_To_Register()
     {
-        var copyToVar = new NesIr.Copy(
-            new NesIr.Constant(144),
-            new NesIr.Variable(0));
-        var copyFromVar = new NesIr.Copy(
-            new NesIr.Variable(0),
-            new NesIr.Register(NesIr.RegisterName.Accumulator));
+        var copyToVar = new Ir6502.Copy(
+            new Ir6502.Constant(144),
+            new Ir6502.Variable(0));
+        var copyFromVar = new Ir6502.Copy(
+            new Ir6502.Variable(0),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
         var testRunner = new InstructionTestRunner([copyToVar, copyFromVar]);
         testRunner.RunTestMethod();
@@ -422,12 +422,12 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_Register_To_Variable()
     {
-        var copyToVar = new NesIr.Copy(
-            new NesIr.Register(NesIr.RegisterName.XIndex),
-            new NesIr.Variable(1));
-        var copyFromVar = new NesIr.Copy(
-            new NesIr.Variable(1),
-            new NesIr.Register(NesIr.RegisterName.YIndex));
+        var copyToVar = new Ir6502.Copy(
+            new Ir6502.Register(Ir6502.RegisterName.XIndex),
+            new Ir6502.Variable(1));
+        var copyFromVar = new Ir6502.Copy(
+            new Ir6502.Variable(1),
+            new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
         var testRunner = new InstructionTestRunner([copyToVar, copyFromVar])
         {
@@ -444,12 +444,12 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_Variable_To_Memory()
     {
-        var copyToVar = new NesIr.Copy(
-            new NesIr.Constant(255),
-            new NesIr.Variable(2));
-        var copyFromVar = new NesIr.Copy(
-            new NesIr.Variable(2),
-            new NesIr.Memory(0x8000, null, false));
+        var copyToVar = new Ir6502.Copy(
+            new Ir6502.Constant(255),
+            new Ir6502.Variable(2));
+        var copyFromVar = new Ir6502.Copy(
+            new Ir6502.Variable(2),
+            new Ir6502.Memory(0x8000, null, false));
 
         var testRunner = new InstructionTestRunner([copyToVar, copyFromVar]);
         testRunner.RunTestMethod();
@@ -460,15 +460,15 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_Variable_To_Variable()
     {
-        var copyToVar1 = new NesIr.Copy(
-            new NesIr.Constant(99),
-            new NesIr.Variable(0));
-        var copyVar1ToVar2 = new NesIr.Copy(
-            new NesIr.Variable(0),
-            new NesIr.Variable(1));
-        var copyVar2ToReg = new NesIr.Copy(
-            new NesIr.Variable(1),
-            new NesIr.Register(NesIr.RegisterName.Accumulator));
+        var copyToVar1 = new Ir6502.Copy(
+            new Ir6502.Constant(99),
+            new Ir6502.Variable(0));
+        var copyVar1ToVar2 = new Ir6502.Copy(
+            new Ir6502.Variable(0),
+            new Ir6502.Variable(1));
+        var copyVar2ToReg = new Ir6502.Copy(
+            new Ir6502.Variable(1),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
         var testRunner = new InstructionTestRunner([copyToVar1, copyVar1ToVar2, copyVar2ToReg]);
         testRunner.RunTestMethod();
@@ -479,9 +479,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_Flag_To_Register()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.Flag(NesIr.FlagName.Zero),
-            new NesIr.Register(NesIr.RegisterName.Accumulator));
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Flag(Ir6502.FlagName.Zero),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.NesHal.SetFlag(CpuStatusFlags.Zero, true);
@@ -493,9 +493,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_Register_To_Flag()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.Register(NesIr.RegisterName.Accumulator),
-            new NesIr.Flag(NesIr.FlagName.Negative));
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator),
+            new Ir6502.Flag(Ir6502.FlagName.Negative));
 
         var testRunner = new InstructionTestRunner([instruction])
         {
@@ -512,9 +512,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_Zero_To_Flag()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.Constant(0),
-            new NesIr.Flag(NesIr.FlagName.Overflow));
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Constant(0),
+            new Ir6502.Flag(Ir6502.FlagName.Overflow));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.RunTestMethod();
@@ -525,9 +525,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_Flag_To_Memory()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.Flag(NesIr.FlagName.Carry),
-            new NesIr.Memory(0x9000, null, false));
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Flag(Ir6502.FlagName.Carry),
+            new Ir6502.Memory(0x9000, null, false));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.NesHal.SetFlag(CpuStatusFlags.Carry, true);
@@ -539,9 +539,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_Memory_To_Flag()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.Memory(0xA000, null, false),
-            new NesIr.Flag(NesIr.FlagName.InterruptDisable));
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Memory(0xA000, null, false),
+            new Ir6502.Flag(Ir6502.FlagName.InterruptDisable));
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.NesHal.WriteMemory(0xA000, 1);
@@ -553,12 +553,12 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_Flag_To_Flag()
     {
-        var copyCarryToVar = new NesIr.Copy(
-            new NesIr.Flag(NesIr.FlagName.Carry),
-            new NesIr.Variable(0));
-        var copyVarToZero = new NesIr.Copy(
-            new NesIr.Variable(0),
-            new NesIr.Flag(NesIr.FlagName.Zero));
+        var copyCarryToVar = new Ir6502.Copy(
+            new Ir6502.Flag(Ir6502.FlagName.Carry),
+            new Ir6502.Variable(0));
+        var copyVarToZero = new Ir6502.Copy(
+            new Ir6502.Variable(0),
+            new Ir6502.Flag(Ir6502.FlagName.Zero));
 
         var testRunner = new InstructionTestRunner([copyCarryToVar, copyVarToZero]);
         testRunner.NesHal.SetFlag(CpuStatusFlags.Carry, true);
@@ -570,9 +570,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_AllFlags_To_Register()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.AllFlags(),
-            new NesIr.Register(NesIr.RegisterName.Accumulator));
+        var instruction = new Ir6502.Copy(
+            new Ir6502.AllFlags(),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
         var testRunner = new InstructionTestRunner([instruction])
         {
@@ -589,9 +589,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_Register_To_AllFlags()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.Register(NesIr.RegisterName.Accumulator),
-            new NesIr.AllFlags());
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator),
+            new Ir6502.AllFlags());
 
         var testRunner = new InstructionTestRunner([instruction])
         {
@@ -608,9 +608,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_AllFlags_To_Memory()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.AllFlags(),
-            new NesIr.Memory(0xB000, null, false));
+        var instruction = new Ir6502.Copy(
+            new Ir6502.AllFlags(),
+            new Ir6502.Memory(0xB000, null, false));
 
         var testRunner = new InstructionTestRunner([instruction])
         {
@@ -627,9 +627,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_Memory_To_AllFlags()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.Memory(0xC000, null, false),
-            new NesIr.AllFlags());
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Memory(0xC000, null, false),
+            new Ir6502.AllFlags());
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.NesHal.WriteMemory(0xC000, 0x3C);
@@ -641,9 +641,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_StackPointer_To_Register()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.StackPointer(),
-            new NesIr.Register(NesIr.RegisterName.XIndex));
+        var instruction = new Ir6502.Copy(
+            new Ir6502.StackPointer(),
+            new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
         var testRunner = new InstructionTestRunner([instruction])
         {
@@ -660,9 +660,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_Register_To_StackPointer()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.Register(NesIr.RegisterName.YIndex),
-            new NesIr.StackPointer());
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Register(Ir6502.RegisterName.YIndex),
+            new Ir6502.StackPointer());
 
         var testRunner = new InstructionTestRunner([instruction])
         {
@@ -679,9 +679,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_StackPointer_To_Memory()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.StackPointer(),
-            new NesIr.Memory(0xD000, null, false));
+        var instruction = new Ir6502.Copy(
+            new Ir6502.StackPointer(),
+            new Ir6502.Memory(0xD000, null, false));
 
         var testRunner = new InstructionTestRunner([instruction])
         {
@@ -698,9 +698,9 @@ public class CopyInstructionTests
     [Fact]
     public void Can_Copy_Memory_To_StackPointer()
     {
-        var instruction = new NesIr.Copy(
-            new NesIr.Memory(0xE000, null, false),
-            new NesIr.StackPointer());
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Memory(0xE000, null, false),
+            new Ir6502.StackPointer());
 
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.NesHal.WriteMemory(0xE000, 0xAA);

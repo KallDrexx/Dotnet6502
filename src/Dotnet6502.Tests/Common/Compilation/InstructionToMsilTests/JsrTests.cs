@@ -41,16 +41,16 @@ public class JsrTests
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
         // Add setup and verification instructions around the JSR call
-        var allInstructions = new List<NesIr.Instruction>
+        var allInstructions = new List<Ir6502.Instruction>
         {
             // Set up initial state
-            new NesIr.Copy(new NesIr.Constant(0), new NesIr.Register(NesIr.RegisterName.Accumulator)),
+            new Ir6502.Copy(new Ir6502.Constant(0), new Ir6502.Register(Ir6502.RegisterName.Accumulator)),
 
             // Add the JSR instruction (converts to CallFunction)
             nesIrInstructions[0],
 
             // Instruction executed after function call
-            new NesIr.Copy(new NesIr.Constant(42), new NesIr.Register(NesIr.RegisterName.XIndex))
+            new Ir6502.Copy(new Ir6502.Constant(42), new Ir6502.Register(Ir6502.RegisterName.XIndex))
         };
 
         var callableFunctions = new[] { "TestFunction" };
@@ -97,19 +97,19 @@ public class JsrTests
         var nesIrInstructions1 = InstructionConverter.Convert(instruction1, context);
         var nesIrInstructions2 = InstructionConverter.Convert(instruction2, context);
 
-        var allInstructions = new List<NesIr.Instruction>
+        var allInstructions = new List<Ir6502.Instruction>
         {
             // First JSR call
             nesIrInstructions1[0],
 
             // Instruction between calls
-            new NesIr.Copy(new NesIr.Constant(77), new NesIr.Register(NesIr.RegisterName.XIndex)),
+            new Ir6502.Copy(new Ir6502.Constant(77), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
             // Second JSR call
             nesIrInstructions2[0],
 
             // Final instruction
-            new NesIr.Copy(new NesIr.Constant(88), new NesIr.Register(NesIr.RegisterName.YIndex))
+            new Ir6502.Copy(new Ir6502.Constant(88), new Ir6502.Register(Ir6502.RegisterName.YIndex))
         };
 
         var callableFunctions = new[] { "FirstFunction", "SecondFunction" };
@@ -147,19 +147,19 @@ public class JsrTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
-        var allInstructions = new List<NesIr.Instruction>
+        var allInstructions = new List<Ir6502.Instruction>
         {
             // First call
             nesIrInstructions[0],
-            new NesIr.Copy(new NesIr.Constant(11), new NesIr.Register(NesIr.RegisterName.XIndex)),
+            new Ir6502.Copy(new Ir6502.Constant(11), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
             // Second call (create new instruction conversion for same function)
             InstructionConverter.Convert(instruction, context)[0],
-            new NesIr.Copy(new NesIr.Constant(22), new NesIr.Register(NesIr.RegisterName.YIndex)),
+            new Ir6502.Copy(new Ir6502.Constant(22), new Ir6502.Register(Ir6502.RegisterName.YIndex)),
 
             // Third call
             InstructionConverter.Convert(instruction, context)[0],
-            new NesIr.Copy(new NesIr.Constant(33), new NesIr.Register(NesIr.RegisterName.Accumulator))
+            new Ir6502.Copy(new Ir6502.Constant(33), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
         };
 
         var callableFunctions = new[] { "RepeatedFunction" };
@@ -196,13 +196,13 @@ public class JsrTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
-        var allInstructions = new List<NesIr.Instruction>
+        var allInstructions = new List<Ir6502.Instruction>
         {
             // Set all flags to known state
-            new NesIr.Copy(new NesIr.Constant(1), new NesIr.Flag(NesIr.FlagName.Carry)),
-            new NesIr.Copy(new NesIr.Constant(1), new NesIr.Flag(NesIr.FlagName.Zero)),
-            new NesIr.Copy(new NesIr.Constant(1), new NesIr.Flag(NesIr.FlagName.Negative)),
-            new NesIr.Copy(new NesIr.Constant(1), new NesIr.Flag(NesIr.FlagName.Overflow)),
+            new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Carry)),
+            new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Zero)),
+            new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Negative)),
+            new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Overflow)),
 
             // Add the JSR instruction
             nesIrInstructions[0]
@@ -250,7 +250,7 @@ public class JsrTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
-        var allInstructions = new List<NesIr.Instruction>
+        var allInstructions = new List<Ir6502.Instruction>
         {
             // Add the JSR instruction
             nesIrInstructions[0]
@@ -306,10 +306,10 @@ public class JsrTests
 
             var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
-            var allInstructions = new List<NesIr.Instruction>
+            var allInstructions = new List<Ir6502.Instruction>
             {
                 nesIrInstructions[0],
-                new NesIr.Copy(new NesIr.Constant(99), new NesIr.Register(NesIr.RegisterName.XIndex))
+                new Ir6502.Copy(new Ir6502.Constant(99), new Ir6502.Register(Ir6502.RegisterName.XIndex))
             };
 
             var callableFunctions = new[] { testCase.Name };

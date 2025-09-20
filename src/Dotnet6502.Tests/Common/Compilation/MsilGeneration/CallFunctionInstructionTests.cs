@@ -9,7 +9,7 @@ public class CallFunctionInstructionTests
     public void Can_Call_Single_Function()
     {
         var functionName = "TestFunction1";
-        var instruction = new NesIr.CallFunction(new NesIr.Identifier(functionName));
+        var instruction = new Ir6502.CallFunction(new Ir6502.Identifier(functionName));
         var callableFunctions = new[] { functionName };
 
         var testRunner = new InstructionTestRunner([instruction], callableFunctions);
@@ -26,10 +26,10 @@ public class CallFunctionInstructionTests
         var function2 = "SecondFunction";
         var callableFunctions = new[] { function1, function2 };
 
-        var instructions = new NesIr.Instruction[]
+        var instructions = new Ir6502.Instruction[]
         {
-            new NesIr.CallFunction(new NesIr.Identifier(function1)),
-            new NesIr.CallFunction(new NesIr.Identifier(function2))
+            new Ir6502.CallFunction(new Ir6502.Identifier(function1)),
+            new Ir6502.CallFunction(new Ir6502.Identifier(function2))
         };
 
         var testRunner = new InstructionTestRunner(instructions, callableFunctions);
@@ -48,11 +48,11 @@ public class CallFunctionInstructionTests
         var functionName = "RepeatedFunction";
         var callableFunctions = new[] { functionName };
 
-        var instructions = new NesIr.Instruction[]
+        var instructions = new Ir6502.Instruction[]
         {
-            new NesIr.CallFunction(new NesIr.Identifier(functionName)),
-            new NesIr.CallFunction(new NesIr.Identifier(functionName)),
-            new NesIr.CallFunction(new NesIr.Identifier(functionName))
+            new Ir6502.CallFunction(new Ir6502.Identifier(functionName)),
+            new Ir6502.CallFunction(new Ir6502.Identifier(functionName)),
+            new Ir6502.CallFunction(new Ir6502.Identifier(functionName))
         };
 
         var testRunner = new InstructionTestRunner(instructions, callableFunctions);
@@ -65,7 +65,7 @@ public class CallFunctionInstructionTests
     [Fact]
     public void Throws_Exception_When_Function_Not_Defined()
     {
-        var instruction = new NesIr.CallFunction(new NesIr.Identifier("NonExistentFunction"));
+        var instruction = new Ir6502.CallFunction(new Ir6502.Identifier("NonExistentFunction"));
         var callableFunctions = new[] { "DifferentFunction" };
 
         Should.Throw<InvalidOperationException>(() => new InstructionTestRunner([instruction], callableFunctions))

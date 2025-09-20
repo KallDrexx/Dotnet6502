@@ -17,12 +17,12 @@ public class InstructionTestRunner
 
     public Test6502Hal NesHal { get; } = new();
 
-    public InstructionTestRunner(IReadOnlyList<NesIr.Instruction> instructions)
+    public InstructionTestRunner(IReadOnlyList<Ir6502.Instruction> instructions)
         : this(instructions, [])
     {
     }
 
-    public InstructionTestRunner(IReadOnlyList<NesIr.Instruction> instructions, IReadOnlyList<string> callableFunctionNames)
+    public InstructionTestRunner(IReadOnlyList<Ir6502.Instruction> instructions, IReadOnlyList<string> callableFunctionNames)
     {
          var (assemblyBuilder, mainClass, testMethod, halField, _) = SetupTestClass(instructions, callableFunctionNames);
          _testClassName = mainClass.FullName!;
@@ -63,7 +63,7 @@ public class InstructionTestRunner
     }
 
     private static (PersistedAssemblyBuilder, TypeInfo, MethodInfo, FieldInfo, Dictionary<string, MethodInfo>) SetupTestClass(
-        IReadOnlyList<NesIr.Instruction> instructions, IReadOnlyList<string> callableFunctionNames)
+        IReadOnlyList<Ir6502.Instruction> instructions, IReadOnlyList<string> callableFunctionNames)
     {
         var ns = $"nes_test_{Guid.NewGuid()}";
         var assemblyBuilder = new PersistedAssemblyBuilder(
@@ -108,7 +108,7 @@ public class InstructionTestRunner
         // We need to pull out all labels so they can be pre-defined, since they need to be
         // defined before they can be marked or referenced
         var ilLabels = instructions
-            .OfType<NesIr.Label>()
+            .OfType<Ir6502.Label>()
             .ToDictionary(x => x.Name, x => ilGenerator.DefineLabel());
 
         var localCount = GetMaxLocalCount(instructions) + MsilGenerator.TemporaryLocalsRequired;
@@ -134,7 +134,7 @@ public class InstructionTestRunner
         return (assemblyBuilder, mainClass, testMethod, hardwareField, callableMethods);
     }
 
-    private static int GetMaxLocalCount(IReadOnlyList<NesIr.Instruction> instructions)
+    private static int GetMaxLocalCount(IReadOnlyList<Ir6502.Instruction> instructions)
     {
         var largestLocalCount = 0;
         foreach (var instruction in instructions)
@@ -143,12 +143,12 @@ public class InstructionTestRunner
             // and maintain that.
             var valueProperties = instruction.GetType()
                 .GetProperties()
-                .Where(x => x.PropertyType == typeof(NesIr.Value))
+                .Where(x => x.PropertyType == typeof(Ir6502.Value))
                 .ToArray();
 
             foreach (var property in valueProperties)
             {
-                if (property.GetValue(instruction) is NesIr.Variable variable)
+                if (property.GetValue(instruction) is Ir6502.Variable variable)
                 {
                     var variableCount = variable.Index + 1;
                     if (largestLocalCount < variableCount)

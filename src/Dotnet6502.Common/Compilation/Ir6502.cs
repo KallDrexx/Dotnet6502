@@ -1,9 +1,9 @@
 namespace Dotnet6502.Common.Compilation;
 
 /// <summary>
-/// Intermediary representation of NES (6502) instructions
+/// Intermediary representation to support 6502 instructions
 /// </summary>
-public static class NesIr
+public static class Ir6502
 {
     public abstract record Instruction;
 

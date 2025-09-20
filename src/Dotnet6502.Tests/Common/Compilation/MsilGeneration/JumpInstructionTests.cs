@@ -9,14 +9,14 @@ public class JumpInstructionTests
     [Fact]
     public void Can_Jump_Forward_To_Label()
     {
-        var jump = new NesIr.Jump(new NesIr.Identifier("forward"));
-        var copy1 = new NesIr.Copy(
-            new NesIr.Constant(11),
-            new NesIr.Register(NesIr.RegisterName.YIndex));
-        var label = new NesIr.Label(new NesIr.Identifier("forward"));
-        var copy2 = new NesIr.Copy(
-            new NesIr.Constant(22),
-            new NesIr.Register(NesIr.RegisterName.Accumulator));
+        var jump = new Ir6502.Jump(new Ir6502.Identifier("forward"));
+        var copy1 = new Ir6502.Copy(
+            new Ir6502.Constant(11),
+            new Ir6502.Register(Ir6502.RegisterName.YIndex));
+        var label = new Ir6502.Label(new Ir6502.Identifier("forward"));
+        var copy2 = new Ir6502.Copy(
+            new Ir6502.Constant(22),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
         var testRunner = new InstructionTestRunner([jump, copy1, label, copy2]);
         testRunner.RunTestMethod();
@@ -28,29 +28,29 @@ public class JumpInstructionTests
     [Fact]
     public void Can_Jump_Backward_To_Label()
     {
-        var copy1 = new NesIr.Copy(
-            new NesIr.Constant(1),
-            new NesIr.Register(NesIr.RegisterName.XIndex));
-        var label = new NesIr.Label(new NesIr.Identifier("loop"));
-        var copy2 = new NesIr.Copy(
-            new NesIr.Register(NesIr.RegisterName.XIndex),
-            new NesIr.Variable(0));
-        var addVar = new NesIr.Binary(
-            NesIr.BinaryOperator.Add,
-            new NesIr.Variable(0),
-            new NesIr.Constant(1),
-            new NesIr.Variable(0));
-        var copyBack = new NesIr.Copy(
-            new NesIr.Variable(0),
-            new NesIr.Register(NesIr.RegisterName.XIndex));
-        var comparison = new NesIr.Binary(
-            NesIr.BinaryOperator.LessThan,
-            new NesIr.Register(NesIr.RegisterName.XIndex),
-            new NesIr.Constant(3),
-            new NesIr.Variable(1));
-        var conditionalJump = new NesIr.JumpIfNotZero(
-            new NesIr.Variable(1),
-            new NesIr.Identifier("loop"));
+        var copy1 = new Ir6502.Copy(
+            new Ir6502.Constant(1),
+            new Ir6502.Register(Ir6502.RegisterName.XIndex));
+        var label = new Ir6502.Label(new Ir6502.Identifier("loop"));
+        var copy2 = new Ir6502.Copy(
+            new Ir6502.Register(Ir6502.RegisterName.XIndex),
+            new Ir6502.Variable(0));
+        var addVar = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Add,
+            new Ir6502.Variable(0),
+            new Ir6502.Constant(1),
+            new Ir6502.Variable(0));
+        var copyBack = new Ir6502.Copy(
+            new Ir6502.Variable(0),
+            new Ir6502.Register(Ir6502.RegisterName.XIndex));
+        var comparison = new Ir6502.Binary(
+            Ir6502.BinaryOperator.LessThan,
+            new Ir6502.Register(Ir6502.RegisterName.XIndex),
+            new Ir6502.Constant(3),
+            new Ir6502.Variable(1));
+        var conditionalJump = new Ir6502.JumpIfNotZero(
+            new Ir6502.Variable(1),
+            new Ir6502.Identifier("loop"));
 
         var testRunner = new InstructionTestRunner([copy1, label, copy2, addVar, copyBack, comparison, conditionalJump]);
         testRunner.RunTestMethod();
@@ -61,15 +61,15 @@ public class JumpInstructionTests
     [Fact]
     public void Can_Handle_Multiple_Labels()
     {
-        var label1 = new NesIr.Label(new NesIr.Identifier("first"));
-        var copy1 = new NesIr.Copy(
-            new NesIr.Constant(10),
-            new NesIr.Register(NesIr.RegisterName.Accumulator));
-        var jump = new NesIr.Jump(new NesIr.Identifier("second"));
-        var label2 = new NesIr.Label(new NesIr.Identifier("second"));
-        var copy2 = new NesIr.Copy(
-            new NesIr.Constant(20),
-            new NesIr.Register(NesIr.RegisterName.XIndex));
+        var label1 = new Ir6502.Label(new Ir6502.Identifier("first"));
+        var copy1 = new Ir6502.Copy(
+            new Ir6502.Constant(10),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
+        var jump = new Ir6502.Jump(new Ir6502.Identifier("second"));
+        var label2 = new Ir6502.Label(new Ir6502.Identifier("second"));
+        var copy2 = new Ir6502.Copy(
+            new Ir6502.Constant(20),
+            new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
         var testRunner = new InstructionTestRunner([label1, copy1, jump, label2, copy2]);
         testRunner.RunTestMethod();
@@ -81,19 +81,19 @@ public class JumpInstructionTests
     [Fact]
     public void JumpIfZero_Jumps_When_Condition_Is_Zero()
     {
-        var setCondition = new NesIr.Copy(
-            new NesIr.Constant(0),
-            new NesIr.Register(NesIr.RegisterName.Accumulator));
-        var jumpIfZero = new NesIr.JumpIfZero(
-            new NesIr.Register(NesIr.RegisterName.Accumulator),
-            new NesIr.Identifier("target"));
-        var skipInstruction = new NesIr.Copy(
-            new NesIr.Constant(99),
-            new NesIr.Register(NesIr.RegisterName.XIndex));
-        var label = new NesIr.Label(new NesIr.Identifier("target"));
-        var executeInstruction = new NesIr.Copy(
-            new NesIr.Constant(42),
-            new NesIr.Register(NesIr.RegisterName.YIndex));
+        var setCondition = new Ir6502.Copy(
+            new Ir6502.Constant(0),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
+        var jumpIfZero = new Ir6502.JumpIfZero(
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator),
+            new Ir6502.Identifier("target"));
+        var skipInstruction = new Ir6502.Copy(
+            new Ir6502.Constant(99),
+            new Ir6502.Register(Ir6502.RegisterName.XIndex));
+        var label = new Ir6502.Label(new Ir6502.Identifier("target"));
+        var executeInstruction = new Ir6502.Copy(
+            new Ir6502.Constant(42),
+            new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
         var testRunner = new InstructionTestRunner([setCondition, jumpIfZero, skipInstruction, label, executeInstruction]);
         testRunner.RunTestMethod();
@@ -106,19 +106,19 @@ public class JumpInstructionTests
     [Fact]
     public void JumpIfZero_Does_Not_Jump_When_Condition_Is_Not_Zero()
     {
-        var setCondition = new NesIr.Copy(
-            new NesIr.Constant(1),
-            new NesIr.Register(NesIr.RegisterName.Accumulator));
-        var jumpIfZero = new NesIr.JumpIfZero(
-            new NesIr.Register(NesIr.RegisterName.Accumulator),
-            new NesIr.Identifier("target"));
-        var executeInstruction = new NesIr.Copy(
-            new NesIr.Constant(77),
-            new NesIr.Register(NesIr.RegisterName.XIndex));
-        var label = new NesIr.Label(new NesIr.Identifier("target"));
-        var skipInstruction = new NesIr.Copy(
-            new NesIr.Constant(88),
-            new NesIr.Register(NesIr.RegisterName.YIndex));
+        var setCondition = new Ir6502.Copy(
+            new Ir6502.Constant(1),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
+        var jumpIfZero = new Ir6502.JumpIfZero(
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator),
+            new Ir6502.Identifier("target"));
+        var executeInstruction = new Ir6502.Copy(
+            new Ir6502.Constant(77),
+            new Ir6502.Register(Ir6502.RegisterName.XIndex));
+        var label = new Ir6502.Label(new Ir6502.Identifier("target"));
+        var skipInstruction = new Ir6502.Copy(
+            new Ir6502.Constant(88),
+            new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
         var testRunner = new InstructionTestRunner([setCondition, jumpIfZero, executeInstruction, label, skipInstruction]);
         testRunner.RunTestMethod();
@@ -131,19 +131,19 @@ public class JumpInstructionTests
     [Fact]
     public void JumpIfNotZero_Jumps_When_Condition_Is_Not_Zero()
     {
-        var setCondition = new NesIr.Copy(
-            new NesIr.Constant(5),
-            new NesIr.Register(NesIr.RegisterName.Accumulator));
-        var jumpIfNotZero = new NesIr.JumpIfNotZero(
-            new NesIr.Register(NesIr.RegisterName.Accumulator),
-            new NesIr.Identifier("target"));
-        var skipInstruction = new NesIr.Copy(
-            new NesIr.Constant(11),
-            new NesIr.Register(NesIr.RegisterName.XIndex));
-        var label = new NesIr.Label(new NesIr.Identifier("target"));
-        var executeInstruction = new NesIr.Copy(
-            new NesIr.Constant(33),
-            new NesIr.Register(NesIr.RegisterName.YIndex));
+        var setCondition = new Ir6502.Copy(
+            new Ir6502.Constant(5),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
+        var jumpIfNotZero = new Ir6502.JumpIfNotZero(
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator),
+            new Ir6502.Identifier("target"));
+        var skipInstruction = new Ir6502.Copy(
+            new Ir6502.Constant(11),
+            new Ir6502.Register(Ir6502.RegisterName.XIndex));
+        var label = new Ir6502.Label(new Ir6502.Identifier("target"));
+        var executeInstruction = new Ir6502.Copy(
+            new Ir6502.Constant(33),
+            new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
         var testRunner = new InstructionTestRunner([setCondition, jumpIfNotZero, skipInstruction, label, executeInstruction]);
         testRunner.RunTestMethod();
@@ -156,19 +156,19 @@ public class JumpInstructionTests
     [Fact]
     public void JumpIfNotZero_Does_Not_Jump_When_Condition_Is_Zero()
     {
-        var setCondition = new NesIr.Copy(
-            new NesIr.Constant(0),
-            new NesIr.Register(NesIr.RegisterName.Accumulator));
-        var jumpIfNotZero = new NesIr.JumpIfNotZero(
-            new NesIr.Register(NesIr.RegisterName.Accumulator),
-            new NesIr.Identifier("target"));
-        var executeInstruction = new NesIr.Copy(
-            new NesIr.Constant(44),
-            new NesIr.Register(NesIr.RegisterName.XIndex));
-        var label = new NesIr.Label(new NesIr.Identifier("target"));
-        var skipInstruction = new NesIr.Copy(
-            new NesIr.Constant(55),
-            new NesIr.Register(NesIr.RegisterName.YIndex));
+        var setCondition = new Ir6502.Copy(
+            new Ir6502.Constant(0),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
+        var jumpIfNotZero = new Ir6502.JumpIfNotZero(
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator),
+            new Ir6502.Identifier("target"));
+        var executeInstruction = new Ir6502.Copy(
+            new Ir6502.Constant(44),
+            new Ir6502.Register(Ir6502.RegisterName.XIndex));
+        var label = new Ir6502.Label(new Ir6502.Identifier("target"));
+        var skipInstruction = new Ir6502.Copy(
+            new Ir6502.Constant(55),
+            new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
         var testRunner = new InstructionTestRunner([setCondition, jumpIfNotZero, executeInstruction, label, skipInstruction]);
         testRunner.RunTestMethod();
@@ -181,19 +181,19 @@ public class JumpInstructionTests
     [Fact]
     public void JumpIfZero_With_Memory_Condition()
     {
-        var setMemory = new NesIr.Copy(
-            new NesIr.Constant(0),
-            new NesIr.Memory(0x2000, null, false));
-        var jumpIfZero = new NesIr.JumpIfZero(
-            new NesIr.Memory(0x2000, null, false),
-            new NesIr.Identifier("jump_target"));
-        var skipInstruction = new NesIr.Copy(
-            new NesIr.Constant(100),
-            new NesIr.Register(NesIr.RegisterName.Accumulator));
-        var label = new NesIr.Label(new NesIr.Identifier("jump_target"));
-        var executeInstruction = new NesIr.Copy(
-            new NesIr.Constant(200),
-            new NesIr.Register(NesIr.RegisterName.XIndex));
+        var setMemory = new Ir6502.Copy(
+            new Ir6502.Constant(0),
+            new Ir6502.Memory(0x2000, null, false));
+        var jumpIfZero = new Ir6502.JumpIfZero(
+            new Ir6502.Memory(0x2000, null, false),
+            new Ir6502.Identifier("jump_target"));
+        var skipInstruction = new Ir6502.Copy(
+            new Ir6502.Constant(100),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
+        var label = new Ir6502.Label(new Ir6502.Identifier("jump_target"));
+        var executeInstruction = new Ir6502.Copy(
+            new Ir6502.Constant(200),
+            new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
         var testRunner = new InstructionTestRunner([setMemory, jumpIfZero, skipInstruction, label, executeInstruction]);
         testRunner.RunTestMethod();
@@ -206,19 +206,19 @@ public class JumpInstructionTests
     [Fact]
     public void JumpIfNotZero_With_Variable_Condition()
     {
-        var setVariable = new NesIr.Copy(
-            new NesIr.Constant(7),
-            new NesIr.Variable(0));
-        var jumpIfNotZero = new NesIr.JumpIfNotZero(
-            new NesIr.Variable(0),
-            new NesIr.Identifier("jump_target"));
-        var skipInstruction = new NesIr.Copy(
-            new NesIr.Constant(111),
-            new NesIr.Register(NesIr.RegisterName.Accumulator));
-        var label = new NesIr.Label(new NesIr.Identifier("jump_target"));
-        var executeInstruction = new NesIr.Copy(
-            new NesIr.Variable(0),
-            new NesIr.Register(NesIr.RegisterName.YIndex));
+        var setVariable = new Ir6502.Copy(
+            new Ir6502.Constant(7),
+            new Ir6502.Variable(0));
+        var jumpIfNotZero = new Ir6502.JumpIfNotZero(
+            new Ir6502.Variable(0),
+            new Ir6502.Identifier("jump_target"));
+        var skipInstruction = new Ir6502.Copy(
+            new Ir6502.Constant(111),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
+        var label = new Ir6502.Label(new Ir6502.Identifier("jump_target"));
+        var executeInstruction = new Ir6502.Copy(
+            new Ir6502.Variable(0),
+            new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
         var testRunner = new InstructionTestRunner([setVariable, jumpIfNotZero, skipInstruction, label, executeInstruction]);
         testRunner.RunTestMethod();
@@ -230,19 +230,19 @@ public class JumpInstructionTests
     [Fact]
     public void JumpIfZero_With_Flag_Condition()
     {
-        var setFlag = new NesIr.Copy(
-            new NesIr.Constant(0),
-            new NesIr.Flag(NesIr.FlagName.Carry));
-        var jumpIfZero = new NesIr.JumpIfZero(
-            new NesIr.Flag(NesIr.FlagName.Carry),
-            new NesIr.Identifier("flag_target"));
-        var skipInstruction = new NesIr.Copy(
-            new NesIr.Constant(123),
-            new NesIr.Register(NesIr.RegisterName.Accumulator));
-        var label = new NesIr.Label(new NesIr.Identifier("flag_target"));
-        var executeInstruction = new NesIr.Copy(
-            new NesIr.Constant(156),
-            new NesIr.Register(NesIr.RegisterName.XIndex));
+        var setFlag = new Ir6502.Copy(
+            new Ir6502.Constant(0),
+            new Ir6502.Flag(Ir6502.FlagName.Carry));
+        var jumpIfZero = new Ir6502.JumpIfZero(
+            new Ir6502.Flag(Ir6502.FlagName.Carry),
+            new Ir6502.Identifier("flag_target"));
+        var skipInstruction = new Ir6502.Copy(
+            new Ir6502.Constant(123),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
+        var label = new Ir6502.Label(new Ir6502.Identifier("flag_target"));
+        var executeInstruction = new Ir6502.Copy(
+            new Ir6502.Constant(156),
+            new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
         var testRunner = new InstructionTestRunner([setFlag, jumpIfZero, skipInstruction, label, executeInstruction]);
         testRunner.RunTestMethod();
@@ -255,26 +255,26 @@ public class JumpInstructionTests
     [Fact]
     public void Conditional_Jump_Loop_With_Counter()
     {
-        var initCounter = new NesIr.Copy(
-            new NesIr.Constant(0),
-            new NesIr.Register(NesIr.RegisterName.XIndex));
-        var label = new NesIr.Label(new NesIr.Identifier("loop"));
-        var incrementCounter = new NesIr.Binary(
-            NesIr.BinaryOperator.Add,
-            new NesIr.Register(NesIr.RegisterName.XIndex),
-            new NesIr.Constant(1),
-            new NesIr.Register(NesIr.RegisterName.XIndex));
-        var checkCondition = new NesIr.Binary(
-            NesIr.BinaryOperator.LessThan,
-            new NesIr.Register(NesIr.RegisterName.XIndex),
-            new NesIr.Constant(3),
-            new NesIr.Variable(0));
-        var conditionalJump = new NesIr.JumpIfNotZero(
-            new NesIr.Variable(0),
-            new NesIr.Identifier("loop"));
-        var finalCopy = new NesIr.Copy(
-            new NesIr.Register(NesIr.RegisterName.XIndex),
-            new NesIr.Register(NesIr.RegisterName.Accumulator));
+        var initCounter = new Ir6502.Copy(
+            new Ir6502.Constant(0),
+            new Ir6502.Register(Ir6502.RegisterName.XIndex));
+        var label = new Ir6502.Label(new Ir6502.Identifier("loop"));
+        var incrementCounter = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Add,
+            new Ir6502.Register(Ir6502.RegisterName.XIndex),
+            new Ir6502.Constant(1),
+            new Ir6502.Register(Ir6502.RegisterName.XIndex));
+        var checkCondition = new Ir6502.Binary(
+            Ir6502.BinaryOperator.LessThan,
+            new Ir6502.Register(Ir6502.RegisterName.XIndex),
+            new Ir6502.Constant(3),
+            new Ir6502.Variable(0));
+        var conditionalJump = new Ir6502.JumpIfNotZero(
+            new Ir6502.Variable(0),
+            new Ir6502.Identifier("loop"));
+        var finalCopy = new Ir6502.Copy(
+            new Ir6502.Register(Ir6502.RegisterName.XIndex),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
         var testRunner = new InstructionTestRunner([initCounter, label, incrementCounter, checkCondition, conditionalJump, finalCopy]);
         testRunner.RunTestMethod();

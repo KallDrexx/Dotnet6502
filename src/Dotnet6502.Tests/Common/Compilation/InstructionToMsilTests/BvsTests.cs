@@ -38,22 +38,22 @@ public class BvsTests
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
         // Add setup and target instructions around the branch
-        var allInstructions = new List<NesIr.Instruction>
+        var allInstructions = new List<Ir6502.Instruction>
         {
             // Set up overflow flag as set (overflow occurred)
-            new NesIr.Copy(new NesIr.Constant(1), new NesIr.Flag(NesIr.FlagName.Overflow)),
+            new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Overflow)),
 
             // Add the BVS instruction
             nesIrInstructions[0],
 
             // Instruction that should be skipped if branch is taken
-            new NesIr.Copy(new NesIr.Constant(99), new NesIr.Register(NesIr.RegisterName.XIndex)),
+            new Ir6502.Copy(new Ir6502.Constant(99), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
             // Target label
-            new NesIr.Label(new NesIr.Identifier("branch_target")),
+            new Ir6502.Label(new Ir6502.Identifier("branch_target")),
 
             // Instruction that should be executed at branch target
-            new NesIr.Copy(new NesIr.Constant(42), new NesIr.Register(NesIr.RegisterName.Accumulator))
+            new Ir6502.Copy(new Ir6502.Constant(42), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
         };
 
         var testRunner = new InstructionTestRunner(allInstructions);
@@ -85,22 +85,22 @@ public class BvsTests
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
         // Add setup and target instructions around the branch
-        var allInstructions = new List<NesIr.Instruction>
+        var allInstructions = new List<Ir6502.Instruction>
         {
             // Set up overflow flag as clear (no overflow)
-            new NesIr.Copy(new NesIr.Constant(0), new NesIr.Flag(NesIr.FlagName.Overflow)),
+            new Ir6502.Copy(new Ir6502.Constant(0), new Ir6502.Flag(Ir6502.FlagName.Overflow)),
 
             // Add the BVS instruction
             nesIrInstructions[0],
 
             // Instruction that should be executed if branch is NOT taken
-            new NesIr.Copy(new NesIr.Constant(77), new NesIr.Register(NesIr.RegisterName.XIndex)),
+            new Ir6502.Copy(new Ir6502.Constant(77), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
             // Target label
-            new NesIr.Label(new NesIr.Identifier("branch_target")),
+            new Ir6502.Label(new Ir6502.Identifier("branch_target")),
 
             // Instruction that should be skipped if branch is not taken
-            new NesIr.Copy(new NesIr.Constant(88), new NesIr.Register(NesIr.RegisterName.Accumulator))
+            new Ir6502.Copy(new Ir6502.Constant(88), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
         };
 
         var testRunner = new InstructionTestRunner(allInstructions);
@@ -132,27 +132,27 @@ public class BvsTests
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
         // Add setup for a loop-like scenario
-        var allInstructions = new List<NesIr.Instruction>
+        var allInstructions = new List<Ir6502.Instruction>
         {
             // Initialize counter
-            new NesIr.Copy(new NesIr.Constant(0), new NesIr.Register(NesIr.RegisterName.XIndex)),
+            new Ir6502.Copy(new Ir6502.Constant(0), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
             // Loop target
-            new NesIr.Label(new NesIr.Identifier("loop_start")),
+            new Ir6502.Label(new Ir6502.Identifier("loop_start")),
 
             // Increment counter
-            new NesIr.Binary(
-                NesIr.BinaryOperator.Add,
-                new NesIr.Register(NesIr.RegisterName.XIndex),
-                new NesIr.Constant(1),
-                new NesIr.Register(NesIr.RegisterName.XIndex)),
+            new Ir6502.Binary(
+                Ir6502.BinaryOperator.Add,
+                new Ir6502.Register(Ir6502.RegisterName.XIndex),
+                new Ir6502.Constant(1),
+                new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
             // Check if we should continue (set overflow flag if X < 3, clear overflow flag when X >= 3 to exit loop)
-            new NesIr.Binary(
-                NesIr.BinaryOperator.LessThan,
-                new NesIr.Register(NesIr.RegisterName.XIndex),
-                new NesIr.Constant(3),
-                new NesIr.Flag(NesIr.FlagName.Overflow)), // Set overflow flag when X < 3 (loop should continue)
+            new Ir6502.Binary(
+                Ir6502.BinaryOperator.LessThan,
+                new Ir6502.Register(Ir6502.RegisterName.XIndex),
+                new Ir6502.Constant(3),
+                new Ir6502.Flag(Ir6502.FlagName.Overflow)), // Set overflow flag when X < 3 (loop should continue)
 
             // Add the BVS instruction (will branch if overflow flag is set)
             nesIrInstructions[0]
@@ -184,19 +184,19 @@ public class BvsTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
-        var allInstructions = new List<NesIr.Instruction>
+        var allInstructions = new List<Ir6502.Instruction>
         {
             // Set all flags to known state
-            new NesIr.Copy(new NesIr.Constant(1), new NesIr.Flag(NesIr.FlagName.Overflow)), // Set overflow for branch
-            new NesIr.Copy(new NesIr.Constant(1), new NesIr.Flag(NesIr.FlagName.Carry)),
-            new NesIr.Copy(new NesIr.Constant(1), new NesIr.Flag(NesIr.FlagName.Zero)),
-            new NesIr.Copy(new NesIr.Constant(1), new NesIr.Flag(NesIr.FlagName.Negative)),
+            new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Overflow)), // Set overflow for branch
+            new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Carry)),
+            new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Zero)),
+            new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Negative)),
 
             // Add the BVS instruction
             nesIrInstructions[0],
 
             // Target label
-            new NesIr.Label(new NesIr.Identifier("target"))
+            new Ir6502.Label(new Ir6502.Identifier("target"))
         };
 
         var testRunner = new InstructionTestRunner(allInstructions);
@@ -238,16 +238,16 @@ public class BvsTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
-        var allInstructions = new List<NesIr.Instruction>
+        var allInstructions = new List<Ir6502.Instruction>
         {
             // Set overflow flag set for branch to occur
-            new NesIr.Copy(new NesIr.Constant(1), new NesIr.Flag(NesIr.FlagName.Overflow)),
+            new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Overflow)),
 
             // Add the BVS instruction
             nesIrInstructions[0],
 
             // Target label
-            new NesIr.Label(new NesIr.Identifier("target"))
+            new Ir6502.Label(new Ir6502.Identifier("target"))
         };
 
         var testRunner = new InstructionTestRunner(allInstructions);
@@ -286,22 +286,22 @@ public class BvsTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
-        var allInstructions = new List<NesIr.Instruction>
+        var allInstructions = new List<Ir6502.Instruction>
         {
             // Set overflow flag set
-            new NesIr.Copy(new NesIr.Constant(1), new NesIr.Flag(NesIr.FlagName.Overflow)),
+            new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Overflow)),
 
             // Add the BVS instruction
             nesIrInstructions[0],
 
             // This should be skipped
-            new NesIr.Copy(new NesIr.Constant(111), new NesIr.Register(NesIr.RegisterName.XIndex)),
+            new Ir6502.Copy(new Ir6502.Constant(111), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
             // Target label
-            new NesIr.Label(new NesIr.Identifier("far_target")),
+            new Ir6502.Label(new Ir6502.Identifier("far_target")),
 
             // This should be executed
-            new NesIr.Copy(new NesIr.Constant(222), new NesIr.Register(NesIr.RegisterName.Accumulator))
+            new Ir6502.Copy(new Ir6502.Constant(222), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
         };
 
         var testRunner = new InstructionTestRunner(allInstructions);
@@ -331,27 +331,27 @@ public class BvsTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
-        var allInstructions = new List<NesIr.Instruction>
+        var allInstructions = new List<Ir6502.Instruction>
         {
             // Target label (at beginning for backward branch)
-            new NesIr.Label(new NesIr.Identifier("back_target")),
+            new Ir6502.Label(new Ir6502.Identifier("back_target")),
 
             // Mark that we reached the target
-            new NesIr.Copy(new NesIr.Constant(155), new NesIr.Register(NesIr.RegisterName.Accumulator)),
+            new Ir6502.Copy(new Ir6502.Constant(155), new Ir6502.Register(Ir6502.RegisterName.Accumulator)),
 
             // Set up a condition to branch only once
-            new NesIr.Binary(
-                NesIr.BinaryOperator.Equals,
-                new NesIr.Register(NesIr.RegisterName.XIndex),
-                new NesIr.Constant(0),
-                new NesIr.Flag(NesIr.FlagName.Overflow)), // Set overflow flag if X == 0
+            new Ir6502.Binary(
+                Ir6502.BinaryOperator.Equals,
+                new Ir6502.Register(Ir6502.RegisterName.XIndex),
+                new Ir6502.Constant(0),
+                new Ir6502.Flag(Ir6502.FlagName.Overflow)), // Set overflow flag if X == 0
 
             // Increment X to prevent infinite loop
-            new NesIr.Binary(
-                NesIr.BinaryOperator.Add,
-                new NesIr.Register(NesIr.RegisterName.XIndex),
-                new NesIr.Constant(1),
-                new NesIr.Register(NesIr.RegisterName.XIndex)),
+            new Ir6502.Binary(
+                Ir6502.BinaryOperator.Add,
+                new Ir6502.Register(Ir6502.RegisterName.XIndex),
+                new Ir6502.Constant(1),
+                new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
             // Add the BVS instruction
             nesIrInstructions[0]
@@ -386,22 +386,22 @@ public class BvsTests
 
         // Test case 1: After operation that clears overflow flag (no overflow)
         {
-            var allInstructions = new List<NesIr.Instruction>
+            var allInstructions = new List<Ir6502.Instruction>
             {
                 // Simulate operation that clears overflow flag
-                new NesIr.Copy(new NesIr.Constant(0), new NesIr.Flag(NesIr.FlagName.Overflow)),
+                new Ir6502.Copy(new Ir6502.Constant(0), new Ir6502.Flag(Ir6502.FlagName.Overflow)),
 
                 // Add the BVS instruction
                 nesIrInstructions[0],
 
                 // This should execute (branch NOT taken)
-                new NesIr.Copy(new NesIr.Constant(50), new NesIr.Register(NesIr.RegisterName.XIndex)),
+                new Ir6502.Copy(new Ir6502.Constant(50), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
                 // Target label
-                new NesIr.Label(new NesIr.Identifier("target")),
+                new Ir6502.Label(new Ir6502.Identifier("target")),
 
                 // This should also execute
-                new NesIr.Copy(new NesIr.Constant(100), new NesIr.Register(NesIr.RegisterName.Accumulator))
+                new Ir6502.Copy(new Ir6502.Constant(100), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
             };
 
             var testRunner1 = new InstructionTestRunner(allInstructions);
@@ -415,22 +415,22 @@ public class BvsTests
 
         // Test case 2: After operation that sets overflow flag (overflow occurred)
         {
-            var allInstructions = new List<NesIr.Instruction>
+            var allInstructions = new List<Ir6502.Instruction>
             {
                 // Simulate operation that sets overflow flag
-                new NesIr.Copy(new NesIr.Constant(1), new NesIr.Flag(NesIr.FlagName.Overflow)),
+                new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Overflow)),
 
                 // Add the BVS instruction
                 nesIrInstructions[0],
 
                 // This should be skipped (branch taken)
-                new NesIr.Copy(new NesIr.Constant(75), new NesIr.Register(NesIr.RegisterName.XIndex)),
+                new Ir6502.Copy(new Ir6502.Constant(75), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
                 // Target label
-                new NesIr.Label(new NesIr.Identifier("target")),
+                new Ir6502.Label(new Ir6502.Identifier("target")),
 
                 // This should execute
-                new NesIr.Copy(new NesIr.Constant(150), new NesIr.Register(NesIr.RegisterName.Accumulator))
+                new Ir6502.Copy(new Ir6502.Constant(150), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
             };
 
             var testRunner2 = new InstructionTestRunner(allInstructions);
