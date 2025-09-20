@@ -58,11 +58,11 @@ public class JsrTests
         testRunner.RunTestMethod();
 
         // Verify the function was called and execution continued
-        testRunner.NesHal.XRegister.ShouldBe((byte)42); // Should be executed after JSR
+        testRunner.TestHal.XRegister.ShouldBe((byte)42); // Should be executed after JSR
 
         // Verify the function was actually invoked
         var (address, expectedValue) = testRunner.GetCallableMethodSignature("TestFunction", callableFunctions);
-        testRunner.NesHal.ReadMemory(address).ShouldBe(expectedValue);
+        testRunner.TestHal.ReadMemory(address).ShouldBe(expectedValue);
     }
 
     [Fact]
@@ -117,14 +117,14 @@ public class JsrTests
         testRunner.RunTestMethod();
 
         // Verify both functions were called and all instructions executed
-        testRunner.NesHal.XRegister.ShouldBe((byte)77);
-        testRunner.NesHal.YRegister.ShouldBe((byte)88);
+        testRunner.TestHal.XRegister.ShouldBe((byte)77);
+        testRunner.TestHal.YRegister.ShouldBe((byte)88);
 
         // Verify both functions were actually invoked
         var (address1, expectedValue1) = testRunner.GetCallableMethodSignature("FirstFunction", callableFunctions);
         var (address2, expectedValue2) = testRunner.GetCallableMethodSignature("SecondFunction", callableFunctions);
-        testRunner.NesHal.ReadMemory(address1).ShouldBe(expectedValue1);
-        testRunner.NesHal.ReadMemory(address2).ShouldBe(expectedValue2);
+        testRunner.TestHal.ReadMemory(address1).ShouldBe(expectedValue1);
+        testRunner.TestHal.ReadMemory(address2).ShouldBe(expectedValue2);
     }
 
     [Fact]
@@ -167,13 +167,13 @@ public class JsrTests
         testRunner.RunTestMethod();
 
         // Verify all instructions executed (function was called each time)
-        testRunner.NesHal.XRegister.ShouldBe((byte)11);
-        testRunner.NesHal.YRegister.ShouldBe((byte)22);
-        testRunner.NesHal.ARegister.ShouldBe((byte)33);
+        testRunner.TestHal.XRegister.ShouldBe((byte)11);
+        testRunner.TestHal.YRegister.ShouldBe((byte)22);
+        testRunner.TestHal.ARegister.ShouldBe((byte)33);
 
         // Verify the function was actually invoked
         var (address, expectedValue) = testRunner.GetCallableMethodSignature("RepeatedFunction", callableFunctions);
-        testRunner.NesHal.ReadMemory(address).ShouldBe(expectedValue);
+        testRunner.TestHal.ReadMemory(address).ShouldBe(expectedValue);
     }
 
     [Fact]
@@ -212,22 +212,22 @@ public class JsrTests
         var testRunner = new InstructionTestRunner(allInstructions, callableFunctions);
 
         // Set initial flag states
-        testRunner.NesHal.Flags[CpuStatusFlags.Carry] = true;
-        testRunner.NesHal.Flags[CpuStatusFlags.Zero] = true;
-        testRunner.NesHal.Flags[CpuStatusFlags.Negative] = true;
-        testRunner.NesHal.Flags[CpuStatusFlags.Overflow] = true;
-        testRunner.NesHal.Flags[CpuStatusFlags.InterruptDisable] = true;
-        testRunner.NesHal.Flags[CpuStatusFlags.Decimal] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Carry] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Zero] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Negative] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Overflow] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Decimal] = true;
 
         testRunner.RunTestMethod();
 
         // JSR should not affect any flags
-        testRunner.NesHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
-        testRunner.NesHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
-        testRunner.NesHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
-        testRunner.NesHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
-        testRunner.NesHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue();
-        testRunner.NesHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
+        testRunner.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
+        testRunner.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
+        testRunner.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
+        testRunner.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
+        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue();
+        testRunner.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
     }
 
     [Fact]
@@ -260,18 +260,18 @@ public class JsrTests
         var testRunner = new InstructionTestRunner(allInstructions, callableFunctions);
 
         // Set initial register values
-        testRunner.NesHal.ARegister = 0x42;
-        testRunner.NesHal.XRegister = 0x33;
-        testRunner.NesHal.YRegister = 0x77;
-        testRunner.NesHal.StackPointer = 0xFF;
+        testRunner.TestHal.ARegister = 0x42;
+        testRunner.TestHal.XRegister = 0x33;
+        testRunner.TestHal.YRegister = 0x77;
+        testRunner.TestHal.StackPointer = 0xFF;
 
         testRunner.RunTestMethod();
 
         // JSR should not affect any registers
-        testRunner.NesHal.ARegister.ShouldBe((byte)0x42);
-        testRunner.NesHal.XRegister.ShouldBe((byte)0x33);
-        testRunner.NesHal.YRegister.ShouldBe((byte)0x77);
-        testRunner.NesHal.StackPointer.ShouldBe((byte)0xFF);
+        testRunner.TestHal.ARegister.ShouldBe((byte)0x42);
+        testRunner.TestHal.XRegister.ShouldBe((byte)0x33);
+        testRunner.TestHal.YRegister.ShouldBe((byte)0x77);
+        testRunner.TestHal.StackPointer.ShouldBe((byte)0xFF);
     }
 
     [Fact]
@@ -317,10 +317,10 @@ public class JsrTests
             testRunner.RunTestMethod();
 
             // Verify function was called and execution continued
-            testRunner.NesHal.XRegister.ShouldBe((byte)99);
+            testRunner.TestHal.XRegister.ShouldBe((byte)99);
 
             var (address, expectedValue) = testRunner.GetCallableMethodSignature(testCase.Name, callableFunctions);
-            testRunner.NesHal.ReadMemory(address).ShouldBe(expectedValue);
+            testRunner.TestHal.ReadMemory(address).ShouldBe(expectedValue);
         }
     }
 

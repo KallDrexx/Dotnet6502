@@ -35,11 +35,11 @@ public class ClvTests
         var testRunner = new InstructionTestRunner(nesIrInstructions);
 
         // Set overflow flag initially
-        testRunner.NesHal.Flags[CpuStatusFlags.Overflow] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Overflow] = true;
         testRunner.RunTestMethod();
 
         // Overflow flag should be cleared
-        testRunner.NesHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
+        testRunner.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
     }
 
     [Fact]
@@ -60,11 +60,11 @@ public class ClvTests
         var testRunner = new InstructionTestRunner(nesIrInstructions);
 
         // Overflow flag already clear
-        testRunner.NesHal.Flags[CpuStatusFlags.Overflow] = false;
+        testRunner.TestHal.Flags[CpuStatusFlags.Overflow] = false;
         testRunner.RunTestMethod();
 
         // Overflow flag should remain clear
-        testRunner.NesHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
+        testRunner.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
     }
 
     [Fact]
@@ -85,24 +85,24 @@ public class ClvTests
         var testRunner = new InstructionTestRunner(nesIrInstructions);
 
         // Set all flags
-        testRunner.NesHal.Flags[CpuStatusFlags.Carry] = true;
-        testRunner.NesHal.Flags[CpuStatusFlags.Zero] = true;
-        testRunner.NesHal.Flags[CpuStatusFlags.InterruptDisable] = true;
-        testRunner.NesHal.Flags[CpuStatusFlags.Decimal] = true;
-        testRunner.NesHal.Flags[CpuStatusFlags.Overflow] = true;
-        testRunner.NesHal.Flags[CpuStatusFlags.Negative] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Carry] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Zero] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Decimal] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Overflow] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Negative] = true;
 
         testRunner.RunTestMethod();
 
         // Only overflow flag should be cleared
-        testRunner.NesHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
+        testRunner.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
 
         // All other flags should be preserved
-        testRunner.NesHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
-        testRunner.NesHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
-        testRunner.NesHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue();
-        testRunner.NesHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
-        testRunner.NesHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
+        testRunner.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
+        testRunner.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
+        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue();
+        testRunner.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
+        testRunner.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
     }
 
     [Fact]
@@ -122,22 +122,22 @@ public class ClvTests
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var testRunner = new InstructionTestRunner(nesIrInstructions);
 
-        testRunner.NesHal.ARegister = 0x42;
-        testRunner.NesHal.XRegister = 0x33;
-        testRunner.NesHal.YRegister = 0x77;
-        testRunner.NesHal.StackPointer = 0xFF;
-        testRunner.NesHal.Flags[CpuStatusFlags.Overflow] = true;
+        testRunner.TestHal.ARegister = 0x42;
+        testRunner.TestHal.XRegister = 0x33;
+        testRunner.TestHal.YRegister = 0x77;
+        testRunner.TestHal.StackPointer = 0xFF;
+        testRunner.TestHal.Flags[CpuStatusFlags.Overflow] = true;
 
         testRunner.RunTestMethod();
 
         // Registers should remain unchanged
-        testRunner.NesHal.ARegister.ShouldBe((byte)0x42);
-        testRunner.NesHal.XRegister.ShouldBe((byte)0x33);
-        testRunner.NesHal.YRegister.ShouldBe((byte)0x77);
-        testRunner.NesHal.StackPointer.ShouldBe((byte)0xFF);
+        testRunner.TestHal.ARegister.ShouldBe((byte)0x42);
+        testRunner.TestHal.XRegister.ShouldBe((byte)0x33);
+        testRunner.TestHal.YRegister.ShouldBe((byte)0x77);
+        testRunner.TestHal.StackPointer.ShouldBe((byte)0xFF);
 
         // Only overflow flag should be cleared
-        testRunner.NesHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
+        testRunner.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
     }
 
     [Fact]
@@ -163,10 +163,10 @@ public class ClvTests
         var testRunner = new InstructionTestRunner(nesIrInstructions);
 
         // Manually set overflow flag (simulating an arithmetic operation result)
-        testRunner.NesHal.Flags[CpuStatusFlags.Overflow] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Overflow] = true;
         testRunner.RunTestMethod();
 
         // CLV should clear it regardless of how it was set
-        testRunner.NesHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
+        testRunner.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
     }
 }

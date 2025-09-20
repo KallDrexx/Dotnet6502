@@ -35,11 +35,11 @@ public class ClcTests
         var testRunner = new InstructionTestRunner(nesIrInstructions);
 
         // Set carry flag initially
-        testRunner.NesHal.Flags[CpuStatusFlags.Carry] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Carry] = true;
         testRunner.RunTestMethod();
 
         // Carry flag should be cleared
-        testRunner.NesHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
+        testRunner.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
     }
 
     [Fact]
@@ -60,11 +60,11 @@ public class ClcTests
         var testRunner = new InstructionTestRunner(nesIrInstructions);
 
         // Carry flag already clear
-        testRunner.NesHal.Flags[CpuStatusFlags.Carry] = false;
+        testRunner.TestHal.Flags[CpuStatusFlags.Carry] = false;
         testRunner.RunTestMethod();
 
         // Carry flag should remain clear
-        testRunner.NesHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
+        testRunner.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
     }
 
     [Fact]
@@ -85,24 +85,24 @@ public class ClcTests
         var testRunner = new InstructionTestRunner(nesIrInstructions);
 
         // Set all flags
-        testRunner.NesHal.Flags[CpuStatusFlags.Carry] = true;
-        testRunner.NesHal.Flags[CpuStatusFlags.Zero] = true;
-        testRunner.NesHal.Flags[CpuStatusFlags.InterruptDisable] = true;
-        testRunner.NesHal.Flags[CpuStatusFlags.Decimal] = true;
-        testRunner.NesHal.Flags[CpuStatusFlags.Overflow] = true;
-        testRunner.NesHal.Flags[CpuStatusFlags.Negative] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Carry] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Zero] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Decimal] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Overflow] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Negative] = true;
 
         testRunner.RunTestMethod();
 
         // Only carry flag should be cleared
-        testRunner.NesHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
+        testRunner.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
 
         // All other flags should be preserved
-        testRunner.NesHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
-        testRunner.NesHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue();
-        testRunner.NesHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
-        testRunner.NesHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
-        testRunner.NesHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
+        testRunner.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
+        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue();
+        testRunner.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
+        testRunner.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
+        testRunner.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
     }
 
     [Fact]
@@ -122,22 +122,22 @@ public class ClcTests
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var testRunner = new InstructionTestRunner(nesIrInstructions);
 
-        testRunner.NesHal.ARegister = 0x42;
-        testRunner.NesHal.XRegister = 0x33;
-        testRunner.NesHal.YRegister = 0x77;
-        testRunner.NesHal.StackPointer = 0xFF;
-        testRunner.NesHal.Flags[CpuStatusFlags.Carry] = true;
+        testRunner.TestHal.ARegister = 0x42;
+        testRunner.TestHal.XRegister = 0x33;
+        testRunner.TestHal.YRegister = 0x77;
+        testRunner.TestHal.StackPointer = 0xFF;
+        testRunner.TestHal.Flags[CpuStatusFlags.Carry] = true;
 
         testRunner.RunTestMethod();
 
         // Registers should remain unchanged
-        testRunner.NesHal.ARegister.ShouldBe((byte)0x42);
-        testRunner.NesHal.XRegister.ShouldBe((byte)0x33);
-        testRunner.NesHal.YRegister.ShouldBe((byte)0x77);
-        testRunner.NesHal.StackPointer.ShouldBe((byte)0xFF);
+        testRunner.TestHal.ARegister.ShouldBe((byte)0x42);
+        testRunner.TestHal.XRegister.ShouldBe((byte)0x33);
+        testRunner.TestHal.YRegister.ShouldBe((byte)0x77);
+        testRunner.TestHal.StackPointer.ShouldBe((byte)0xFF);
 
         // Only carry flag should be cleared
-        testRunner.NesHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
+        testRunner.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
     }
 
     [Fact]
@@ -158,24 +158,24 @@ public class ClcTests
         var testRunner = new InstructionTestRunner(nesIrInstructions);
 
         // Set a mixed pattern of flags
-        testRunner.NesHal.Flags[CpuStatusFlags.Carry] = true;  // Will be cleared
-        testRunner.NesHal.Flags[CpuStatusFlags.Zero] = false; // Should remain false
-        testRunner.NesHal.Flags[CpuStatusFlags.InterruptDisable] = true;  // Should remain true
-        testRunner.NesHal.Flags[CpuStatusFlags.Decimal] = false; // Should remain false
-        testRunner.NesHal.Flags[CpuStatusFlags.Overflow] = true;  // Should remain true
-        testRunner.NesHal.Flags[CpuStatusFlags.Negative] = false; // Should remain false
+        testRunner.TestHal.Flags[CpuStatusFlags.Carry] = true;  // Will be cleared
+        testRunner.TestHal.Flags[CpuStatusFlags.Zero] = false; // Should remain false
+        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;  // Should remain true
+        testRunner.TestHal.Flags[CpuStatusFlags.Decimal] = false; // Should remain false
+        testRunner.TestHal.Flags[CpuStatusFlags.Overflow] = true;  // Should remain true
+        testRunner.TestHal.Flags[CpuStatusFlags.Negative] = false; // Should remain false
 
         testRunner.RunTestMethod();
 
         // Only carry flag should be affected
-        testRunner.NesHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
+        testRunner.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
 
         // All other flags should remain unchanged
-        testRunner.NesHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        testRunner.NesHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue();
-        testRunner.NesHal.Flags[CpuStatusFlags.Decimal].ShouldBeFalse();
-        testRunner.NesHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
-        testRunner.NesHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
+        testRunner.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
+        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue();
+        testRunner.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeFalse();
+        testRunner.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
+        testRunner.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
     }
 
     [Fact]
@@ -196,16 +196,16 @@ public class ClcTests
         var testRunner = new InstructionTestRunner(nesIrInstructions);
 
         // Set carry flag initially
-        testRunner.NesHal.Flags[CpuStatusFlags.Carry] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Carry] = true;
 
         // First CLC call
         testRunner.RunTestMethod();
-        testRunner.NesHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
+        testRunner.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
 
         // Second CLC call (should have no effect)
         var testRunner2 = new InstructionTestRunner(nesIrInstructions);
-        testRunner2.NesHal.Flags[CpuStatusFlags.Carry] = false; // Already clear
+        testRunner2.TestHal.Flags[CpuStatusFlags.Carry] = false; // Already clear
         testRunner2.RunTestMethod();
-        testRunner2.NesHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
+        testRunner2.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
     }
 }

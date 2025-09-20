@@ -8,10 +8,14 @@ namespace Dotnet6502.Common.Compilation;
 /// </summary>
 public class MsilGenerator
 {
+    public delegate void CustomIlGenerator(Ir6502.Instruction instruction, Context context);
+
     public record Context(
         ILGenerator IlGenerator,
         FieldInfo HardwareField,
         Func<string, MethodInfo?> GetMethodInfo);
+
+    private readonly Dictionary<Type, CustomIlGenerator> _customIlGenerators;
 
     /// <summary>
     /// The number of locals that are required for MsilGenerator operations. It is assumed that
@@ -23,13 +27,22 @@ public class MsilGenerator
 
     private readonly IReadOnlyDictionary<Ir6502.Identifier, Label> _labels;
 
-    public MsilGenerator(IReadOnlyDictionary<Ir6502.Identifier, Label> labels)
+    public MsilGenerator(
+        IReadOnlyDictionary<Ir6502.Identifier, Label> labels,
+        Dictionary<Type, CustomIlGenerator> customIlGenerators)
     {
         _labels = labels;
+        _customIlGenerators = customIlGenerators;
     }
 
     public void Generate(Ir6502.Instruction instruction, Context context)
     {
+        if (_customIlGenerators.TryGetValue(instruction.GetType(), out var generator))
+        {
+            generator.Invoke(instruction, context);
+            return;
+        }
+        
         switch (instruction)
         {
             case Ir6502.Binary binary:

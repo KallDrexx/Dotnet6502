@@ -20,7 +20,7 @@ public class ConvertVariableToByteInstructionTests
         var testRunner = new InstructionTestRunner([setupVar, convertInstruction, readVar]);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.ARegister.ShouldBe((byte)42);
+        testRunner.TestHal.ARegister.ShouldBe((byte)42);
     }
 
     [Fact]
@@ -37,7 +37,7 @@ public class ConvertVariableToByteInstructionTests
         var testRunner = new InstructionTestRunner([setupVar, convertInstruction, readVar]);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.XRegister.ShouldBe((byte)0);
+        testRunner.TestHal.XRegister.ShouldBe((byte)0);
     }
 
     [Fact]
@@ -54,7 +54,7 @@ public class ConvertVariableToByteInstructionTests
         var testRunner = new InstructionTestRunner([setupVar, convertInstruction, readVar]);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.YRegister.ShouldBe((byte)255);
+        testRunner.TestHal.YRegister.ShouldBe((byte)255);
     }
 
     [Fact]
@@ -71,7 +71,7 @@ public class ConvertVariableToByteInstructionTests
         var testRunner = new InstructionTestRunner([setupVar, convertInstruction, writeToMemory]);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.ReadMemory(0x2000).ShouldBe((byte)123);
+        testRunner.TestHal.ReadMemory(0x2000).ShouldBe((byte)123);
     }
 
     [Fact]
@@ -88,7 +88,7 @@ public class ConvertVariableToByteInstructionTests
         var testRunner = new InstructionTestRunner([setupVar, convertInstruction, copyToFlag]);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.GetFlag(CpuStatusFlags.Carry).ShouldBe(true);
+        testRunner.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBe(true);
     }
 
     [Fact]
@@ -105,7 +105,7 @@ public class ConvertVariableToByteInstructionTests
         var testRunner = new InstructionTestRunner([setupVar, convertInstruction, copyToStackPointer]);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.StackPointer.ShouldBe((byte)0xF8);
+        testRunner.TestHal.StackPointer.ShouldBe((byte)0xF8);
     }
 
     [Fact]
@@ -130,6 +130,6 @@ public class ConvertVariableToByteInstructionTests
         var testRunner = new InstructionTestRunner([setupVar1, setupVar2, addOperation, convertInstruction, readResult]);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.ARegister.ShouldBe((byte)94);
+        testRunner.TestHal.ARegister.ShouldBe((byte)94);
     }
 }

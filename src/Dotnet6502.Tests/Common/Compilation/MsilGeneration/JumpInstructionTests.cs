@@ -21,8 +21,8 @@ public class JumpInstructionTests
         var testRunner = new InstructionTestRunner([jump, copy1, label, copy2]);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.YRegister.ShouldBe((byte)0);
-        testRunner.NesHal.ARegister.ShouldBe((byte)22);
+        testRunner.TestHal.YRegister.ShouldBe((byte)0);
+        testRunner.TestHal.ARegister.ShouldBe((byte)22);
     }
 
     [Fact]
@@ -55,7 +55,7 @@ public class JumpInstructionTests
         var testRunner = new InstructionTestRunner([copy1, label, copy2, addVar, copyBack, comparison, conditionalJump]);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.XRegister.ShouldBe((byte)3);
+        testRunner.TestHal.XRegister.ShouldBe((byte)3);
     }
 
     [Fact]
@@ -74,8 +74,8 @@ public class JumpInstructionTests
         var testRunner = new InstructionTestRunner([label1, copy1, jump, label2, copy2]);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.ARegister.ShouldBe((byte)10);
-        testRunner.NesHal.XRegister.ShouldBe((byte)20);
+        testRunner.TestHal.ARegister.ShouldBe((byte)10);
+        testRunner.TestHal.XRegister.ShouldBe((byte)20);
     }
 
     [Fact]
@@ -98,9 +98,9 @@ public class JumpInstructionTests
         var testRunner = new InstructionTestRunner([setCondition, jumpIfZero, skipInstruction, label, executeInstruction]);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.ARegister.ShouldBe((byte)0);
-        testRunner.NesHal.XRegister.ShouldBe((byte)0);
-        testRunner.NesHal.YRegister.ShouldBe((byte)42);
+        testRunner.TestHal.ARegister.ShouldBe((byte)0);
+        testRunner.TestHal.XRegister.ShouldBe((byte)0);
+        testRunner.TestHal.YRegister.ShouldBe((byte)42);
     }
 
     [Fact]
@@ -123,9 +123,9 @@ public class JumpInstructionTests
         var testRunner = new InstructionTestRunner([setCondition, jumpIfZero, executeInstruction, label, skipInstruction]);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.ARegister.ShouldBe((byte)1);
-        testRunner.NesHal.XRegister.ShouldBe((byte)77);
-        testRunner.NesHal.YRegister.ShouldBe((byte)88);
+        testRunner.TestHal.ARegister.ShouldBe((byte)1);
+        testRunner.TestHal.XRegister.ShouldBe((byte)77);
+        testRunner.TestHal.YRegister.ShouldBe((byte)88);
     }
 
     [Fact]
@@ -148,9 +148,9 @@ public class JumpInstructionTests
         var testRunner = new InstructionTestRunner([setCondition, jumpIfNotZero, skipInstruction, label, executeInstruction]);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.ARegister.ShouldBe((byte)5);
-        testRunner.NesHal.XRegister.ShouldBe((byte)0);
-        testRunner.NesHal.YRegister.ShouldBe((byte)33);
+        testRunner.TestHal.ARegister.ShouldBe((byte)5);
+        testRunner.TestHal.XRegister.ShouldBe((byte)0);
+        testRunner.TestHal.YRegister.ShouldBe((byte)33);
     }
 
     [Fact]
@@ -173,9 +173,9 @@ public class JumpInstructionTests
         var testRunner = new InstructionTestRunner([setCondition, jumpIfNotZero, executeInstruction, label, skipInstruction]);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.ARegister.ShouldBe((byte)0);
-        testRunner.NesHal.XRegister.ShouldBe((byte)44);
-        testRunner.NesHal.YRegister.ShouldBe((byte)55);
+        testRunner.TestHal.ARegister.ShouldBe((byte)0);
+        testRunner.TestHal.XRegister.ShouldBe((byte)44);
+        testRunner.TestHal.YRegister.ShouldBe((byte)55);
     }
 
     [Fact]
@@ -198,9 +198,9 @@ public class JumpInstructionTests
         var testRunner = new InstructionTestRunner([setMemory, jumpIfZero, skipInstruction, label, executeInstruction]);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.ReadMemory(0x2000).ShouldBe((byte)0);
-        testRunner.NesHal.ARegister.ShouldBe((byte)0);
-        testRunner.NesHal.XRegister.ShouldBe((byte)200);
+        testRunner.TestHal.ReadMemory(0x2000).ShouldBe((byte)0);
+        testRunner.TestHal.ARegister.ShouldBe((byte)0);
+        testRunner.TestHal.XRegister.ShouldBe((byte)200);
     }
 
     [Fact]
@@ -223,8 +223,8 @@ public class JumpInstructionTests
         var testRunner = new InstructionTestRunner([setVariable, jumpIfNotZero, skipInstruction, label, executeInstruction]);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.ARegister.ShouldBe((byte)0);
-        testRunner.NesHal.YRegister.ShouldBe((byte)7);
+        testRunner.TestHal.ARegister.ShouldBe((byte)0);
+        testRunner.TestHal.YRegister.ShouldBe((byte)7);
     }
 
     [Fact]
@@ -247,9 +247,9 @@ public class JumpInstructionTests
         var testRunner = new InstructionTestRunner([setFlag, jumpIfZero, skipInstruction, label, executeInstruction]);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.GetFlag(CpuStatusFlags.Carry).ShouldBe(false);
-        testRunner.NesHal.ARegister.ShouldBe((byte)0);
-        testRunner.NesHal.XRegister.ShouldBe((byte)156);
+        testRunner.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBe(false);
+        testRunner.TestHal.ARegister.ShouldBe((byte)0);
+        testRunner.TestHal.XRegister.ShouldBe((byte)156);
     }
 
     [Fact]
@@ -279,7 +279,7 @@ public class JumpInstructionTests
         var testRunner = new InstructionTestRunner([initCounter, label, incrementCounter, checkCondition, conditionalJump, finalCopy]);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.XRegister.ShouldBe((byte)3);
-        testRunner.NesHal.ARegister.ShouldBe((byte)3);
+        testRunner.TestHal.XRegister.ShouldBe((byte)3);
+        testRunner.TestHal.ARegister.ShouldBe((byte)3);
     }
 }

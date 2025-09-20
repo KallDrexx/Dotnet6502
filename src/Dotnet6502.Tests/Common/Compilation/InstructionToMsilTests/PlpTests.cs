@@ -36,25 +36,25 @@ public class PlpTests
         var testRunner = new InstructionTestRunner(nesIrInstructions);
 
         // Clear all flags initially
-        testRunner.NesHal.Flags[CpuStatusFlags.Carry] = false;
-        testRunner.NesHal.Flags[CpuStatusFlags.Zero] = false;
-        testRunner.NesHal.Flags[CpuStatusFlags.InterruptDisable] = false;
-        testRunner.NesHal.Flags[CpuStatusFlags.Decimal] = false;
-        testRunner.NesHal.Flags[CpuStatusFlags.Overflow] = false;
-        testRunner.NesHal.Flags[CpuStatusFlags.Negative] = false;
+        testRunner.TestHal.Flags[CpuStatusFlags.Carry] = false;
+        testRunner.TestHal.Flags[CpuStatusFlags.Zero] = false;
+        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable] = false;
+        testRunner.TestHal.Flags[CpuStatusFlags.Decimal] = false;
+        testRunner.TestHal.Flags[CpuStatusFlags.Overflow] = false;
+        testRunner.TestHal.Flags[CpuStatusFlags.Negative] = false;
 
         // Push a value with specific flags set (Carry, InterruptDisable, Overflow)
         // 0x01 | 0x04 | 0x40 = 0x45
-        testRunner.NesHal.PushToStack(0x45);
+        testRunner.TestHal.PushToStack(0x45);
         testRunner.RunTestMethod();
 
         // Check flags are set according to pulled value
-        testRunner.NesHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();      // bit 0
-        testRunner.NesHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();      // bit 1
-        testRunner.NesHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue(); // bit 2
-        testRunner.NesHal.Flags[CpuStatusFlags.Decimal].ShouldBeFalse();   // bit 3
-        testRunner.NesHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();   // bit 6
-        testRunner.NesHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();  // bit 7
+        testRunner.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();      // bit 0
+        testRunner.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();      // bit 1
+        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue(); // bit 2
+        testRunner.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeFalse();   // bit 3
+        testRunner.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();   // bit 6
+        testRunner.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();  // bit 7
     }
 
     [Fact]
@@ -75,26 +75,26 @@ public class PlpTests
         var testRunner = new InstructionTestRunner(nesIrInstructions);
 
         // Clear all flags initially
-        testRunner.NesHal.Flags[CpuStatusFlags.Carry] = false;
-        testRunner.NesHal.Flags[CpuStatusFlags.Zero] = false;
-        testRunner.NesHal.Flags[CpuStatusFlags.InterruptDisable] = false;
-        testRunner.NesHal.Flags[CpuStatusFlags.Decimal] = false;
-        testRunner.NesHal.Flags[CpuStatusFlags.Overflow] = false;
-        testRunner.NesHal.Flags[CpuStatusFlags.Negative] = false;
+        testRunner.TestHal.Flags[CpuStatusFlags.Carry] = false;
+        testRunner.TestHal.Flags[CpuStatusFlags.Zero] = false;
+        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable] = false;
+        testRunner.TestHal.Flags[CpuStatusFlags.Decimal] = false;
+        testRunner.TestHal.Flags[CpuStatusFlags.Overflow] = false;
+        testRunner.TestHal.Flags[CpuStatusFlags.Negative] = false;
 
         // Push value with all standard flags set
         // 0x01 | 0x02 | 0x04 | 0x08 | 0x40 | 0x80 = 0xCF
-        testRunner.NesHal.PushToStack(0xCF);
+        testRunner.TestHal.PushToStack(0xCF);
         testRunner.RunTestMethod();
 
 
         // All flags should be set
-        testRunner.NesHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
-        testRunner.NesHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
-        testRunner.NesHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue();
-        testRunner.NesHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
-        testRunner.NesHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
-        testRunner.NesHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
+        testRunner.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
+        testRunner.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
+        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue();
+        testRunner.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
+        testRunner.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
+        testRunner.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
     }
 
     [Fact]
@@ -115,25 +115,25 @@ public class PlpTests
         var testRunner = new InstructionTestRunner(nesIrInstructions);
 
         // Set all flags initially
-        testRunner.NesHal.Flags[CpuStatusFlags.Carry] = true;
-        testRunner.NesHal.Flags[CpuStatusFlags.Zero] = true;
-        testRunner.NesHal.Flags[CpuStatusFlags.InterruptDisable] = true;
-        testRunner.NesHal.Flags[CpuStatusFlags.Decimal] = true;
-        testRunner.NesHal.Flags[CpuStatusFlags.Overflow] = true;
-        testRunner.NesHal.Flags[CpuStatusFlags.Negative] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Carry] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Zero] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Decimal] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Overflow] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Negative] = true;
 
         // Push value with all flags clear
-        testRunner.NesHal.PushToStack(0x00);
+        testRunner.TestHal.PushToStack(0x00);
         testRunner.RunTestMethod();
 
 
         // All flags should be clear
-        testRunner.NesHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
-        testRunner.NesHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        testRunner.NesHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeFalse();
-        testRunner.NesHal.Flags[CpuStatusFlags.Decimal].ShouldBeFalse();
-        testRunner.NesHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
-        testRunner.NesHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
+        testRunner.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
+        testRunner.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
+        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeFalse();
+        testRunner.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeFalse();
+        testRunner.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
+        testRunner.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
     }
 
     [Fact]
@@ -154,26 +154,26 @@ public class PlpTests
         var testRunner = new InstructionTestRunner(nesIrInstructions);
 
         // Start with opposite pattern
-        testRunner.NesHal.Flags[CpuStatusFlags.Carry] = true;
-        testRunner.NesHal.Flags[CpuStatusFlags.Zero] = true;
-        testRunner.NesHal.Flags[CpuStatusFlags.InterruptDisable] = true;
-        testRunner.NesHal.Flags[CpuStatusFlags.Decimal] = true;
-        testRunner.NesHal.Flags[CpuStatusFlags.Overflow] = true;
-        testRunner.NesHal.Flags[CpuStatusFlags.Negative] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Carry] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Zero] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Decimal] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Overflow] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Negative] = true;
 
         // Push value with mixed flags: Zero and Negative set
         // 0x02 | 0x80 = 0x82
-        testRunner.NesHal.PushToStack(0x82);
+        testRunner.TestHal.PushToStack(0x82);
         testRunner.RunTestMethod();
 
 
         // Check specific flag pattern
-        testRunner.NesHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
-        testRunner.NesHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
-        testRunner.NesHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeFalse();
-        testRunner.NesHal.Flags[CpuStatusFlags.Decimal].ShouldBeFalse();
-        testRunner.NesHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
-        testRunner.NesHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
+        testRunner.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
+        testRunner.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
+        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeFalse();
+        testRunner.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeFalse();
+        testRunner.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
+        testRunner.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
     }
 
     [Fact]
@@ -192,16 +192,16 @@ public class PlpTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var testRunner = new InstructionTestRunner(nesIrInstructions);
-        testRunner.NesHal.ARegister = 0x42;
-        testRunner.NesHal.XRegister = 0x33;
-        testRunner.NesHal.YRegister = 0x77;
+        testRunner.TestHal.ARegister = 0x42;
+        testRunner.TestHal.XRegister = 0x33;
+        testRunner.TestHal.YRegister = 0x77;
 
-        testRunner.NesHal.PushToStack(0xFF);
+        testRunner.TestHal.PushToStack(0xFF);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.ARegister.ShouldBe((byte)0x42); // Should remain unchanged
-        testRunner.NesHal.XRegister.ShouldBe((byte)0x33); // Should remain unchanged
-        testRunner.NesHal.YRegister.ShouldBe((byte)0x77); // Should remain unchanged
+        testRunner.TestHal.ARegister.ShouldBe((byte)0x42); // Should remain unchanged
+        testRunner.TestHal.XRegister.ShouldBe((byte)0x33); // Should remain unchanged
+        testRunner.TestHal.YRegister.ShouldBe((byte)0x77); // Should remain unchanged
     }
 
     [Fact]
@@ -222,17 +222,17 @@ public class PlpTests
 
         // Test with just carry flag
         var testRunner1 = new InstructionTestRunner(nesIrInstructions);
-        testRunner1.NesHal.PushToStack(0x01); // Just carry flag
+        testRunner1.TestHal.PushToStack(0x01); // Just carry flag
         testRunner1.RunTestMethod();
-        testRunner1.NesHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
-        testRunner1.NesHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
+        testRunner1.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
+        testRunner1.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
 
         // Test with alternating pattern
         var testRunner2 = new InstructionTestRunner(nesIrInstructions);
-        testRunner2.NesHal.PushToStack(0xAA); // 10101010 pattern
+        testRunner2.TestHal.PushToStack(0xAA); // 10101010 pattern
         testRunner2.RunTestMethod();
-        testRunner2.NesHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue(); // bit 1
-        testRunner2.NesHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue(); // bit 3
-        testRunner2.NesHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue(); // bit 7
+        testRunner2.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue(); // bit 1
+        testRunner2.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue(); // bit 3
+        testRunner2.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue(); // bit 7
     }
 }

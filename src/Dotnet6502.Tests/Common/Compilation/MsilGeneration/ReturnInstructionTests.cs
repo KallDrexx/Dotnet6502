@@ -55,9 +55,9 @@ public class ReturnInstructionTests
         ]);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.ARegister.ShouldBe((byte)77);
-        testRunner.NesHal.ReadMemory(0x4000).ShouldBe((byte)88);
-        testRunner.NesHal.GetFlag(CpuStatusFlags.Negative).ShouldBe(true);
-        testRunner.NesHal.YRegister.ShouldBe((byte)0);
+        testRunner.TestHal.ARegister.ShouldBe((byte)77);
+        testRunner.TestHal.ReadMemory(0x4000).ShouldBe((byte)88);
+        testRunner.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBe(true);
+        testRunner.TestHal.YRegister.ShouldBe((byte)0);
     }
 }

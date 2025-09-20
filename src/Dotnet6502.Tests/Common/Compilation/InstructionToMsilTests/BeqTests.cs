@@ -57,13 +57,13 @@ public class BeqTests
         };
 
         var testRunner = new InstructionTestRunner(allInstructions);
-        testRunner.NesHal.Flags[CpuStatusFlags.Zero] = true; // Zero flag set
+        testRunner.TestHal.Flags[CpuStatusFlags.Zero] = true; // Zero flag set
         testRunner.RunTestMethod();
 
         // Branch should be taken, skipping X register assignment
-        testRunner.NesHal.XRegister.ShouldBe((byte)0); // Should remain 0 (skipped)
-        testRunner.NesHal.ARegister.ShouldBe((byte)42); // Should be executed at target
-        testRunner.NesHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue(); // Should remain unchanged
+        testRunner.TestHal.XRegister.ShouldBe((byte)0); // Should remain 0 (skipped)
+        testRunner.TestHal.ARegister.ShouldBe((byte)42); // Should be executed at target
+        testRunner.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue(); // Should remain unchanged
     }
 
     [Fact]
@@ -104,13 +104,13 @@ public class BeqTests
         };
 
         var testRunner = new InstructionTestRunner(allInstructions);
-        testRunner.NesHal.Flags[CpuStatusFlags.Zero] = false; // Zero flag clear
+        testRunner.TestHal.Flags[CpuStatusFlags.Zero] = false; // Zero flag clear
         testRunner.RunTestMethod();
 
         // Branch should NOT be taken, continuing to next instruction
-        testRunner.NesHal.XRegister.ShouldBe((byte)77); // Should be executed
-        testRunner.NesHal.ARegister.ShouldBe((byte)88); // Should also be executed
-        testRunner.NesHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse(); // Should remain unchanged
+        testRunner.TestHal.XRegister.ShouldBe((byte)77); // Should be executed
+        testRunner.TestHal.ARegister.ShouldBe((byte)88); // Should also be executed
+        testRunner.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse(); // Should remain unchanged
     }
 
     [Fact]
@@ -165,8 +165,8 @@ public class BeqTests
         testRunner.RunTestMethod();
 
         // Loop should execute 3 times before zero flag becomes clear (exit condition)
-        testRunner.NesHal.XRegister.ShouldBe((byte)3);
-        testRunner.NesHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse(); // Final state: zero flag clear (loop exit condition)
+        testRunner.TestHal.XRegister.ShouldBe((byte)3);
+        testRunner.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse(); // Final state: zero flag clear (loop exit condition)
     }
 
     [Fact]
@@ -205,22 +205,22 @@ public class BeqTests
         var testRunner = new InstructionTestRunner(allInstructions);
 
         // Set initial flag states
-        testRunner.NesHal.Flags[CpuStatusFlags.Zero] = true;
-        testRunner.NesHal.Flags[CpuStatusFlags.Carry] = true;
-        testRunner.NesHal.Flags[CpuStatusFlags.Negative] = true;
-        testRunner.NesHal.Flags[CpuStatusFlags.Overflow] = true;
-        testRunner.NesHal.Flags[CpuStatusFlags.InterruptDisable] = true;
-        testRunner.NesHal.Flags[CpuStatusFlags.Decimal] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Zero] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Carry] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Negative] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Overflow] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Decimal] = true;
 
         testRunner.RunTestMethod();
 
         // BEQ should not affect any flags
-        testRunner.NesHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
-        testRunner.NesHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
-        testRunner.NesHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
-        testRunner.NesHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
-        testRunner.NesHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue();
-        testRunner.NesHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
+        testRunner.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
+        testRunner.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
+        testRunner.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
+        testRunner.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
+        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue();
+        testRunner.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
     }
 
     [Fact]
@@ -256,19 +256,19 @@ public class BeqTests
         var testRunner = new InstructionTestRunner(allInstructions);
 
         // Set initial register values
-        testRunner.NesHal.ARegister = 0x42;
-        testRunner.NesHal.XRegister = 0x33;
-        testRunner.NesHal.YRegister = 0x77;
-        testRunner.NesHal.StackPointer = 0xFF;
-        testRunner.NesHal.Flags[CpuStatusFlags.Zero] = true;
+        testRunner.TestHal.ARegister = 0x42;
+        testRunner.TestHal.XRegister = 0x33;
+        testRunner.TestHal.YRegister = 0x77;
+        testRunner.TestHal.StackPointer = 0xFF;
+        testRunner.TestHal.Flags[CpuStatusFlags.Zero] = true;
 
         testRunner.RunTestMethod();
 
         // BEQ should not affect any registers
-        testRunner.NesHal.ARegister.ShouldBe((byte)0x42);
-        testRunner.NesHal.XRegister.ShouldBe((byte)0x33);
-        testRunner.NesHal.YRegister.ShouldBe((byte)0x77);
-        testRunner.NesHal.StackPointer.ShouldBe((byte)0xFF);
+        testRunner.TestHal.ARegister.ShouldBe((byte)0x42);
+        testRunner.TestHal.XRegister.ShouldBe((byte)0x33);
+        testRunner.TestHal.YRegister.ShouldBe((byte)0x77);
+        testRunner.TestHal.StackPointer.ShouldBe((byte)0xFF);
     }
 
     [Fact]
@@ -308,12 +308,12 @@ public class BeqTests
         };
 
         var testRunner = new InstructionTestRunner(allInstructions);
-        testRunner.NesHal.Flags[CpuStatusFlags.Zero] = true;
+        testRunner.TestHal.Flags[CpuStatusFlags.Zero] = true;
         testRunner.RunTestMethod();
 
         // Branch should be taken
-        testRunner.NesHal.XRegister.ShouldBe((byte)0); // Should be skipped
-        testRunner.NesHal.ARegister.ShouldBe((byte)222); // Should be executed
+        testRunner.TestHal.XRegister.ShouldBe((byte)0); // Should be skipped
+        testRunner.TestHal.ARegister.ShouldBe((byte)222); // Should be executed
     }
 
     [Fact]
@@ -361,12 +361,12 @@ public class BeqTests
         };
 
         var testRunner = new InstructionTestRunner(allInstructions);
-        testRunner.NesHal.XRegister = 0; // Start with 0 to trigger branch once
+        testRunner.TestHal.XRegister = 0; // Start with 0 to trigger branch once
         testRunner.RunTestMethod();
 
         // Should have branched back, loop executes twice (X starts at 0, branches when X==0, then X becomes 1, then X becomes 2, then zero is clear and no more branch)
-        testRunner.NesHal.ARegister.ShouldBe((byte)155); // Target reached
-        testRunner.NesHal.XRegister.ShouldBe((byte)2); // Incremented twice (loop executes twice)
+        testRunner.TestHal.ARegister.ShouldBe((byte)155); // Target reached
+        testRunner.TestHal.XRegister.ShouldBe((byte)2); // Incremented twice (loop executes twice)
     }
 
     [Fact]
@@ -408,12 +408,12 @@ public class BeqTests
             };
 
             var testRunner1 = new InstructionTestRunner(allInstructions);
-            testRunner1.NesHal.Flags[CpuStatusFlags.Zero] = false;
+            testRunner1.TestHal.Flags[CpuStatusFlags.Zero] = false;
             testRunner1.RunTestMethod();
 
             // Branch should NOT be taken
-            testRunner1.NesHal.XRegister.ShouldBe((byte)50);
-            testRunner1.NesHal.ARegister.ShouldBe((byte)100);
+            testRunner1.TestHal.XRegister.ShouldBe((byte)50);
+            testRunner1.TestHal.ARegister.ShouldBe((byte)100);
         }
 
         // Test case 2: After operation that sets zero flag (zero result)
@@ -437,12 +437,12 @@ public class BeqTests
             };
 
             var testRunner2 = new InstructionTestRunner(allInstructions);
-            testRunner2.NesHal.Flags[CpuStatusFlags.Zero] = true;
+            testRunner2.TestHal.Flags[CpuStatusFlags.Zero] = true;
             testRunner2.RunTestMethod();
 
             // Branch SHOULD be taken
-            testRunner2.NesHal.XRegister.ShouldBe((byte)0); // Skipped
-            testRunner2.NesHal.ARegister.ShouldBe((byte)150); // Executed at target
+            testRunner2.TestHal.XRegister.ShouldBe((byte)0); // Skipped
+            testRunner2.TestHal.ARegister.ShouldBe((byte)150); // Executed at target
         }
     }
 }

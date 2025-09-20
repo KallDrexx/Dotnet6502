@@ -129,7 +129,7 @@ public class NesGameClass
             ilGenerator.DeclareLocal(typeof(int));
         }
 
-        var msilGenerator = new MsilGenerator(ilLabels);
+        var msilGenerator = new MsilGenerator(ilLabels, []);
         var context = new MsilGenerator.Context(ilGenerator, HardwareField, GetMethodInfo);
         foreach (var instruction in nesIrInstructions)
         {

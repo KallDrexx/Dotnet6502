@@ -16,7 +16,7 @@ public class CallFunctionInstructionTests
         testRunner.RunTestMethod();
 
         var (address, expectedValue) = testRunner.GetCallableMethodSignature(functionName, callableFunctions);
-        testRunner.NesHal.ReadMemory(address).ShouldBe(expectedValue);
+        testRunner.TestHal.ReadMemory(address).ShouldBe(expectedValue);
     }
 
     [Fact]
@@ -38,8 +38,8 @@ public class CallFunctionInstructionTests
         var (address1, expectedValue1) = testRunner.GetCallableMethodSignature(function1, callableFunctions);
         var (address2, expectedValue2) = testRunner.GetCallableMethodSignature(function2, callableFunctions);
 
-        testRunner.NesHal.ReadMemory(address1).ShouldBe(expectedValue1);
-        testRunner.NesHal.ReadMemory(address2).ShouldBe(expectedValue2);
+        testRunner.TestHal.ReadMemory(address1).ShouldBe(expectedValue1);
+        testRunner.TestHal.ReadMemory(address2).ShouldBe(expectedValue2);
     }
 
     [Fact]
@@ -59,7 +59,7 @@ public class CallFunctionInstructionTests
         testRunner.RunTestMethod();
 
         var (address, expectedValue) = testRunner.GetCallableMethodSignature(functionName, callableFunctions);
-        testRunner.NesHal.ReadMemory(address).ShouldBe(expectedValue);
+        testRunner.TestHal.ReadMemory(address).ShouldBe(expectedValue);
     }
 
     [Fact]

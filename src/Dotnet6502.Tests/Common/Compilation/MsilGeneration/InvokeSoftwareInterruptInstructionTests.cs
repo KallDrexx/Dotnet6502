@@ -12,6 +12,6 @@ public class InvokeSoftwareInterruptInstructionTests
         var testRunner = new InstructionTestRunner([trigger]);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.SoftwareInterruptTriggered.ShouldBeTrue();
+        testRunner.TestHal.SoftwareInterruptTriggered.ShouldBeTrue();
     }
 }

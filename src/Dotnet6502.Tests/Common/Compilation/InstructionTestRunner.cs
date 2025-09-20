@@ -13,18 +13,24 @@ public class InstructionTestRunner
     private readonly string _halFieldName;
     private readonly string _testMethodName;
     private readonly Assembly _assembly;
-    private readonly Dictionary<string, MethodInfo> _callableMethods;
 
-    public Test6502Hal NesHal { get; } = new();
+    public Test6502Hal TestHal { get; } = new();
 
     public InstructionTestRunner(IReadOnlyList<Ir6502.Instruction> instructions)
-        : this(instructions, [])
+        : this(instructions, [], null)
     {
     }
 
-    public InstructionTestRunner(IReadOnlyList<Ir6502.Instruction> instructions, IReadOnlyList<string> callableFunctionNames)
+    public InstructionTestRunner(
+        IReadOnlyList<Ir6502.Instruction> instructions,
+        IReadOnlyList<string> callableFunctionNames,
+        Dictionary<Type, MsilGenerator.CustomIlGenerator>? customIlGenerators = null)
     {
-         var (assemblyBuilder, mainClass, testMethod, halField, _) = SetupTestClass(instructions, callableFunctionNames);
+        var (assemblyBuilder, mainClass, testMethod, halField, _) = SetupTestClass(
+            instructions,
+            callableFunctionNames,
+            customIlGenerators ?? []);
+
          _testClassName = mainClass.FullName!;
          _halFieldName = halField.Name;
          _testMethodName = testMethod.Name;
@@ -34,12 +40,6 @@ public class InstructionTestRunner
          assemblyBuilder.Save(stream);
          stream.Seek(0, SeekOrigin.Begin);
          _assembly = AssemblyLoadContext.Default.LoadFromStream(stream);
-
-         // Get the actual MethodInfo instances from the loaded assembly
-         var loadedClass = _assembly.GetType(_testClassName)!;
-         _callableMethods = callableFunctionNames.ToDictionary(
-             name => name,
-             name => loadedClass.GetMethod(name)!);
     }
 
     public void RunTestMethod()
@@ -51,7 +51,7 @@ public class InstructionTestRunner
         halField.ShouldNotBeNull();
         testMethod.ShouldNotBeNull();
 
-        halField.SetValue(null, NesHal);
+        halField.SetValue(null, TestHal);
         testMethod.Invoke(null, []);
     }
 
@@ -63,7 +63,9 @@ public class InstructionTestRunner
     }
 
     private static (PersistedAssemblyBuilder, TypeInfo, MethodInfo, FieldInfo, Dictionary<string, MethodInfo>) SetupTestClass(
-        IReadOnlyList<Ir6502.Instruction> instructions, IReadOnlyList<string> callableFunctionNames)
+        IReadOnlyList<Ir6502.Instruction> instructions,
+        IReadOnlyList<string> callableFunctionNames,
+        Dictionary<Type, MsilGenerator.CustomIlGenerator> customIlGenerators)
     {
         var ns = $"nes_test_{Guid.NewGuid()}";
         var assemblyBuilder = new PersistedAssemblyBuilder(
@@ -117,7 +119,7 @@ public class InstructionTestRunner
             ilGenerator.DeclareLocal(typeof(int));
         }
 
-        var msilGenerator = new MsilGenerator(ilLabels);
+        var msilGenerator = new MsilGenerator(ilLabels, customIlGenerators);
 
         // Support CallFunction IR instruction tests by providing callable methods
         var context = new MsilGenerator.Context(ilGenerator, hardwareField, name => callableMethods.GetValueOrDefault(name));

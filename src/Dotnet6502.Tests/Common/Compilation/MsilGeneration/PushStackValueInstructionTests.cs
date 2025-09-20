@@ -14,7 +14,7 @@ public class PushStackValueInstructionTests
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.PopFromStack().ShouldBe((byte)42);
+        testRunner.TestHal.PopFromStack().ShouldBe((byte)42);
     }
 
     [Fact]
@@ -24,14 +24,14 @@ public class PushStackValueInstructionTests
 
         var testRunner = new InstructionTestRunner([instruction])
         {
-            NesHal =
+            TestHal =
             {
                 ARegister = 123
             }
         };
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.PopFromStack().ShouldBe((byte)123);
+        testRunner.TestHal.PopFromStack().ShouldBe((byte)123);
     }
 
     [Fact]
@@ -41,14 +41,14 @@ public class PushStackValueInstructionTests
 
         var testRunner = new InstructionTestRunner([instruction])
         {
-            NesHal =
+            TestHal =
             {
                 XRegister = 55
             }
         };
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.PopFromStack().ShouldBe((byte)55);
+        testRunner.TestHal.PopFromStack().ShouldBe((byte)55);
     }
 
     [Fact]
@@ -58,14 +58,14 @@ public class PushStackValueInstructionTests
 
         var testRunner = new InstructionTestRunner([instruction])
         {
-            NesHal =
+            TestHal =
             {
                 YRegister = 88
             }
         };
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.PopFromStack().ShouldBe((byte)88);
+        testRunner.TestHal.PopFromStack().ShouldBe((byte)88);
     }
 
     [Fact]
@@ -74,10 +74,10 @@ public class PushStackValueInstructionTests
         var instruction = new Ir6502.PushStackValue(new Ir6502.Memory(0x2000, null, false));
 
         var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.WriteMemory(0x2000, 156);
+        testRunner.TestHal.WriteMemory(0x2000, 156);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.PopFromStack().ShouldBe((byte)156);
+        testRunner.TestHal.PopFromStack().ShouldBe((byte)156);
     }
 
     [Fact]
@@ -87,15 +87,15 @@ public class PushStackValueInstructionTests
 
         var testRunner = new InstructionTestRunner([instruction])
         {
-            NesHal =
+            TestHal =
             {
                 XRegister = 5
             }
         };
-        testRunner.NesHal.WriteMemory(0x4005, 211);
+        testRunner.TestHal.WriteMemory(0x4005, 211);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.PopFromStack().ShouldBe((byte)211);
+        testRunner.TestHal.PopFromStack().ShouldBe((byte)211);
     }
 
     [Fact]
@@ -109,7 +109,7 @@ public class PushStackValueInstructionTests
         var testRunner = new InstructionTestRunner([setupInstruction, pushInstruction]);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.PopFromStack().ShouldBe((byte)144);
+        testRunner.TestHal.PopFromStack().ShouldBe((byte)144);
     }
 
     [Fact]
@@ -118,10 +118,10 @@ public class PushStackValueInstructionTests
         var instruction = new Ir6502.PushStackValue(new Ir6502.Flag(Ir6502.FlagName.Carry));
 
         var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.SetFlag(CpuStatusFlags.Carry, true);
+        testRunner.TestHal.SetFlag(CpuStatusFlags.Carry, true);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.PopFromStack().ShouldBe((byte)1);
+        testRunner.TestHal.PopFromStack().ShouldBe((byte)1);
     }
 
     [Fact]
@@ -130,10 +130,10 @@ public class PushStackValueInstructionTests
         var instruction = new Ir6502.PushStackValue(new Ir6502.Flag(Ir6502.FlagName.Zero));
 
         var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.SetFlag(CpuStatusFlags.Zero, false);
+        testRunner.TestHal.SetFlag(CpuStatusFlags.Zero, false);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.PopFromStack().ShouldBe((byte)0);
+        testRunner.TestHal.PopFromStack().ShouldBe((byte)0);
     }
 
     [Fact]
@@ -142,10 +142,10 @@ public class PushStackValueInstructionTests
         var instruction = new Ir6502.PushStackValue(new Ir6502.Flag(Ir6502.FlagName.InterruptDisable));
 
         var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.SetFlag(CpuStatusFlags.InterruptDisable, true);
+        testRunner.TestHal.SetFlag(CpuStatusFlags.InterruptDisable, true);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.PopFromStack().ShouldBe((byte)1);
+        testRunner.TestHal.PopFromStack().ShouldBe((byte)1);
     }
 
     [Fact]
@@ -154,10 +154,10 @@ public class PushStackValueInstructionTests
         var instruction = new Ir6502.PushStackValue(new Ir6502.Flag(Ir6502.FlagName.Overflow));
 
         var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.SetFlag(CpuStatusFlags.Overflow, true);
+        testRunner.TestHal.SetFlag(CpuStatusFlags.Overflow, true);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.PopFromStack().ShouldBe((byte)1);
+        testRunner.TestHal.PopFromStack().ShouldBe((byte)1);
     }
 
     [Fact]
@@ -166,10 +166,10 @@ public class PushStackValueInstructionTests
         var instruction = new Ir6502.PushStackValue(new Ir6502.Flag(Ir6502.FlagName.Negative));
 
         var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.SetFlag(CpuStatusFlags.Negative, true);
+        testRunner.TestHal.SetFlag(CpuStatusFlags.Negative, true);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.PopFromStack().ShouldBe((byte)1);
+        testRunner.TestHal.PopFromStack().ShouldBe((byte)1);
     }
 
     [Fact]
@@ -179,14 +179,14 @@ public class PushStackValueInstructionTests
 
         var testRunner = new InstructionTestRunner([instruction])
         {
-            NesHal =
+            TestHal =
             {
                 ProcessorStatus = 0xC3
             }
         };
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.PopFromStack().ShouldBe((byte)0xC3);
+        testRunner.TestHal.PopFromStack().ShouldBe((byte)0xC3);
     }
 
     [Fact]
@@ -196,13 +196,13 @@ public class PushStackValueInstructionTests
 
         var testRunner = new InstructionTestRunner([instruction])
         {
-            NesHal =
+            TestHal =
             {
                 StackPointer = 0xF8
             }
         };
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.PopFromStack().ShouldBe((byte)0xF8);
+        testRunner.TestHal.PopFromStack().ShouldBe((byte)0xF8);
     }
 }

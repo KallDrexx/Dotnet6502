@@ -17,7 +17,7 @@ public class UnaryInstructionTests
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.ARegister.ShouldBe((byte)0xAA);
+        testRunner.TestHal.ARegister.ShouldBe((byte)0xAA);
     }
 
     [Fact]
@@ -29,10 +29,10 @@ public class UnaryInstructionTests
             new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
         var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.WriteMemory(0x2000, 0x33);
+        testRunner.TestHal.WriteMemory(0x2000, 0x33);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.XRegister.ShouldBe((byte)0xCC);
+        testRunner.TestHal.XRegister.ShouldBe((byte)0xCC);
     }
 
     [Fact]
@@ -49,7 +49,7 @@ public class UnaryInstructionTests
         var testRunner = new InstructionTestRunner([setupVar, instruction]);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.YRegister.ShouldBe((byte)0xF0);
+        testRunner.TestHal.YRegister.ShouldBe((byte)0xF0);
     }
 
     [Fact]
@@ -62,14 +62,14 @@ public class UnaryInstructionTests
 
         var testRunner = new InstructionTestRunner([instruction])
         {
-            NesHal =
+            TestHal =
             {
                 ARegister = 0xA5
             }
         };
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.XRegister.ShouldBe((byte)0x5A);
+        testRunner.TestHal.XRegister.ShouldBe((byte)0x5A);
     }
 
     [Fact]
@@ -81,10 +81,10 @@ public class UnaryInstructionTests
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
         var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.NesHal.SetFlag(CpuStatusFlags.Carry, true);
+        testRunner.TestHal.SetFlag(CpuStatusFlags.Carry, true);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.ARegister.ShouldBe((byte)0xFE);
+        testRunner.TestHal.ARegister.ShouldBe((byte)0xFE);
     }
 
     [Fact]
@@ -97,14 +97,14 @@ public class UnaryInstructionTests
 
         var testRunner = new InstructionTestRunner([instruction])
         {
-            NesHal =
+            TestHal =
             {
                 ProcessorStatus = 0xC3
             }
         };
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.ARegister.ShouldBe((byte)0x3C);
+        testRunner.TestHal.ARegister.ShouldBe((byte)0x3C);
     }
 
     [Fact]
@@ -117,14 +117,14 @@ public class UnaryInstructionTests
 
         var testRunner = new InstructionTestRunner([instruction])
         {
-            NesHal =
+            TestHal =
             {
                 StackPointer = 0xF8
             }
         };
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.XRegister.ShouldBe((byte)0x07);
+        testRunner.TestHal.XRegister.ShouldBe((byte)0x07);
     }
 
     [Fact]
@@ -138,7 +138,7 @@ public class UnaryInstructionTests
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.ReadMemory(0x3000).ShouldBe((byte)0x88);
+        testRunner.TestHal.ReadMemory(0x3000).ShouldBe((byte)0x88);
     }
 
     [Fact]
@@ -155,7 +155,7 @@ public class UnaryInstructionTests
         var testRunner = new InstructionTestRunner([instruction, readVar]);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.ReadMemory(0x4000).ShouldBe((byte)0x77);
+        testRunner.TestHal.ReadMemory(0x4000).ShouldBe((byte)0x77);
     }
 
     [Fact]
@@ -169,7 +169,7 @@ public class UnaryInstructionTests
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.GetFlag(CpuStatusFlags.Zero).ShouldBe(true);
+        testRunner.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBe(true);
     }
 
     [Fact]
@@ -183,7 +183,7 @@ public class UnaryInstructionTests
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.ProcessorStatus.ShouldBe((byte)0x7E);
+        testRunner.TestHal.ProcessorStatus.ShouldBe((byte)0x7E);
     }
 
     [Fact]
@@ -197,7 +197,7 @@ public class UnaryInstructionTests
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.StackPointer.ShouldBe((byte)0xF8);
+        testRunner.TestHal.StackPointer.ShouldBe((byte)0xF8);
     }
 
     [Fact]
@@ -210,15 +210,15 @@ public class UnaryInstructionTests
 
         var testRunner = new InstructionTestRunner([instruction])
         {
-            NesHal =
+            TestHal =
             {
                 XRegister = 10
             }
         };
-        testRunner.NesHal.WriteMemory(0x500A, 0x3C);
+        testRunner.TestHal.WriteMemory(0x500A, 0x3C);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.ARegister.ShouldBe((byte)0xC3);
+        testRunner.TestHal.ARegister.ShouldBe((byte)0xC3);
     }
 
     [Fact]
@@ -231,14 +231,14 @@ public class UnaryInstructionTests
 
         var testRunner = new InstructionTestRunner([instruction])
         {
-            NesHal =
+            TestHal =
             {
                 YRegister = 5
             }
         };
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.ReadMemory(0x6005).ShouldBe((byte)0xA5);
+        testRunner.TestHal.ReadMemory(0x6005).ShouldBe((byte)0xA5);
     }
 
     [Fact]
@@ -252,7 +252,7 @@ public class UnaryInstructionTests
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.ARegister.ShouldBe((byte)0xFF);
+        testRunner.TestHal.ARegister.ShouldBe((byte)0xFF);
     }
 
     [Fact]
@@ -266,6 +266,6 @@ public class UnaryInstructionTests
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.RunTestMethod();
 
-        testRunner.NesHal.ARegister.ShouldBe((byte)0x00);
+        testRunner.TestHal.ARegister.ShouldBe((byte)0x00);
     }
 }
