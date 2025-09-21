@@ -23,7 +23,7 @@ public class NesMemory
                 break;
 
             case MemoryType.Ppu:
-                _ppu.Write(address, value);
+                _ppu.ProcessMemoryWrite(address, value);
                 break;
 
             case MemoryType.Rp2A03:
@@ -49,7 +49,7 @@ public class NesMemory
                 return _internalRam[ramAddress];
 
             case MemoryType.Ppu:
-                return _ppu.Read(address);
+                return _ppu.ProcessMemoryRead(address);
 
             case MemoryType.Rp2A03:
                 throw new NotImplementedException();

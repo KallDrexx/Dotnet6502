@@ -5,6 +5,12 @@ namespace Dotnet6502.Nes;
 /// </summary>
 public class Ppu
 {
+    private enum CurrentDotLocation
+    {
+        InDisplayableArea, InHBlank, InPostRender, StartsNewDisplayableScanline, StartsPostRender, StartsVBlank,
+        InVBlank, EndsVBlank,
+    }
+    
     private const int PpuCyclesPerScanline = 341;
     private const int DisplayableScanLines = 240;
     private const int PostRenderBlankingLines = 1;
@@ -26,9 +32,18 @@ public class Ppu
     private ushort _ppuAddr;
     private bool _wRegister;
 
-    private int _currentCycle;
-    private int _currentScanLine;
-    private bool _hasNmiTriggered;
+    private readonly RgbColor[] _framebuffer = new RgbColor[DisplayableWidth * DisplayableScanLines];
+    private int _pixelIndex;
+    private int _currentScanLineCycle;
+    private int _currentScanLine; // zero based index of what scan line we are currently at
+    private bool _hasNmiTriggered; // Has NMI been marked as to be triggered this frame
+
+    public Ppu()
+    {
+        _ppuCtrl = new PpuCtrl();
+        _ppuStatus = new PpuStatus();
+        _ppuMask = new PpuMask();
+    }
 
     /// <summary>
     /// Executes the next Ppu step based on the number of CPU cycles about to be executed.
@@ -40,23 +55,52 @@ public class Ppu
 
         for (var x = 0; x < ppuCycles; x++)
         {
-            _currentCycle++;
-            if (_currentCycle >= PpuCyclesPerScanline)
-            {
-                _currentCycle = 0;
-                _currentScanLine++;
+            _currentScanLineCycle++;
 
-                if (_currentScanLine == DisplayableScanLines + PostRenderBlankingLines)
-                {
-                    _ppuStatus.VBlankFlag = true;
-                }
-                else if (_currentScanLine == TotalScanLines)
-                {
+            var currentLocation = GetCurrentDotLocation();
+            switch (currentLocation)
+            {
+                case CurrentDotLocation.InDisplayableArea:
+                    _pixelIndex++;
+                    DrawNextPixel();
+                    break;
+                
+                case CurrentDotLocation.InVBlank:
+                case CurrentDotLocation.InHBlank:
+                case CurrentDotLocation.InPostRender:
+                    break; // Nothing to do
+                
+                case CurrentDotLocation.StartsNewDisplayableScanline:
+                    _currentScanLineCycle = 0;
+                    _currentScanLine++;
+                    _pixelIndex++;
+                    DrawNextPixel();
+                    break;
+
+                case CurrentDotLocation.StartsPostRender:
+                    _currentScanLineCycle = 0;
+                    _currentScanLine++;
+                    break;
+
+                case CurrentDotLocation.EndsVBlank:
+                    // New frame
+                    _currentScanLineCycle = 0;
+                    _currentScanLine = 0;
                     _ppuStatus.VBlankFlag = false;
                     _hasNmiTriggered = false;
-                }
+                    _pixelIndex = 0;
+                    DrawNextPixel();
+                    break;
 
-                DrawNextPixel();
+                case CurrentDotLocation.StartsVBlank:
+                    _currentScanLineCycle = 0;
+                    _currentScanLine++;
+                    _ppuStatus.VBlankFlag = true;
+                    RenderFrame();
+                    break;
+
+                default:
+                    throw new NotSupportedException(currentLocation.ToString());
             }
         }
 
@@ -69,7 +113,10 @@ public class Ppu
         return triggerNmi;
     }
 
-    public void Write(ushort address, byte value)
+    /// <summary>
+    /// Process a request from the CPU to write to a PPU owned memory address
+    /// </summary>
+    public void ProcessMemoryWrite(ushort address, byte value)
     {
         if (address == 0x4014)
         {
@@ -131,7 +178,10 @@ public class Ppu
         }
     }
 
-    public byte Read(ushort address)
+    /// <summary>
+    /// Process a request from the CPU to read from a PPU owned memory address
+    /// </summary>
+    public byte ProcessMemoryRead(ushort address)
     {
         if (address == 0x4014)
         {
@@ -175,5 +225,64 @@ public class Ppu
     private void DrawNextPixel()
     {
         throw new NotImplementedException();
+    }
+
+    private void RenderFrame()
+    {
+        throw new NotImplementedException();
+    }
+
+    private CurrentDotLocation GetCurrentDotLocation()
+    {
+        // NOTE: Assumes cycle count has already been incremented by one, but nothing else has been incremented
+        if (_currentScanLineCycle > PpuCyclesPerScanline)
+        {
+            var message = $"Expected cycle count to never get past {PpuCyclesPerScanline}, but it was {_currentScanLineCycle}";
+            throw new InvalidOperationException(message);
+        }
+
+        if (_currentScanLineCycle == PpuCyclesPerScanline)
+        {
+            // Starting a new scanline. Scan line count hasn't been incremented yet
+            if (_currentScanLine < DisplayableScanLines - 1)
+            {
+                return CurrentDotLocation.StartsNewDisplayableScanline;
+            }
+
+            if (_currentScanLine == DisplayableScanLines - 1)
+            {
+                return CurrentDotLocation.StartsPostRender;
+            }
+
+            if (_currentScanLine == DisplayableScanLines + PostRenderBlankingLines - 1)
+            {
+                return CurrentDotLocation.StartsVBlank;
+            }
+
+            if (_currentScanLine == TotalScanLines - 1)
+            {
+                return CurrentDotLocation.EndsVBlank;
+            }
+
+            return CurrentDotLocation.InVBlank;
+        }
+
+        // Within a scanline
+        if (_currentScanLine == DisplayableScanLines)
+        {
+            return CurrentDotLocation.InPostRender;
+        }
+
+        if (_currentScanLine > DisplayableScanLines)
+        {
+            return CurrentDotLocation.InVBlank;
+        }
+
+        if (_currentScanLineCycle < DisplayableWidth)
+        {
+            return CurrentDotLocation.InDisplayableArea;
+        }
+
+        return CurrentDotLocation.InHBlank;
     }
 }

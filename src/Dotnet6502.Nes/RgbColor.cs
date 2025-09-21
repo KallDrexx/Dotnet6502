@@ -1,8 +1,3 @@
 namespace Dotnet6502.Nes;
 
-public struct RgbColor
-{
-    public byte Red;
-    public byte Green;
-    public byte Blue;
-}
+public readonly record struct RgbColor(byte Red, byte Green, byte Blue);
