@@ -2,14 +2,14 @@ namespace Dotnet6502.Nes;
 
 public class NesMemory
 {
-    private readonly PpuRegisters _ppuRegisters;
+    private readonly Ppu _ppu;
     private enum MemoryType { InternalRam, Ppu, Rp2A03, CartridgeSpace }
     private readonly byte[] _internalRam = new byte[0x800]; // 2KB
     private readonly byte[] _cartridgeSpace = new byte[0x7FFF];
 
-    public NesMemory(PpuRegisters ppuRegisters)
+    public NesMemory(Ppu ppu)
     {
-        _ppuRegisters = ppuRegisters;
+        _ppu = ppu;
     }
 
     public void Write(ushort address, byte value)
@@ -23,7 +23,7 @@ public class NesMemory
                 break;
 
             case MemoryType.Ppu:
-                _ppuRegisters.Write(address, value);
+                _ppu.Write(address, value);
                 break;
 
             case MemoryType.Rp2A03:
@@ -49,7 +49,7 @@ public class NesMemory
                 return _internalRam[ramAddress];
 
             case MemoryType.Ppu:
-                return _ppuRegisters.Read(address);
+                return _ppu.Read(address);
 
             case MemoryType.Rp2A03:
                 throw new NotImplementedException();
@@ -67,6 +67,7 @@ public class NesMemory
     {
         return address switch
         {
+            0x4014 => MemoryType.Ppu, // OAMDATA
             < 0x2000 => MemoryType.InternalRam,
             < 0x4000 => MemoryType.Ppu,
             < 0x4020 => MemoryType.Rp2A03,
@@ -88,12 +89,5 @@ public class NesMemory
         }
 
         return address;
-    }
-
-    private static ushort NormalizePpuRamAddress(ushort address)
-    {
-        // PPU starts at 0x2000 - 0x2007, and mirrors every 8 bytes until 0x3FFF
-        var byteNum = address % 8;
-        return (ushort)(0x2000 + byteNum);
     }
 }

@@ -4,6 +4,7 @@ namespace Dotnet6502.Nes;
 
 public class NesHal : I6502Hal
 {
+
     private readonly Dictionary<CpuStatusFlags, bool> _flags  = new()
     {
         { CpuStatusFlags.Always1, true },
@@ -17,6 +18,7 @@ public class NesHal : I6502Hal
     };
 
     private readonly NesMemory _memory;
+    private int _ppuCycleCount;
 
     public byte ARegister { get; set; }
     public byte XRegister { get; set; }
