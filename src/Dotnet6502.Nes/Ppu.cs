@@ -8,16 +8,21 @@ public class Ppu
     private enum CurrentDotLocation
     {
         InDisplayableArea, InHBlank, InPostRender, StartsNewDisplayableScanline, StartsPostRender, StartsVBlank,
-        InVBlank, EndsVBlank,
+        InVBlank, StartsPreRender, InPreRender, StartsFirstDisplayableScanLine
     }
     
     private const int PpuCyclesPerScanline = 341;
     private const int DisplayableScanLines = 240;
     private const int PostRenderBlankingLines = 1;
+    private const int PreRenderBlankingLines = 1;
     private const int VBlankLinesPostNmi = 20;
-    private const int TotalScanLines = DisplayableScanLines + PostRenderBlankingLines + VBlankLinesPostNmi;
     private const int HBlankCycles = 61;
     private const int PpuCyclesPerCpuCycle = 3;
+    private const int TotalScanLines =
+        DisplayableScanLines +
+        PostRenderBlankingLines +
+        VBlankLinesPostNmi +
+        PreRenderBlankingLines;
 
     private const int DisplayableWidth = PpuCyclesPerScanline - HBlankCycles;
 
@@ -31,12 +36,19 @@ public class Ppu
     private byte _xScrollRegister, _yScrollRegister;
     private ushort _ppuAddr;
     private bool _wRegister;
+    private byte _vRegister;
+    private byte _tRegister;
+    private byte _xRegister;
 
     private readonly RgbColor[] _framebuffer = new RgbColor[DisplayableWidth * DisplayableScanLines];
+    private readonly byte[] _memory = new byte[0x4000];
+    private readonly byte[] _oamMemory = new byte[0xFF];
     private int _pixelIndex;
     private int _currentScanLineCycle;
     private int _currentScanLine; // zero based index of what scan line we are currently at
     private bool _hasNmiTriggered; // Has NMI been marked as to be triggered this frame
+
+    public byte[] CpuMemory { get; set; } = null!;
 
     public Ppu()
     {
@@ -55,53 +67,7 @@ public class Ppu
 
         for (var x = 0; x < ppuCycles; x++)
         {
-            _currentScanLineCycle++;
-
-            var currentLocation = GetCurrentDotLocation();
-            switch (currentLocation)
-            {
-                case CurrentDotLocation.InDisplayableArea:
-                    _pixelIndex++;
-                    DrawNextPixel();
-                    break;
-                
-                case CurrentDotLocation.InVBlank:
-                case CurrentDotLocation.InHBlank:
-                case CurrentDotLocation.InPostRender:
-                    break; // Nothing to do
-                
-                case CurrentDotLocation.StartsNewDisplayableScanline:
-                    _currentScanLineCycle = 0;
-                    _currentScanLine++;
-                    _pixelIndex++;
-                    DrawNextPixel();
-                    break;
-
-                case CurrentDotLocation.StartsPostRender:
-                    _currentScanLineCycle = 0;
-                    _currentScanLine++;
-                    break;
-
-                case CurrentDotLocation.EndsVBlank:
-                    // New frame
-                    _currentScanLineCycle = 0;
-                    _currentScanLine = 0;
-                    _ppuStatus.VBlankFlag = false;
-                    _hasNmiTriggered = false;
-                    _pixelIndex = 0;
-                    DrawNextPixel();
-                    break;
-
-                case CurrentDotLocation.StartsVBlank:
-                    _currentScanLineCycle = 0;
-                    _currentScanLine++;
-                    _ppuStatus.VBlankFlag = true;
-                    RenderFrame();
-                    break;
-
-                default:
-                    throw new NotSupportedException(currentLocation.ToString());
-            }
+            RunSinglePpuCycle();
         }
 
         var triggerNmi = _ppuCtrl.NmiEnable == PpuCtrl.NmiEnableValue.On && _ppuStatus.VBlankFlag && !_hasNmiTriggered;
@@ -111,6 +77,63 @@ public class Ppu
         }
 
         return triggerNmi;
+    }
+
+    private void RunSinglePpuCycle()
+    {
+        _currentScanLineCycle++;
+
+        var currentLocation = GetCurrentDotLocation();
+        switch (currentLocation)
+        {
+            case CurrentDotLocation.InDisplayableArea:
+                _pixelIndex++;
+                DrawNextPixel();
+                break;
+                
+            case CurrentDotLocation.InVBlank:
+            case CurrentDotLocation.InHBlank:
+            case CurrentDotLocation.InPostRender:
+            case CurrentDotLocation.InPreRender:
+                break; // Nothing to do
+                
+            case CurrentDotLocation.StartsNewDisplayableScanline:
+                _currentScanLineCycle = 0;
+                _currentScanLine++;
+                _pixelIndex++;
+                DrawNextPixel();
+                break;
+
+            case CurrentDotLocation.StartsPostRender:
+                _currentScanLineCycle = 0;
+                _currentScanLine++;
+                break;
+
+            case CurrentDotLocation.StartsPreRender:
+                _currentScanLineCycle = 0;
+                _ppuStatus.VBlankFlag = false;
+                break;
+
+            case CurrentDotLocation.StartsFirstDisplayableScanLine:
+                _currentScanLineCycle = 0;
+                _currentScanLine = 0;
+                _hasNmiTriggered = false;
+                _pixelIndex = 0;
+                DrawNextPixel();
+                break;
+
+            case CurrentDotLocation.StartsVBlank:
+                _currentScanLineCycle = 0;
+                _currentScanLine++;
+                _ppuStatus.VBlankFlag = true;
+                RenderFrame();
+                break;
+
+            default:
+                throw new NotSupportedException(currentLocation.ToString());
+        }
+            
+        ResetOamData();
     }
 
     /// <summary>
@@ -143,7 +166,8 @@ public class Ppu
                 break;
 
             case 4:
-                _oamDataRegister = value;
+                _oamMemory[_oamAddrRegister] = value;
+                _oamAddrRegister++;
                 break;
 
             case 5:
@@ -166,15 +190,29 @@ public class Ppu
                 }
                 else
                 {
-                    _ppuAddr = (ushort)((_ppuAddr & 0x00FF) | (value << 8));
+                    // PPUADDR is only 14 bits, so clear out the two high bits
+                    var maskedValue = value & 0x3F;
+                    _ppuAddr = (ushort)((_ppuAddr & 0x00FF) | (maskedValue << 8));
                 }
 
                 _wRegister = !_wRegister;
                 break;
 
             case 7:
-                throw new NotImplementedException();
+                _memory[_ppuAddr] = value;
+                if (_ppuCtrl.VRamAddressIncrement == PpuCtrl.VRamAddressIncrementValue.Add1Across)
+                {
+                    _ppuAddr += 1;
+                }
+                else
+                {
+                    _ppuAddr += 32;
+                }
+
                 break;
+
+            default:
+                throw new NotSupportedException(byteNumber.ToString());
         }
     }
 
@@ -200,13 +238,14 @@ public class Ppu
             case 2:
                 var result = _ppuStatus.ToByte();
                 _ppuStatus.VBlankFlag = false; // Clear vblank on read
+                _wRegister = false; // w register always gets cleared on status read
                 return result;
 
             case 3:
                 return 0; // OamAddr not readable
 
             case 4:
-                return _oamDataRegister;
+                return _oamMemory[_oamAddrRegister];
 
             case 5:
                 return 0; // PPUSCROLL not readable
@@ -215,7 +254,17 @@ public class Ppu
                 return 0; // PPUADDR not readable
 
             case 7:
-                throw new NotImplementedException();
+                var value = _memory[_ppuAddr];
+                if (_ppuCtrl.VRamAddressIncrement == PpuCtrl.VRamAddressIncrementValue.Add1Across)
+                {
+                    _ppuAddr += 1;
+                }
+                else
+                {
+                    _ppuAddr += 32;
+                }
+
+                return value;
 
             default:
                 throw new NotSupportedException(byteNumber.ToString());
@@ -230,6 +279,20 @@ public class Ppu
     private void RenderFrame()
     {
         throw new NotImplementedException();
+    }
+
+    private void ResetOamData()
+    {
+        // OAMADDR is set to 0 during each of ticks 257–320 (the sprite tile loading interval)
+        // of the pre-render and visible scanlines.
+        var isInPreRender = _currentScanLine == TotalScanLines - 1;
+        var isInVisibleRegion = _currentScanLine < DisplayableScanLines;
+        var isWithinCycleBounds = _currentScanLineCycle is >= 257 and <= 320;
+
+        if ((isInPreRender || isInVisibleRegion) && isWithinCycleBounds)
+        {
+            _oamAddrRegister = 0;
+        }
     }
 
     private CurrentDotLocation GetCurrentDotLocation()
@@ -259,9 +322,14 @@ public class Ppu
                 return CurrentDotLocation.StartsVBlank;
             }
 
+            if (_currentScanLine == TotalScanLines - PreRenderBlankingLines - 1)
+            {
+                return CurrentDotLocation.StartsPreRender;
+            }
+
             if (_currentScanLine == TotalScanLines - 1)
             {
-                return CurrentDotLocation.EndsVBlank;
+                return CurrentDotLocation.StartsFirstDisplayableScanLine;
             }
 
             return CurrentDotLocation.InVBlank;
@@ -271,6 +339,11 @@ public class Ppu
         if (_currentScanLine == DisplayableScanLines)
         {
             return CurrentDotLocation.InPostRender;
+        }
+
+        if (_currentScanLine == DisplayableScanLines + PostRenderBlankingLines + PreRenderBlankingLines - 1)
+        {
+            return CurrentDotLocation.InPreRender;
         }
 
         if (_currentScanLine > DisplayableScanLines)

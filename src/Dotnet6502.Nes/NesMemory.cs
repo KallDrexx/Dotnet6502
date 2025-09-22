@@ -10,6 +10,7 @@ public class NesMemory
     public NesMemory(Ppu ppu)
     {
         _ppu = ppu;
+        _ppu.CpuMemory = _internalRam;
     }
 
     public void Write(ushort address, byte value)
