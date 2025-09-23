@@ -16,7 +16,7 @@ public class Ppu
     private const int PostRenderBlankingLines = 1;
     private const int PreRenderBlankingLines = 1;
     private const int VBlankLinesPostNmi = 20;
-    private const int HBlankCycles = 61;
+    private const int HBlankCycles = 85;
     private const int PpuCyclesPerCpuCycle = 3;
     private const int TotalScanLines =
         DisplayableScanLines +
