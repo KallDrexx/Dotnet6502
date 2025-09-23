@@ -2,10 +2,12 @@ namespace Dotnet6502.Nes;
 
 public class NesMemory
 {
+    private const int UnmappedSpaceSize = 0xBFE0;
+
     private readonly Ppu _ppu;
-    private enum MemoryType { InternalRam, Ppu, Rp2A03, CartridgeSpace }
+    private enum MemoryType { InternalRam, Ppu, Rp2A03, UnmappedSpace }
     private readonly byte[] _internalRam = new byte[0x800]; // 2KB
-    private readonly byte[] _cartridgeSpace = new byte[0x7FFF];
+    private readonly byte[] _unmappedSpace = new byte[0x7FFF];
 
     public NesMemory(Ppu ppu)
     {
@@ -30,9 +32,9 @@ public class NesMemory
             case MemoryType.Rp2A03:
                 throw new NotImplementedException();
 
-            case MemoryType.CartridgeSpace:
-                var offsetAddress = address - 0x7FFF;
-                _cartridgeSpace[offsetAddress] = value;
+            case MemoryType.UnmappedSpace:
+                var offsetAddress = address - UnmappedSpaceSize;
+                _unmappedSpace[offsetAddress] = value;
                 break;
 
             default:
@@ -55,9 +57,9 @@ public class NesMemory
             case MemoryType.Rp2A03:
                 throw new NotImplementedException();
 
-            case MemoryType.CartridgeSpace:
-                var offsetAddress = address - 0x7FFF;
-                return _cartridgeSpace[offsetAddress];
+            case MemoryType.UnmappedSpace:
+                var offsetAddress = address - UnmappedSpaceSize;
+                return _unmappedSpace[offsetAddress];
 
             default:
                 throw new NotSupportedException(memoryType.ToString());
@@ -72,7 +74,7 @@ public class NesMemory
             < 0x2000 => MemoryType.InternalRam,
             < 0x4000 => MemoryType.Ppu,
             < 0x4020 => MemoryType.Rp2A03,
-            _ => MemoryType.CartridgeSpace,
+            _ => MemoryType.UnmappedSpace,
         };
     }
 
