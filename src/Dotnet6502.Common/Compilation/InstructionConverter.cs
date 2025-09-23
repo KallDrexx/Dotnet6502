@@ -97,6 +97,7 @@ public static class InstructionConverter
         var accumulator = new Ir6502.Register(Ir6502.RegisterName.Accumulator);
         var operand = ParseAddress(instruction);
         var isNegative = new Ir6502.Variable(0);
+        var operandVariable = new Ir6502.Variable(6);
 
         // Don't store the value in the accumulator so we don't lose track of if it overflowed due to byte precision
         var addVariable = new Ir6502.Variable(1);
@@ -109,8 +110,9 @@ public static class InstructionConverter
 
         // Preserve original accumulator value for overflow calculation
         var preserveAccumulator = new Ir6502.Copy(accumulator, originalAccumulator);
+        var preserveOperand = new Ir6502.Copy(operand, operandVariable);
 
-        var firstAdd = new Ir6502.Binary(Ir6502.BinaryOperator.Add, accumulator, operand, addVariable);
+        var firstAdd = new Ir6502.Binary(Ir6502.BinaryOperator.Add, accumulator, operandVariable, addVariable);
         var carryAdd = new Ir6502.Binary(
             Ir6502.BinaryOperator.Add,
             addVariable,
@@ -137,7 +139,7 @@ public static class InstructionConverter
         // M^result: XOR operand with final result
         var calcMXorResult = new Ir6502.Binary(
             Ir6502.BinaryOperator.Xor,
-            operand,
+            operandVariable,
             addVariable,
             mXorResult);
 
@@ -168,8 +170,9 @@ public static class InstructionConverter
 
         return
         [
-            preserveAccumulator, firstAdd, carryAdd, setCarry, convertToByte, calcAXorResult, calcMXorResult,
-            andXorResults, maskSignBit, setOverflow, checkForZero, checkForNegative, setNegative, storeAccumulator
+            preserveAccumulator, preserveOperand, firstAdd, carryAdd, setCarry, convertToByte, calcAXorResult,
+            calcMXorResult, andXorResults, maskSignBit, setOverflow, checkForZero, checkForNegative, setNegative,
+            storeAccumulator
         ];
     }
 
@@ -196,10 +199,12 @@ public static class InstructionConverter
     {
         var operand = ParseAddress(instruction);
         var tempVariable = new Ir6502.Variable(0);
+        var operandVariable = new Ir6502.Variable(1);
 
+        var preserveOperand = new Ir6502.Copy(operand, operandVariable);
         var carry = new Ir6502.Binary(
             Ir6502.BinaryOperator.And,
-            operand,
+            operandVariable,
             new Ir6502.Constant(0x80),
             tempVariable);
 
@@ -211,14 +216,16 @@ public static class InstructionConverter
 
         var shift = new Ir6502.Binary(
             Ir6502.BinaryOperator.ShiftLeft,
-            operand,
+            operandVariable,
             new Ir6502.Constant(1),
-            operand);
+            operandVariable);
 
-        var zeroFlag = ZeroFlagInstruction(operand);
-        var (checkForNegative, setNegative) = NegativeFlagInstructions(operand, tempVariable);
+        var convertToByte = new Ir6502.ConvertVariableToByte(operandVariable);
+        var zeroFlag = ZeroFlagInstruction(operandVariable);
+        var (checkForNegative, setNegative) = NegativeFlagInstructions(operandVariable, tempVariable);
+        var storeOperand = new Ir6502.Copy(operandVariable, operand);
 
-        return [carry, carryFlag, shift, zeroFlag, checkForNegative, setNegative];
+        return [preserveOperand, carry, carryFlag, shift, convertToByte, zeroFlag, checkForNegative, setNegative, storeOperand];
     }
 
     /// <summary>
@@ -261,12 +268,15 @@ public static class InstructionConverter
     {
         var tempVariable = new Ir6502.Variable(0);
         var overflowTemp = new Ir6502.Variable(1);
+        var operandVariable = new Ir6502.Variable(2);
         var operand = ParseAddress(instruction);
+
+        var copy = new Ir6502.Copy(operand, operandVariable);
 
         var andOp = new Ir6502.Binary(
             Ir6502.BinaryOperator.And,
             new Ir6502.Register(Ir6502.RegisterName.Accumulator),
-            operand,
+            operandVariable,
             tempVariable);
 
         var zeroFlag = ZeroFlagInstruction(tempVariable);
@@ -274,7 +284,7 @@ public static class InstructionConverter
         // Overflow flag is set from bit 6 of the memory operand
         var checkOverflow = new Ir6502.Binary(
             Ir6502.BinaryOperator.And,
-            operand,
+            operandVariable,
             new Ir6502.Constant(0x40),
             overflowTemp);
 
@@ -285,9 +295,9 @@ public static class InstructionConverter
             new Ir6502.Flag(Ir6502.FlagName.Overflow));
 
         // Negative flag is set from bit 7 of the memory operand
-        var (negativeFlag, setNegative) = NegativeFlagInstructions(operand, tempVariable);
+        var (negativeFlag, setNegative) = NegativeFlagInstructions(operandVariable, tempVariable);
 
-        return [andOp, zeroFlag, checkOverflow, setOverflow, negativeFlag, setNegative];
+        return [copy, andOp, zeroFlag, checkOverflow, setOverflow, negativeFlag, setNegative];
     }
 
     /// <summary>
@@ -411,23 +421,25 @@ public static class InstructionConverter
         var accumulator = new Ir6502.Register(Ir6502.RegisterName.Accumulator);
         var operand = ParseAddress(instruction);
         var variable = new Ir6502.Variable(0);
+        var operandVariable = new Ir6502.Variable(1);
 
+        var preserveOperand = new Ir6502.Copy(operand, operandVariable);
         var subtract = new Ir6502.Binary(
             Ir6502.BinaryOperator.Subtract,
             accumulator,
-            operand,
+            operandVariable,
             variable);
 
         var zero = ZeroFlagInstruction(variable);
         var carry = new Ir6502.Binary(
             Ir6502.BinaryOperator.GreaterThanOrEqualTo,
             accumulator,
-            operand,
+            operandVariable,
             new Ir6502.Flag(Ir6502.FlagName.Carry));
 
         var (checkForNegative, setNegative) = NegativeFlagInstructions(variable, variable);
 
-        return [subtract, carry, zero, checkForNegative, setNegative];
+        return [preserveOperand, subtract, carry, zero, checkForNegative, setNegative];
     }
 
     /// <summary>
@@ -438,23 +450,25 @@ public static class InstructionConverter
         var xIndex = new Ir6502.Register(Ir6502.RegisterName.XIndex);
         var operand = ParseAddress(instruction);
         var variable = new Ir6502.Variable(0);
+        var operandVariable = new Ir6502.Variable(1);
 
+        var preserveOperand = new Ir6502.Copy(operand, operandVariable);
         var subtract = new Ir6502.Binary(
             Ir6502.BinaryOperator.Subtract,
             xIndex,
-            operand,
+            operandVariable,
             variable);
 
         var zero = ZeroFlagInstruction(variable);
         var carry = new Ir6502.Binary(
             Ir6502.BinaryOperator.GreaterThanOrEqualTo,
             xIndex,
-            operand,
+            operandVariable,
             new Ir6502.Flag(Ir6502.FlagName.Carry));
 
         var (checkForNegative, setNegative) = NegativeFlagInstructions(variable, variable);
 
-        return [subtract, carry, zero, checkForNegative, setNegative];
+        return [preserveOperand, subtract, carry, zero, checkForNegative, setNegative];
     }
 
     /// <summary>
@@ -465,23 +479,25 @@ public static class InstructionConverter
         var yIndex = new Ir6502.Register(Ir6502.RegisterName.YIndex);
         var operand = ParseAddress(instruction);
         var variable = new Ir6502.Variable(0);
+        var operandVariable = new Ir6502.Variable(1);
 
+        var preserveOperand = new Ir6502.Copy(operand, operandVariable);
         var subtract = new Ir6502.Binary(
             Ir6502.BinaryOperator.Subtract,
             yIndex,
-            operand,
+            operandVariable,
             variable);
 
         var zero = ZeroFlagInstruction(variable);
         var carry = new Ir6502.Binary(
             Ir6502.BinaryOperator.GreaterThanOrEqualTo,
             yIndex,
-            operand,
+            operandVariable,
             new Ir6502.Flag(Ir6502.FlagName.Carry));
 
         var (checkForNegative, setNegative) = NegativeFlagInstructions(variable, variable);
 
-        return [subtract, carry, zero, checkForNegative, setNegative];
+        return [preserveOperand, subtract, carry, zero, checkForNegative, setNegative];
     }
 
     /// <summary>
@@ -700,10 +716,12 @@ public static class InstructionConverter
     {
         var operand = ParseAddress(instruction);
         var tempVariable = new Ir6502.Variable(0);
+        var operandVariable = new Ir6502.Variable(1);
 
+        var preserveOperand = new Ir6502.Copy(operand, operandVariable);
         var carry = new Ir6502.Binary(
             Ir6502.BinaryOperator.And,
-            operand,
+            operandVariable,
             new Ir6502.Constant(0x01),
             tempVariable);
 
@@ -715,14 +733,15 @@ public static class InstructionConverter
 
         var shift = new Ir6502.Binary(
             Ir6502.BinaryOperator.ShiftRight,
-            operand,
+            operandVariable,
             new Ir6502.Constant(1),
-            operand);
+            operandVariable);
 
-        var zero = ZeroFlagInstruction(operand);
+        var copyToOperand = new Ir6502.Copy(operandVariable, operand);
+        var zero = ZeroFlagInstruction(operandVariable);
         var negative = new Ir6502.Copy(new Ir6502.Constant(0), new Ir6502.Flag(Ir6502.FlagName.Negative));
 
-        return [carry, carryFlag, shift, zero, negative];
+        return [preserveOperand, carry, carryFlag, shift, zero, negative, copyToOperand];
     }
 
     /// <summary>
@@ -812,11 +831,13 @@ public static class InstructionConverter
         var operand = ParseAddress(instruction);
         var oldCarry = new Ir6502.Variable(0);
         var tempVariable = new Ir6502.Variable(1);
+        var operandVariable = new Ir6502.Variable(2);
 
+        var preserveOperand = new Ir6502.Copy(operand, operandVariable);
         var copyCarry = new Ir6502.Copy(new Ir6502.Flag(Ir6502.FlagName.Carry), oldCarry);
         var compareLastBit = new Ir6502.Binary(
             Ir6502.BinaryOperator.And,
-            operand,
+            operandVariable,
             new Ir6502.Constant(0x80),
             tempVariable);
 
@@ -828,20 +849,25 @@ public static class InstructionConverter
 
         var shift = new Ir6502.Binary(
             Ir6502.BinaryOperator.ShiftLeft,
-            operand,
+            operandVariable,
             new Ir6502.Constant(1),
-            operand);
+            operandVariable);
 
         var setBit0 = new Ir6502.Binary(
             Ir6502.BinaryOperator.Or,
-            operand,
+            operandVariable,
             oldCarry,
-            operand);
+            operandVariable);
 
-        var zero = ZeroFlagInstruction(operand);
-        var (checkNegative, setNegative) = NegativeFlagInstructions(operand, tempVariable);
+        var convertToByte = new Ir6502.ConvertVariableToByte(operandVariable);
+        var storeOperand = new Ir6502.Copy(operandVariable, operand);
+        var zero = ZeroFlagInstruction(operandVariable);
+        var (checkNegative, setNegative) = NegativeFlagInstructions(operandVariable, tempVariable);
 
-        return [copyCarry, compareLastBit, setCarry, shift, setBit0, zero, checkNegative, setNegative];
+        return [
+            preserveOperand, copyCarry, compareLastBit, setCarry, shift, setBit0, convertToByte, zero,
+            checkNegative, setNegative, storeOperand,
+        ];
     }
 
     /// <summary>
@@ -852,11 +878,13 @@ public static class InstructionConverter
         var operand = ParseAddress(instruction);
         var oldCarry = new Ir6502.Variable(0);
         var tempVariable = new Ir6502.Variable(1);
+        var operandVariable = new Ir6502.Variable(2);
 
+        var preserveOperand = new Ir6502.Copy(operand, operandVariable);
         var copyCarry = new Ir6502.Copy(new Ir6502.Flag(Ir6502.FlagName.Carry), oldCarry);
         var compareLastBit = new Ir6502.Binary(
             Ir6502.BinaryOperator.And,
-            operand,
+            operandVariable,
             new Ir6502.Constant(0x01),
             tempVariable);
 
@@ -868,9 +896,9 @@ public static class InstructionConverter
 
         var shiftOperand = new Ir6502.Binary(
             Ir6502.BinaryOperator.ShiftRight,
-            operand,
+            operandVariable,
             new Ir6502.Constant(1),
-            operand);
+            operandVariable);
 
         var shiftOldCarry = new Ir6502.Binary(
             Ir6502.BinaryOperator.ShiftLeft,
@@ -880,16 +908,18 @@ public static class InstructionConverter
 
         var setBit7 = new Ir6502.Binary(
             Ir6502.BinaryOperator.Or,
-            operand,
+            operandVariable,
             oldCarry,
-            operand);
+            operandVariable);
 
-        var zero = ZeroFlagInstruction(operand);
-        var (checkNegative, setNegative) = NegativeFlagInstructions(operand, tempVariable);
+        var zero = ZeroFlagInstruction(operandVariable);
+        var (checkNegative, setNegative) = NegativeFlagInstructions(operandVariable, tempVariable);
+        var storeOperand = new Ir6502.Copy(operandVariable, operand);
 
         return
         [
-            copyCarry, compareLastBit, setCarry, shiftOperand, shiftOldCarry, setBit7, zero, checkNegative, setNegative
+            preserveOperand, copyCarry, compareLastBit, setCarry, shiftOperand, shiftOldCarry, setBit7, zero,
+            checkNegative, setNegative, storeOperand,
         ];
     }
 
@@ -923,6 +953,7 @@ public static class InstructionConverter
         var operand = ParseAddress(instruction);
         var subVariable = new Ir6502.Variable(0);
         var tempVariable = new Ir6502.Variable(1);
+        var operandVariable = new Ir6502.Variable(7);
 
         // Variables for 6502 SBC overflow calculation: (result^A) & (result^~M) & 0x80
         var originalAccumulator = new Ir6502.Variable(2);
@@ -933,6 +964,7 @@ public static class InstructionConverter
 
         // Preserve original accumulator value for overflow calculation
         var preserveAccumulator = new Ir6502.Copy(accumulator, originalAccumulator);
+        var preserveOperand = new Ir6502.Copy(operand, operandVariable);
 
         // SBC = A - M - (1 - C)
         // Calculate (1 - C) properly
@@ -945,7 +977,7 @@ public static class InstructionConverter
         var subtractOperand = new Ir6502.Binary(
             Ir6502.BinaryOperator.Subtract,
             accumulator,
-            operand,
+            operandVariable,
             subVariable);
 
         var subtractBorrow = new Ir6502.Binary(
@@ -974,7 +1006,7 @@ public static class InstructionConverter
         // ~M: Bitwise NOT of operand
         var calcNotMemory = new Ir6502.Unary(
             Ir6502.UnaryOperator.BitwiseNot,
-            operand,
+            operandVariable,
             notMemory);
 
         // result^~M: XOR final result with NOT of operand
@@ -1011,7 +1043,7 @@ public static class InstructionConverter
 
         return
         [
-            preserveAccumulator, oneMinusCarry, subtractOperand, subtractBorrow, carryCheck,
+            preserveAccumulator, preserveOperand, oneMinusCarry, subtractOperand, subtractBorrow, carryCheck,
             calcResultXorA, calcNotMemory, calcResultXorNotMemory, andXorResults, maskSignBit, setOverflow,
             setAccumulator, zero, checkNegative, setNegative
         ];

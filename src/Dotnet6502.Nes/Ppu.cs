@@ -8,7 +8,7 @@ public class Ppu
     private enum CurrentDotLocation
     {
         InDisplayableArea, InHBlank, InPostRender, StartsNewDisplayableScanline, StartsPostRender, StartsVBlank,
-        InVBlank, StartsPreRender, InPreRender, StartsFirstDisplayableScanLine
+        StartsNewScanlineInVBlank, InVBlank, StartsPreRender, InPreRender, StartsFirstDisplayableScanLine
     }
     
     private const int PpuCyclesPerScanline = 341;
@@ -102,6 +102,7 @@ public class Ppu
                 DrawNextPixel();
                 break;
 
+            case CurrentDotLocation.StartsNewScanlineInVBlank:
             case CurrentDotLocation.StartsPostRender:
                 _currentScanLineCycle = 0;
                 _currentScanLine++;
@@ -271,12 +272,11 @@ public class Ppu
 
     private void DrawNextPixel()
     {
-        throw new NotImplementedException();
     }
 
     private void RenderFrame()
     {
-        throw new NotImplementedException();
+        Console.WriteLine("Attempted to render the frame, but not implemented yet");
     }
 
     private void ResetOamData()
@@ -362,7 +362,7 @@ public class Ppu
                 return CurrentDotLocation.StartsFirstDisplayableScanLine;
             }
 
-            return CurrentDotLocation.InVBlank;
+            return CurrentDotLocation.StartsNewScanlineInVBlank;
         }
 
         // Within a scanline

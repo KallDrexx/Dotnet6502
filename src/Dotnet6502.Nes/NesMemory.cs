@@ -7,12 +7,22 @@ public class NesMemory
     private readonly Ppu _ppu;
     private enum MemoryType { InternalRam, Ppu, Rp2A03, UnmappedSpace }
     private readonly byte[] _internalRam = new byte[0x800]; // 2KB
-    private readonly byte[] _unmappedSpace = new byte[0x7FFF];
+    private readonly byte[] _unmappedSpace = new byte[0x8000];
 
-    public NesMemory(Ppu ppu)
+    public NesMemory(Ppu ppu, byte[] prgRomData)
     {
         _ppu = ppu;
         _ppu.CpuMemory = _internalRam;
+
+        if (prgRomData.Length != 0x8000)
+        {
+            throw new InvalidOperationException("Unexpected prgRomData length");
+        }
+
+        for (var x = 0; x < 0x8000; x++)
+        {
+            _unmappedSpace[x] = prgRomData[x];
+        }
     }
 
     public void Write(ushort address, byte value)

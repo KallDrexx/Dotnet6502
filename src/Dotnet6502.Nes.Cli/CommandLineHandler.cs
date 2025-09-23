@@ -1,7 +1,3 @@
-using System;
-using System.IO;
-using System.Linq;
-
 namespace Dotnet6502.Nes.Cli;
 
 public static class CommandLineHandler
@@ -9,10 +5,8 @@ public static class CommandLineHandler
     public record Values(
         FileInfo RomFile,
         bool RunEmulation,
-        string EmulationMode,
         bool SaveDll,
-        string? OutputDirectory,
-        bool Verbose);
+        string? OutputDirectory);
 
     public static Values? Parse(string[] args)
     {
@@ -23,11 +17,9 @@ public static class CommandLineHandler
         }
 
         FileInfo? romFile = null;
-        bool runEmulation = false;
-        string emulationMode = "event-driven";
-        bool saveDll = true;
+        var runEmulation = false;
+        var saveDll = true;
         string? outputDirectory = null;
-        bool verbose = false;
 
         for (int i = 0; i < args.Length; i++)
         {
@@ -51,19 +43,6 @@ public static class CommandLineHandler
                     runEmulation = true;
                     break;
 
-                case "--mode":
-                case "-m":
-                    if (i + 1 < args.Length)
-                    {
-                        emulationMode = args[++i];
-                    }
-                    else
-                    {
-                        Console.Error.WriteLine("Error: --mode requires a value");
-                        return null;
-                    }
-                    break;
-
                 case "--save-dll":
                 case "-s":
                     saveDll = true;
@@ -84,11 +63,6 @@ public static class CommandLineHandler
                         Console.Error.WriteLine("Error: --output requires a directory path");
                         return null;
                     }
-                    break;
-
-                case "--verbose":
-                case "-v":
-                    verbose = true;
                     break;
 
                 case "--help":
@@ -117,13 +91,6 @@ public static class CommandLineHandler
             return null;
         }
 
-        if (!IsValidEmulationMode(emulationMode))
-        {
-            Console.Error.WriteLine($"Error: Invalid emulation mode '{emulationMode}'. " +
-                                  "Valid modes: event-driven, cycle-accurate, instruction-based, hybrid");
-            return null;
-        }
-
         if (!string.IsNullOrEmpty(outputDirectory))
         {
             try
@@ -140,11 +107,8 @@ public static class CommandLineHandler
         return new Values(
             romFile,
             runEmulation,
-            emulationMode.ToLower(),
             saveDll,
-            outputDirectory,
-            verbose
-        );
+            outputDirectory);
     }
 
     private static void ShowHelp()
