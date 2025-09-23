@@ -30,9 +30,7 @@ public class Ppu
     private readonly PpuCtrl _ppuCtrl;
     private readonly PpuStatus _ppuStatus;
     private readonly PpuMask _ppuMask;
-    private byte _oamDmaRegister;
     private byte _oamAddrRegister;
-    private byte _oamDataRegister;
     private byte _xScrollRegister, _yScrollRegister;
     private ushort _ppuAddr;
     private bool _wRegister;
@@ -143,7 +141,7 @@ public class Ppu
     {
         if (address == 0x4014)
         {
-            _oamDmaRegister = value;
+            HandleOamDma(value);
             return;
         }
 
@@ -223,7 +221,7 @@ public class Ppu
     {
         if (address == 0x4014)
         {
-            return _oamDmaRegister;
+            return 0;
         }
 
         var byteNumber = address % 8;

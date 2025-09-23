@@ -4,7 +4,6 @@ namespace Dotnet6502.Nes;
 
 public class NesHal : I6502Hal
 {
-
     private readonly Dictionary<CpuStatusFlags, bool> _flags  = new()
     {
         { CpuStatusFlags.Always1, true },
@@ -18,6 +17,7 @@ public class NesHal : I6502Hal
     };
 
     private readonly NesMemory _memory;
+    private readonly Ppu _ppu;
 
     public byte ARegister { get; set; }
     public byte XRegister { get; set; }
@@ -48,9 +48,10 @@ public class NesHal : I6502Hal
         }
     }
 
-    public NesHal(NesMemory memory)
+    public NesHal(NesMemory memory, Ppu ppu)
     {
         _memory = memory;
+        _ppu = ppu;
     }
 
     public void SetFlag(CpuStatusFlags flag, bool value)
@@ -96,6 +97,7 @@ public class NesHal : I6502Hal
 
     public void IncrementCpuCycleCount(int count)
     {
-
+        // TODO: Handle NMI trigger
+        _ppu.RunNextStep(count);
     }
 }
