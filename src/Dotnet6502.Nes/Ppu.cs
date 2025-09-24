@@ -46,8 +46,6 @@ public class Ppu
     private int _currentScanLine; // zero based index of what scan line we are currently at
     private bool _hasNmiTriggered; // Has NMI been marked as to be triggered this frame
 
-    public byte[] CpuMemory { get; set; } = null!;
-
     public Ppu()
     {
         _ppuCtrl = new PpuCtrl();
@@ -140,12 +138,6 @@ public class Ppu
     /// </summary>
     public void ProcessMemoryWrite(ushort address, byte value)
     {
-        if (address == 0x4014)
-        {
-            HandleOamDma(value);
-            return;
-        }
-
         var byteNumber = address % 8;
         switch (byteNumber)
         {
@@ -290,38 +282,6 @@ public class Ppu
         if ((isInPreRender || isInVisibleRegion) && isWithinCycleBounds)
         {
             _oamAddrRegister = 0;
-        }
-    }
-
-    private void HandleOamDma(byte page)
-    {
-        // This is not the proper modelling of the DMA procedure, but for now just go with it.
-        // In theory the CPU/APU should just do CPU reads + OAMDATA writes for the full 256 bytes.
-        // This is a bit harder to model with the hardware abstraction I have going on atm, so for now
-        // cheat and do this directly (including with the unfortunate circular reference back to
-        // CPU internal memory).
-        //
-        // Most games only map from internal CPU RAM (0x0000-0x07FF). Ignore games that don't do this
-        // for the POC.
-        if (page > 0x07)
-        {
-            var message = $"Unsupported page number: {page:X2}";
-            throw new InvalidOperationException(message);
-        }
-
-        var oamIndex = 0;
-        var memoryIndex = page << 8;
-        for (var x = 0; x < 256; x++)
-        {
-            _oamMemory[oamIndex] = CpuMemory[memoryIndex];
-            oamIndex++;
-            memoryIndex++;
-        }
-
-        // This takes 513 PPU cycles, so increment from that
-        for (var x = 0; x < 513; x++)
-        {
-            RunSinglePpuCycle();
         }
     }
 

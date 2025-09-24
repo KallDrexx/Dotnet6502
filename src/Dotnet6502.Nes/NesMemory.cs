@@ -5,14 +5,13 @@ public class NesMemory
     private const int UnmappedSpaceSize = 0xBFE0;
 
     private readonly Ppu _ppu;
-    private enum MemoryType { InternalRam, Ppu, Rp2A03, UnmappedSpace }
+    private enum MemoryType { InternalRam, Ppu, Rp2A03, UnmappedSpace, PpuOamDma }
     private readonly byte[] _internalRam = new byte[0x800]; // 2KB
     private readonly byte[] _unmappedSpace = new byte[0x8000];
 
     public NesMemory(Ppu ppu, byte[] prgRomData)
     {
         _ppu = ppu;
-        _ppu.CpuMemory = _internalRam;
 
         if (prgRomData.Length != 0x8000)
         {
@@ -45,6 +44,10 @@ public class NesMemory
             case MemoryType.UnmappedSpace:
                 var offsetAddress = address - UnmappedSpaceSize;
                 _unmappedSpace[offsetAddress] = value;
+                break;
+
+            case MemoryType.PpuOamDma:
+                PerformOamDma(value);
                 break;
 
             default:
@@ -80,7 +83,7 @@ public class NesMemory
     {
         return address switch
         {
-            0x4014 => MemoryType.Ppu, // OAMDATA
+            0x4014 => MemoryType.PpuOamDma,
             < 0x2000 => MemoryType.InternalRam,
             < 0x4000 => MemoryType.Ppu,
             < 0x4020 => MemoryType.Rp2A03,
@@ -102,5 +105,22 @@ public class NesMemory
         }
 
         return address;
+    }
+
+    private void PerformOamDma(byte page)
+    {
+        // Reset OAMADDR register to zero, then copy the 256 bytes of memory from the page and write
+        // it to OAMDATA.
+        _ppu.ProcessMemoryWrite(0x2003, 0);
+
+        var address = (ushort)(page << 8);
+        for (var x = 0; x <= 0xFF; x++)
+        {
+            var value = Read(address);
+            _ppu.ProcessMemoryWrite(0x2004, value);
+        }
+
+        // In real hardware this would have taken 513 CPU cycles, so increment the PPU by that much
+        _ppu.RunNextStep(513 / 3); // 3 PPU cycles = 1 CPU cycle
     }
 }
