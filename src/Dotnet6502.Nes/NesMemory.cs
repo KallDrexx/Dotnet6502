@@ -94,14 +94,9 @@ public class NesMemory
     private static ushort NormalizeInternalRamAddress(ushort address)
     {
         // 0x0800 - 0x2000 mirrors the first 2k range, so normalize down to that.
-        if ((address & 0x1000) > 0)
+        while (address >= 0x800)
         {
-            address = (ushort)(address & 0x0FFF);
-        }
-
-        if ((address & 0x0F00) > 0)
-        {
-            address = (ushort)(address - 0x800);
+            address -= 0x800;
         }
 
         return address;

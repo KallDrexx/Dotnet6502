@@ -108,6 +108,7 @@ public class Ppu
 
             case CurrentDotLocation.StartsPreRender:
                 _currentScanLineCycle = 0;
+                _currentScanLine++;
                 _ppuStatus.VBlankFlag = false;
                 break;
 
@@ -268,7 +269,7 @@ public class Ppu
 
     private void RenderFrame()
     {
-        Console.WriteLine("Attempted to render the frame, but not implemented yet");
+        // TODO: Implement
     }
 
     private void ResetOamData()

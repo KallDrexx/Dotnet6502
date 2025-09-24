@@ -18,8 +18,6 @@ public class NesHal : I6502Hal
 
     private readonly NesMemory _memory;
     private readonly Ppu _ppu;
-    private readonly Dictionary<ushort, int> _addressReads = new();
-    private readonly Dictionary<ushort, int> _addressWrites = new();
 
     public byte ARegister { get; set; }
     public byte XRegister { get; set; }
@@ -68,18 +66,12 @@ public class NesHal : I6502Hal
 
     public byte ReadMemory(ushort address)
     {
-        _addressReads.TryGetValue(address, out var count);
-        _addressReads[address] = count + 1;
-
         var readValue = _memory.Read(address);
         return readValue;
     }
 
     public void WriteMemory(ushort address, byte value)
     {
-        _addressWrites.TryGetValue(address, out var count);
-        _addressWrites[address] = count + 1;
-
         _memory.Write(address, value);
     }
 
@@ -110,20 +102,7 @@ public class NesHal : I6502Hal
         if (nmiTriggered)
         {
             Console.WriteLine("TODO: Trigger NMI");
-
-            Console.WriteLine("Memory Stats:");
-            Console.WriteLine("Reads:");
-            foreach (var kvp in _addressReads.OrderBy(x => x.Key))
-            {
-                Console.WriteLine($"\t{kvp.Key:X4} ({kvp.Value} times");
-            }
-
-            Console.WriteLine();
-            Console.WriteLine("Writes:");
-            foreach (var kvp in _addressWrites.OrderBy(x => x.Key))
-            {
-                Console.WriteLine($"\t{kvp.Key:X4} ({kvp.Value} times");
-            }
+            Thread.Sleep(16);
         }
     }
 }
