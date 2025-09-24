@@ -39,7 +39,8 @@ public class NesMemory
                 break;
 
             case MemoryType.Rp2A03:
-                throw new NotImplementedException();
+                // Ignore APU writes
+                break;
 
             case MemoryType.UnmappedSpace:
                 var offsetAddress = address - UnmappedSpaceSize;

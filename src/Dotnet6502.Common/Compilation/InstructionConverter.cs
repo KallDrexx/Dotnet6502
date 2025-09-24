@@ -1245,10 +1245,10 @@ public static class InstructionConverter
             }
 
             case AddressingMode.IndexedIndirect:
-                return new Ir6502.IndirectMemory(instruction.Operands[1], false);
+                return new Ir6502.IndirectMemory(instruction.Operands[0], false);
 
             case AddressingMode.IndirectIndexed:
-                return new Ir6502.IndirectMemory(instruction.Operands[1], true);
+                return new Ir6502.IndirectMemory(instruction.Operands[0], true);
 
             default:
                 throw new NotSupportedException(instruction.Info.AddressingMode.ToString());
