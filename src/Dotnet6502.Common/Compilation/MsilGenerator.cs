@@ -361,7 +361,7 @@ public class MsilGenerator
             {
                 var readMemoryMethod = typeof(I6502Hal).GetMethod(nameof(I6502Hal.ReadMemory))!;
                 context.IlGenerator.Emit(OpCodes.Ldsfld, context.HardwareField);
-                context.IlGenerator.Emit(OpCodes.Ldc_I4, indirectMemory.ZeroPage);
+                context.IlGenerator.Emit(OpCodes.Ldc_I4, (int)indirectMemory.ZeroPage);
 
                 // If this is pre-indexed, then add the X register to the zero page for the address lookup
                 if (!indirectMemory.IsPostIndexed)
