@@ -756,4 +756,52 @@ public class CopyInstructionTests
 
         testRunner.TestHal.ARegister.ShouldBe((byte)0x84);
     }
+
+    [Fact]
+    public void Can_Copy_Register_To_IndexedIndirect()
+    {
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator),
+            new Ir6502.IndirectMemory(0x20, false)); // Indexed-Indirect: (zp,X)
+
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            TestHal = {
+                XRegister = 5,
+                ARegister = 0x42
+            }
+        };
+
+        // Set up the address lookup: ($20 + X) = $25 contains the target address $3000
+        testRunner.TestHal.WriteMemory(0x25, 0x00); // Low byte of target address
+        testRunner.TestHal.WriteMemory(0x26, 0x30); // High byte of target address
+
+        testRunner.RunTestMethod();
+
+        testRunner.TestHal.ReadMemory(0x3000).ShouldBe((byte)0x42);
+    }
+
+    [Fact]
+    public void Can_Copy_Register_To_IndirectIndexed()
+    {
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator),
+            new Ir6502.IndirectMemory(0x30, true)); // Indirect-Indexed: (zp),Y
+
+        var testRunner = new InstructionTestRunner([instruction])
+        {
+            TestHal = {
+                YRegister = 10,
+                ARegister = 0x84
+            }
+        };
+
+        // Set up the base address: $30 contains the base address $2000
+        testRunner.TestHal.WriteMemory(0x30, 0x00); // Low byte of base address
+        testRunner.TestHal.WriteMemory(0x31, 0x20); // High byte of base address
+
+        testRunner.RunTestMethod();
+
+        testRunner.TestHal.ReadMemory(0x200A).ShouldBe((byte)0x84);
+    }
 }
