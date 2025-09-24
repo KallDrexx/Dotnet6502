@@ -20,9 +20,6 @@ namespace Dotnet6502.Tests.Common.Compilation.InstructionToMsilTests;
 /// </summary>
 public class LsrTests
 {
-    // Note: LSR Accumulator mode tests are not included as the InstructionConverter
-    // does not yet support the Accumulator addressing mode for shift instructions
-
     [Fact]
     public void LSR_ZeroPage_Basic()
     {
@@ -189,6 +186,32 @@ public class LsrTests
 
         testRunner.TestHal.MemoryValues[0x200F].ShouldBe((byte)0x7F);
         testRunner.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
+        testRunner.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
+        testRunner.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
+    }
+
+    [Fact]
+    public void LSR_Accumulator_Basic()
+    {
+        var instructionInfo = InstructionSet.GetInstruction(0x4A);
+        var instruction = new DisassembledInstruction
+        {
+            Info = instructionInfo,
+            Bytes = [0x4A],
+        };
+
+        var context = new InstructionConverter.Context(
+            new Dictionary<ushort, string>(),
+            new Dictionary<ushort, Function>());
+
+        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var testRunner = new InstructionTestRunner(nesIrInstructions);
+        testRunner.TestHal.ARegister = 0xFE;
+        testRunner.TestHal.Flags[CpuStatusFlags.Carry] = true;
+        testRunner.RunTestMethod();
+
+        testRunner.TestHal.ARegister.ShouldBe((byte)0x7F);
+        testRunner.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
         testRunner.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
         testRunner.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
     }

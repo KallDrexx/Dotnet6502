@@ -1211,6 +1211,9 @@ public static class InstructionConverter
     {
         switch (instruction.Info.AddressingMode)
         {
+            case AddressingMode.Accumulator:
+                return new Ir6502.Register(Ir6502.RegisterName.Accumulator);
+
             case AddressingMode.Immediate:
                 return new Ir6502.Constant(instruction.Operands[0]);
 
@@ -1240,6 +1243,12 @@ public static class InstructionConverter
                 var fullAddress = (ushort)((instruction.Operands[1] << 8) | instruction.Operands[0]);
                 return new Ir6502.Memory(fullAddress, Ir6502.RegisterName.YIndex, false);
             }
+
+            case AddressingMode.IndexedIndirect:
+                return new Ir6502.IndirectMemory(instruction.Operands[1], false);
+
+            case AddressingMode.IndirectIndexed:
+                return new Ir6502.IndirectMemory(instruction.Operands[1], true);
 
             default:
                 throw new NotSupportedException(instruction.Info.AddressingMode.ToString());

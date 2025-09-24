@@ -23,7 +23,7 @@ public class MsilGenerator
     /// required by the instructions used in the method. This means that any instruction's local
     /// index must be incremented by this amount.
     /// </summary>
-    public const int TemporaryLocalsRequired = 1;
+    public const int TemporaryLocalsRequired = 2;
 
     private readonly IReadOnlyDictionary<Ir6502.Identifier, Label> _labels;
 
@@ -336,6 +336,7 @@ public class MsilGenerator
                 break;
 
             case Ir6502.Memory memory:
+            {
                 var readMemoryMethod = typeof(I6502Hal).GetMethod(nameof(I6502Hal.ReadMemory))!;
 
                 context.IlGenerator.Emit(OpCodes.Ldsfld, context.HardwareField);
@@ -354,6 +355,61 @@ public class MsilGenerator
                 context.IlGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
                 context.IlGenerator.Emit(OpCodes.Conv_I4);
                 break;
+            }
+
+            case Ir6502.IndirectMemory indirectMemory:
+            {
+                var readMemoryMethod = typeof(I6502Hal).GetMethod(nameof(I6502Hal.ReadMemory))!;
+                context.IlGenerator.Emit(OpCodes.Ldsfld, context.HardwareField);
+                context.IlGenerator.Emit(OpCodes.Ldc_I4, indirectMemory.ZeroPage);
+
+                // If this is pre-indexed, then add the X register to the zero page for the address lookup
+                if (!indirectMemory.IsPostIndexed)
+                {
+                    LoadRegisterToStack(Ir6502.RegisterName.XIndex, context);
+                    context.IlGenerator.Emit(OpCodes.Add);
+                    context.IlGenerator.Emit(OpCodes.Conv_U1); // remain in zero-page address
+                }
+
+                context.IlGenerator.Emit(OpCodes.Dup); // Since we need two reads
+                SaveStackToTempLocal(context, true); // Save one value for low byte read
+                context.IlGenerator.Emit(OpCodes.Ldc_I4, 1);
+                context.IlGenerator.Emit(OpCodes.Add); // For the high byte memory address
+
+                // Retrieve the address high byte from memory,
+                context.IlGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
+                context.IlGenerator.Emit(OpCodes.Conv_I4);
+                context.IlGenerator.Emit(OpCodes.Ldc_I4, 8);
+                context.IlGenerator.Emit(OpCodes.Shl);
+                SaveStackToTempLocal(context);
+
+                // This should leave us with the low byte address (pre-dup)
+                context.IlGenerator.Emit(OpCodes.Ldsfld, context.HardwareField);
+                LoadTempLocalToStack(context, true);
+                context.IlGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
+                context.IlGenerator.Emit(OpCodes.Conv_I4);
+                LoadTempLocalToStack(context, false);
+                context.IlGenerator.Emit(OpCodes.Add); // Add them together for a full 16-bit address
+
+                // Since we need to do a memory lookup, we need to save the current address we read
+                // to a temp variable, so we can load the hardware field on the stack before the
+                // address for a proper read.
+                SaveStackToTempLocal(context);
+                context.IlGenerator.Emit(OpCodes.Ldsfld, context.HardwareField);
+                LoadTempLocalToStack(context);
+
+                if (indirectMemory.IsPostIndexed)
+                {
+                    // If this is post-indexed, then add the Y register to the result to get the final address
+                    LoadRegisterToStack(Ir6502.RegisterName.YIndex, context);
+                    context.IlGenerator.Emit(OpCodes.Add);
+                }
+
+                // Retrieve the value from the address we now have
+                context.IlGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
+                context.IlGenerator.Emit(OpCodes.Conv_I4);
+                break;
+            }
 
             case Ir6502.Register register:
                 LoadRegisterToStack(register.Name, context);
@@ -408,6 +464,7 @@ public class MsilGenerator
                 break;
 
             case Ir6502.Memory memory:
+            {
                 var writeMemoryMethod = typeof(I6502Hal).GetMethod(nameof(I6502Hal.WriteMemory))!;
 
                 context.IlGenerator.Emit(OpCodes.Ldsfld, context.HardwareField);
@@ -427,6 +484,7 @@ public class MsilGenerator
                 context.IlGenerator.Emit(OpCodes.Conv_U1); // Convert int to byte
                 context.IlGenerator.Emit(OpCodes.Callvirt, writeMemoryMethod);
                 break;
+            }
 
             case Ir6502.Register register:
                 var setMethod = register.Name switch
@@ -474,8 +532,15 @@ public class MsilGenerator
         }
     }
 
-    private static void LoadTempLocalToStack(Context context) => context.IlGenerator.Emit(OpCodes.Ldloc_0);
-    private static void SaveStackToTempLocal(Context context) => context.IlGenerator.Emit(OpCodes.Stloc_0);
+    private static void LoadTempLocalToStack(Context context, bool tempIndex1 = false)
+    {
+        context.IlGenerator.Emit(tempIndex1 ? OpCodes.Ldloc_1 : OpCodes.Ldloc_0);
+    }
+
+    private static void SaveStackToTempLocal(Context context, bool tempIndex1 = false)
+    {
+        context.IlGenerator.Emit(tempIndex1 ? OpCodes.Stloc_1 : OpCodes.Stloc_0);
+    }
 
     private static void LoadRegisterToStack(Ir6502.RegisterName registerName, Context context)
     {

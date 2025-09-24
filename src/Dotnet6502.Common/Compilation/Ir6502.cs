@@ -39,6 +39,8 @@ public static class Ir6502
 
     public record Memory(ushort Address, RegisterName? RegisterToAdd, bool SingleByteAddress) : Value;
 
+    public record IndirectMemory(byte ZeroPage, bool IsPostIndexed) : Value;
+
     public record Variable(int Index) : Value;
 
     public record Register(RegisterName Name) : Value;
