@@ -1,3 +1,4 @@
+using System.Reflection;
 using Dotnet6502.Common;
 
 namespace Dotnet6502.Nes;
@@ -23,6 +24,7 @@ public class NesHal : I6502Hal
     public byte XRegister { get; set; }
     public byte YRegister { get; set; }
     public byte StackPointer { get; set; }
+    public MethodInfo? NmiHandler { get; set; }
 
     public byte ProcessorStatus
     {
@@ -101,8 +103,15 @@ public class NesHal : I6502Hal
         var nmiTriggered = _ppu.RunNextStep(count);
         if (nmiTriggered)
         {
-            Console.WriteLine("TODO: Trigger NMI");
             Thread.Sleep(16);
+            if (NmiHandler != null)
+            {
+                NmiHandler.Invoke(null, []);
+            }
+            else
+            {
+                throw new InvalidOperationException("NMI triggered but no NMI handler defined");
+            }
         }
     }
 }

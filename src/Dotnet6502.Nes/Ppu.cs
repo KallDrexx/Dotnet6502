@@ -40,7 +40,7 @@ public class Ppu
 
     private readonly RgbColor[] _framebuffer = new RgbColor[DisplayableWidth * DisplayableScanLines];
     private readonly byte[] _memory = new byte[0x4000];
-    private readonly byte[] _oamMemory = new byte[0xFF];
+    private readonly byte[] _oamMemory = new byte[0x100];
     private int _pixelIndex;
     private int _currentScanLineCycle;
     private int _currentScanLine; // zero based index of what scan line we are currently at
@@ -171,6 +171,7 @@ public class Ppu
             case 4:
                 _oamMemory[_oamAddrRegister] = value;
                 _oamAddrRegister++;
+
                 break;
 
             case 5:

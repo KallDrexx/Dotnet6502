@@ -101,7 +101,7 @@ namespace Dotnet6502.Common.Hal.V1
                 var decompiler = new Decompiler(romInfo, disassembler);
                 decompiler.Decompile();
 
-                var gameClass = new NesGameClass("JitGame", decompiler, disassembler);
+                var gameClass = new NesGameClassBuilder("JitGame", decompiler, disassembler);
 
                 // Save to memory stream and load
                 using var memoryStream = new MemoryStream();

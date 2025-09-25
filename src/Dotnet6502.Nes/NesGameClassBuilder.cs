@@ -11,7 +11,7 @@ namespace Dotnet6502.Nes;
 /// Builds an NES game class (and outer assembly) to hold the decompiled 6502 instructions and the
 /// NES hardware abstraction layer to be used.
 /// </summary>
-public class NesGameClass
+public class NesGameClassBuilder
 {
     private record NesMethod(Function NesFunction, MethodBuilder Builder);
 
@@ -28,7 +28,7 @@ public class NesGameClass
     public TypeBuilder Type { get; }
     public FieldInfo HardwareField { get; }
 
-    public NesGameClass(string namespaceName, Decompiler decompiler, Disassembler disassembler)
+    public NesGameClassBuilder(string namespaceName, Decompiler decompiler, Disassembler disassembler)
     {
         _decompiler = decompiler ?? throw new ArgumentNullException(nameof(decompiler));
 

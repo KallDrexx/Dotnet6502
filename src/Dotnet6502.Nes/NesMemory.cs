@@ -5,7 +5,7 @@ public class NesMemory
     private const int UnmappedSpaceSize = 0xBFE0;
 
     private readonly Ppu _ppu;
-    private enum MemoryType { InternalRam, Ppu, Rp2A03, UnmappedSpace, PpuOamDma }
+    private enum MemoryType { InternalRam, Ppu, Apu, Joy1, Joy2, UnmappedSpace, PpuOamDma }
     private readonly byte[] _internalRam = new byte[0x800]; // 2KB
     private readonly byte[] _unmappedSpace = new byte[0x8000];
 
@@ -38,7 +38,7 @@ public class NesMemory
                 _ppu.ProcessMemoryWrite(address, value);
                 break;
 
-            case MemoryType.Rp2A03:
+            case MemoryType.Apu:
                 // Ignore APU writes
                 break;
 
@@ -50,6 +50,9 @@ public class NesMemory
             case MemoryType.PpuOamDma:
                 PerformOamDma(value);
                 break;
+
+            case MemoryType.Joy1:
+                break; // joystick probe / latch.
 
             default:
                 throw new NotSupportedException(memoryType.ToString());
@@ -68,12 +71,18 @@ public class NesMemory
             case MemoryType.Ppu:
                 return _ppu.ProcessMemoryRead(address);
 
-            case MemoryType.Rp2A03:
+            case MemoryType.Apu:
                 throw new NotImplementedException();
 
             case MemoryType.UnmappedSpace:
                 var offsetAddress = address - UnmappedSpaceSize;
                 return _unmappedSpace[offsetAddress];
+
+            case MemoryType.Joy1:
+                return 0;
+
+            case MemoryType.Joy2:
+                return 0;
 
             default:
                 throw new NotSupportedException(memoryType.ToString());
@@ -85,9 +94,11 @@ public class NesMemory
         return address switch
         {
             0x4014 => MemoryType.PpuOamDma,
+            0x4016 => MemoryType.Joy1,
+            0x4017 => MemoryType.Joy2,
             < 0x2000 => MemoryType.InternalRam,
             < 0x4000 => MemoryType.Ppu,
-            < 0x4020 => MemoryType.Rp2A03,
+            < 0x4020 => MemoryType.Apu,
             _ => MemoryType.UnmappedSpace,
         };
     }

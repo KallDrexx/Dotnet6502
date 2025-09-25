@@ -31,7 +31,7 @@ var decompiler = new Decompiler(romInfo, disassembler);
 decompiler.Decompile();
 
 Console.WriteLine("Generating MSIL...");
-var nesGameClass = new NesGameClass(Path.GetFileNameWithoutExtension(romFile.Name), decompiler, disassembler);
+var nesGameClass = new NesGameClassBuilder(Path.GetFileNameWithoutExtension(romFile.Name), decompiler, disassembler);
 using var gameStreamInMemory = new MemoryStream();
 nesGameClass.WriteAssemblyTo(gameStreamInMemory);
 gameStreamInMemory.Seek(0, SeekOrigin.Begin);
@@ -91,6 +91,22 @@ if (halField == null)
 }
 
 halField.SetValue(null, hal);
+
+var nmiAddress = romInfo.NmiVector;
+if (nmiAddress == 0)
+{
+    throw new InvalidOperationException("Rom has no known NMI vector");
+}
+
+var nmiFunction = decompiler.Functions[nmiAddress];
+var nmiMethodInfo = game.GetMethod(nmiFunction.Name);
+if (nmiMethodInfo == null)
+{
+    var message = $"No NMI method exists with the name '{nmiFunction.Name}' on the nes game class";
+    throw new InvalidOperationException(message);
+}
+
+hal.NmiHandler = nmiMethodInfo;
 
 Console.WriteLine($"Starting at reset vector: {romInfo.ResetVector:X4}");
 var resetVectorFunction = decompiler.Functions.GetValueOrDefault(romInfo.ResetVector);
