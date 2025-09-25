@@ -20,6 +20,7 @@ Console.WriteLine($"Loading ROM: '{romFile.FullName}'");
 var loader = new ROMLoader();
 var romInfo = loader.LoadFromFile(romFile.FullName);
 var programRomData = loader.GetPRGROMData();
+var chrRomData = loader.GetCHRROMData();
 
 Console.WriteLine("Disassembling ROM...");
 var disassembler = new Disassembler(romInfo, programRomData);
@@ -78,7 +79,7 @@ if (game == null)
 }
 
 Console.WriteLine("Creating emulated hardware units");
-var ppu = new Ppu();
+var ppu = new Ppu(chrRomData);
 var memory = new NesMemory(ppu, programRomData);
 var hal = new NesHal(memory, ppu);
 

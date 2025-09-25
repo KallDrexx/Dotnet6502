@@ -46,11 +46,22 @@ public class Ppu
     private int _currentScanLine; // zero based index of what scan line we are currently at
     private bool _hasNmiTriggered; // Has NMI been marked as to be triggered this frame
 
-    public Ppu()
+    public Ppu(byte[] chrRomData)
     {
         _ppuCtrl = new PpuCtrl();
         _ppuStatus = new PpuStatus();
         _ppuMask = new PpuMask();
+
+        if (chrRomData.Length != 0x2000)
+        {
+            var message = $"Expected chrRomData to be 0x2000 bytes, but was {chrRomData.Length:X4}";
+            throw new ArgumentException(message);
+        }
+
+        for (var x = 0; x < chrRomData.Length; x++)
+        {
+            _memory[x] = chrRomData[x];
+        }
     }
 
     /// <summary>
