@@ -38,6 +38,7 @@ public class Ppu
     private byte _tRegister;
     private byte _xRegister;
 
+    private readonly INesDisplay _nesDisplay;
     private readonly RgbColor[] _framebuffer = new RgbColor[DisplayableWidth * DisplayableScanLines];
     private readonly byte[] _memory = new byte[0x4000];
     private readonly byte[] _oamMemory = new byte[0x100];
@@ -46,8 +47,9 @@ public class Ppu
     private int _currentScanLine; // zero based index of what scan line we are currently at
     private bool _hasNmiTriggered; // Has NMI been marked as to be triggered this frame
 
-    public Ppu(byte[] chrRomData)
+    public Ppu(byte[] chrRomData, INesDisplay nesDisplay)
     {
+        _nesDisplay = nesDisplay;
         _ppuCtrl = new PpuCtrl();
         _ppuStatus = new PpuStatus();
         _ppuMask = new PpuMask();
@@ -281,7 +283,12 @@ public class Ppu
 
     private void RenderFrame()
     {
-        // TODO: Implement
+        _nesDisplay.RenderFrame(_framebuffer);
+
+        for (var x = 0; x < _framebuffer.Length; x++)
+        {
+            _framebuffer[x] = new RgbColor(0, 0, 0);
+        }
     }
 
     private void ResetOamData()

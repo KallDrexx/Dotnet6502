@@ -79,7 +79,8 @@ if (game == null)
 }
 
 Console.WriteLine("Creating emulated hardware units");
-var ppu = new Ppu(chrRomData);
+var app = new App();
+var ppu = new Ppu(chrRomData, app);
 var memory = new NesMemory(ppu, programRomData);
 var hal = new NesHal(memory, ppu);
 
@@ -118,7 +119,6 @@ if (resetVectorFunction == null)
 
 var resetMethodVector = game.GetMethod(resetVectorFunction.Name);
 resetMethodVector!.Invoke(null, null);
-
 
 Console.WriteLine("Done");
 return 0;
