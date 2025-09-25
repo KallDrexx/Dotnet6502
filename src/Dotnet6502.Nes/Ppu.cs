@@ -34,7 +34,7 @@ public class Ppu
     private byte _xScrollRegister, _yScrollRegister;
     private ushort _ppuAddr;
     private bool _wRegister;
-    private byte _vRegister;
+    private ushort _vRegister;
     private byte _tRegister;
     private byte _xRegister;
 
@@ -202,6 +202,7 @@ public class Ppu
                 }
 
                 _wRegister = !_wRegister;
+                _vRegister = _ppuAddr;
                 break;
 
             case 7:
@@ -214,6 +215,8 @@ public class Ppu
                 {
                     _ppuAddr += 32;
                 }
+
+                _vRegister = _ppuAddr;
 
                 break;
 
@@ -279,6 +282,46 @@ public class Ppu
 
     private void DrawNextPixel()
     {
+        var nameTableAddress = _ppuCtrl.BaseNameTableAddress switch
+        {
+            PpuCtrl.BaseNameTableAddressValue.Hex2C00 => 0x2C00,
+            PpuCtrl.BaseNameTableAddressValue.Hex2000 => 0x2000,
+            PpuCtrl.BaseNameTableAddressValue.Hex2400 => 0x2400,
+            PpuCtrl.BaseNameTableAddressValue.Hex2800 => 0x2800,
+            _ => throw new ArgumentOutOfRangeException(_ppuCtrl.BaseNameTableAddress.ToString())
+        };
+
+        var backgroundTableAddress = _ppuCtrl.BackgroundPatternTableAddress switch
+        {
+            PpuCtrl.BackgroundPatternTableAddressEnum.Hex0000 => 0x0000,
+            PpuCtrl.BackgroundPatternTableAddressEnum.Hex1000 => 0x1000,
+            _ => throw new ArgumentOutOfRangeException(_ppuCtrl.BackgroundPatternTableAddress.ToString()),
+        };
+
+        var pixelX = _currentScanLineCycle;
+        var pixelY = _currentScanLine;
+    }
+
+    private void RenderBackground(int pixelX, int pixelY)
+    {
+        if (!_ppuMask.EnableBackgroundRendering)
+        {
+            return;
+        }
+
+        if (!_ppuMask.ShowBackgroundInLeftmost8PixelsOfScreen && pixelX < 8)
+        {
+            return;
+        }
+
+        // Which 8x8 tile does this belong to?
+        var tileX = pixelX / 8;
+        var tileY = pixelY / 8;
+
+        // Calculate pixel position in the tile
+        var pixelInTileX = pixelX % 8;
+        var pixelInTileY = pixelY % 8;
+
     }
 
     private void RenderFrame()
