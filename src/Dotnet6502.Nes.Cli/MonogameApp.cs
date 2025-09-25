@@ -1,21 +1,26 @@
+using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 
 namespace Dotnet6502.Nes.Cli;
 
 /// <summary>
 /// Handles input and rendering of the NES game
 /// </summary>
-public class App : Game, INesDisplay
+public class MonogameApp : Game, INesDisplay
 {
     private const int Width = 256;
     private const int Height = 240;
-    private SpriteBatch _spriteBatch = null!;
-    private Texture2D _texture = null!;
 
     private readonly GraphicsDeviceManager _graphicsDeviceManager;
+    private readonly object _synchronizationLock = new();
+    private readonly Color[] _pixelColors = new Color[Width * Height];
+    private SpriteBatch _spriteBatch = null!;
+    private Texture2D _texture = null!;
+    private bool _readyToContinue = false;
 
-    public App()
+    public MonogameApp()
     {
         _graphicsDeviceManager = new GraphicsDeviceManager(this);
 
@@ -25,15 +30,27 @@ public class App : Game, INesDisplay
 
     public void RenderFrame(RgbColor[] pixels)
     {
-        if (pixels.Length != Width * Height)
+        if (pixels.Length != _pixelColors.Length)
         {
-            var message = $"Expected {Width * Height} pixels ({Width}x{Height}), instead got a frame buffer" +
-                          $"that contains {pixels.Length} pixels";
-
+            var message = "Frame buffer from NES has different pixel count than texture pixel array length";
             throw new InvalidOperationException(message);
         }
 
-        RunOneFrame();
+        lock (_synchronizationLock)
+        {
+            for (var x = 0; x < _pixelColors.Length; x++)
+            {
+                var color = new Color(pixels[x].Red, pixels[x].Green, pixels[x].Blue);
+                _pixelColors[x] = color;
+            }
+
+            while (!_readyToContinue)
+            {
+                Monitor.Wait(_synchronizationLock);
+            }
+
+            _readyToContinue = false;
+        }
     }
 
     protected override void Initialize()
@@ -55,6 +72,21 @@ public class App : Game, INesDisplay
 
     protected override void Update(GameTime gameTime)
     {
+        // Now that update has called, Signal to the NES thread that it can continue with the next frame
+        lock (_synchronizationLock)
+        {
+            _readyToContinue = true;
+            Monitor.Pulse(_synchronizationLock);
+
+            _texture.SetData(_pixelColors);
+        }
+
+        var keyboardState = Keyboard.GetState();
+        if (keyboardState.IsKeyDown(Keys.Escape))
+        {
+            Exit();
+        }
+
         base.Update(gameTime);
     }
 
@@ -68,7 +100,6 @@ public class App : Game, INesDisplay
             new Rectangle(0, 0, Width, Height),
             Color.White);
         _spriteBatch.End();
-
 
         base.Draw(gameTime);
     }

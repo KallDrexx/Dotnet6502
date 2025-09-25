@@ -79,10 +79,11 @@ if (game == null)
 }
 
 Console.WriteLine("Creating emulated hardware units");
-var app = new App();
+var app = new MonogameApp();
+var cancellationTokenSource = new CancellationTokenSource();
 var ppu = new Ppu(chrRomData, app);
 var memory = new NesMemory(ppu, programRomData);
-var hal = new NesHal(memory, ppu);
+var hal = new NesHal(memory, ppu, cancellationTokenSource.Token);
 
 var halField = game.GetField(nesGameClass.HardwareField.Name);
 if (halField == null)
@@ -118,7 +119,34 @@ if (resetVectorFunction == null)
 }
 
 var resetMethodVector = game.GetMethod(resetVectorFunction.Name);
-resetMethodVector!.Invoke(null, null);
+if (resetMethodVector == null)
+{
+    throw new InvalidOperationException("No reset vector method found");
+}
+
+var nesThread = new Thread(() =>
+{
+    try
+    {
+        resetMethodVector.Invoke(null, null);
+    }
+    catch (TargetInvocationException targetInvocationException)
+    {
+        if (targetInvocationException.InnerException?.GetType() == typeof(TaskCanceledException))
+        {
+            // Ignore cancellation exceptions
+            return;
+        }
+
+        throw;
+    }
+});
+
+nesThread.Start();
+app.Run();
+
+// Cancel the NES thread
+cancellationTokenSource.Cancel();
 
 Console.WriteLine("Done");
 return 0;

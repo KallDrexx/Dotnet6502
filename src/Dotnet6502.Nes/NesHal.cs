@@ -19,6 +19,7 @@ public class NesHal : I6502Hal
 
     private readonly NesMemory _memory;
     private readonly Ppu _ppu;
+    private readonly CancellationToken _cancellationToken;
 
     public byte ARegister { get; set; }
     public byte XRegister { get; set; }
@@ -50,10 +51,11 @@ public class NesHal : I6502Hal
         }
     }
 
-    public NesHal(NesMemory memory, Ppu ppu)
+    public NesHal(NesMemory memory, Ppu ppu, CancellationToken cancellationToken)
     {
         _memory = memory;
         _ppu = ppu;
+        _cancellationToken = cancellationToken;
     }
 
     public void SetFlag(CpuStatusFlags flag, bool value)
@@ -100,10 +102,14 @@ public class NesHal : I6502Hal
 
     public void IncrementCpuCycleCount(int count)
     {
+        if (_cancellationToken.IsCancellationRequested)
+        {
+            throw new TaskCanceledException("Cancellation requested");
+        }
+
         var nmiTriggered = _ppu.RunNextStep(count);
         if (nmiTriggered)
         {
-            Thread.Sleep(16);
             if (NmiHandler != null)
             {
                 NmiHandler.Invoke(null, []);
