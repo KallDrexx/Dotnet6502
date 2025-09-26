@@ -37,6 +37,7 @@ public class Ppu
     private ushort _vRegister;
     private byte _tRegister;
     private byte _xRegister;
+    private byte _readBuffer;
 
     private readonly INesDisplay _nesDisplay;
     private readonly RgbColor[] _framebuffer = new RgbColor[DisplayableWidth * DisplayableScanLines];
@@ -203,6 +204,9 @@ public class Ppu
 
                 _wRegister = !_wRegister;
                 _vRegister = _ppuAddr;
+
+                // Prime the read buffer
+                _readBuffer = _memory[_ppuAddr];
                 break;
 
             case 7:
@@ -263,7 +267,18 @@ public class Ppu
                 return 0; // PPUADDR not readable
 
             case 7:
-                var value = _memory[_ppuAddr];
+                // PPU reads up to 0x3F00 are delayed one read
+                byte value;
+                if (_ppuAddr < 0x3F00)
+                {
+                    value = _readBuffer;
+                    _readBuffer = _memory[_ppuAddr];
+                }
+                else
+                {
+                    value = _memory[_ppuAddr];
+                }
+
                 if (_ppuCtrl.VRamAddressIncrement == PpuCtrl.VRamAddressIncrementValue.Add1Across)
                 {
                     _ppuAddr += 1;
