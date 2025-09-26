@@ -1,7 +1,6 @@
 using System.Reflection;
 using System.Reflection.Emit;
 using Dotnet6502.Common;
-using Dotnet6502.Common.Compilation;
 using NESDecompiler.Core.Decompilation;
 using NESDecompiler.Core.Disassembly;
 
