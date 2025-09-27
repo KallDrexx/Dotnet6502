@@ -1,6 +1,5 @@
 using Dotnet6502.Common;
 using NESDecompiler.Core.CPU;
-using NESDecompiler.Core.Decompilation;
 using NESDecompiler.Core.Disassembly;
 using Shouldly;
 
@@ -31,8 +30,7 @@ public class JmpTests
 
         var labels = new Dictionary<ushort, string> { { 0x9000, "jump_target" } };
         var context = new InstructionConverter.Context(
-            labels,
-            new Dictionary<ushort, Function>());
+            labels);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
@@ -73,8 +71,7 @@ public class JmpTests
 
         var labels = new Dictionary<ushort, string> { { 0x9000, "jump_target" } };
         var context = new InstructionConverter.Context(
-            labels,
-            new Dictionary<ushort, Function>());
+            labels);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
@@ -115,8 +112,7 @@ public class JmpTests
 
         var labels = new Dictionary<ushort, string> { { 0x8500, "target" } };
         var context = new InstructionConverter.Context(
-            labels,
-            new Dictionary<ushort, Function>());
+            labels);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
@@ -169,8 +165,7 @@ public class JmpTests
 
         var labels = new Dictionary<ushort, string> { { 0x8500, "target" } };
         var context = new InstructionConverter.Context(
-            labels,
-            new Dictionary<ushort, Function>());
+            labels);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
@@ -223,8 +218,7 @@ public class JmpTests
 
         var labels = new Dictionary<ushort, string> { { 0x8600, "target" } };
         var context = new InstructionConverter.Context(
-            labels,
-            new Dictionary<ushort, Function>());
+            labels);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
@@ -267,8 +261,7 @@ public class JmpTests
 
         var labels = new Dictionary<ushort, string> { { 0x8600, "target" } };
         var context = new InstructionConverter.Context(
-            labels,
-            new Dictionary<ushort, Function>());
+            labels);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
@@ -311,8 +304,7 @@ public class JmpTests
 
         var labels = new Dictionary<ushort, string> { { 0xFFFF, "far_target" } };
         var context = new InstructionConverter.Context(
-            labels,
-            new Dictionary<ushort, Function>());
+            labels);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
@@ -352,8 +344,7 @@ public class JmpTests
 
         var labels = new Dictionary<ushort, string> { { 0xA000, "zp_target" } };
         var context = new InstructionConverter.Context(
-            labels,
-            new Dictionary<ushort, Function>());
+            labels);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
@@ -393,8 +384,7 @@ public class JmpTests
 
         var labels = new Dictionary<ushort, string> { { 0x0000, "low_target" } };
         var context = new InstructionConverter.Context(
-            labels,
-            new Dictionary<ushort, Function>());
+            labels);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
@@ -435,8 +425,7 @@ public class JmpTests
 
         var labels = new Dictionary<ushort, string> { { 0x8750, "always_target" } };
         var context = new InstructionConverter.Context(
-            labels,
-            new Dictionary<ushort, Function>());
+            labels);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 

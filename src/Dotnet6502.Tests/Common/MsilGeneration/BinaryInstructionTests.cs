@@ -14,6 +14,7 @@ public class BinaryInstructionTests
             new Ir6502.Constant(25),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
+        var method = ExecutableMethodGenerator.Generate("testMethod", [instruction]);
         var testRunner = new InstructionTestRunner([instruction]);
         testRunner.RunTestMethod();
 

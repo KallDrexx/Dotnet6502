@@ -1,5 +1,4 @@
 using NESDecompiler.Core.CPU;
-using NESDecompiler.Core.Decompilation;
 using NESDecompiler.Core.Disassembly;
 
 namespace Dotnet6502.Common;
@@ -9,9 +8,7 @@ namespace Dotnet6502.Common;
 /// </summary>
 public static class InstructionConverter
 {
-    public record Context(
-        IReadOnlyDictionary<ushort, string> Labels,
-        IReadOnlyDictionary<ushort, Function> Functions);
+    public record Context(IReadOnlyDictionary<ushort, string> Labels);
 
     public static IReadOnlyList<Ir6502.Instruction> Convert(
         DisassembledInstruction instruction,
@@ -53,7 +50,7 @@ public static class InstructionConverter
             case "INX": results.AddRange(ConvertInx()); break;
             case "INY": results.AddRange(ConvertIny()); break;
             case "JMP": results.AddRange(ConvertJmp(instruction, context)); break;
-            case "JSR": results.AddRange(ConvertJsr(instruction, context)); break;
+            case "JSR": results.AddRange(ConvertJsr(instruction)); break;
             case "LDA": results.AddRange(ConvertLda(instruction)); break;
             case "LDX": results.AddRange(ConvertLdx(instruction)); break;
             case "LDY": results.AddRange(ConvertLdy(instruction)); break;
@@ -640,7 +637,7 @@ public static class InstructionConverter
     /// <summary>
     /// Jump to subroutine
     /// </summary>
-    private static Ir6502.Instruction[] ConvertJsr(DisassembledInstruction instruction, Context context)
+    private static Ir6502.Instruction[] ConvertJsr(DisassembledInstruction instruction)
     {
         if (!instruction.TargetAddress.HasValue)
         {
@@ -648,16 +645,7 @@ public static class InstructionConverter
             throw new InvalidOperationException(message);
         }
 
-        if (!context.Functions.TryGetValue(instruction.TargetAddress.Value, out var function))
-        {
-            var message = $"JSR instruction to address '{instruction.TargetAddress}' but that address is " +
-                          $"not tied to a known function";
-
-            throw new InvalidOperationException(message);
-        }
-
-        var jump = new Ir6502.CallFunction(new Ir6502.Identifier(function.Name));
-
+        var jump = new Ir6502.CallFunction(new Ir6502.TargetAddress(instruction.TargetAddress.Value));
         return [jump];
     }
 

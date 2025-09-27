@@ -8,8 +8,7 @@ public class CallFunctionInstructionTests
     [Fact]
     public void Can_Call_Single_Function()
     {
-        var functionName = "TestFunction1";
-        var instruction = new Ir6502.CallFunction(new Ir6502.Identifier(functionName));
+        var instruction = new Ir6502.CallFunction(new Ir6502.TargetAddress(functionName));
         var callableFunctions = new[] { functionName };
 
         var testRunner = new InstructionTestRunner([instruction], callableFunctions);

@@ -35,7 +35,7 @@ public class JsrTests
         {
             { 0x9000, new Function(0x9000, "TestFunction") }
         };
-        var context = new InstructionConverter.Context(labels, functions);
+        var context = new InstructionConverter.Context(labels);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
@@ -91,7 +91,7 @@ public class JsrTests
             { 0x9000, new Function(0x9000, "FirstFunction") },
             { 0x9100, new Function(0x9100, "SecondFunction") }
         };
-        var context = new InstructionConverter.Context(labels, functions);
+        var context = new InstructionConverter.Context(labels);
 
         var nesIrInstructions1 = InstructionConverter.Convert(instruction1, context);
         var nesIrInstructions2 = InstructionConverter.Convert(instruction2, context);
@@ -142,7 +142,7 @@ public class JsrTests
         {
             { 0x9000, new Function(0x9000, "RepeatedFunction") }
         };
-        var context = new InstructionConverter.Context(labels, functions);
+        var context = new InstructionConverter.Context(labels);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
@@ -191,7 +191,7 @@ public class JsrTests
         {
             { 0x9000, new Function(0x9000, "TestFunction") }
         };
-        var context = new InstructionConverter.Context(labels, functions);
+        var context = new InstructionConverter.Context(labels);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
@@ -245,7 +245,7 @@ public class JsrTests
         {
             { 0x9000, new Function(0x9000, "TestFunction") }
         };
-        var context = new InstructionConverter.Context(labels, functions);
+        var context = new InstructionConverter.Context(labels);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
@@ -301,7 +301,7 @@ public class JsrTests
             {
                 { testCase.Address, new Function(testCase.Address, testCase.Name) }
             };
-            var context = new InstructionConverter.Context(labels, functions);
+            var context = new InstructionConverter.Context(labels);
 
             var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
@@ -336,7 +336,7 @@ public class JsrTests
 
         var labels = new Dictionary<ushort, string>();
         var functions = new Dictionary<ushort, Function>(); // Empty - no functions defined
-        var context = new InstructionConverter.Context(labels, functions);
+        var context = new InstructionConverter.Context(labels);
 
         // Should throw exception when trying to convert JSR to undefined function
         Should.Throw<InvalidOperationException>(() => InstructionConverter.Convert(instruction, context))
@@ -356,7 +356,7 @@ public class JsrTests
 
         var labels = new Dictionary<ushort, string>();
         var functions = new Dictionary<ushort, Function>();
-        var context = new InstructionConverter.Context(labels, functions);
+        var context = new InstructionConverter.Context(labels);
 
         // Should throw exception when JSR has no target address
         Should.Throw<InvalidOperationException>(() => InstructionConverter.Convert(instruction, context))

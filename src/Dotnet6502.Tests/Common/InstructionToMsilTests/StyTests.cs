@@ -1,6 +1,5 @@
 using Dotnet6502.Common;
 using NESDecompiler.Core.CPU;
-using NESDecompiler.Core.Decompilation;
 using NESDecompiler.Core.Disassembly;
 using Shouldly;
 
@@ -26,8 +25,7 @@ public class StyTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>(),
-            new Dictionary<ushort, Function>());
+            new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var testRunner = new InstructionTestRunner(nesIrInstructions);
@@ -56,8 +54,7 @@ public class StyTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>(),
-            new Dictionary<ushort, Function>());
+            new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var testRunner = new InstructionTestRunner(nesIrInstructions);
@@ -86,8 +83,7 @@ public class StyTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>(),
-            new Dictionary<ushort, Function>());
+            new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var testRunner = new InstructionTestRunner(nesIrInstructions);
@@ -116,8 +112,7 @@ public class StyTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>(),
-            new Dictionary<ushort, Function>());
+            new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var testRunner = new InstructionTestRunner(nesIrInstructions);
@@ -147,8 +142,7 @@ public class StyTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>(),
-            new Dictionary<ushort, Function>());
+            new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var testRunner = new InstructionTestRunner(nesIrInstructions);
@@ -180,8 +174,7 @@ public class StyTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>(),
-            new Dictionary<ushort, Function>());
+            new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var testRunner = new InstructionTestRunner(nesIrInstructions);
@@ -210,8 +203,7 @@ public class StyTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>(),
-            new Dictionary<ushort, Function>());
+            new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var testRunner = new InstructionTestRunner(nesIrInstructions);
@@ -240,8 +232,7 @@ public class StyTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>(),
-            new Dictionary<ushort, Function>());
+            new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var testRunner = new InstructionTestRunner(nesIrInstructions);
@@ -280,8 +271,7 @@ public class StyTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>(),
-            new Dictionary<ushort, Function>());
+            new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var testRunner = new InstructionTestRunner(nesIrInstructions);
@@ -310,8 +300,7 @@ public class StyTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>(),
-            new Dictionary<ushort, Function>());
+            new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var testRunner = new InstructionTestRunner(nesIrInstructions);
@@ -344,8 +333,7 @@ public class StyTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>(),
-            new Dictionary<ushort, Function>());
+            new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var testRunner = new InstructionTestRunner(nesIrInstructions);
@@ -375,8 +363,7 @@ public class StyTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>(),
-            new Dictionary<ushort, Function>());
+            new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var testRunner = new InstructionTestRunner(nesIrInstructions);
@@ -405,8 +392,7 @@ public class StyTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>(),
-            new Dictionary<ushort, Function>());
+            new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var testRunner = new InstructionTestRunner(nesIrInstructions);

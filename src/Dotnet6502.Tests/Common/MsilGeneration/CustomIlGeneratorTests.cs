@@ -11,12 +11,12 @@ public class CustomIlGeneratorTests
     [Fact]
     public void Can_Execute_Generator_For_Custom_Instruction()
     {
-        void CustomGenerator(Ir6502.Instruction instruction, MsilGenerator.Context context)
+        void CustomGenerator(Ir6502.Instruction instruction, ILGenerator ilGenerator)
         {
             var pushMethod = typeof(I6502Hal).GetMethod(nameof(I6502Hal.PushToStack))!;
-            context.IlGenerator.Emit(OpCodes.Ldsfld, context.HardwareField);
-            context.IlGenerator.Emit(OpCodes.Ldc_I4, 123);
-            context.IlGenerator.Emit(OpCodes.Callvirt, pushMethod);
+            ilGenerator.Emit(JitCompiler.LoadHalArg);
+            ilGenerator.Emit(OpCodes.Ldc_I4, 123);
+            ilGenerator.Emit(OpCodes.Callvirt, pushMethod);
         }
 
         var customGenerators = new Dictionary<Type, MsilGenerator.CustomIlGenerator>()

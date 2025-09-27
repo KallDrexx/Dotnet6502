@@ -17,7 +17,7 @@ public static class Ir6502
 
     public record Label(Identifier Name) : Instruction;
 
-    public record CallFunction(Identifier Name) : Instruction;
+    public record CallFunction(TargetAddress FunctionAddress) : Instruction;
 
     public record Jump(Identifier Target) : Instruction;
 
@@ -51,7 +51,11 @@ public static class Ir6502
 
     public record StackPointer : Value;
 
-    public record Identifier(string Characters);
+    public abstract record JumpTarget;
+
+    public record Identifier(string Characters) : JumpTarget;
+
+    public record TargetAddress(ushort Address) : JumpTarget;
     
     public enum RegisterName { Accumulator, XIndex, YIndex }
 
