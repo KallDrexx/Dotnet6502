@@ -20,6 +20,8 @@ public class MonogameApp : Game, INesDisplay
     private Texture2D _texture = null!;
     private bool _readyToContinue = false;
 
+    public Task? NesCodeTask { get; set; }
+
     public MonogameApp()
     {
         _graphicsDeviceManager = new GraphicsDeviceManager(this);
@@ -72,6 +74,27 @@ public class MonogameApp : Game, INesDisplay
 
     protected override void Update(GameTime gameTime)
     {
+        if (NesCodeTask == null)
+        {
+            throw new InvalidOperationException("No NES code task available yet");
+        }
+
+        if (NesCodeTask.IsCompleted)
+        {
+            if (NesCodeTask.IsCompletedSuccessfully)
+            {
+                Console.WriteLine("NES code ended");
+                Exit();
+            }
+
+            if (NesCodeTask.Exception != null)
+            {
+                throw NesCodeTask.Exception;
+            }
+
+            throw new InvalidOperationException("NES code faulted without exception");
+        }
+
         // Now that update has called, Signal to the NES thread that it can continue with the next frame
         lock (_synchronizationLock)
         {

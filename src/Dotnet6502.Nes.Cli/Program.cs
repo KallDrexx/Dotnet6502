@@ -48,8 +48,9 @@ if (nmiAddress == 0)
 
 hal.NmiHandler = () => jitCompiler.RunMethod(nmiAddress);
 
+
 Console.WriteLine($"Starting at reset vector: {romInfo.ResetVector:X4}");
-var nesThread = new Thread(() =>
+var nesTask = Task.Run(() =>
 {
     try
     {
@@ -67,11 +68,17 @@ var nesThread = new Thread(() =>
     }
 });
 
-nesThread.Start();
+app.NesCodeTask = nesTask;
 app.Run();
 
 // Cancel the NES thread
 cancellationTokenSource.Cancel();
+
+Console.WriteLine("Waiting for NES code to cancel");
+while (!nesTask.IsCompleted)
+{
+    await Task.Delay(1);
+}
 
 Console.WriteLine("Done");
 return 0;

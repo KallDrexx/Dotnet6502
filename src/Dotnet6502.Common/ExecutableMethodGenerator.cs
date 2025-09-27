@@ -13,6 +13,15 @@ public static class ExecutableMethodGenerator
         IReadOnlyList<ConvertedInstruction> instructions,
         IReadOnlyDictionary<Type, MsilGenerator.CustomIlGenerator>? customIlGenerators = null)
     {
+        return GenerateViaAssemblies(name, instructions, customIlGenerators);
+        // return GenerateViaDynamicMethod(name, instructions, customIlGenerators);
+    }
+
+    private static ExecutableMethod GenerateViaDynamicMethod(
+        string name,
+        IReadOnlyList<ConvertedInstruction> instructions,
+        IReadOnlyDictionary<Type, MsilGenerator.CustomIlGenerator>? customIlGenerators)
+    {
         var methodToCreate = new DynamicMethod(
             name,
             MethodAttributes.Static | MethodAttributes.Public,
@@ -23,7 +32,47 @@ public static class ExecutableMethodGenerator
             false);
 
         var ilGenerator = methodToCreate.GetILGenerator();
+        GenerateMsil(ilGenerator, instructions, customIlGenerators);
 
+        return methodToCreate.CreateDelegate<ExecutableMethod>();
+    }
+
+    private static ExecutableMethod GenerateViaAssemblies(
+        string name,
+        IReadOnlyList<ConvertedInstruction> instructions,
+        IReadOnlyDictionary<Type, MsilGenerator.CustomIlGenerator>? customIlGenerators)
+    {
+        var assemblyName = new AssemblyName($"assembly_for_{name}");
+        var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
+        var moduleBuilder = assemblyBuilder.DefineDynamicModule($"module_for_{name}");
+        var typeBuilder = moduleBuilder.DefineType($"class_for_{name}", TypeAttributes.Public);
+        var methodBuilder = typeBuilder.DefineMethod(
+            name,
+            MethodAttributes.Public | MethodAttributes.Static,
+            CallingConventions.Standard,
+            typeof(void),
+            [typeof(IJitCompiler), typeof(I6502Hal)]);
+
+        var ilGenerator = methodBuilder.GetILGenerator();
+        GenerateMsil(ilGenerator, instructions, customIlGenerators);
+
+        var constructedType = typeBuilder.CreateType();
+        var method = constructedType.GetMethod(methodBuilder.Name);
+        if (method == null)
+        {
+            throw new InvalidOperationException("Failed to get method from newly constructed type");
+        }
+
+        return (ExecutableMethod) Delegate.CreateDelegate(typeof(ExecutableMethod), method, true)!;
+    }
+
+    /// <summary>
+    /// Generates complete MSIL for the specified set of instructions
+    /// </summary>
+    private static void GenerateMsil(ILGenerator ilGenerator,
+        IReadOnlyList<ConvertedInstruction> instructions,
+        IReadOnlyDictionary<Type, MsilGenerator.CustomIlGenerator>? customIlGenerators = null)
+    {
         // We need to pull out all labels so they can be pre-defined, since they need to be
         // defined before they can be marked or referenced
         var ilLabels = instructions
@@ -52,8 +101,6 @@ public static class ExecutableMethodGenerator
         }
 
         ilGenerator.Emit(OpCodes.Ret);
-
-        return methodToCreate.CreateDelegate<ExecutableMethod>();
     }
 
     private static int GetMaxLocalCount(IReadOnlyList<Ir6502.Instruction> instructions)
