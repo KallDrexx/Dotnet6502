@@ -55,9 +55,9 @@ public class Ppu
         _ppuStatus = new PpuStatus();
         _ppuMask = new PpuMask();
 
-        if (chrRomData.Length != 0x2000)
+        if (chrRomData.Length is not (0x2000 or 0x4000))
         {
-            var message = $"Expected chrRomData to be 0x2000 bytes, but was {chrRomData.Length:X4}";
+            var message = $"Expected chrRomData to be 0x2000 or 0x4000 bytes, but was 0x{chrRomData.Length:X4}";
             throw new ArgumentException(message);
         }
 
