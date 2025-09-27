@@ -47,16 +47,17 @@ public class ReturnInstructionTests
             new Ir6502.Variable(1),
             new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
-        var testRunner = new InstructionTestRunner([
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [
             setAccumulator, setMemory, setFlag, setVariable,
             returnInstruction,
             modifyAccumulator, modifyMemory, clearFlag, binaryOperation, copyVariableToRegister
         ]);
-        testRunner.RunTestMethod();
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.ARegister.ShouldBe((byte)77);
-        testRunner.TestHal.ReadMemory(0x4000).ShouldBe((byte)88);
-        testRunner.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBe(true);
-        testRunner.TestHal.YRegister.ShouldBe((byte)0);
+        jit.TestHal.ARegister.ShouldBe((byte)77);
+        jit.TestHal.ReadMemory(0x4000).ShouldBe((byte)88);
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBe(true);
+        jit.TestHal.YRegister.ShouldBe((byte)0);
     }
 }

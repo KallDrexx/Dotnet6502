@@ -6,19 +6,20 @@ namespace Dotnet6502.Tests.Common;
 
 public class TestJitCompiler : IJitCompiler
 {
-    private readonly Dictionary<ushort, ExecutableMethod> _methods = new();
+    public Dictionary<ushort, ExecutableMethod> Methods { get; } = new();
+    public Dictionary<Type, MsilGenerator.CustomIlGenerator>? CustomGenerators { get; set; }
 
-    public Test6502Hal Hal { get; } = new();
+    public Test6502Hal TestHal { get; } = new();
 
     public void RunMethod(ushort address)
     {
-        if (!_methods.TryGetValue(address, out var method))
+        if (!Methods.TryGetValue(address, out var method))
         {
             var message = $"Method at address {address:X4} called but no method prepared for that";
             throw new InvalidOperationException(message);
         }
 
-        method(this, Hal);
+        method(this, TestHal);
     }
 
     public void AddMethod(ushort address, IReadOnlyList<Ir6502.Instruction> instructions)
@@ -27,13 +28,11 @@ public class TestJitCompiler : IJitCompiler
         {
             Info = InstructionSet.GetInstruction(0xEA),
             CPUAddress = address,
+            Bytes = [0xEA]
         };
 
-        var convertedInstructions = instructions
-            .Select(x => new ConvertedInstruction(nop, instructions))
-            .ToArray();
-
-        var method = ExecutableMethodGenerator.Generate($"test_{address}", convertedInstructions);
-        _methods.Add(address, method);
+        var convertedInstructions = new ConvertedInstruction(nop, instructions);
+        var method = ExecutableMethodGenerator.Generate($"test_{address}", [convertedInstructions], CustomGenerators);
+        Methods.Add(address, method);
     }
 }

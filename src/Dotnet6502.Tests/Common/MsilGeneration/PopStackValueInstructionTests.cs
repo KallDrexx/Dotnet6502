@@ -10,11 +10,12 @@ public class PopStackValueInstructionTests
     {
         var instruction = new Ir6502.PopStackValue(new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.TestHal.PushToStack(123);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.TestHal.PushToStack(123);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.ARegister.ShouldBe((byte)123);
+        jit.TestHal.ARegister.ShouldBe((byte)123);
     }
 
     [Fact]
@@ -22,11 +23,12 @@ public class PopStackValueInstructionTests
     {
         var instruction = new Ir6502.PopStackValue(new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.TestHal.PushToStack(55);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.TestHal.PushToStack(55);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.XRegister.ShouldBe((byte)55);
+        jit.TestHal.XRegister.ShouldBe((byte)55);
     }
 
     [Fact]
@@ -34,11 +36,12 @@ public class PopStackValueInstructionTests
     {
         var instruction = new Ir6502.PopStackValue(new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.TestHal.PushToStack(88);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.TestHal.PushToStack(88);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.YRegister.ShouldBe((byte)88);
+        jit.TestHal.YRegister.ShouldBe((byte)88);
     }
 
     [Fact]
@@ -46,11 +49,12 @@ public class PopStackValueInstructionTests
     {
         var instruction = new Ir6502.PopStackValue(new Ir6502.Memory(0x3000, null, false));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.TestHal.PushToStack(199);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.TestHal.PushToStack(199);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.ReadMemory(0x3000).ShouldBe((byte)199);
+        jit.TestHal.ReadMemory(0x3000).ShouldBe((byte)199);
     }
 
     [Fact]
@@ -58,17 +62,18 @@ public class PopStackValueInstructionTests
     {
         var instruction = new Ir6502.PopStackValue(new Ir6502.Memory(0x5000, Ir6502.RegisterName.XIndex, false));
 
-        var testRunner = new InstructionTestRunner([instruction])
+        var jit = new TestJitCompiler()
         {
             TestHal =
             {
                 XRegister = 10
             }
         };
-        testRunner.TestHal.PushToStack(222);
-        testRunner.RunTestMethod();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.TestHal.PushToStack(222);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.ReadMemory(0x500A).ShouldBe((byte)222);
+        jit.TestHal.ReadMemory(0x500A).ShouldBe((byte)222);
     }
 
     [Fact]
@@ -79,11 +84,12 @@ public class PopStackValueInstructionTests
             new Ir6502.Variable(0),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var testRunner = new InstructionTestRunner([popInstruction, copyInstruction]);
-        testRunner.TestHal.PushToStack(177);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [popInstruction, copyInstruction]);
+        jit.TestHal.PushToStack(177);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.ARegister.ShouldBe((byte)177);
+        jit.TestHal.ARegister.ShouldBe((byte)177);
     }
 
     [Fact]
@@ -91,11 +97,12 @@ public class PopStackValueInstructionTests
     {
         var instruction = new Ir6502.PopStackValue(new Ir6502.Flag(Ir6502.FlagName.Carry));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.TestHal.PushToStack(1);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.TestHal.PushToStack(1);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBe(true);
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBe(true);
     }
 
     [Fact]
@@ -103,11 +110,12 @@ public class PopStackValueInstructionTests
     {
         var instruction = new Ir6502.PopStackValue(new Ir6502.Flag(Ir6502.FlagName.Zero));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.TestHal.PushToStack(0);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.TestHal.PushToStack(0);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBe(false);
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBe(false);
     }
 
     [Fact]
@@ -115,11 +123,12 @@ public class PopStackValueInstructionTests
     {
         var instruction = new Ir6502.PopStackValue(new Ir6502.Flag(Ir6502.FlagName.InterruptDisable));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.TestHal.PushToStack(1);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.TestHal.PushToStack(1);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.GetFlag(CpuStatusFlags.InterruptDisable).ShouldBe(true);
+        jit.TestHal.GetFlag(CpuStatusFlags.InterruptDisable).ShouldBe(true);
     }
 
     [Fact]
@@ -127,11 +136,12 @@ public class PopStackValueInstructionTests
     {
         var instruction = new Ir6502.PopStackValue(new Ir6502.Flag(Ir6502.FlagName.BFlag));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.TestHal.PushToStack(1);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.TestHal.PushToStack(1);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.GetFlag(CpuStatusFlags.BFlag).ShouldBe(true);
+        jit.TestHal.GetFlag(CpuStatusFlags.BFlag).ShouldBe(true);
     }
 
     [Fact]
@@ -139,11 +149,12 @@ public class PopStackValueInstructionTests
     {
         var instruction = new Ir6502.PopStackValue(new Ir6502.Flag(Ir6502.FlagName.Decimal));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.TestHal.PushToStack(1);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.TestHal.PushToStack(1);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.GetFlag(CpuStatusFlags.Decimal).ShouldBe(true);
+        jit.TestHal.GetFlag(CpuStatusFlags.Decimal).ShouldBe(true);
     }
 
     [Fact]
@@ -151,11 +162,12 @@ public class PopStackValueInstructionTests
     {
         var instruction = new Ir6502.PopStackValue(new Ir6502.Flag(Ir6502.FlagName.Overflow));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.TestHal.PushToStack(1);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.TestHal.PushToStack(1);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBe(true);
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBe(true);
     }
 
     [Fact]
@@ -163,11 +175,12 @@ public class PopStackValueInstructionTests
     {
         var instruction = new Ir6502.PopStackValue(new Ir6502.Flag(Ir6502.FlagName.Negative));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.TestHal.PushToStack(1);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.TestHal.PushToStack(1);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBe(true);
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBe(true);
     }
 
     [Fact]
@@ -175,11 +188,12 @@ public class PopStackValueInstructionTests
     {
         var instruction = new Ir6502.PopStackValue(new Ir6502.AllFlags());
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.TestHal.PushToStack(0x81);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.TestHal.PushToStack(0x81);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.ProcessorStatus.ShouldBe((byte)0x81);
+        jit.TestHal.ProcessorStatus.ShouldBe((byte)0x81);
     }
 
     [Fact]
@@ -187,10 +201,11 @@ public class PopStackValueInstructionTests
     {
         var instruction = new Ir6502.PopStackValue(new Ir6502.StackPointer());
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.TestHal.PushToStack(0xE5);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.TestHal.PushToStack(0xE5);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.StackPointer.ShouldBe((byte)0xE5);
+        jit.TestHal.StackPointer.ShouldBe((byte)0xE5);
     }
 }

@@ -16,10 +16,11 @@ public class ConvertVariableToByteInstructionTests
             new Ir6502.Variable(0),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var testRunner = new InstructionTestRunner([setupVar, convertInstruction, readVar]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [setupVar, convertInstruction, readVar]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.ARegister.ShouldBe((byte)42);
+        jit.TestHal.ARegister.ShouldBe((byte)42);
     }
 
     [Fact]
@@ -33,10 +34,11 @@ public class ConvertVariableToByteInstructionTests
             new Ir6502.Variable(1),
             new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
-        var testRunner = new InstructionTestRunner([setupVar, convertInstruction, readVar]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [setupVar, convertInstruction, readVar]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.XRegister.ShouldBe((byte)0);
+        jit.TestHal.XRegister.ShouldBe((byte)0);
     }
 
     [Fact]
@@ -50,10 +52,11 @@ public class ConvertVariableToByteInstructionTests
             new Ir6502.Variable(2),
             new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
-        var testRunner = new InstructionTestRunner([setupVar, convertInstruction, readVar]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [setupVar, convertInstruction, readVar]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.YRegister.ShouldBe((byte)255);
+        jit.TestHal.YRegister.ShouldBe((byte)255);
     }
 
     [Fact]
@@ -67,10 +70,11 @@ public class ConvertVariableToByteInstructionTests
             new Ir6502.Variable(0),
             new Ir6502.Memory(0x2000, null, false));
 
-        var testRunner = new InstructionTestRunner([setupVar, convertInstruction, writeToMemory]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [setupVar, convertInstruction, writeToMemory]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.ReadMemory(0x2000).ShouldBe((byte)123);
+        jit.TestHal.ReadMemory(0x2000).ShouldBe((byte)123);
     }
 
     [Fact]
@@ -84,10 +88,11 @@ public class ConvertVariableToByteInstructionTests
             new Ir6502.Variable(0),
             new Ir6502.Flag(Ir6502.FlagName.Carry));
 
-        var testRunner = new InstructionTestRunner([setupVar, convertInstruction, copyToFlag]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [setupVar, convertInstruction, copyToFlag]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBe(true);
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBe(true);
     }
 
     [Fact]
@@ -101,10 +106,11 @@ public class ConvertVariableToByteInstructionTests
             new Ir6502.Variable(3),
             new Ir6502.StackPointer());
 
-        var testRunner = new InstructionTestRunner([setupVar, convertInstruction, copyToStackPointer]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [setupVar, convertInstruction, copyToStackPointer]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.StackPointer.ShouldBe((byte)0xF8);
+        jit.TestHal.StackPointer.ShouldBe((byte)0xF8);
     }
 
     [Fact]
@@ -126,9 +132,10 @@ public class ConvertVariableToByteInstructionTests
             new Ir6502.Variable(2),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var testRunner = new InstructionTestRunner([setupVar1, setupVar2, addOperation, convertInstruction, readResult]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [setupVar1, setupVar2, addOperation, convertInstruction, readResult]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.ARegister.ShouldBe((byte)94);
+        jit.TestHal.ARegister.ShouldBe((byte)94);
     }
 }

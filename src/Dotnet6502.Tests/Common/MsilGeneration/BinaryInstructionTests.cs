@@ -14,11 +14,11 @@ public class BinaryInstructionTests
             new Ir6502.Constant(25),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var method = ExecutableMethodGenerator.Generate("testMethod", [instruction]);
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.ARegister.ShouldBe((byte)40);
+        jit.TestHal.ARegister.ShouldBe((byte)40);
     }
 
     [Fact]
@@ -30,10 +30,11 @@ public class BinaryInstructionTests
             new Ir6502.Constant(30),
             new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.XRegister.ShouldBe((byte)20);
+        jit.TestHal.XRegister.ShouldBe((byte)20);
     }
 
     [Fact]
@@ -45,10 +46,11 @@ public class BinaryInstructionTests
             new Ir6502.Constant(0x0F),
             new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.YRegister.ShouldBe((byte)0x0F);
+        jit.TestHal.YRegister.ShouldBe((byte)0x0F);
     }
 
     [Fact]
@@ -60,10 +62,11 @@ public class BinaryInstructionTests
             new Ir6502.Constant(0xF0),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.ARegister.ShouldBe((byte)0xFF);
+        jit.TestHal.ARegister.ShouldBe((byte)0xFF);
     }
 
     [Fact]
@@ -75,10 +78,11 @@ public class BinaryInstructionTests
             new Ir6502.Constant(0x55),
             new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.XRegister.ShouldBe((byte)0xFF);
+        jit.TestHal.XRegister.ShouldBe((byte)0xFF);
     }
 
     [Fact]
@@ -90,10 +94,11 @@ public class BinaryInstructionTests
             new Ir6502.Constant(4),
             new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.YRegister.ShouldBe((byte)0x10);
+        jit.TestHal.YRegister.ShouldBe((byte)0x10);
     }
 
     [Fact]
@@ -105,10 +110,11 @@ public class BinaryInstructionTests
             new Ir6502.Constant(4),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.ARegister.ShouldBe((byte)0x08);
+        jit.TestHal.ARegister.ShouldBe((byte)0x08);
     }
 
     [Fact]
@@ -120,10 +126,11 @@ public class BinaryInstructionTests
             new Ir6502.Constant(42),
             new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.XRegister.ShouldBe((byte)1);
+        jit.TestHal.XRegister.ShouldBe((byte)1);
     }
 
     [Fact]
@@ -135,10 +142,11 @@ public class BinaryInstructionTests
             new Ir6502.Constant(43),
             new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.YRegister.ShouldBe((byte)0);
+        jit.TestHal.YRegister.ShouldBe((byte)0);
     }
 
     [Fact]
@@ -150,10 +158,11 @@ public class BinaryInstructionTests
             new Ir6502.Constant(43),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.ARegister.ShouldBe((byte)1);
+        jit.TestHal.ARegister.ShouldBe((byte)1);
     }
 
     [Fact]
@@ -165,10 +174,11 @@ public class BinaryInstructionTests
             new Ir6502.Constant(42),
             new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.XRegister.ShouldBe((byte)0);
+        jit.TestHal.XRegister.ShouldBe((byte)0);
     }
 
     [Fact]
@@ -180,10 +190,11 @@ public class BinaryInstructionTests
             new Ir6502.Constant(30),
             new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.YRegister.ShouldBe((byte)1);
+        jit.TestHal.YRegister.ShouldBe((byte)1);
     }
 
     [Fact]
@@ -195,10 +206,11 @@ public class BinaryInstructionTests
             new Ir6502.Constant(50),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.ARegister.ShouldBe((byte)0);
+        jit.TestHal.ARegister.ShouldBe((byte)0);
     }
 
     [Fact]
@@ -210,10 +222,11 @@ public class BinaryInstructionTests
             new Ir6502.Constant(50),
             new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.XRegister.ShouldBe((byte)1);
+        jit.TestHal.XRegister.ShouldBe((byte)1);
     }
 
     [Fact]
@@ -225,10 +238,11 @@ public class BinaryInstructionTests
             new Ir6502.Constant(50),
             new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.YRegister.ShouldBe((byte)0);
+        jit.TestHal.YRegister.ShouldBe((byte)0);
     }
 
     [Fact]
@@ -240,10 +254,11 @@ public class BinaryInstructionTests
             new Ir6502.Constant(50),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.ARegister.ShouldBe((byte)1);
+        jit.TestHal.ARegister.ShouldBe((byte)1);
     }
 
     [Fact]
@@ -255,10 +270,11 @@ public class BinaryInstructionTests
             new Ir6502.Constant(50),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.ARegister.ShouldBe((byte)1);
+        jit.TestHal.ARegister.ShouldBe((byte)1);
     }
 
     [Fact]
@@ -270,10 +286,11 @@ public class BinaryInstructionTests
             new Ir6502.Constant(30),
             new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.XRegister.ShouldBe((byte)0);
+        jit.TestHal.XRegister.ShouldBe((byte)0);
     }
 
     [Fact]
@@ -285,10 +302,11 @@ public class BinaryInstructionTests
             new Ir6502.Constant(30),
             new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.YRegister.ShouldBe((byte)1);
+        jit.TestHal.YRegister.ShouldBe((byte)1);
     }
 
     [Fact]
@@ -300,10 +318,11 @@ public class BinaryInstructionTests
             new Ir6502.Constant(30),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.ARegister.ShouldBe((byte)0);
+        jit.TestHal.ARegister.ShouldBe((byte)0);
     }
 
     [Fact]
@@ -315,10 +334,11 @@ public class BinaryInstructionTests
             new Ir6502.Constant(30),
             new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.XRegister.ShouldBe((byte)1);
+        jit.TestHal.XRegister.ShouldBe((byte)1);
     }
 
     [Fact]
@@ -330,16 +350,17 @@ public class BinaryInstructionTests
             new Ir6502.Constant(10),
             new Ir6502.Memory(0x1000, null, false));
 
-        var testRunner = new InstructionTestRunner([instruction])
+        var jit = new TestJitCompiler()
         {
             TestHal =
             {
                 ARegister = 25
             }
         };
-        testRunner.RunTestMethod();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.ReadMemory(0x1000).ShouldBe((byte)35);
+        jit.TestHal.ReadMemory(0x1000).ShouldBe((byte)35);
     }
 
     [Fact]
@@ -355,10 +376,11 @@ public class BinaryInstructionTests
             new Ir6502.Variable(0),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var testRunner = new InstructionTestRunner([instruction, readVar]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction, readVar]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.ARegister.ShouldBe((byte)20);
+        jit.TestHal.ARegister.ShouldBe((byte)20);
     }
 
     [Fact]
@@ -370,12 +392,13 @@ public class BinaryInstructionTests
             new Ir6502.Memory(0x2001, null, false),
             new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.TestHal.WriteMemory(0x2000, 15);
-        testRunner.TestHal.WriteMemory(0x2001, 20);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.TestHal.WriteMemory(0x2000, 15);
+        jit.TestHal.WriteMemory(0x2001, 20);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.XRegister.ShouldBe((byte)35);
+        jit.TestHal.XRegister.ShouldBe((byte)35);
     }
 
     [Fact]
@@ -387,17 +410,18 @@ public class BinaryInstructionTests
             new Ir6502.Constant(5),
             new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
-        var testRunner = new InstructionTestRunner([instruction])
+        var jit = new TestJitCompiler()
         {
             TestHal =
             {
                 XRegister = 10
             }
         };
-        testRunner.TestHal.WriteMemory(0x300A, 30);
-        testRunner.RunTestMethod();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.TestHal.WriteMemory(0x300A, 30);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.YRegister.ShouldBe((byte)35);
+        jit.TestHal.YRegister.ShouldBe((byte)35);
     }
 
     [Fact]
@@ -415,10 +439,11 @@ public class BinaryInstructionTests
             new Ir6502.Variable(1),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var testRunner = new InstructionTestRunner([setupVar1, setupVar2, instruction]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [setupVar1, setupVar2, instruction]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.ARegister.ShouldBe((byte)40);
+        jit.TestHal.ARegister.ShouldBe((byte)40);
     }
 
     [Fact]
@@ -430,12 +455,13 @@ public class BinaryInstructionTests
             new Ir6502.Flag(Ir6502.FlagName.Zero),
             new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.TestHal.SetFlag(CpuStatusFlags.Carry, true);
-        testRunner.TestHal.SetFlag(CpuStatusFlags.Zero, true);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Zero, true);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.XRegister.ShouldBe((byte)2);
+        jit.TestHal.XRegister.ShouldBe((byte)2);
     }
 
     [Fact]
@@ -447,16 +473,17 @@ public class BinaryInstructionTests
             new Ir6502.Constant(10),
             new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
-        var testRunner = new InstructionTestRunner([instruction])
+        var jit = new TestJitCompiler()
         {
             TestHal =
             {
                 ProcessorStatus = 0x20
             }
         };
-        testRunner.RunTestMethod();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.YRegister.ShouldBe((byte)42);
+        jit.TestHal.YRegister.ShouldBe((byte)42);
     }
 
     [Fact]
@@ -468,16 +495,17 @@ public class BinaryInstructionTests
             new Ir6502.Constant(5),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var testRunner = new InstructionTestRunner([instruction])
+        var jit = new TestJitCompiler()
         {
             TestHal =
             {
                 StackPointer = 0xF0
             }
         };
-        testRunner.RunTestMethod();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.ARegister.ShouldBe((byte)0xF5);
+        jit.TestHal.ARegister.ShouldBe((byte)0xF5);
     }
 
     [Fact]
@@ -489,10 +517,11 @@ public class BinaryInstructionTests
             new Ir6502.Constant(42),
             new Ir6502.Flag(Ir6502.FlagName.Zero));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBe(true);
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBe(true);
     }
 
     [Fact]
@@ -504,10 +533,11 @@ public class BinaryInstructionTests
             new Ir6502.Constant(0x03),
             new Ir6502.AllFlags());
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.ProcessorStatus.ShouldBe((byte)0x83);
+        jit.TestHal.ProcessorStatus.ShouldBe((byte)0x83);
     }
 
     [Fact]
@@ -519,10 +549,11 @@ public class BinaryInstructionTests
             new Ir6502.Constant(0x05),
             new Ir6502.StackPointer());
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.StackPointer.ShouldBe((byte)0xF5);
+        jit.TestHal.StackPointer.ShouldBe((byte)0xF5);
     }
 
     [Fact]
@@ -534,16 +565,17 @@ public class BinaryInstructionTests
             new Ir6502.Constant(20),
             new Ir6502.Memory(0x4000, Ir6502.RegisterName.YIndex, false));
 
-        var testRunner = new InstructionTestRunner([instruction])
+        var jit = new TestJitCompiler()
         {
             TestHal =
             {
                 YRegister = 15
             }
         };
-        testRunner.RunTestMethod();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.ReadMemory(0x400F).ShouldBe((byte)30);
+        jit.TestHal.ReadMemory(0x400F).ShouldBe((byte)30);
     }
 
     [Fact]
@@ -555,10 +587,11 @@ public class BinaryInstructionTests
             new Ir6502.Constant(100),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.ARegister.ShouldBe((byte)44);
+        jit.TestHal.ARegister.ShouldBe((byte)44);
     }
 
     [Fact]
@@ -570,9 +603,10 @@ public class BinaryInstructionTests
             new Ir6502.Constant(20),
             new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
-        var testRunner = new InstructionTestRunner([instruction]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.XRegister.ShouldBe((byte)246);
+        jit.TestHal.XRegister.ShouldBe((byte)246);
     }
 }

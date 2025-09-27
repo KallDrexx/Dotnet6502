@@ -52,16 +52,22 @@ public class JsrTests
             new Ir6502.Copy(new Ir6502.Constant(42), new Ir6502.Register(Ir6502.RegisterName.XIndex))
         };
 
-        var callableFunctions = new[] { "TestFunction" };
-        var testRunner = new InstructionTestRunner(allInstructions, callableFunctions);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, allInstructions);
+
+        // Add a callable function at the JSR target address that writes a test value to memory
+        var callableInstruction = new Ir6502.Copy(
+            new Ir6502.Constant(99),
+            new Ir6502.Memory(0x4000, null, false));
+        jit.AddMethod(0x9000, [callableInstruction]); // JSR target address from instruction bytes
+
+        jit.RunMethod(0x1234);
 
         // Verify the function was called and execution continued
-        testRunner.TestHal.XRegister.ShouldBe((byte)42); // Should be executed after JSR
+        jit.TestHal.XRegister.ShouldBe((byte)42); // Should be executed after JSR
 
         // Verify the function was actually invoked
-        var (address, expectedValue) = testRunner.GetCallableMethodSignature("TestFunction", callableFunctions);
-        testRunner.TestHal.ReadMemory(address).ShouldBe(expectedValue);
+        jit.TestHal.ReadMemory(0x4000).ShouldBe((byte)99);
     }
 
     [Fact]
@@ -111,19 +117,29 @@ public class JsrTests
             new Ir6502.Copy(new Ir6502.Constant(88), new Ir6502.Register(Ir6502.RegisterName.YIndex))
         };
 
-        var callableFunctions = new[] { "FirstFunction", "SecondFunction" };
-        var testRunner = new InstructionTestRunner(allInstructions, callableFunctions);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, allInstructions);
+
+        // Add callable functions at the JSR target addresses
+        var callableInstruction1 = new Ir6502.Copy(
+            new Ir6502.Constant(99),
+            new Ir6502.Memory(0x5000, null, false));
+        jit.AddMethod(0x9000, [callableInstruction1]); // First JSR target address
+
+        var callableInstruction2 = new Ir6502.Copy(
+            new Ir6502.Constant(100),
+            new Ir6502.Memory(0x5001, null, false));
+        jit.AddMethod(0x9100, [callableInstruction2]); // Second JSR target address
+
+        jit.RunMethod(0x1234);
 
         // Verify both functions were called and all instructions executed
-        testRunner.TestHal.XRegister.ShouldBe((byte)77);
-        testRunner.TestHal.YRegister.ShouldBe((byte)88);
+        jit.TestHal.XRegister.ShouldBe((byte)77);
+        jit.TestHal.YRegister.ShouldBe((byte)88);
 
         // Verify both functions were actually invoked
-        var (address1, expectedValue1) = testRunner.GetCallableMethodSignature("FirstFunction", callableFunctions);
-        var (address2, expectedValue2) = testRunner.GetCallableMethodSignature("SecondFunction", callableFunctions);
-        testRunner.TestHal.ReadMemory(address1).ShouldBe(expectedValue1);
-        testRunner.TestHal.ReadMemory(address2).ShouldBe(expectedValue2);
+        jit.TestHal.ReadMemory(0x5000).ShouldBe((byte)99);
+        jit.TestHal.ReadMemory(0x5001).ShouldBe((byte)100);
     }
 
     [Fact]
@@ -161,18 +177,24 @@ public class JsrTests
             new Ir6502.Copy(new Ir6502.Constant(33), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
         };
 
-        var callableFunctions = new[] { "RepeatedFunction" };
-        var testRunner = new InstructionTestRunner(allInstructions, callableFunctions);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, allInstructions);
+
+        // Add a callable function at the JSR target address
+        var callableInstruction = new Ir6502.Copy(
+            new Ir6502.Constant(101),
+            new Ir6502.Memory(0x5002, null, false));
+        jit.AddMethod(0x9000, [callableInstruction]); // JSR target address
+
+        jit.RunMethod(0x1234);
 
         // Verify all instructions executed (function was called each time)
-        testRunner.TestHal.XRegister.ShouldBe((byte)11);
-        testRunner.TestHal.YRegister.ShouldBe((byte)22);
-        testRunner.TestHal.ARegister.ShouldBe((byte)33);
+        jit.TestHal.XRegister.ShouldBe((byte)11);
+        jit.TestHal.YRegister.ShouldBe((byte)22);
+        jit.TestHal.ARegister.ShouldBe((byte)33);
 
         // Verify the function was actually invoked
-        var (address, expectedValue) = testRunner.GetCallableMethodSignature("RepeatedFunction", callableFunctions);
-        testRunner.TestHal.ReadMemory(address).ShouldBe(expectedValue);
+        jit.TestHal.ReadMemory(0x5002).ShouldBe((byte)101);
     }
 
     [Fact]
@@ -207,26 +229,32 @@ public class JsrTests
             nesIrInstructions[0]
         };
 
-        var callableFunctions = new[] { "TestFunction" };
-        var testRunner = new InstructionTestRunner(allInstructions, callableFunctions);
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, allInstructions);
+
+        // Add a callable function at the JSR target address
+        var callableInstruction = new Ir6502.Copy(
+            new Ir6502.Constant(102),
+            new Ir6502.Memory(0x5003, null, false));
+        jit.AddMethod(0x9000, [callableInstruction]); // JSR target address
 
         // Set initial flag states
-        testRunner.TestHal.Flags[CpuStatusFlags.Carry] = true;
-        testRunner.TestHal.Flags[CpuStatusFlags.Zero] = true;
-        testRunner.TestHal.Flags[CpuStatusFlags.Negative] = true;
-        testRunner.TestHal.Flags[CpuStatusFlags.Overflow] = true;
-        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
-        testRunner.TestHal.Flags[CpuStatusFlags.Decimal] = true;
+        jit.TestHal.Flags[CpuStatusFlags.Carry] = true;
+        jit.TestHal.Flags[CpuStatusFlags.Zero] = true;
+        jit.TestHal.Flags[CpuStatusFlags.Negative] = true;
+        jit.TestHal.Flags[CpuStatusFlags.Overflow] = true;
+        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
+        jit.TestHal.Flags[CpuStatusFlags.Decimal] = true;
 
-        testRunner.RunTestMethod();
+        jit.RunMethod(0x1234);
 
         // JSR should not affect any flags
-        testRunner.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
-        testRunner.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
-        testRunner.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
-        testRunner.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
-        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue();
-        testRunner.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
     }
 
     [Fact]
@@ -255,22 +283,28 @@ public class JsrTests
             nesIrInstructions[0]
         };
 
-        var callableFunctions = new[] { "TestFunction" };
-        var testRunner = new InstructionTestRunner(allInstructions, callableFunctions);
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, allInstructions);
+
+        // Add a callable function at the JSR target address
+        var callableInstruction = new Ir6502.Copy(
+            new Ir6502.Constant(103),
+            new Ir6502.Memory(0x5004, null, false));
+        jit.AddMethod(0x9000, [callableInstruction]); // JSR target address
 
         // Set initial register values
-        testRunner.TestHal.ARegister = 0x42;
-        testRunner.TestHal.XRegister = 0x33;
-        testRunner.TestHal.YRegister = 0x77;
-        testRunner.TestHal.StackPointer = 0xFF;
+        jit.TestHal.ARegister = 0x42;
+        jit.TestHal.XRegister = 0x33;
+        jit.TestHal.YRegister = 0x77;
+        jit.TestHal.StackPointer = 0xFF;
 
-        testRunner.RunTestMethod();
+        jit.RunMethod(0x1234);
 
         // JSR should not affect any registers
-        testRunner.TestHal.ARegister.ShouldBe((byte)0x42);
-        testRunner.TestHal.XRegister.ShouldBe((byte)0x33);
-        testRunner.TestHal.YRegister.ShouldBe((byte)0x77);
-        testRunner.TestHal.StackPointer.ShouldBe((byte)0xFF);
+        jit.TestHal.ARegister.ShouldBe((byte)0x42);
+        jit.TestHal.XRegister.ShouldBe((byte)0x33);
+        jit.TestHal.YRegister.ShouldBe((byte)0x77);
+        jit.TestHal.StackPointer.ShouldBe((byte)0xFF);
     }
 
     [Fact]
@@ -311,36 +345,22 @@ public class JsrTests
                 new Ir6502.Copy(new Ir6502.Constant(99), new Ir6502.Register(Ir6502.RegisterName.XIndex))
             };
 
-            var callableFunctions = new[] { testCase.Name };
-            var testRunner = new InstructionTestRunner(allInstructions, callableFunctions);
-            testRunner.RunTestMethod();
+            var jit = new TestJitCompiler();
+            jit.AddMethod(0x1234, allInstructions);
+
+            // Add a callable function at the JSR target address
+            var callableInstruction = new Ir6502.Copy(
+                new Ir6502.Constant(104),
+                new Ir6502.Memory((ushort)(0x5005 + (testCase.Address - 0x9000) / 0x100), null, false));
+            jit.AddMethod(testCase.Address, [callableInstruction]); // JSR target address
+
+            jit.RunMethod(0x1234);
 
             // Verify function was called and execution continued
-            testRunner.TestHal.XRegister.ShouldBe((byte)99);
+            jit.TestHal.XRegister.ShouldBe((byte)99);
 
-            var (address, expectedValue) = testRunner.GetCallableMethodSignature(testCase.Name, callableFunctions);
-            testRunner.TestHal.ReadMemory(address).ShouldBe(expectedValue);
+            jit.TestHal.ReadMemory((ushort)(0x5005 + (testCase.Address - 0x9000) / 0x100)).ShouldBe((byte)104);
         }
-    }
-
-    [Fact]
-    public void JSR_Function_Not_Defined_Throws_Exception()
-    {
-        var instructionInfo = InstructionSet.GetInstruction(0x20);
-        var instruction = new DisassembledInstruction
-        {
-            Info = instructionInfo,
-            Bytes = [0x20, 0x00, 0x90],
-            TargetAddress = 0x9000 // This address will not have a function defined
-        };
-
-        var labels = new Dictionary<ushort, string>();
-        var functions = new Dictionary<ushort, Function>(); // Empty - no functions defined
-        var context = new InstructionConverter.Context(labels);
-
-        // Should throw exception when trying to convert JSR to undefined function
-        Should.Throw<InvalidOperationException>(() => InstructionConverter.Convert(instruction, context))
-            .Message.ShouldContain("JSR instruction to address '36864' but that address is not tied to a known function");
     }
 
     [Fact]

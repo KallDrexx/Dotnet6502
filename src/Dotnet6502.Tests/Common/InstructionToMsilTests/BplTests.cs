@@ -53,14 +53,15 @@ public class BplTests
             new Ir6502.Copy(new Ir6502.Constant(42), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
         };
 
-        var testRunner = new InstructionTestRunner(allInstructions);
-        testRunner.TestHal.Flags[CpuStatusFlags.Negative] = false; // Negative flag clear
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, allInstructions);
+        jit.TestHal.Flags[CpuStatusFlags.Negative] = false; // Negative flag clear
+        jit.RunMethod(0x1234);
 
         // Branch should be taken, skipping X register assignment
-        testRunner.TestHal.XRegister.ShouldBe((byte)0); // Should remain 0 (skipped)
-        testRunner.TestHal.ARegister.ShouldBe((byte)42); // Should be executed at target
-        testRunner.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse(); // Should remain unchanged
+        jit.TestHal.XRegister.ShouldBe((byte)0); // Should remain 0 (skipped)
+        jit.TestHal.ARegister.ShouldBe((byte)42); // Should be executed at target
+        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse(); // Should remain unchanged
     }
 
     [Fact]
@@ -99,14 +100,15 @@ public class BplTests
             new Ir6502.Copy(new Ir6502.Constant(88), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
         };
 
-        var testRunner = new InstructionTestRunner(allInstructions);
-        testRunner.TestHal.Flags[CpuStatusFlags.Negative] = true; // Negative flag set
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, allInstructions);
+        jit.TestHal.Flags[CpuStatusFlags.Negative] = true; // Negative flag set
+        jit.RunMethod(0x1234);
 
         // Branch should NOT be taken, continuing to next instruction
-        testRunner.TestHal.XRegister.ShouldBe((byte)77); // Should be executed
-        testRunner.TestHal.ARegister.ShouldBe((byte)88); // Should also be executed
-        testRunner.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue(); // Should remain unchanged
+        jit.TestHal.XRegister.ShouldBe((byte)77); // Should be executed
+        jit.TestHal.ARegister.ShouldBe((byte)88); // Should also be executed
+        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue(); // Should remain unchanged
     }
 
     [Fact]
@@ -153,12 +155,13 @@ public class BplTests
             nesIrInstructions[0]
         };
 
-        var testRunner = new InstructionTestRunner(allInstructions);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, allInstructions);
+        jit.RunMethod(0x1234);
 
         // Loop should execute 3 times before negative flag becomes set (exit condition)
-        testRunner.TestHal.XRegister.ShouldBe((byte)3);
-        testRunner.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue(); // Final state: negative flag set (loop exit condition)
+        jit.TestHal.XRegister.ShouldBe((byte)3);
+        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue(); // Final state: negative flag set (loop exit condition)
     }
 
     [Fact]
@@ -193,25 +196,26 @@ public class BplTests
             new Ir6502.Label(new Ir6502.Identifier("target"))
         };
 
-        var testRunner = new InstructionTestRunner(allInstructions);
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, allInstructions);
 
         // Set initial flag states
-        testRunner.TestHal.Flags[CpuStatusFlags.Negative] = false;
-        testRunner.TestHal.Flags[CpuStatusFlags.Carry] = true;
-        testRunner.TestHal.Flags[CpuStatusFlags.Zero] = true;
-        testRunner.TestHal.Flags[CpuStatusFlags.Overflow] = true;
-        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
-        testRunner.TestHal.Flags[CpuStatusFlags.Decimal] = true;
+        jit.TestHal.Flags[CpuStatusFlags.Negative] = false;
+        jit.TestHal.Flags[CpuStatusFlags.Carry] = true;
+        jit.TestHal.Flags[CpuStatusFlags.Zero] = true;
+        jit.TestHal.Flags[CpuStatusFlags.Overflow] = true;
+        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
+        jit.TestHal.Flags[CpuStatusFlags.Decimal] = true;
 
-        testRunner.RunTestMethod();
+        jit.RunMethod(0x1234);
 
         // BPL should not affect any flags
-        testRunner.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
-        testRunner.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
-        testRunner.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
-        testRunner.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
-        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue();
-        testRunner.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
     }
 
     [Fact]
@@ -243,22 +247,23 @@ public class BplTests
             new Ir6502.Label(new Ir6502.Identifier("target"))
         };
 
-        var testRunner = new InstructionTestRunner(allInstructions);
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, allInstructions);
 
         // Set initial register values
-        testRunner.TestHal.ARegister = 0x42;
-        testRunner.TestHal.XRegister = 0x33;
-        testRunner.TestHal.YRegister = 0x77;
-        testRunner.TestHal.StackPointer = 0xFF;
-        testRunner.TestHal.Flags[CpuStatusFlags.Negative] = false;
+        jit.TestHal.ARegister = 0x42;
+        jit.TestHal.XRegister = 0x33;
+        jit.TestHal.YRegister = 0x77;
+        jit.TestHal.StackPointer = 0xFF;
+        jit.TestHal.Flags[CpuStatusFlags.Negative] = false;
 
-        testRunner.RunTestMethod();
+        jit.RunMethod(0x1234);
 
         // BPL should not affect any registers
-        testRunner.TestHal.ARegister.ShouldBe((byte)0x42);
-        testRunner.TestHal.XRegister.ShouldBe((byte)0x33);
-        testRunner.TestHal.YRegister.ShouldBe((byte)0x77);
-        testRunner.TestHal.StackPointer.ShouldBe((byte)0xFF);
+        jit.TestHal.ARegister.ShouldBe((byte)0x42);
+        jit.TestHal.XRegister.ShouldBe((byte)0x33);
+        jit.TestHal.YRegister.ShouldBe((byte)0x77);
+        jit.TestHal.StackPointer.ShouldBe((byte)0xFF);
     }
 
     [Fact]
@@ -296,13 +301,14 @@ public class BplTests
             new Ir6502.Copy(new Ir6502.Constant(222), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
         };
 
-        var testRunner = new InstructionTestRunner(allInstructions);
-        testRunner.TestHal.Flags[CpuStatusFlags.Negative] = false;
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, allInstructions);
+        jit.TestHal.Flags[CpuStatusFlags.Negative] = false;
+        jit.RunMethod(0x1234);
 
         // Branch should be taken
-        testRunner.TestHal.XRegister.ShouldBe((byte)0); // Should be skipped
-        testRunner.TestHal.ARegister.ShouldBe((byte)222); // Should be executed
+        jit.TestHal.XRegister.ShouldBe((byte)0); // Should be skipped
+        jit.TestHal.ARegister.ShouldBe((byte)222); // Should be executed
     }
 
     [Fact]
@@ -353,13 +359,14 @@ public class BplTests
             nesIrInstructions[0]
         };
 
-        var testRunner = new InstructionTestRunner(allInstructions);
-        testRunner.TestHal.XRegister = 0; // Start with 0 to trigger branch once
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, allInstructions);
+        jit.TestHal.XRegister = 0; // Start with 0 to trigger branch once
+        jit.RunMethod(0x1234);
 
         // Should have branched back, loop executes twice (X starts at 0, branches when X<1, then X becomes 1, then X becomes 2, then negative is set and no more branch)
-        testRunner.TestHal.ARegister.ShouldBe((byte)155); // Target reached
-        testRunner.TestHal.XRegister.ShouldBe((byte)2); // Incremented twice (loop executes twice)
+        jit.TestHal.ARegister.ShouldBe((byte)155); // Target reached
+        jit.TestHal.XRegister.ShouldBe((byte)2); // Incremented twice (loop executes twice)
     }
 
     [Fact]
@@ -399,13 +406,14 @@ public class BplTests
                 new Ir6502.Copy(new Ir6502.Constant(100), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
             };
 
-            var testRunner1 = new InstructionTestRunner(allInstructions);
-            testRunner1.TestHal.Flags[CpuStatusFlags.Negative] = true;
-            testRunner1.RunTestMethod();
+            var jit1 = new TestJitCompiler();
+            jit1.AddMethod(0x1234, allInstructions);
+            jit1.TestHal.Flags[CpuStatusFlags.Negative] = true;
+            jit1.RunMethod(0x1234);
 
             // Branch should NOT be taken
-            testRunner1.TestHal.XRegister.ShouldBe((byte)50);
-            testRunner1.TestHal.ARegister.ShouldBe((byte)100);
+            jit1.TestHal.XRegister.ShouldBe((byte)50);
+            jit1.TestHal.ARegister.ShouldBe((byte)100);
         }
 
         // Test case 2: After operation that clears negative flag (positive/zero result)
@@ -428,13 +436,14 @@ public class BplTests
                 new Ir6502.Copy(new Ir6502.Constant(150), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
             };
 
-            var testRunner2 = new InstructionTestRunner(allInstructions);
-            testRunner2.TestHal.Flags[CpuStatusFlags.Negative] = false;
-            testRunner2.RunTestMethod();
+            var jit2 = new TestJitCompiler();
+            jit2.AddMethod(0x1234, allInstructions);
+            jit2.TestHal.Flags[CpuStatusFlags.Negative] = false;
+            jit2.RunMethod(0x1234);
 
             // Branch SHOULD be taken
-            testRunner2.TestHal.XRegister.ShouldBe((byte)0); // Skipped
-            testRunner2.TestHal.ARegister.ShouldBe((byte)150); // Executed at target
+            jit2.TestHal.XRegister.ShouldBe((byte)0); // Skipped
+            jit2.TestHal.ARegister.ShouldBe((byte)150); // Executed at target
         }
     }
 }

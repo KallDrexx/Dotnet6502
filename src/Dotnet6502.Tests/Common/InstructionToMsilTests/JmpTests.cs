@@ -50,12 +50,13 @@ public class JmpTests
             new Ir6502.Copy(new Ir6502.Constant(42), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
         };
 
-        var testRunner = new InstructionTestRunner(allInstructions);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, allInstructions);
+        jit.RunMethod(0x1234);
 
         // Jump should always be taken, skipping X register assignment
-        testRunner.TestHal.XRegister.ShouldBe((byte)0); // Should remain 0 (skipped)
-        testRunner.TestHal.ARegister.ShouldBe((byte)42); // Should be executed at target
+        jit.TestHal.XRegister.ShouldBe((byte)0); // Should remain 0 (skipped)
+        jit.TestHal.ARegister.ShouldBe((byte)42); // Should be executed at target
     }
 
     [Fact]
@@ -91,12 +92,13 @@ public class JmpTests
             new Ir6502.Copy(new Ir6502.Constant(77), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
         };
 
-        var testRunner = new InstructionTestRunner(allInstructions);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, allInstructions);
+        jit.RunMethod(0x1234);
 
         // Jump should always be taken, skipping X register assignment
-        testRunner.TestHal.XRegister.ShouldBe((byte)0); // Should remain 0 (skipped)
-        testRunner.TestHal.ARegister.ShouldBe((byte)77); // Should be executed at target
+        jit.TestHal.XRegister.ShouldBe((byte)0); // Should remain 0 (skipped)
+        jit.TestHal.ARegister.ShouldBe((byte)77); // Should be executed at target
     }
 
     [Fact]
@@ -131,25 +133,26 @@ public class JmpTests
             new Ir6502.Label(new Ir6502.Identifier("target"))
         };
 
-        var testRunner = new InstructionTestRunner(allInstructions);
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, allInstructions);
 
         // Set initial flag states
-        testRunner.TestHal.Flags[CpuStatusFlags.Carry] = true;
-        testRunner.TestHal.Flags[CpuStatusFlags.Zero] = true;
-        testRunner.TestHal.Flags[CpuStatusFlags.Negative] = true;
-        testRunner.TestHal.Flags[CpuStatusFlags.Overflow] = true;
-        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
-        testRunner.TestHal.Flags[CpuStatusFlags.Decimal] = true;
+        jit.TestHal.Flags[CpuStatusFlags.Carry] = true;
+        jit.TestHal.Flags[CpuStatusFlags.Zero] = true;
+        jit.TestHal.Flags[CpuStatusFlags.Negative] = true;
+        jit.TestHal.Flags[CpuStatusFlags.Overflow] = true;
+        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
+        jit.TestHal.Flags[CpuStatusFlags.Decimal] = true;
 
-        testRunner.RunTestMethod();
+        jit.RunMethod(0x1234);
 
         // JMP should not affect any flags
-        testRunner.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
-        testRunner.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
-        testRunner.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
-        testRunner.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
-        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue();
-        testRunner.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
     }
 
     [Fact]
@@ -184,25 +187,26 @@ public class JmpTests
             new Ir6502.Label(new Ir6502.Identifier("target"))
         };
 
-        var testRunner = new InstructionTestRunner(allInstructions);
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, allInstructions);
 
         // Set initial flag states
-        testRunner.TestHal.Flags[CpuStatusFlags.Carry] = true;
-        testRunner.TestHal.Flags[CpuStatusFlags.Zero] = true;
-        testRunner.TestHal.Flags[CpuStatusFlags.Negative] = true;
-        testRunner.TestHal.Flags[CpuStatusFlags.Overflow] = true;
-        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
-        testRunner.TestHal.Flags[CpuStatusFlags.Decimal] = true;
+        jit.TestHal.Flags[CpuStatusFlags.Carry] = true;
+        jit.TestHal.Flags[CpuStatusFlags.Zero] = true;
+        jit.TestHal.Flags[CpuStatusFlags.Negative] = true;
+        jit.TestHal.Flags[CpuStatusFlags.Overflow] = true;
+        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
+        jit.TestHal.Flags[CpuStatusFlags.Decimal] = true;
 
-        testRunner.RunTestMethod();
+        jit.RunMethod(0x1234);
 
         // JMP should not affect any flags
-        testRunner.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
-        testRunner.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
-        testRunner.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
-        testRunner.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
-        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue();
-        testRunner.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
     }
 
     [Fact]
@@ -231,21 +235,22 @@ public class JmpTests
             new Ir6502.Label(new Ir6502.Identifier("target"))
         };
 
-        var testRunner = new InstructionTestRunner(allInstructions);
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, allInstructions);
 
         // Set initial register values
-        testRunner.TestHal.ARegister = 0x42;
-        testRunner.TestHal.XRegister = 0x33;
-        testRunner.TestHal.YRegister = 0x77;
-        testRunner.TestHal.StackPointer = 0xFF;
+        jit.TestHal.ARegister = 0x42;
+        jit.TestHal.XRegister = 0x33;
+        jit.TestHal.YRegister = 0x77;
+        jit.TestHal.StackPointer = 0xFF;
 
-        testRunner.RunTestMethod();
+        jit.RunMethod(0x1234);
 
         // JMP should not affect any registers
-        testRunner.TestHal.ARegister.ShouldBe((byte)0x42);
-        testRunner.TestHal.XRegister.ShouldBe((byte)0x33);
-        testRunner.TestHal.YRegister.ShouldBe((byte)0x77);
-        testRunner.TestHal.StackPointer.ShouldBe((byte)0xFF);
+        jit.TestHal.ARegister.ShouldBe((byte)0x42);
+        jit.TestHal.XRegister.ShouldBe((byte)0x33);
+        jit.TestHal.YRegister.ShouldBe((byte)0x77);
+        jit.TestHal.StackPointer.ShouldBe((byte)0xFF);
     }
 
     [Fact]
@@ -274,21 +279,22 @@ public class JmpTests
             new Ir6502.Label(new Ir6502.Identifier("target"))
         };
 
-        var testRunner = new InstructionTestRunner(allInstructions);
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, allInstructions);
 
         // Set initial register values
-        testRunner.TestHal.ARegister = 0x55;
-        testRunner.TestHal.XRegister = 0xAA;
-        testRunner.TestHal.YRegister = 0xBB;
-        testRunner.TestHal.StackPointer = 0xCC;
+        jit.TestHal.ARegister = 0x55;
+        jit.TestHal.XRegister = 0xAA;
+        jit.TestHal.YRegister = 0xBB;
+        jit.TestHal.StackPointer = 0xCC;
 
-        testRunner.RunTestMethod();
+        jit.RunMethod(0x1234);
 
         // JMP should not affect any registers
-        testRunner.TestHal.ARegister.ShouldBe((byte)0x55);
-        testRunner.TestHal.XRegister.ShouldBe((byte)0xAA);
-        testRunner.TestHal.YRegister.ShouldBe((byte)0xBB);
-        testRunner.TestHal.StackPointer.ShouldBe((byte)0xCC);
+        jit.TestHal.ARegister.ShouldBe((byte)0x55);
+        jit.TestHal.XRegister.ShouldBe((byte)0xAA);
+        jit.TestHal.YRegister.ShouldBe((byte)0xBB);
+        jit.TestHal.StackPointer.ShouldBe((byte)0xCC);
     }
 
     [Fact]
@@ -323,12 +329,13 @@ public class JmpTests
             new Ir6502.Copy(new Ir6502.Constant(222), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
         };
 
-        var testRunner = new InstructionTestRunner(allInstructions);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, allInstructions);
+        jit.RunMethod(0x1234);
 
         // Jump should be taken to far address
-        testRunner.TestHal.XRegister.ShouldBe((byte)0); // Should be skipped
-        testRunner.TestHal.ARegister.ShouldBe((byte)222); // Should be executed
+        jit.TestHal.XRegister.ShouldBe((byte)0); // Should be skipped
+        jit.TestHal.ARegister.ShouldBe((byte)222); // Should be executed
     }
 
     [Fact]
@@ -363,12 +370,13 @@ public class JmpTests
             new Ir6502.Copy(new Ir6502.Constant(210), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
         };
 
-        var testRunner = new InstructionTestRunner(allInstructions);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, allInstructions);
+        jit.RunMethod(0x1234);
 
         // Jump should be taken via indirect addressing
-        testRunner.TestHal.YRegister.ShouldBe((byte)0); // Should be skipped
-        testRunner.TestHal.ARegister.ShouldBe((byte)210); // Should be executed
+        jit.TestHal.YRegister.ShouldBe((byte)0); // Should be skipped
+        jit.TestHal.ARegister.ShouldBe((byte)210); // Should be executed
     }
 
     [Fact]
@@ -403,12 +411,13 @@ public class JmpTests
             new Ir6502.Copy(new Ir6502.Constant(99), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
         };
 
-        var testRunner = new InstructionTestRunner(allInstructions);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, allInstructions);
+        jit.RunMethod(0x1234);
 
         // Jump should be taken to low address
-        testRunner.TestHal.XRegister.ShouldBe((byte)0); // Should be skipped
-        testRunner.TestHal.ARegister.ShouldBe((byte)99); // Should be executed
+        jit.TestHal.XRegister.ShouldBe((byte)0); // Should be skipped
+        jit.TestHal.ARegister.ShouldBe((byte)99); // Should be executed
     }
 
     [Fact]
@@ -456,20 +465,21 @@ public class JmpTests
                 new Ir6502.Copy(new Ir6502.Constant(55), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
             };
 
-            var testRunner = new InstructionTestRunner(allInstructions);
+            var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, allInstructions);
 
             // Set flag states
-            testRunner.TestHal.Flags[CpuStatusFlags.Carry] = carryState;
-            testRunner.TestHal.Flags[CpuStatusFlags.Zero] = zeroState;
-            testRunner.TestHal.Flags[CpuStatusFlags.Negative] = negativeState;
-            testRunner.TestHal.Flags[CpuStatusFlags.Overflow] = overflowState;
+            jit.TestHal.Flags[CpuStatusFlags.Carry] = carryState;
+            jit.TestHal.Flags[CpuStatusFlags.Zero] = zeroState;
+            jit.TestHal.Flags[CpuStatusFlags.Negative] = negativeState;
+            jit.TestHal.Flags[CpuStatusFlags.Overflow] = overflowState;
 
-            testRunner.RunTestMethod();
+            jit.RunMethod(0x1234);
 
             // JMP should always jump, regardless of flag states
-            testRunner.TestHal.XRegister.ShouldBe((byte)0,
+            jit.TestHal.XRegister.ShouldBe((byte)0,
                 $"Jump should always be taken (C:{carryState}, Z:{zeroState}, N:{negativeState}, V:{overflowState})");
-            testRunner.TestHal.ARegister.ShouldBe((byte)55,
+            jit.TestHal.ARegister.ShouldBe((byte)55,
                 $"Target should always be reached (C:{carryState}, Z:{zeroState}, N:{negativeState}, V:{overflowState})");
         }
     }

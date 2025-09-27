@@ -28,19 +28,20 @@ public class StaTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var testRunner = new InstructionTestRunner(nesIrInstructions);
-        testRunner.TestHal.ARegister = 0x42;
-        testRunner.TestHal.MemoryValues[0x10] = 0x00; // Initial value
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, nesIrInstructions);
+        jit.TestHal.ARegister = 0x42;
+        jit.TestHal.MemoryValues[0x10] = 0x00; // Initial value
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.MemoryValues[0x10].ShouldBe((byte)0x42);
-        testRunner.TestHal.ARegister.ShouldBe((byte)0x42); // Accumulator unchanged
+        jit.TestHal.MemoryValues[0x10].ShouldBe((byte)0x42);
+        jit.TestHal.ARegister.ShouldBe((byte)0x42); // Accumulator unchanged
 
         // No flags should be affected
-        testRunner.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        testRunner.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
-        testRunner.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
-        testRunner.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
     }
 
     [Fact]
@@ -57,19 +58,20 @@ public class StaTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var testRunner = new InstructionTestRunner(nesIrInstructions);
-        testRunner.TestHal.ARegister = 0x00;
-        testRunner.TestHal.MemoryValues[0x20] = 0xFF; // Initial value
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, nesIrInstructions);
+        jit.TestHal.ARegister = 0x00;
+        jit.TestHal.MemoryValues[0x20] = 0xFF; // Initial value
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.MemoryValues[0x20].ShouldBe((byte)0x00);
-        testRunner.TestHal.ARegister.ShouldBe((byte)0x00);
+        jit.TestHal.MemoryValues[0x20].ShouldBe((byte)0x00);
+        jit.TestHal.ARegister.ShouldBe((byte)0x00);
 
         // No flags should be affected even when storing zero
-        testRunner.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        testRunner.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
-        testRunner.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
-        testRunner.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
     }
 
     [Fact]
@@ -86,19 +88,20 @@ public class StaTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var testRunner = new InstructionTestRunner(nesIrInstructions);
-        testRunner.TestHal.ARegister = 0x80; // Negative value
-        testRunner.TestHal.MemoryValues[0x30] = 0x00; // Initial value
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, nesIrInstructions);
+        jit.TestHal.ARegister = 0x80; // Negative value
+        jit.TestHal.MemoryValues[0x30] = 0x00; // Initial value
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.MemoryValues[0x30].ShouldBe((byte)0x80);
-        testRunner.TestHal.ARegister.ShouldBe((byte)0x80);
+        jit.TestHal.MemoryValues[0x30].ShouldBe((byte)0x80);
+        jit.TestHal.ARegister.ShouldBe((byte)0x80);
 
         // No flags should be affected even when storing negative value
-        testRunner.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        testRunner.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
-        testRunner.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
-        testRunner.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
     }
 
     [Fact]
@@ -115,20 +118,21 @@ public class StaTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var testRunner = new InstructionTestRunner(nesIrInstructions);
-        testRunner.TestHal.ARegister = 0x55;
-        testRunner.TestHal.XRegister = 0x05;
-        testRunner.TestHal.MemoryValues[0x45] = 0x00; // 0x40 + 0x05 = 0x45
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, nesIrInstructions);
+        jit.TestHal.ARegister = 0x55;
+        jit.TestHal.XRegister = 0x05;
+        jit.TestHal.MemoryValues[0x45] = 0x00; // 0x40 + 0x05 = 0x45
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.MemoryValues[0x45].ShouldBe((byte)0x55);
-        testRunner.TestHal.ARegister.ShouldBe((byte)0x55);
+        jit.TestHal.MemoryValues[0x45].ShouldBe((byte)0x55);
+        jit.TestHal.ARegister.ShouldBe((byte)0x55);
 
         // No flags should be affected
-        testRunner.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        testRunner.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
-        testRunner.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
-        testRunner.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
     }
 
     [Fact]
@@ -145,22 +149,23 @@ public class StaTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var testRunner = new InstructionTestRunner(nesIrInstructions);
-        testRunner.TestHal.ARegister = 0x77;
-        testRunner.TestHal.XRegister = 0x02;
-        testRunner.TestHal.MemoryValues[0x01] = 0x00; // (0xFF + 0x02) & 0xFF = 0x01
-        testRunner.TestHal.MemoryValues[0x101] = 0x00; // Should NOT be written to
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, nesIrInstructions);
+        jit.TestHal.ARegister = 0x77;
+        jit.TestHal.XRegister = 0x02;
+        jit.TestHal.MemoryValues[0x01] = 0x00; // (0xFF + 0x02) & 0xFF = 0x01
+        jit.TestHal.MemoryValues[0x101] = 0x00; // Should NOT be written to
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.MemoryValues[0x01].ShouldBe((byte)0x77);
-        testRunner.TestHal.MemoryValues[0x101].ShouldBe((byte)0x00); // Should remain unchanged
-        testRunner.TestHal.ARegister.ShouldBe((byte)0x77);
+        jit.TestHal.MemoryValues[0x01].ShouldBe((byte)0x77);
+        jit.TestHal.MemoryValues[0x101].ShouldBe((byte)0x00); // Should remain unchanged
+        jit.TestHal.ARegister.ShouldBe((byte)0x77);
 
         // No flags should be affected
-        testRunner.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        testRunner.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
-        testRunner.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
-        testRunner.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
     }
 
     [Fact]
@@ -177,19 +182,20 @@ public class StaTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var testRunner = new InstructionTestRunner(nesIrInstructions);
-        testRunner.TestHal.ARegister = 0x99;
-        testRunner.TestHal.MemoryValues[0x3000] = 0x00; // Initial value
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, nesIrInstructions);
+        jit.TestHal.ARegister = 0x99;
+        jit.TestHal.MemoryValues[0x3000] = 0x00; // Initial value
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.MemoryValues[0x3000].ShouldBe((byte)0x99);
-        testRunner.TestHal.ARegister.ShouldBe((byte)0x99);
+        jit.TestHal.MemoryValues[0x3000].ShouldBe((byte)0x99);
+        jit.TestHal.ARegister.ShouldBe((byte)0x99);
 
         // No flags should be affected
-        testRunner.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        testRunner.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
-        testRunner.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
-        testRunner.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
     }
 
     [Fact]
@@ -206,20 +212,21 @@ public class StaTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var testRunner = new InstructionTestRunner(nesIrInstructions);
-        testRunner.TestHal.ARegister = 0x11;
-        testRunner.TestHal.XRegister = 0x0F;
-        testRunner.TestHal.MemoryValues[0x200F] = 0x00; // 0x2000 + 0x0F = 0x200F
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, nesIrInstructions);
+        jit.TestHal.ARegister = 0x11;
+        jit.TestHal.XRegister = 0x0F;
+        jit.TestHal.MemoryValues[0x200F] = 0x00; // 0x2000 + 0x0F = 0x200F
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.MemoryValues[0x200F].ShouldBe((byte)0x11);
-        testRunner.TestHal.ARegister.ShouldBe((byte)0x11);
+        jit.TestHal.MemoryValues[0x200F].ShouldBe((byte)0x11);
+        jit.TestHal.ARegister.ShouldBe((byte)0x11);
 
         // No flags should be affected
-        testRunner.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        testRunner.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
-        testRunner.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
-        testRunner.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
     }
 
     [Fact]
@@ -236,20 +243,21 @@ public class StaTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var testRunner = new InstructionTestRunner(nesIrInstructions);
-        testRunner.TestHal.ARegister = 0x22;
-        testRunner.TestHal.YRegister = 0x10;
-        testRunner.TestHal.MemoryValues[0x4010] = 0x00; // 0x4000 + 0x10 = 0x4010
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, nesIrInstructions);
+        jit.TestHal.ARegister = 0x22;
+        jit.TestHal.YRegister = 0x10;
+        jit.TestHal.MemoryValues[0x4010] = 0x00; // 0x4000 + 0x10 = 0x4010
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.MemoryValues[0x4010].ShouldBe((byte)0x22);
-        testRunner.TestHal.ARegister.ShouldBe((byte)0x22);
+        jit.TestHal.MemoryValues[0x4010].ShouldBe((byte)0x22);
+        jit.TestHal.ARegister.ShouldBe((byte)0x22);
 
         // No flags should be affected
-        testRunner.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        testRunner.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
-        testRunner.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
-        testRunner.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
     }
 
 
@@ -267,29 +275,30 @@ public class StaTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var testRunner = new InstructionTestRunner(nesIrInstructions);
-        testRunner.TestHal.ARegister = 0xFF;
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, nesIrInstructions);
+        jit.TestHal.ARegister = 0xFF;
 
         // Set all flags that should be preserved
-        testRunner.TestHal.Flags[CpuStatusFlags.Zero] = true;
-        testRunner.TestHal.Flags[CpuStatusFlags.Negative] = true;
-        testRunner.TestHal.Flags[CpuStatusFlags.Carry] = true;
-        testRunner.TestHal.Flags[CpuStatusFlags.Overflow] = true;
-        testRunner.TestHal.Flags[CpuStatusFlags.Decimal] = true;
-        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
+        jit.TestHal.Flags[CpuStatusFlags.Zero] = true;
+        jit.TestHal.Flags[CpuStatusFlags.Negative] = true;
+        jit.TestHal.Flags[CpuStatusFlags.Carry] = true;
+        jit.TestHal.Flags[CpuStatusFlags.Overflow] = true;
+        jit.TestHal.Flags[CpuStatusFlags.Decimal] = true;
+        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
 
-        testRunner.RunTestMethod();
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.MemoryValues[0x50].ShouldBe((byte)0xFF);
-        testRunner.TestHal.ARegister.ShouldBe((byte)0xFF);
+        jit.TestHal.MemoryValues[0x50].ShouldBe((byte)0xFF);
+        jit.TestHal.ARegister.ShouldBe((byte)0xFF);
 
         // All flags should remain exactly as they were
-        testRunner.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
-        testRunner.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
-        testRunner.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
-        testRunner.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
-        testRunner.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
-        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue();
     }
 
     [Fact]
@@ -306,18 +315,19 @@ public class StaTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var testRunner = new InstructionTestRunner(nesIrInstructions);
-        testRunner.TestHal.ARegister = 0xAA;
-        testRunner.TestHal.MemoryValues[0x60] = 0x55; // Existing value to be overwritten
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, nesIrInstructions);
+        jit.TestHal.ARegister = 0xAA;
+        jit.TestHal.MemoryValues[0x60] = 0x55; // Existing value to be overwritten
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.MemoryValues[0x60].ShouldBe((byte)0xAA);
-        testRunner.TestHal.ARegister.ShouldBe((byte)0xAA);
+        jit.TestHal.MemoryValues[0x60].ShouldBe((byte)0xAA);
+        jit.TestHal.ARegister.ShouldBe((byte)0xAA);
 
         // No flags should be affected
-        testRunner.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        testRunner.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
-        testRunner.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
-        testRunner.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
     }
 }

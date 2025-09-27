@@ -29,14 +29,15 @@ public class CliTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var testRunner = new InstructionTestRunner(nesIrInstructions);
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, nesIrInstructions);
 
         // Set interrupt disable flag initially
-        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
-        testRunner.RunTestMethod();
+        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
+        jit.RunMethod(0x1234);
 
         // Interrupt disable flag should be cleared
-        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeFalse();
     }
 
     [Fact]
@@ -53,14 +54,15 @@ public class CliTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var testRunner = new InstructionTestRunner(nesIrInstructions);
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, nesIrInstructions);
 
         // Interrupt disable flag already clear
-        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable] = false;
-        testRunner.RunTestMethod();
+        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable] = false;
+        jit.RunMethod(0x1234);
 
         // Interrupt disable flag should remain clear
-        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeFalse();
     }
 
     [Fact]
@@ -77,27 +79,28 @@ public class CliTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var testRunner = new InstructionTestRunner(nesIrInstructions);
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, nesIrInstructions);
 
         // Set all flags
-        testRunner.TestHal.Flags[CpuStatusFlags.Carry] = true;
-        testRunner.TestHal.Flags[CpuStatusFlags.Zero] = true;
-        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
-        testRunner.TestHal.Flags[CpuStatusFlags.Decimal] = true;
-        testRunner.TestHal.Flags[CpuStatusFlags.Overflow] = true;
-        testRunner.TestHal.Flags[CpuStatusFlags.Negative] = true;
+        jit.TestHal.Flags[CpuStatusFlags.Carry] = true;
+        jit.TestHal.Flags[CpuStatusFlags.Zero] = true;
+        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
+        jit.TestHal.Flags[CpuStatusFlags.Decimal] = true;
+        jit.TestHal.Flags[CpuStatusFlags.Overflow] = true;
+        jit.TestHal.Flags[CpuStatusFlags.Negative] = true;
 
-        testRunner.RunTestMethod();
+        jit.RunMethod(0x1234);
 
         // Only interrupt disable flag should be cleared
-        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeFalse();
 
         // All other flags should be preserved
-        testRunner.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
-        testRunner.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
-        testRunner.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
-        testRunner.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
-        testRunner.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
     }
 
     [Fact]
@@ -114,23 +117,24 @@ public class CliTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var testRunner = new InstructionTestRunner(nesIrInstructions);
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, nesIrInstructions);
 
-        testRunner.TestHal.ARegister = 0x42;
-        testRunner.TestHal.XRegister = 0x33;
-        testRunner.TestHal.YRegister = 0x77;
-        testRunner.TestHal.StackPointer = 0xFF;
-        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
+        jit.TestHal.ARegister = 0x42;
+        jit.TestHal.XRegister = 0x33;
+        jit.TestHal.YRegister = 0x77;
+        jit.TestHal.StackPointer = 0xFF;
+        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
 
-        testRunner.RunTestMethod();
+        jit.RunMethod(0x1234);
 
         // Registers should remain unchanged
-        testRunner.TestHal.ARegister.ShouldBe((byte)0x42);
-        testRunner.TestHal.XRegister.ShouldBe((byte)0x33);
-        testRunner.TestHal.YRegister.ShouldBe((byte)0x77);
-        testRunner.TestHal.StackPointer.ShouldBe((byte)0xFF);
+        jit.TestHal.ARegister.ShouldBe((byte)0x42);
+        jit.TestHal.XRegister.ShouldBe((byte)0x33);
+        jit.TestHal.YRegister.ShouldBe((byte)0x77);
+        jit.TestHal.StackPointer.ShouldBe((byte)0xFF);
 
         // Only interrupt disable flag should be cleared
-        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeFalse();
+        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeFalse();
     }
 }

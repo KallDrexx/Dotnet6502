@@ -30,12 +30,14 @@ public class CustomIlGeneratorTests
             new Ir6502.PushStackValue(new Ir6502.Constant(55)),
         ];
 
-        var runner = new InstructionTestRunner(instructions, [], customGenerators);
-        runner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.CustomGenerators = customGenerators;
+        jit.AddMethod(0x1234, instructions);
+        jit.RunMethod(0x1234);
         
         // First stack value should be the normal stack behavior, while second value should be the 
         // custom one.
-        runner.TestHal.PopFromStack().ShouldBe((byte)55);
-        runner.TestHal.PopFromStack().ShouldBe((byte)123);
+        jit.TestHal.PopFromStack().ShouldBe((byte)55);
+        jit.TestHal.PopFromStack().ShouldBe((byte)123);
     }
 }

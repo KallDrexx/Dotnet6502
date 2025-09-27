@@ -9,9 +9,10 @@ public class InvokeSoftwareInterruptInstructionTests
     public void Can_Trigger_Software_Interrupt_In_Hal()
     {
         var trigger = new Ir6502.InvokeSoftwareInterrupt();
-        var testRunner = new InstructionTestRunner([trigger]);
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [trigger]);
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.SoftwareInterruptTriggered.ShouldBeTrue();
+        jit.TestHal.SoftwareInterruptTriggered.ShouldBeTrue();
     }
 }

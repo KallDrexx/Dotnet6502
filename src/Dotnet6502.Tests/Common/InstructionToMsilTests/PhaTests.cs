@@ -29,12 +29,13 @@ public class PhaTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var testRunner = new InstructionTestRunner(nesIrInstructions);
-        testRunner.TestHal.ARegister = 0x42;
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, nesIrInstructions);
+        jit.TestHal.ARegister = 0x42;
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.ARegister.ShouldBe((byte)0x42); // Accumulator preserved
-        testRunner.TestHal.PopFromStack().ShouldBe((byte)0x42); // Value on stack
+        jit.TestHal.ARegister.ShouldBe((byte)0x42); // Accumulator preserved
+        jit.TestHal.PopFromStack().ShouldBe((byte)0x42); // Value on stack
     }
 
     [Fact]
@@ -51,12 +52,13 @@ public class PhaTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var testRunner = new InstructionTestRunner(nesIrInstructions);
-        testRunner.TestHal.ARegister = 0x00;
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, nesIrInstructions);
+        jit.TestHal.ARegister = 0x00;
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.ARegister.ShouldBe((byte)0x00);
-        testRunner.TestHal.PopFromStack().ShouldBe((byte)0x00);
+        jit.TestHal.ARegister.ShouldBe((byte)0x00);
+        jit.TestHal.PopFromStack().ShouldBe((byte)0x00);
     }
 
     [Fact]
@@ -73,12 +75,13 @@ public class PhaTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var testRunner = new InstructionTestRunner(nesIrInstructions);
-        testRunner.TestHal.ARegister = 0xFF;
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, nesIrInstructions);
+        jit.TestHal.ARegister = 0xFF;
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.ARegister.ShouldBe((byte)0xFF);
-        testRunner.TestHal.PopFromStack().ShouldBe((byte)0xFF);
+        jit.TestHal.ARegister.ShouldBe((byte)0xFF);
+        jit.TestHal.PopFromStack().ShouldBe((byte)0xFF);
     }
 
     [Fact]
@@ -95,26 +98,27 @@ public class PhaTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var testRunner = new InstructionTestRunner(nesIrInstructions);
-        testRunner.TestHal.ARegister = 0x80;
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, nesIrInstructions);
+        jit.TestHal.ARegister = 0x80;
 
         // Set all flags to test they are preserved
-        testRunner.TestHal.Flags[CpuStatusFlags.Carry] = true;
-        testRunner.TestHal.Flags[CpuStatusFlags.Zero] = true;
-        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
-        testRunner.TestHal.Flags[CpuStatusFlags.Decimal] = true;
-        testRunner.TestHal.Flags[CpuStatusFlags.Overflow] = true;
-        testRunner.TestHal.Flags[CpuStatusFlags.Negative] = true;
+        jit.TestHal.Flags[CpuStatusFlags.Carry] = true;
+        jit.TestHal.Flags[CpuStatusFlags.Zero] = true;
+        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
+        jit.TestHal.Flags[CpuStatusFlags.Decimal] = true;
+        jit.TestHal.Flags[CpuStatusFlags.Overflow] = true;
+        jit.TestHal.Flags[CpuStatusFlags.Negative] = true;
 
-        testRunner.RunTestMethod();
+        jit.RunMethod(0x1234);
 
         // All flags should be preserved
-        testRunner.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
-        testRunner.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
-        testRunner.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue();
-        testRunner.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
-        testRunner.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
-        testRunner.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
+        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
     }
 
     [Fact]
@@ -131,16 +135,17 @@ public class PhaTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var testRunner = new InstructionTestRunner(nesIrInstructions);
-        testRunner.TestHal.ARegister = 0x42;
-        testRunner.TestHal.XRegister = 0x33;
-        testRunner.TestHal.YRegister = 0x77;
-        testRunner.RunTestMethod();
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, nesIrInstructions);
+        jit.TestHal.ARegister = 0x42;
+        jit.TestHal.XRegister = 0x33;
+        jit.TestHal.YRegister = 0x77;
+        jit.RunMethod(0x1234);
 
-        testRunner.TestHal.ARegister.ShouldBe((byte)0x42);
-        testRunner.TestHal.XRegister.ShouldBe((byte)0x33); // Should remain unchanged
-        testRunner.TestHal.YRegister.ShouldBe((byte)0x77); // Should remain unchanged
-        testRunner.TestHal.PopFromStack().ShouldBe((byte)0x42);
+        jit.TestHal.ARegister.ShouldBe((byte)0x42);
+        jit.TestHal.XRegister.ShouldBe((byte)0x33); // Should remain unchanged
+        jit.TestHal.YRegister.ShouldBe((byte)0x77); // Should remain unchanged
+        jit.TestHal.PopFromStack().ShouldBe((byte)0x42);
     }
 
     [Fact]
@@ -159,14 +164,16 @@ public class PhaTests
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
         // Test pushing multiple values
-        var testRunner1 = new InstructionTestRunner(nesIrInstructions);
-        testRunner1.TestHal.ARegister = 0x55;
-        testRunner1.RunTestMethod();
-        testRunner1.TestHal.PopFromStack().ShouldBe((byte)0x55);
+        var jit1 = new TestJitCompiler();
+            jit1.AddMethod(0x1234, nesIrInstructions);
+        jit1.TestHal.ARegister = 0x55;
+        jit1.RunMethod(0x1234);
+        jit1.TestHal.PopFromStack().ShouldBe((byte)0x55);
 
-        var testRunner2 = new InstructionTestRunner(nesIrInstructions);
-        testRunner2.TestHal.ARegister = 0xAA;
-        testRunner2.RunTestMethod();
-        testRunner2.TestHal.PopFromStack().ShouldBe((byte)0xAA);
+        var jit2 = new TestJitCompiler();
+            jit2.AddMethod(0x1234, nesIrInstructions);
+        jit2.TestHal.ARegister = 0xAA;
+        jit2.RunMethod(0x1234);
+        jit2.TestHal.PopFromStack().ShouldBe((byte)0xAA);
     }
 }

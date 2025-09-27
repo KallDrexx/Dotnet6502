@@ -179,7 +179,7 @@ public class MsilGenerator
         ilGenerator.Emit(JitCompiler.LoadJitCompilerArg);
         ilGenerator.Emit(OpCodes.Ldc_I4, callFunction.FunctionAddress.Address);
 
-        var method = typeof(JitCompiler).GetMethod(nameof(JitCompiler.RunMethod))!;
+        var method = typeof(IJitCompiler).GetMethod(nameof(JitCompiler.RunMethod))!;
         ilGenerator.Emit(OpCodes.Callvirt, method);
     }
 

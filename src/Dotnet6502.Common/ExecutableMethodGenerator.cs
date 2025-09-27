@@ -16,9 +16,9 @@ public static class ExecutableMethodGenerator
         var methodToCreate = new DynamicMethod(
             name,
             MethodAttributes.Static | MethodAttributes.Public,
-            CallingConventions.Any,
+            CallingConventions.Standard,
             typeof(void),
-            [typeof(JitCompiler), typeof(I6502Hal)],
+            [typeof(IJitCompiler), typeof(I6502Hal)],
             typeof(JitCompiler).Module,
             false);
 
