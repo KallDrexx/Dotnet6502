@@ -24,10 +24,10 @@ public class MsilGenerator
 
     public MsilGenerator(
         IReadOnlyDictionary<Ir6502.Identifier, Label> labels,
-        IReadOnlyDictionary<Type, CustomIlGenerator> customIlGenerators)
+        IReadOnlyDictionary<Type, CustomIlGenerator>? customIlGenerators)
     {
         _labels = labels;
-        _customIlGenerators = customIlGenerators;
+        _customIlGenerators = customIlGenerators ?? new Dictionary<Type, CustomIlGenerator>();
     }
 
     public void Generate(Ir6502.Instruction instruction, ILGenerator ilGenerator)

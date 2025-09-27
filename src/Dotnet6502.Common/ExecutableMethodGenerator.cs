@@ -40,7 +40,7 @@ public static class ExecutableMethodGenerator
             ilGenerator.DeclareLocal(typeof(int));
         }
 
-        var msilGenerator = new MsilGenerator(ilLabels, customIlGenerators ?? []);
+        var msilGenerator = new MsilGenerator(ilLabels, customIlGenerators);
         foreach (var instruction in instructions)
         {
             ilGenerator.Emit(OpCodes.Ldstr, $"{instruction.OriginalInstruction}");

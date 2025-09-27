@@ -25,7 +25,7 @@ public class NesHal : I6502Hal
     public byte XRegister { get; set; }
     public byte YRegister { get; set; }
     public byte StackPointer { get; set; }
-    public MethodInfo? NmiHandler { get; set; }
+    public Action? NmiHandler { get; set; }
 
     public byte ProcessorStatus
     {
@@ -112,7 +112,7 @@ public class NesHal : I6502Hal
         {
             if (NmiHandler != null)
             {
-                NmiHandler.Invoke(null, []);
+                NmiHandler();
             }
             else
             {
