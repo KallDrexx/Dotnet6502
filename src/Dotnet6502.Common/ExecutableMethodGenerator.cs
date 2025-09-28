@@ -14,27 +14,6 @@ public static class ExecutableMethodGenerator
         IReadOnlyDictionary<Type, MsilGenerator.CustomIlGenerator>? customIlGenerators = null)
     {
         return GenerateViaAssemblies(name, instructions, customIlGenerators);
-        // return GenerateViaDynamicMethod(name, instructions, customIlGenerators);
-    }
-
-    private static ExecutableMethod GenerateViaDynamicMethod(
-        string name,
-        IReadOnlyList<ConvertedInstruction> instructions,
-        IReadOnlyDictionary<Type, MsilGenerator.CustomIlGenerator>? customIlGenerators)
-    {
-        var methodToCreate = new DynamicMethod(
-            name,
-            MethodAttributes.Static | MethodAttributes.Public,
-            CallingConventions.Standard,
-            typeof(void),
-            [typeof(IJitCompiler), typeof(I6502Hal)],
-            typeof(JitCompiler).Module,
-            false);
-
-        var ilGenerator = methodToCreate.GetILGenerator();
-        GenerateMsil(ilGenerator, instructions, customIlGenerators);
-
-        return methodToCreate.CreateDelegate<ExecutableMethod>();
     }
 
     private static ExecutableMethod GenerateViaAssemblies(
@@ -42,6 +21,10 @@ public static class ExecutableMethodGenerator
         IReadOnlyList<ConvertedInstruction> instructions,
         IReadOnlyDictionary<Type, MsilGenerator.CustomIlGenerator>? customIlGenerators)
     {
+        // While we could use `new DynamicMethod()` to create these methods, it hurts debug-ability.
+        // Specifically, the stack frame just shows "Lightweight function call" or something similar
+        // and no real way to peek into it. Using actual assemblies provides stack frames where we
+        // can actually see locals and arguments, which really helps debugging.
         var assemblyName = new AssemblyName($"assembly_for_{name}");
         var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
         var moduleBuilder = assemblyBuilder.DefineDynamicModule($"module_for_{name}");
