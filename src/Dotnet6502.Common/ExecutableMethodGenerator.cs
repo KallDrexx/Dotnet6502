@@ -81,9 +81,10 @@ public static class ExecutableMethodGenerator
             .ToDictionary(x => x.Name, x => ilGenerator.DefineLabel());
 
         // Figure out how many locals this method will need and declare them.
-        var localCount = GetMaxLocalCount(instructions.SelectMany(x => x.Ir6502Instructions).ToArray());
-        localCount += MsilGenerator.TemporaryLocalsRequired;
+        MsilGenerator.DeclareRequiredLocals(ilGenerator);
 
+        // Declare locals required for instruction usage
+        var localCount = GetMaxLocalCount(instructions.SelectMany(x => x.Ir6502Instructions).ToArray());
         for (var x = 0; x < localCount; x++)
         {
             ilGenerator.DeclareLocal(typeof(int));
@@ -92,8 +93,8 @@ public static class ExecutableMethodGenerator
         var msilGenerator = new MsilGenerator(ilLabels, customIlGenerators);
         foreach (var instruction in instructions)
         {
-            ilGenerator.Emit(OpCodes.Ldstr, $"{instruction.OriginalInstruction}");
-            ilGenerator.Emit(OpCodes.Pop);
+            var debugInstruction = new Ir6502.StoreDebugString(instruction.OriginalInstruction.ToString());
+            msilGenerator.Generate(debugInstruction, ilGenerator);
             foreach (var irInstruction in instruction.Ir6502Instructions)
             {
                 msilGenerator.Generate(irInstruction, ilGenerator);

@@ -1,5 +1,6 @@
 using System.Reflection;
 using Dotnet6502.Common;
+using NESDecompiler.Core.CPU;
 
 namespace Dotnet6502.Nes;
 

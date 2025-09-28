@@ -25,6 +25,7 @@ public class Ppu
         PreRenderBlankingLines;
 
     private const int DisplayableWidth = PpuCyclesPerScanline - HBlankCycles;
+    private const int NameTableSize = 0x3c0;
 
     private readonly RgbColor[] _systemPalette =
     [
@@ -115,65 +116,6 @@ public class Ppu
         return triggerNmi;
     }
 
-    private void RunSinglePpuCycle()
-    {
-        _currentScanLineCycle++;
-
-        var currentLocation = GetCurrentDotLocation();
-        switch (currentLocation)
-        {
-            case CurrentDotLocation.InDisplayableArea:
-                _pixelIndex++;
-                DrawNextPixel();
-                break;
-                
-            case CurrentDotLocation.InVBlank:
-            case CurrentDotLocation.InHBlank:
-            case CurrentDotLocation.InPostRender:
-            case CurrentDotLocation.InPreRender:
-                break; // Nothing to do
-                
-            case CurrentDotLocation.StartsNewDisplayableScanline:
-                _currentScanLineCycle = 0;
-                _currentScanLine++;
-                _pixelIndex++;
-                DrawNextPixel();
-                break;
-
-            case CurrentDotLocation.StartsNewScanlineInVBlank:
-            case CurrentDotLocation.StartsPostRender:
-                _currentScanLineCycle = 0;
-                _currentScanLine++;
-                break;
-
-            case CurrentDotLocation.StartsPreRender:
-                _currentScanLineCycle = 0;
-                _currentScanLine++;
-                _ppuStatus.VBlankFlag = false;
-                break;
-
-            case CurrentDotLocation.StartsFirstDisplayableScanLine:
-                _currentScanLineCycle = 0;
-                _currentScanLine = 0;
-                _hasNmiTriggered = false;
-                _pixelIndex = 0;
-                DrawNextPixel();
-                break;
-
-            case CurrentDotLocation.StartsVBlank:
-                _currentScanLineCycle = 0;
-                _currentScanLine++;
-                _ppuStatus.VBlankFlag = true;
-                RenderFrame();
-                break;
-
-            default:
-                throw new NotSupportedException(currentLocation.ToString());
-        }
-            
-        ResetOamData();
-    }
-
     /// <summary>
     /// Process a request from the CPU to write to a PPU owned memory address
     /// </summary>
@@ -236,7 +178,18 @@ public class Ppu
                 break;
 
             case 7:
-                _memory[_ppuAddr] = value;
+                var oldPpuAddr = _ppuAddr;
+
+                if (_ppuAddr >= 0x3F00)
+                {
+                    var mirroredAddress = _ppuAddr;
+                    _memory[mirroredAddress] = value;
+                }
+                else
+                {
+                    _memory[_ppuAddr] = value;
+                }
+
                 if (_ppuCtrl.VRamAddressIncrement == PpuCtrl.VRamAddressIncrementValue.Add1Across)
                 {
                     _ppuAddr += 1;
@@ -246,6 +199,7 @@ public class Ppu
                     _ppuAddr += 32;
                 }
 
+                // Console.WriteLine($"Wrote 0x{value:X4} to PPU memory 0x{oldPpuAddr:X4} (next address: 0x{_ppuAddr:X4})");
                 _vRegister = _ppuAddr;
 
                 break;
@@ -302,7 +256,8 @@ public class Ppu
                 }
                 else
                 {
-                    value = _memory[_ppuAddr];
+                    var mirroredAddress = GetPaletteMemoryLocation(_ppuAddr);
+                    value = _memory[mirroredAddress];
                 }
 
                 if (_ppuCtrl.VRamAddressIncrement == PpuCtrl.VRamAddressIncrementValue.Add1Across)
@@ -319,6 +274,76 @@ public class Ppu
             default:
                 throw new NotSupportedException(byteNumber.ToString());
         }
+    }
+
+    private static ushort GetPaletteMemoryLocation(ushort address)
+    {
+        // $3F20-$3FFF mirrors $3F00-$3F1F
+        while (address >= 0x3F20)
+        {
+            address -= 0x20;
+        }
+
+        return address;
+    }
+
+    private void RunSinglePpuCycle()
+    {
+        _currentScanLineCycle++;
+
+        var currentLocation = GetCurrentDotLocation();
+        switch (currentLocation)
+        {
+            case CurrentDotLocation.InDisplayableArea:
+                _pixelIndex++;
+                DrawNextPixel();
+                break;
+
+            case CurrentDotLocation.InVBlank:
+            case CurrentDotLocation.InHBlank:
+            case CurrentDotLocation.InPostRender:
+            case CurrentDotLocation.InPreRender:
+                break; // Nothing to do
+
+            case CurrentDotLocation.StartsNewDisplayableScanline:
+                _currentScanLineCycle = 0;
+                _currentScanLine++;
+                _pixelIndex++;
+                DrawNextPixel();
+                break;
+
+            case CurrentDotLocation.StartsNewScanlineInVBlank:
+            case CurrentDotLocation.StartsPostRender:
+                _currentScanLineCycle = 0;
+                _currentScanLine++;
+                break;
+
+            case CurrentDotLocation.StartsPreRender:
+                _currentScanLineCycle = 0;
+                _currentScanLine++;
+                _ppuStatus.VBlankFlag = false;
+                break;
+
+            case CurrentDotLocation.StartsFirstDisplayableScanLine:
+                _currentScanLineCycle = 0;
+                _currentScanLine = 0;
+                _hasNmiTriggered = false;
+                _pixelIndex = 0;
+                DrawNextPixel();
+                break;
+
+            case CurrentDotLocation.StartsVBlank:
+                _currentScanLineCycle = 0;
+                _currentScanLine++;
+                _ppuStatus.VBlankFlag = true;
+                RenderFrame();
+                break;
+
+            default:
+                throw new NotSupportedException(currentLocation.ToString());
+        }
+
+        ResetOamData();
     }
 
     private void DrawNextPixel()
@@ -344,16 +369,17 @@ public class Ppu
             _ => throw new NotSupportedException(_ppuCtrl.BackgroundPatternTableAddress.ToString()),
         };
 
-        var nameTableBytes = _memory.AsSpan().Slice(nameTableAddress, 960);
-        for (var i = 0; i < nameTableBytes.Length; i++)
+        var nametablebytes = _memory.AsSpan().Slice(nameTableAddress, 960);
+        for (var i = 0; i < nametablebytes.Length; i++)
         {
-            var tile = nameTableBytes[i];
-            var tileX = i % 32;
-            var tileY = i / 32;
-            // var palette = GetBackgroundPaletteIndexes(tileX, tileY);
-            var palette = new byte[] { 0x01, 0x23, 0x27, 0x30 };
-            ShowTile(backgroundTableAddress, tile, tileX * 8, tileY * 8, palette);
+            var tile = nametablebytes[i];
+            var tilex = i % 32;
+            var tiley = i / 32;
+            var palette = GetBackgroundPaletteIndexes(tilex, tiley);
+            // var palette = new byte[] { 0x01, 0x23, 0x27, 0x30 };
+            ShowTile(backgroundTableAddress, tile, tilex * 8, tiley * 8, palette);
         }
+        // RenderPatternTableToFrameBuffer();
 
         _nesDisplay.RenderFrame(_framebuffer);
 
@@ -372,14 +398,14 @@ public class Ppu
             _ => throw new NotSupportedException(_ppuCtrl.BackgroundPatternTableAddress.ToString()),
         };
 
-        var tileX = 0;
-        var tileY = 0;
+        var tileX = 2;
+        var tileY = 2;
         for (ushort tileNum = 0; tileNum < 255; tileNum++)
         {
-            if (tileNum != 0 && tileNum % 20 == 0)
+            if (tileNum != 0 && tileNum % 16 == 0)
             {
                 tileY += 10;
-                tileX = 0;
+                tileX = 2;
             }
 
             var palette = new byte[] { 0x01, 0x23, 0x27, 0x30 };
@@ -432,7 +458,9 @@ public class Ppu
         };
 
         var attributeTableIndex = tileRow / 4 * 8 + tileColumn / 4;
-        var attributeByte = _memory[nameTableAddress + attributeTableIndex];
+        var attributeTableLocation = nameTableAddress + NameTableSize;
+        var attributeByteLocation = attributeTableLocation + attributeTableIndex;
+        var attributeByte = _memory[attributeByteLocation];
         var palletIndex = (tileColumn % 4 / 2, tileRow % 4 / 2) switch
         {
             (0, 0) => attributeByte & 0b11,

@@ -18,7 +18,12 @@ public class MsilGenerator
     /// required by the instructions used in the method. This means that any instruction's local
     /// index must be incremented by this amount.
     /// </summary>
-    public const int TemporaryLocalsRequired = 3;
+    private const int TemporaryLocalsRequired = 4;
+
+    /// <summary>
+    /// Index of the local that will store the debug string
+    /// </summary>
+    private const int InstructionDebugStringLocalIndex = 3;
 
     private readonly IReadOnlyDictionary<Ir6502.Identifier, Label> _labels;
 
@@ -28,6 +33,17 @@ public class MsilGenerator
     {
         _labels = labels;
         _customIlGenerators = customIlGenerators ?? new Dictionary<Type, CustomIlGenerator>();
+    }
+
+    public static void DeclareRequiredLocals(ILGenerator ilGenerator)
+    {
+        // All locals except one are for ints, with the string local used for debugging assistance
+        for (var x = 0; x < TemporaryLocalsRequired - 1; x++)
+        {
+            ilGenerator.DeclareLocal(typeof(int));
+        }
+
+        ilGenerator.DeclareLocal(typeof(string));
     }
 
     public void Generate(Ir6502.Instruction instruction, ILGenerator ilGenerator)
@@ -90,6 +106,10 @@ public class MsilGenerator
 
             case Ir6502.Unary unary:
                 GenerateUnary(unary, ilGenerator);
+                break;
+
+            case Ir6502.StoreDebugString debugString:
+                GenerateDebugString(debugString, ilGenerator);
                 break;
 
             default:
@@ -292,6 +312,12 @@ public class MsilGenerator
         ilGenerator.Emit(OpCodes.Conv_U1);
         SaveStackToTempLocal(ilGenerator);
         WriteTempLocalToValue(convertVariableToByte.Variable, ilGenerator);
+    }
+
+    private void GenerateDebugString(Ir6502.StoreDebugString debugString, ILGenerator ilGenerator)
+    {
+        ilGenerator.Emit(OpCodes.Ldstr, debugString.Text);
+        ilGenerator.Emit(OpCodes.Stloc, InstructionDebugStringLocalIndex);
     }
 
     private static void LoadValueToStack(Ir6502.Value value, ILGenerator ilGenerator)

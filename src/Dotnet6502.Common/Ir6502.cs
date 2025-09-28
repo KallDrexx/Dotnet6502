@@ -33,6 +33,8 @@ public static class Ir6502
 
     public record InvokeSoftwareInterrupt : Instruction;
 
+    public record StoreDebugString(string Text) : Instruction;
+
     public abstract record Value;
 
     public record Constant(byte Number) : Value;

@@ -2,12 +2,12 @@ namespace Dotnet6502.Nes;
 
 public class NesMemory
 {
-    private const int UnmappedSpaceSize = 0xBFE0;
+    private const int UnmappedSpaceStart = 0x4020;
 
     private readonly Ppu _ppu;
     private enum MemoryType { InternalRam, Ppu, Apu, Joy1, Joy2, UnmappedSpace, PpuOamDma }
     private readonly byte[] _internalRam = new byte[0x800]; // 2KB
-    private readonly byte[] _unmappedSpace = new byte[0x8000];
+    private readonly byte[] _unmappedSpace = new byte[0x10000 - UnmappedSpaceStart];
 
     public NesMemory(Ppu ppu, byte[] prgRomData)
     {
@@ -20,7 +20,8 @@ public class NesMemory
 
         for (var x = 0; x < 0x8000; x++)
         {
-            _unmappedSpace[x] = prgRomData[x];
+            const int prgOffset = 0x8000 - UnmappedSpaceStart;
+            _unmappedSpace[x + prgOffset] = prgRomData[x];
         }
     }
 
@@ -43,7 +44,7 @@ public class NesMemory
                 break;
 
             case MemoryType.UnmappedSpace:
-                var offsetAddress = address - UnmappedSpaceSize;
+                var offsetAddress = address - UnmappedSpaceStart;
                 _unmappedSpace[offsetAddress] = value;
                 break;
 
@@ -78,7 +79,7 @@ public class NesMemory
                 throw new NotImplementedException();
 
             case MemoryType.UnmappedSpace:
-                var offsetAddress = address - UnmappedSpaceSize;
+                var offsetAddress = address - UnmappedSpaceStart;
                 return _unmappedSpace[offsetAddress];
 
             case MemoryType.Joy1:

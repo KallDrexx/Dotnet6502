@@ -48,24 +48,10 @@ if (nmiAddress == 0)
 
 hal.NmiHandler = () => jitCompiler.RunMethod(nmiAddress);
 
-
 Console.WriteLine($"Starting at reset vector: {romInfo.ResetVector:X4}");
 var nesTask = Task.Run(() =>
 {
-    try
-    {
-        jitCompiler.RunMethod(romInfo.ResetVector);
-    }
-    catch (TargetInvocationException targetInvocationException)
-    {
-        if (targetInvocationException.InnerException?.GetType() == typeof(TaskCanceledException))
-        {
-            // Ignore cancellation exceptions
-            return;
-        }
-
-        throw;
-    }
+    jitCompiler.RunMethod(romInfo.ResetVector);
 });
 
 app.NesCodeTask = nesTask;
