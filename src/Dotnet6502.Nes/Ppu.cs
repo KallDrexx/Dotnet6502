@@ -369,15 +369,15 @@ public class Ppu
             _ => throw new NotSupportedException(_ppuCtrl.BackgroundPatternTableAddress.ToString()),
         };
 
-        var nametablebytes = _memory.AsSpan().Slice(nameTableAddress, 960);
-        for (var i = 0; i < nametablebytes.Length; i++)
+        var nameTableBytes = _memory.AsSpan().Slice(nameTableAddress, 960);
+        for (var i = 0; i < nameTableBytes.Length; i++)
         {
-            var tile = nametablebytes[i];
+            var tileIndex = nameTableBytes[i];
             var tilex = i % 32;
             var tiley = i / 32;
             var palette = GetBackgroundPaletteIndexes(tilex, tiley);
             // var palette = new byte[] { 0x01, 0x23, 0x27, 0x30 };
-            ShowTile(backgroundTableAddress, tile, tilex * 8, tiley * 8, palette);
+            ShowTile(backgroundTableAddress, tileIndex, tilex * 8, tiley * 8, palette);
         }
         // RenderPatternTableToFrameBuffer();
 
@@ -428,7 +428,7 @@ public class Ppu
 
             for (var x = 7; x >= 0; x--)
             {
-                var value = ((1 & upper) << 1) | (1 & lower);
+                var value = ((1 & lower) << 1) | (1 & upper);
                 upper = (byte)(upper >> 1);
                 lower = (byte)(lower >> 1);
 
