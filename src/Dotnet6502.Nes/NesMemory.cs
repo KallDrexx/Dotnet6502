@@ -54,6 +54,9 @@ public class NesMemory
             case MemoryType.Joy1:
                 break; // joystick probe / latch.
 
+            case MemoryType.Joy2:
+                break; // APU frame counter
+
             default:
                 throw new NotSupportedException(memoryType.ToString());
         }
