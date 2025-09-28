@@ -18,7 +18,8 @@ public class MonogameApp : Game, INesDisplay
     private readonly Color[] _pixelColors = new Color[Width * Height];
     private SpriteBatch _spriteBatch = null!;
     private Texture2D _texture = null!;
-    private bool _readyToContinue = false;
+    private bool _readyToContinue;
+    private bool _displayQuit; // Tells the PPU that the display quit, and thus Monitor will never be pulsed
 
     public Task? NesCodeTask { get; set; }
 
@@ -46,7 +47,7 @@ public class MonogameApp : Game, INesDisplay
                 _pixelColors[x] = color;
             }
 
-            while (!_readyToContinue)
+            while (!_readyToContinue && !_displayQuit)
             {
                 Monitor.Wait(_synchronizationLock);
             }
@@ -125,6 +126,17 @@ public class MonogameApp : Game, INesDisplay
         _spriteBatch.End();
 
         base.Draw(gameTime);
+    }
+
+    protected override void OnExiting(object sender, ExitingEventArgs args)
+    {
+        lock (_synchronizationLock)
+        {
+            _displayQuit = true;
+            Monitor.Pulse(_synchronizationLock);
+        }
+
+        base.OnExiting(sender, args);
     }
 
     private Rectangle ComputeDestinationRectangle()

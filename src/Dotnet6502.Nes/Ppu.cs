@@ -323,57 +323,37 @@ public class Ppu
 
     private void DrawNextPixel()
     {
-        var nameTableAddress = _ppuCtrl.BaseNameTableAddress switch
-        {
-            PpuCtrl.BaseNameTableAddressValue.Hex2C00 => 0x2C00,
-            PpuCtrl.BaseNameTableAddressValue.Hex2000 => 0x2000,
-            PpuCtrl.BaseNameTableAddressValue.Hex2400 => 0x2400,
-            PpuCtrl.BaseNameTableAddressValue.Hex2800 => 0x2800,
-            _ => throw new ArgumentOutOfRangeException(_ppuCtrl.BaseNameTableAddress.ToString())
-        };
-
-        var backgroundTableAddress = _ppuCtrl.BackgroundPatternTableAddress switch
-        {
-            PpuCtrl.BackgroundPatternTableAddressEnum.Hex0000 => 0x0000,
-            PpuCtrl.BackgroundPatternTableAddressEnum.Hex1000 => 0x1000,
-            _ => throw new ArgumentOutOfRangeException(_ppuCtrl.BackgroundPatternTableAddress.ToString()),
-        };
-
-        var pixelX = _currentScanLineCycle;
-        var pixelY = _currentScanLine;
-    }
-
-    private void RenderBackground(int pixelX, int pixelY)
-    {
-        if (!_ppuMask.EnableBackgroundRendering)
-        {
-            return;
-        }
-
-        if (!_ppuMask.ShowBackgroundInLeftmost8PixelsOfScreen && pixelX < 8)
-        {
-            return;
-        }
-
-        // Which 8x8 tile does this belong to?
-        var tileX = pixelX / 8;
-        var tileY = pixelY / 8;
-
-        // Calculate pixel position in the tile
-        var pixelInTileX = pixelX % 8;
-        var pixelInTileY = pixelY % 8;
-
+        // TODO: Only full render at the end of the frame supported atm
     }
 
     private void RenderFrame()
     {
-        var backgroundTableAddress = _ppuCtrl.BackgroundPatternTableAddress switch
+        ushort nameTableAddress = _ppuCtrl.BaseNameTableAddress switch
+        {
+            PpuCtrl.BaseNameTableAddressValue.Hex2000 => 0x2000,
+            PpuCtrl.BaseNameTableAddressValue.Hex2400 => 0x2400,
+            PpuCtrl.BaseNameTableAddressValue.Hex2800 => 0x2800,
+            PpuCtrl.BaseNameTableAddressValue.Hex2C00 => 0x2C00,
+            _ => throw new NotSupportedException(_ppuCtrl.BaseNameTableAddress.ToString()),
+        };
+
+        ushort backgroundTableAddress = _ppuCtrl.BackgroundPatternTableAddress switch
         {
             PpuCtrl.BackgroundPatternTableAddressEnum.Hex0000 => 0x0000,
             PpuCtrl.BackgroundPatternTableAddressEnum.Hex1000 => 0x1000,
-            _ => throw new ArgumentOutOfRangeException(_ppuCtrl.BackgroundPatternTableAddress.ToString()),
+            _ => throw new NotSupportedException(_ppuCtrl.BackgroundPatternTableAddress.ToString()),
         };
 
+        var nameTableBytes = _memory.AsSpan().Slice(nameTableAddress, 960);
+        for (var i = 0; i < nameTableBytes.Length; i++)
+        {
+            var tile = nameTableBytes[i];
+            var tileX = i % 32;
+            var tileY = i / 32;
+            // var palette = GetBackgroundPaletteIndexes(tileX, tileY);
+            var palette = new byte[] { 0x01, 0x23, 0x27, 0x30 };
+            ShowTile(backgroundTableAddress, tile, tileX * 8, tileY * 8, palette);
+        }
 
         _nesDisplay.RenderFrame(_framebuffer);
 
@@ -381,6 +361,102 @@ public class Ppu
         {
             _framebuffer[x] = new RgbColor(0, 0, 0);
         }
+    }
+
+    private void RenderPatternTableToFrameBuffer()
+    {
+        ushort backgroundTableAddress = _ppuCtrl.BackgroundPatternTableAddress switch
+        {
+            PpuCtrl.BackgroundPatternTableAddressEnum.Hex0000 => 0x0000,
+            PpuCtrl.BackgroundPatternTableAddressEnum.Hex1000 => 0x1000,
+            _ => throw new NotSupportedException(_ppuCtrl.BackgroundPatternTableAddress.ToString()),
+        };
+
+        var tileX = 0;
+        var tileY = 0;
+        for (ushort tileNum = 0; tileNum < 255; tileNum++)
+        {
+            if (tileNum != 0 && tileNum % 20 == 0)
+            {
+                tileY += 10;
+                tileX = 0;
+            }
+
+            var palette = new byte[] { 0x01, 0x23, 0x27, 0x30 };
+            ShowTile(backgroundTableAddress, tileNum, tileX, tileY, palette);
+
+            tileX += 10;
+        }
+    }
+
+    private void ShowTile(ushort bankAddress, ushort tileNumber, int startX, int startY, byte[] palette)
+    {
+        var tileStart = bankAddress + tileNumber * 16;
+        var tileEnd = bankAddress + tileNumber * 16 + 16;
+        var tileData = _memory[tileStart..tileEnd];
+
+        for (var y = 0; y < 8; y++)
+        {
+            var upper = tileData[y];
+            var lower = tileData[y + 8];
+
+            for (var x = 7; x >= 0; x--)
+            {
+                var value = ((1 & upper) << 1) | (1 & lower);
+                upper = (byte)(upper >> 1);
+                lower = (byte)(lower >> 1);
+
+                var color = value switch
+                {
+                    0 => _systemPalette[palette[0]],
+                    1 => _systemPalette[palette[1]],
+                    2 => _systemPalette[palette[2]],
+                    3 => _systemPalette[palette[3]],
+                    _ => throw new NotSupportedException(value.ToString()),
+                };
+
+                SetPixel(x + startX, y + startY, color);
+            }
+        }
+    }
+
+    private byte[] GetBackgroundPaletteIndexes(int tileColumn, int tileRow)
+    {
+        ushort nameTableAddress = _ppuCtrl.BaseNameTableAddress switch
+        {
+            PpuCtrl.BaseNameTableAddressValue.Hex2000 => 0x2000,
+            PpuCtrl.BaseNameTableAddressValue.Hex2400 => 0x2400,
+            PpuCtrl.BaseNameTableAddressValue.Hex2800 => 0x2800,
+            PpuCtrl.BaseNameTableAddressValue.Hex2C00 => 0x2C00,
+            _ => throw new NotSupportedException(_ppuCtrl.BaseNameTableAddress.ToString()),
+        };
+
+        var attributeTableIndex = tileRow / 4 * 8 + tileColumn / 4;
+        var attributeByte = _memory[nameTableAddress + attributeTableIndex];
+        var palletIndex = (tileColumn % 4 / 2, tileRow % 4 / 2) switch
+        {
+            (0, 0) => attributeByte & 0b11,
+            (1, 0) => (attributeByte >> 2) & 0b11,
+            (0, 1) => (attributeByte >> 4) & 0b11,
+            (1, 1) => (attributeByte >> 6) & 0b11,
+            _ => throw new NotSupportedException(),
+        };
+
+        var paletteStart = 1 + palletIndex * 4;
+        var paletteTable = _memory.AsSpan()[0x3F00..];
+        return
+        [
+            paletteTable[0],
+            paletteTable[paletteStart],
+            paletteTable[paletteStart + 1],
+            paletteTable[paletteStart + 2],
+        ];
+    }
+
+    private void SetPixel(int x, int y, RgbColor color)
+    {
+        var index = y * DisplayableWidth + x;
+        _framebuffer[index] = color;
     }
 
     private void ResetOamData()
