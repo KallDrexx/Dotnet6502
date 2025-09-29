@@ -1,6 +1,4 @@
-using System.Reflection;
 using Dotnet6502.Common;
-using NESDecompiler.Core.CPU;
 
 namespace Dotnet6502.Nes;
 
@@ -8,7 +6,7 @@ public class NesHal : I6502Hal
 {
     private readonly Dictionary<CpuStatusFlags, bool> _flags  = new()
     {
-        { CpuStatusFlags.Always1, true },
+        { CpuStatusFlags.Always1, false }, // fceux seems to always have this as false
         { CpuStatusFlags.BFlag, false },
         { CpuStatusFlags.Carry, false },
         { CpuStatusFlags.Decimal, false },
@@ -120,5 +118,10 @@ public class NesHal : I6502Hal
                 throw new InvalidOperationException("NMI triggered but no NMI handler defined");
             }
         }
+    }
+
+    public void DebugHook(string info)
+    {
+        Console.WriteLine($"{info} - A:{ARegister:X2} X:{XRegister:X2} Y:{YRegister:X2} P:{ProcessorStatus:X2}");
     }
 }

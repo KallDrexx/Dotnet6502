@@ -10,6 +10,8 @@ public class NesJitCustomizer : IJitCustomizer
 {
     private record IncrementCycleCount(int Cycles) : Ir6502.Instruction;
 
+    private record CallDebugHook(string Info) : Ir6502.Instruction;
+
     public IReadOnlyList<ConvertedInstruction> MutateInstructions(IReadOnlyList<ConvertedInstruction> instructions)
     {
         var result = new List<ConvertedInstruction>();
@@ -20,6 +22,7 @@ public class NesJitCustomizer : IJitCustomizer
             var updatedInstruction = instruction with
             {
                 Ir6502Instructions = instruction.Ir6502Instructions
+                    .Prepend(new CallDebugHook(instruction.OriginalInstruction.ToString()))
                     .Prepend(new IncrementCycleCount(instruction.OriginalInstruction.Info.Cycles))
                     .ToArray(),
             };
@@ -34,7 +37,8 @@ public class NesJitCustomizer : IJitCustomizer
     {
         return new Dictionary<Type, MsilGenerator.CustomIlGenerator>
         {
-            { typeof(IncrementCycleCount), CreateCycleCountIlGenerator() }
+            { typeof(IncrementCycleCount), CreateCycleCountIlGenerator() },
+            { typeof(CallDebugHook), CreateDebugHookIlGenerator() },
         };
     }
 
@@ -61,6 +65,24 @@ public class NesJitCustomizer : IJitCustomizer
             {
                 throw new NotSupportedException(instruction.GetType().FullName);
             }
+        };
+    }
+
+    private static MsilGenerator.CustomIlGenerator CreateDebugHookIlGenerator()
+    {
+        return (instruction, ilGenerator) =>
+        {
+            var debugInstruction = (CallDebugHook)instruction;
+
+            // Load the hardware field
+            ilGenerator.Emit(JitCompiler.LoadHalArg);
+
+            // Cast from I6502Hal interface to NesHal concrete type
+            ilGenerator.Emit(OpCodes.Castclass, typeof(NesHal));
+            ilGenerator.Emit(OpCodes.Ldstr, debugInstruction.Info);
+
+            var incrementMethod = typeof(NesHal).GetMethod(nameof(NesHal.DebugHook))!;
+            ilGenerator.Emit(OpCodes.Callvirt, incrementMethod);
         };
     }
 }

@@ -628,16 +628,19 @@ public static class InstructionConverter
     /// </summary>
     private static Ir6502.Instruction[] ConvertJmp(DisassembledInstruction instruction, Context context)
     {
-        if (instruction.Info.AddressingMode is
+        var isIndirectlyAddressed = instruction.Info.AddressingMode is
             AddressingMode.IndexedIndirect or
             AddressingMode.IndirectIndexed or
-            AddressingMode.Indirect)
+            AddressingMode.Indirect;
+
+        if (isIndirectlyAddressed)
         {
             // Pull out the address to jump to from memory
             var operand = ParseAddress(instruction);
             return
             [
                 new Ir6502.CallFunction((Ir6502.IndirectMemory)operand),
+                new Ir6502.Return(),
             ];
         }
 

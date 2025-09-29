@@ -178,11 +178,9 @@ public class Ppu
                 break;
 
             case 7:
-                var oldPpuAddr = _ppuAddr;
-
                 if (_ppuAddr >= 0x3F00)
                 {
-                    var mirroredAddress = _ppuAddr;
+                    var mirroredAddress = GetPaletteMemoryLocation(_ppuAddr);
                     _memory[mirroredAddress] = value;
                 }
                 else
@@ -199,7 +197,6 @@ public class Ppu
                     _ppuAddr += 32;
                 }
 
-                // Console.WriteLine($"Wrote 0x{value:X4} to PPU memory 0x{oldPpuAddr:X4} (next address: 0x{_ppuAddr:X4})");
                 _vRegister = _ppuAddr;
 
                 break;
