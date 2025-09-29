@@ -21,6 +21,7 @@ var loader = new ROMLoader();
 var romInfo = loader.LoadFromFile(romFile.FullName);
 var programRomData = loader.GetPRGROMData();
 var chrRomData = loader.GetCHRROMData();
+Console.WriteLine(romInfo.ToString());
 
 Console.WriteLine("Disassembling ROM...");
 var disassembler = new Disassembler(romInfo, programRomData);

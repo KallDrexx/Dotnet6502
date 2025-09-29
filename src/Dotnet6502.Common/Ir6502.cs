@@ -7,6 +7,8 @@ public static class Ir6502
 {
     public abstract record Instruction;
 
+    public interface IFunctionAddress;
+
     public record Copy(Value Source, Value Destination) : Instruction;
 
     public record Return : Instruction;
@@ -17,7 +19,7 @@ public static class Ir6502
 
     public record Label(Identifier Name) : Instruction;
 
-    public record CallFunction(TargetAddress FunctionAddress) : Instruction;
+    public record CallFunction(IFunctionAddress FunctionAddress) : Instruction;
 
     public record Jump(Identifier Target) : Instruction;
 
@@ -44,7 +46,7 @@ public static class Ir6502
 
     public record Memory(ushort Address, RegisterName? RegisterToAdd, bool SingleByteAddress) : Value;
 
-    public record IndirectMemory(byte ZeroPage, bool IsPostIndexed) : Value;
+    public record IndirectMemory(byte ZeroPage, bool IsPreIndexed, bool IsPostIndexed) : Value, IFunctionAddress;
 
     public record Variable(int Index) : Value;
 
@@ -60,7 +62,7 @@ public static class Ir6502
 
     public record Identifier(string Characters) : JumpTarget;
 
-    public record TargetAddress(ushort Address) : JumpTarget;
+    public record TargetAddress(ushort Address) : JumpTarget, IFunctionAddress;
     
     public enum RegisterName { Accumulator, XIndex, YIndex }
 

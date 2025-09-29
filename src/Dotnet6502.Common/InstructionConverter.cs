@@ -628,6 +628,21 @@ public static class InstructionConverter
     /// </summary>
     private static Ir6502.Instruction[] ConvertJmp(DisassembledInstruction instruction, Context context)
     {
+        if (instruction.Info.AddressingMode is
+            AddressingMode.IndexedIndirect or
+            AddressingMode.IndirectIndexed or
+            AddressingMode.Indirect)
+        {
+            // Pull out the address to jump to from memory
+            var operand = ParseAddress(instruction);
+            return
+            [
+                new Ir6502.CallFunction((Ir6502.IndirectMemory)operand),
+            ];
+        }
+
+        // For non-indirect references, we've already mapped out the call site during decompilation
+        // so we should be able to just jump to it.
         var target = GetTargetLabel(instruction, context);
         var jump = new Ir6502.Jump(target);
 
@@ -1233,10 +1248,13 @@ public static class InstructionConverter
             }
 
             case AddressingMode.IndexedIndirect:
-                return new Ir6502.IndirectMemory(instruction.Operands[0], false);
+                return new Ir6502.IndirectMemory(instruction.Operands[0], true, false);
 
             case AddressingMode.IndirectIndexed:
-                return new Ir6502.IndirectMemory(instruction.Operands[0], true);
+                return new Ir6502.IndirectMemory(instruction.Operands[0], false, true);
+
+            case AddressingMode.Indirect:
+                return new Ir6502.IndirectMemory(instruction.Operands[0], false, false);
 
             default:
                 throw new NotSupportedException(instruction.Info.AddressingMode.ToString());

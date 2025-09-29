@@ -197,8 +197,21 @@ public class MsilGenerator
     private static void GenerateCallFunction(Ir6502.CallFunction callFunction, ILGenerator ilGenerator)
     {
         ilGenerator.Emit(JitCompiler.LoadJitCompilerArg);
-        ilGenerator.Emit(OpCodes.Ldc_I4, callFunction.FunctionAddress.Address);
-
+        
+        switch (callFunction.FunctionAddress)
+        {
+            case Ir6502.TargetAddress targetAddress:
+                ilGenerator.Emit(OpCodes.Ldc_I4, targetAddress.Address);
+                break;
+            
+            case Ir6502.IndirectMemory indirectMemory:
+                LoadIndirectMemoryValueToStack(indirectMemory, ilGenerator);
+                break;
+            
+            default:
+                throw new NotSupportedException(callFunction.FunctionAddress.GetType().FullName!);
+        }
+        
         var method = typeof(IJitCompiler).GetMethod(nameof(JitCompiler.RunMethod))!;
         ilGenerator.Emit(OpCodes.Callvirt, method);
     }
@@ -368,58 +381,8 @@ public class MsilGenerator
             }
 
             case Ir6502.IndirectMemory indirectMemory:
-            {
-                var readMemoryMethod = typeof(I6502Hal).GetMethod(nameof(I6502Hal.ReadMemory))!;
-                ilGenerator.Emit(JitCompiler.LoadHalArg);
-                ilGenerator.Emit(OpCodes.Ldc_I4, (int)indirectMemory.ZeroPage);
-
-                // If this is pre-indexed, then add the X register to the zero page for the address lookup
-                if (!indirectMemory.IsPostIndexed)
-                {
-                    LoadRegisterToStack(Ir6502.RegisterName.XIndex, ilGenerator);
-                    ilGenerator.Emit(OpCodes.Add);
-                    ilGenerator.Emit(OpCodes.Conv_U1); // remain in zero-page address
-                }
-
-                ilGenerator.Emit(OpCodes.Dup); // Since we need two reads
-                SaveStackToTempLocal(ilGenerator, 1); // Save one value for low byte read
-                ilGenerator.Emit(OpCodes.Ldc_I4, 1);
-                ilGenerator.Emit(OpCodes.Add); // For the high byte memory address
-
-                // Retrieve the address high byte from memory,
-                ilGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
-                ilGenerator.Emit(OpCodes.Conv_I4);
-                ilGenerator.Emit(OpCodes.Ldc_I4, 8);
-                ilGenerator.Emit(OpCodes.Shl);
-                SaveStackToTempLocal(ilGenerator, 0);
-
-                // This should leave us with the low byte address (pre-dup)
-                ilGenerator.Emit(JitCompiler.LoadHalArg);
-                LoadTempLocalToStack(ilGenerator, 1);
-                ilGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
-                ilGenerator.Emit(OpCodes.Conv_I4);
-                LoadTempLocalToStack(ilGenerator, 0);
-                ilGenerator.Emit(OpCodes.Add); // Add them together for a full 16-bit address
-
-                // Since we need to do a memory lookup, we need to save the current address we read
-                // to a temp variable, so we can load the hardware field on the stack before the
-                // address for a proper read.
-                SaveStackToTempLocal(ilGenerator);
-                ilGenerator.Emit(JitCompiler.LoadHalArg);
-                LoadTempLocalToStack(ilGenerator);
-
-                if (indirectMemory.IsPostIndexed)
-                {
-                    // If this is post-indexed, then add the Y register to the result to get the final address
-                    LoadRegisterToStack(Ir6502.RegisterName.YIndex, ilGenerator);
-                    ilGenerator.Emit(OpCodes.Add);
-                }
-
-                // Retrieve the value from the address we now have
-                ilGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
-                ilGenerator.Emit(OpCodes.Conv_I4);
+                LoadIndirectMemoryValueToStack(indirectMemory, ilGenerator);
                 break;
-            }
 
             case Ir6502.Register register:
                 LoadRegisterToStack(register.Name, ilGenerator);
@@ -442,6 +405,59 @@ public class MsilGenerator
             default:
                 throw new NotSupportedException(value.GetType().FullName);
         }
+    }
+
+    private static void LoadIndirectMemoryValueToStack(Ir6502.IndirectMemory indirectMemory, ILGenerator ilGenerator)
+    {
+        var readMemoryMethod = typeof(I6502Hal).GetMethod(nameof(I6502Hal.ReadMemory))!;
+        ilGenerator.Emit(JitCompiler.LoadHalArg);
+        ilGenerator.Emit(OpCodes.Ldc_I4, (int)indirectMemory.ZeroPage);
+
+        // If this is pre-indexed, then add the X register to the zero page for the address lookup
+        if (indirectMemory.IsPreIndexed)
+        {
+            LoadRegisterToStack(Ir6502.RegisterName.XIndex, ilGenerator);
+            ilGenerator.Emit(OpCodes.Add);
+            ilGenerator.Emit(OpCodes.Conv_U1); // remain in zero-page address
+        }
+
+        ilGenerator.Emit(OpCodes.Dup); // Since we need two reads
+        SaveStackToTempLocal(ilGenerator, 1); // Save one value for low byte read
+        ilGenerator.Emit(OpCodes.Ldc_I4, 1);
+        ilGenerator.Emit(OpCodes.Add); // For the high byte memory address
+
+        // Retrieve the address high byte from memory,
+        ilGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
+        ilGenerator.Emit(OpCodes.Conv_I4);
+        ilGenerator.Emit(OpCodes.Ldc_I4, 8);
+        ilGenerator.Emit(OpCodes.Shl);
+        SaveStackToTempLocal(ilGenerator, 0);
+
+        // This should leave us with the low byte address (pre-dup)
+        ilGenerator.Emit(JitCompiler.LoadHalArg);
+        LoadTempLocalToStack(ilGenerator, 1);
+        ilGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
+        ilGenerator.Emit(OpCodes.Conv_I4);
+        LoadTempLocalToStack(ilGenerator, 0);
+        ilGenerator.Emit(OpCodes.Add); // Add them together for a full 16-bit address
+
+        // Since we need to do a memory lookup, we need to save the current address we read
+        // to a temp variable, so we can load the hardware field on the stack before the
+        // address for a proper read.
+        SaveStackToTempLocal(ilGenerator);
+        ilGenerator.Emit(JitCompiler.LoadHalArg);
+        LoadTempLocalToStack(ilGenerator);
+
+        if (indirectMemory.IsPostIndexed)
+        {
+            // If this is post-indexed, then add the Y register to the result to get the final address
+            LoadRegisterToStack(Ir6502.RegisterName.YIndex, ilGenerator);
+            ilGenerator.Emit(OpCodes.Add);
+        }
+
+        // Retrieve the value from the address we now have
+        ilGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
+        ilGenerator.Emit(OpCodes.Conv_I4);
     }
 
     private static void WriteTempLocalToValue(Ir6502.Value destination, ILGenerator ilGenerator)
@@ -505,7 +521,7 @@ public class MsilGenerator
                 ilGenerator.Emit(OpCodes.Ldc_I4, (int)indirectMemory.ZeroPage);
 
                 // If this is pre-indexed, then add the X register to the zero page for the address lookup
-                if (!indirectMemory.IsPostIndexed)
+                if (indirectMemory.IsPreIndexed)
                 {
                     LoadRegisterToStack(Ir6502.RegisterName.XIndex, ilGenerator);
                     ilGenerator.Emit(OpCodes.Add);

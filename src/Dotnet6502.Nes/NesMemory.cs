@@ -13,15 +13,17 @@ public class NesMemory
     {
         _ppu = ppu;
 
-        if (prgRomData.Length != 0x8000)
+        if (prgRomData.Length % 0x4000 != 0)
         {
-            throw new InvalidOperationException("Unexpected prgRomData length");
+            var message = $"Expected prgRom as multiple of 0x4000, instead it was 0x{prgRomData.Length:X4}";
+            throw new InvalidOperationException(message);
         }
 
-        for (var x = 0; x < 0x8000; x++)
+        for (var x = 0; x < prgRomData.Length; x++)
         {
-            const int prgOffset = 0x8000 - UnmappedSpaceStart;
-            _unmappedSpace[x + prgOffset] = prgRomData[x];
+            var unmappedSpaceIndex = _unmappedSpace.Length - x - 1;
+            var prgRomDataIndex = prgRomData.Length - x - 1;
+            _unmappedSpace[unmappedSpaceIndex] = prgRomData[prgRomDataIndex];
         }
     }
 

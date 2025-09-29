@@ -643,7 +643,7 @@ public class CopyInstructionTests
     public void Can_Copy_IndexedIndirect_To_Register()
     {
         var instruction = new Ir6502.Copy(
-            new Ir6502.IndirectMemory(0x20, false), // Indexed-Indirect: (zp,X)
+            new Ir6502.IndirectMemory(0x20, true, false), // Indexed-Indirect: (zp,X)
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
         var jit = new TestJitCompiler();
@@ -666,7 +666,7 @@ public class CopyInstructionTests
     public void Can_Copy_IndirectIndexed_To_Register()
     {
         var instruction = new Ir6502.Copy(
-            new Ir6502.IndirectMemory(0x30, true), // Indirect-Indexed: (zp),Y
+            new Ir6502.IndirectMemory(0x30, false, true), // Indirect-Indexed: (zp),Y
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
         var jit = new TestJitCompiler();
@@ -690,7 +690,7 @@ public class CopyInstructionTests
     {
         var instruction = new Ir6502.Copy(
             new Ir6502.Register(Ir6502.RegisterName.Accumulator),
-            new Ir6502.IndirectMemory(0x20, false)); // Indexed-Indirect: (zp,X)
+            new Ir6502.IndirectMemory(0x20, true, false)); // Indexed-Indirect: (zp,X)
 
         var jit = new TestJitCompiler();
         jit.TestHal.XRegister = 5;
@@ -711,7 +711,7 @@ public class CopyInstructionTests
     {
         var instruction = new Ir6502.Copy(
             new Ir6502.Register(Ir6502.RegisterName.Accumulator),
-            new Ir6502.IndirectMemory(0x30, true)); // Indirect-Indexed: (zp),Y
+            new Ir6502.IndirectMemory(0x30, false, true)); // Indirect-Indexed: (zp),Y
 
         var jit = new TestJitCompiler();
         jit.TestHal.YRegister = 10;
