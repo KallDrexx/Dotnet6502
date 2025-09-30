@@ -19,6 +19,7 @@ public class NesHal : I6502Hal
     private readonly NesMemory _memory;
     private readonly Ppu _ppu;
     private readonly CancellationToken _cancellationToken;
+    private readonly StreamWriter? _debugWriter;
 
     public byte ARegister { get; set; }
     public byte XRegister { get; set; }
@@ -50,11 +51,12 @@ public class NesHal : I6502Hal
         }
     }
 
-    public NesHal(NesMemory memory, Ppu ppu, CancellationToken cancellationToken)
+    public NesHal(NesMemory memory, Ppu ppu, StreamWriter? debugWriter, CancellationToken cancellationToken)
     {
         _memory = memory;
         _ppu = ppu;
         _cancellationToken = cancellationToken;
+        _debugWriter = debugWriter;
     }
 
     public void SetFlag(CpuStatusFlags flag, bool value)
@@ -70,17 +72,22 @@ public class NesHal : I6502Hal
     public byte ReadMemory(ushort address)
     {
         var readValue = _memory.Read(address);
+
+        _debugWriter?.WriteLine($"Read 0x{readValue:X2} from address 0x{address:X4}");
         return readValue;
     }
 
     public void WriteMemory(ushort address, byte value)
     {
+        _debugWriter?.WriteLine($"Writing 0x{value:X2} to address 0x{address:X4}");
         _memory.Write(address, value);
     }
 
     public void PushToStack(byte value)
     {
         var stackAddress = (ushort)(0x0100 | StackPointer);
+
+        _debugWriter?.WriteLine($"Pushing 0x{value:X2} to stack address 0x{stackAddress:X4}");
         _memory.Write(stackAddress, value);
         StackPointer--;
     }
@@ -89,6 +96,7 @@ public class NesHal : I6502Hal
     {
         var stackAddress = (ushort)(0x0100 | StackPointer);
         var value = _memory.Read(stackAddress);
+        _debugWriter?.WriteLine($"popped 0x{value:X2} from stack address 0x{stackAddress:X4}");
         StackPointer++;
 
         return value;
@@ -111,7 +119,9 @@ public class NesHal : I6502Hal
         {
             if (NmiHandler != null)
             {
+                _debugWriter?.WriteLine("----Entering NMI");
                 NmiHandler();
+                _debugWriter?.WriteLine("----Exiting NMI");
             }
             else
             {
@@ -122,6 +132,9 @@ public class NesHal : I6502Hal
 
     public void DebugHook(string info)
     {
-        Console.WriteLine($"{info} - A:{ARegister:X2} X:{XRegister:X2} Y:{YRegister:X2} P:{ProcessorStatus:X2}");
+        _debugWriter?.Write($"{info} - A:{ARegister:X2} X:{XRegister:X2} Y:{YRegister:X2} P:{ProcessorStatus:X2} ");
+        _debugWriter?.Write($"SP:{StackPointer:X2} ");
+        _debugWriter?.Write($"PPUCTL:{_ppu.PpuCtrl.ToByte():X2} PPUSTATUS:{_ppu.PpuStatus.ToByte():X2} ");
+        _debugWriter?.WriteLine($"PPUADDR:{_ppu.PpuAddr:X4}");
     }
 }

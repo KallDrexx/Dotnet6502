@@ -54,12 +54,12 @@ public class Ppu
     ];
 
     // Registers
-    private readonly PpuCtrl _ppuCtrl;
-    private readonly PpuStatus _ppuStatus;
-    private readonly PpuMask _ppuMask;
+    internal PpuCtrl PpuCtrl { get; }
+    internal PpuStatus PpuStatus { get; }
+    internal PpuMask PpuMask { get; }
+    internal ushort PpuAddr { get; private set; }
     private byte _oamAddrRegister;
     private byte _xScrollRegister, _yScrollRegister;
-    private ushort _ppuAddr;
     private bool _wRegister;
     private ushort _vRegister;
     private byte _tRegister;
@@ -78,9 +78,9 @@ public class Ppu
     public Ppu(byte[] chrRomData, INesDisplay nesDisplay)
     {
         _nesDisplay = nesDisplay;
-        _ppuCtrl = new PpuCtrl();
-        _ppuStatus = new PpuStatus();
-        _ppuMask = new PpuMask();
+        PpuCtrl = new PpuCtrl();
+        PpuStatus = new PpuStatus();
+        PpuMask = new PpuMask();
 
         if (chrRomData.Length is not (0x2000 or 0x4000))
         {
@@ -107,7 +107,7 @@ public class Ppu
             RunSinglePpuCycle();
         }
 
-        var triggerNmi = _ppuCtrl.NmiEnable == PpuCtrl.NmiEnableValue.On && _ppuStatus.VBlankFlag && !_hasNmiTriggered;
+        var triggerNmi = PpuCtrl.NmiEnable == PpuCtrl.NmiEnableValue.On && PpuStatus.VBlankFlag && !_hasNmiTriggered;
         if (triggerNmi)
         {
             _hasNmiTriggered = true;
@@ -125,11 +125,11 @@ public class Ppu
         switch (byteNumber)
         {
             case 0:
-                _ppuCtrl.UpdateFromByte(value);
+                PpuCtrl.UpdateFromByte(value);
                 break;
 
             case 1:
-                _ppuMask.UpdateFromByte(value);
+                PpuMask.UpdateFromByte(value);
                 break;
 
             case 2:
@@ -161,43 +161,43 @@ public class Ppu
             case 6:
                 if (_wRegister)
                 {
-                    _ppuAddr = (ushort)((_ppuAddr & 0xFF00) | value);
+                    PpuAddr = (ushort)((PpuAddr & 0xFF00) | value);
                 }
                 else
                 {
                     // PPUADDR is only 14 bits, so clear out the two high bits
                     var maskedValue = value & 0x3F;
-                    _ppuAddr = (ushort)((_ppuAddr & 0x00FF) | (maskedValue << 8));
+                    PpuAddr = (ushort)((PpuAddr & 0x00FF) | (maskedValue << 8));
                 }
 
                 _wRegister = !_wRegister;
-                _vRegister = _ppuAddr;
+                _vRegister = PpuAddr;
 
                 // Prime the read buffer
-                _readBuffer = _memory[_ppuAddr];
+                _readBuffer = _memory[PpuAddr];
                 break;
 
             case 7:
-                if (_ppuAddr >= 0x3F00)
+                if (PpuAddr >= 0x3F00)
                 {
-                    var mirroredAddress = GetPaletteMemoryLocation(_ppuAddr);
+                    var mirroredAddress = GetPaletteMemoryLocation(PpuAddr);
                     _memory[mirroredAddress] = value;
                 }
                 else
                 {
-                    _memory[_ppuAddr] = value;
+                    _memory[PpuAddr] = value;
                 }
 
-                if (_ppuCtrl.VRamAddressIncrement == PpuCtrl.VRamAddressIncrementValue.Add1Across)
+                if (PpuCtrl.VRamAddressIncrement == PpuCtrl.VRamAddressIncrementValue.Add1Across)
                 {
-                    _ppuAddr += 1;
+                    PpuAddr += 1;
                 }
                 else
                 {
-                    _ppuAddr += 32;
+                    PpuAddr += 32;
                 }
 
-                _vRegister = _ppuAddr;
+                _vRegister = PpuAddr;
 
                 break;
 
@@ -226,8 +226,8 @@ public class Ppu
                 return 0; // PpuMask not readable
 
             case 2:
-                var result = _ppuStatus.ToByte();
-                _ppuStatus.VBlankFlag = false; // Clear vblank on read
+                var result = PpuStatus.ToByte();
+                PpuStatus.VBlankFlag = false; // Clear vblank on read
                 _wRegister = false; // w register always gets cleared on status read
                 return result;
 
@@ -246,24 +246,24 @@ public class Ppu
             case 7:
                 // PPU reads up to 0x3F00 are delayed one read
                 byte value;
-                if (_ppuAddr < 0x3F00)
+                if (PpuAddr < 0x3F00)
                 {
                     value = _readBuffer;
-                    _readBuffer = _memory[_ppuAddr];
+                    _readBuffer = _memory[PpuAddr];
                 }
                 else
                 {
-                    var mirroredAddress = GetPaletteMemoryLocation(_ppuAddr);
+                    var mirroredAddress = GetPaletteMemoryLocation(PpuAddr);
                     value = _memory[mirroredAddress];
                 }
 
-                if (_ppuCtrl.VRamAddressIncrement == PpuCtrl.VRamAddressIncrementValue.Add1Across)
+                if (PpuCtrl.VRamAddressIncrement == PpuCtrl.VRamAddressIncrementValue.Add1Across)
                 {
-                    _ppuAddr += 1;
+                    PpuAddr += 1;
                 }
                 else
                 {
-                    _ppuAddr += 32;
+                    PpuAddr += 32;
                 }
 
                 return value;
@@ -318,7 +318,7 @@ public class Ppu
             case CurrentDotLocation.StartsPreRender:
                 _currentScanLineCycle = 0;
                 _currentScanLine++;
-                _ppuStatus.VBlankFlag = false;
+                PpuStatus.VBlankFlag = false;
                 break;
 
             case CurrentDotLocation.StartsFirstDisplayableScanLine:
@@ -332,7 +332,7 @@ public class Ppu
             case CurrentDotLocation.StartsVBlank:
                 _currentScanLineCycle = 0;
                 _currentScanLine++;
-                _ppuStatus.VBlankFlag = true;
+                PpuStatus.VBlankFlag = true;
                 RenderFrame();
                 break;
 
@@ -350,20 +350,20 @@ public class Ppu
 
     private void RenderFrame()
     {
-        ushort nameTableAddress = _ppuCtrl.BaseNameTableAddress switch
+        ushort nameTableAddress = PpuCtrl.BaseNameTableAddress switch
         {
             PpuCtrl.BaseNameTableAddressValue.Hex2000 => 0x2000,
             PpuCtrl.BaseNameTableAddressValue.Hex2400 => 0x2400,
             PpuCtrl.BaseNameTableAddressValue.Hex2800 => 0x2800,
             PpuCtrl.BaseNameTableAddressValue.Hex2C00 => 0x2C00,
-            _ => throw new NotSupportedException(_ppuCtrl.BaseNameTableAddress.ToString()),
+            _ => throw new NotSupportedException(PpuCtrl.BaseNameTableAddress.ToString()),
         };
 
-        ushort backgroundTableAddress = _ppuCtrl.BackgroundPatternTableAddress switch
+        ushort backgroundTableAddress = PpuCtrl.BackgroundPatternTableAddress switch
         {
             PpuCtrl.BackgroundPatternTableAddressEnum.Hex0000 => 0x0000,
             PpuCtrl.BackgroundPatternTableAddressEnum.Hex1000 => 0x1000,
-            _ => throw new NotSupportedException(_ppuCtrl.BackgroundPatternTableAddress.ToString()),
+            _ => throw new NotSupportedException(PpuCtrl.BackgroundPatternTableAddress.ToString()),
         };
 
         var nameTableBytes = _memory.AsSpan().Slice(nameTableAddress, 960);
@@ -388,11 +388,11 @@ public class Ppu
 
     private void RenderPatternTableToFrameBuffer()
     {
-        ushort backgroundTableAddress = _ppuCtrl.BackgroundPatternTableAddress switch
+        ushort backgroundTableAddress = PpuCtrl.BackgroundPatternTableAddress switch
         {
             PpuCtrl.BackgroundPatternTableAddressEnum.Hex0000 => 0x0000,
             PpuCtrl.BackgroundPatternTableAddressEnum.Hex1000 => 0x1000,
-            _ => throw new NotSupportedException(_ppuCtrl.BackgroundPatternTableAddress.ToString()),
+            _ => throw new NotSupportedException(PpuCtrl.BackgroundPatternTableAddress.ToString()),
         };
 
         var tileX = 2;
@@ -445,13 +445,13 @@ public class Ppu
 
     private byte[] GetBackgroundPaletteIndexes(int tileColumn, int tileRow)
     {
-        ushort nameTableAddress = _ppuCtrl.BaseNameTableAddress switch
+        ushort nameTableAddress = PpuCtrl.BaseNameTableAddress switch
         {
             PpuCtrl.BaseNameTableAddressValue.Hex2000 => 0x2000,
             PpuCtrl.BaseNameTableAddressValue.Hex2400 => 0x2400,
             PpuCtrl.BaseNameTableAddressValue.Hex2800 => 0x2800,
             PpuCtrl.BaseNameTableAddressValue.Hex2C00 => 0x2C00,
-            _ => throw new NotSupportedException(_ppuCtrl.BaseNameTableAddress.ToString()),
+            _ => throw new NotSupportedException(PpuCtrl.BaseNameTableAddress.ToString()),
         };
 
         var attributeTableIndex = tileRow / 4 * 8 + tileColumn / 4;

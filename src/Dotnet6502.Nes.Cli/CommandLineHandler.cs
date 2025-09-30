@@ -2,7 +2,7 @@ namespace Dotnet6502.Nes.Cli;
 
 public static class CommandLineHandler
 {
-    public record Values(FileInfo RomFile);
+    public record Values(FileInfo RomFile, FileInfo? DebugFile);
 
     public static Values? Parse(string[] args)
     {
@@ -13,6 +13,7 @@ public static class CommandLineHandler
         }
 
         FileInfo? romFile = null;
+        FileInfo? debugFile = null;
 
         for (int i = 0; i < args.Length; i++)
         {
@@ -30,6 +31,20 @@ public static class CommandLineHandler
                         return null;
                     }
                     break;
+
+                case "--debug":
+                case "-d":
+                    if (i + 1 < args.Length)
+                    {
+                         debugFile = new FileInfo(args[++i]);
+                    }
+                    else
+                    {
+                        Console.Error.WriteLine("Error: --debug requires a file path");
+                        return null;
+                    }
+                    break;
+
 
                 case "--help":
                 case "-h":
@@ -57,7 +72,7 @@ public static class CommandLineHandler
             return null;
         }
 
-        return new Values(romFile);
+        return new Values(romFile, debugFile);
     }
 
     private static void ShowHelp()
@@ -71,8 +86,7 @@ public static class CommandLineHandler
         Console.WriteLine("  --rom, -r <file>        The NES ROM file to process");
         Console.WriteLine();
         Console.WriteLine("Options:");
-        Console.WriteLine("  --output, -o <dir>      Output directory for generated files");
-        Console.WriteLine("  --verbose, -v           Enable verbose output");
+        Console.WriteLine("  --debug, -d <file>      File to write debug file to");
         Console.WriteLine("  --help, -h              Show this help message");
         Console.WriteLine();
         Console.WriteLine("Examples:");

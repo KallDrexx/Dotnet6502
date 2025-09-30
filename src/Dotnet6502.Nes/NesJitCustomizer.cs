@@ -19,12 +19,21 @@ public class NesJitCustomizer : IJitCustomizer
         {
             // Prepend cycle count instruction. This has to be done before the instruction's execution
             // otherwise it will get missed by branch/jump calls.
+            // However, if this contains a label instruction, that *must* come first
+            var labels = instruction.Ir6502Instructions.OfType<Ir6502.Label>().ToArray();
+            var otherInstructions = instruction.Ir6502Instructions
+                .Where(x => x is not Ir6502.Label)
+                .ToArray();
+
+            var updatedInstructions = new List<Ir6502.Instruction>();
+            updatedInstructions.AddRange(labels);
+            updatedInstructions.Add(new CallDebugHook(instruction.OriginalInstruction.ToString()));
+            updatedInstructions.Add(new IncrementCycleCount(instruction.OriginalInstruction.Info.Cycles));
+            updatedInstructions.AddRange(otherInstructions);
+
             var updatedInstruction = instruction with
             {
-                Ir6502Instructions = instruction.Ir6502Instructions
-                    .Prepend(new CallDebugHook(instruction.OriginalInstruction.ToString()))
-                    .Prepend(new IncrementCycleCount(instruction.OriginalInstruction.Info.Cycles))
-                    .ToArray(),
+                Ir6502Instructions = updatedInstructions
             };
 
             result.Add(updatedInstruction);

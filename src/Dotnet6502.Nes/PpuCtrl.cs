@@ -21,6 +21,18 @@ internal class PpuCtrl
         BaseNameTableAddress = (BaseNameTableAddressValue)(value & 0x03);
     }
 
+    internal byte ToByte()
+    {
+        return (byte)(
+            (byte)NmiEnable << 7 |
+            (byte)MasterSlaveSelect << 6 |
+            (byte)SpriteSize << 5 |
+            (byte)BackgroundPatternTableAddress << 4 |
+            (byte)SpritePatternTableAddressFor8X8 << 3 |
+            (byte)VRamAddressIncrement << 2 |
+            (byte)BaseNameTableAddress);
+    }
+
     internal enum BackgroundPatternTableAddressEnum
     {
         Hex0000 = 0,
