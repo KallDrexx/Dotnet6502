@@ -353,6 +353,44 @@ public class Ppu
 
     private void RenderFrame()
     {
+        RenderFullBackground();
+        RenderSprites();
+        // RenderPatternTableToFrameBuffer();
+
+        _nesDisplay.RenderFrame(_framebuffer);
+
+        for (var x = 0; x < _framebuffer.Length; x++)
+        {
+            _framebuffer[x] = new RgbColor(0, 0, 0);
+        }
+    }
+
+    private void RenderSprites()
+    {
+        for (var index = 0; index < 256; index += 4)
+        {
+            var tileIndex = _oamMemory[index + 1];
+            var tileX = _oamMemory[index + 3];
+            var tileY = _oamMemory[index];
+
+            var flipVertical = ((_oamMemory[index + 2] >> 7) & 1) == 1;
+            var flipHorizontal = ((_oamMemory[index + 2] >> 6) & 1) == 1;
+            var paletteIndex = _oamMemory[index + 2] & 0b11;
+            var palette = GetSpritePaletteIndexes(paletteIndex);
+
+            var bank = PpuCtrl.SpritePatternTableAddressFor8X8 switch
+            {
+                PpuCtrl.SpritePatternTableAddressFor8X8Enum.Hex0000 => 0x0000,
+                PpuCtrl.SpritePatternTableAddressFor8X8Enum.Hex1000 => 0x1000,
+                _ => throw new NotSupportedException(PpuCtrl.SpritePatternTableAddressFor8X8.ToString()),
+            };
+
+            ShowTile((ushort)bank, tileIndex, tileX, tileY, palette, flipVertical, flipVertical, true);
+        }
+    }
+
+    private void RenderFullBackground()
+    {
         ushort nameTableAddress = PpuCtrl.BaseNameTableAddress switch
         {
             PpuCtrl.BaseNameTableAddressValue.Hex2000 => 0x2000,
@@ -377,15 +415,7 @@ public class Ppu
             var tiley = i / 32;
             var palette = GetBackgroundPaletteIndexes(tilex, tiley);
             // var palette = new byte[] { 0x01, 0x23, 0x27, 0x30 };
-            ShowTile(backgroundTableAddress, tileIndex, tilex * 8, tiley * 8, palette);
-        }
-        // RenderPatternTableToFrameBuffer();
-
-        _nesDisplay.RenderFrame(_framebuffer);
-
-        for (var x = 0; x < _framebuffer.Length; x++)
-        {
-            _framebuffer[x] = new RgbColor(0, 0, 0);
+            ShowTile(backgroundTableAddress, tileIndex, tilex * 8, tiley * 8, palette, false, false, false);
         }
     }
 
@@ -409,13 +439,21 @@ public class Ppu
             }
 
             var palette = new byte[] { 0x01, 0x23, 0x27, 0x30 };
-            ShowTile(backgroundTableAddress, tileNum, tileX, tileY, palette);
+            ShowTile(backgroundTableAddress, tileNum, tileX, tileY, palette, false, false, false);
 
             tileX += 10;
         }
     }
 
-    private void ShowTile(ushort bankAddress, ushort tileNumber, int startX, int startY, byte[] palette)
+    private void ShowTile(
+        ushort bankAddress,
+        ushort tileNumber,
+        int startX,
+        int startY,
+        byte[] palette,
+        bool flipHorizontal,
+        bool flipVertical,
+        bool skipPaletteZero)
     {
         var tileStart = bankAddress + tileNumber * 16;
         var tileEnd = bankAddress + tileNumber * 16 + 16;
@@ -432,6 +470,11 @@ public class Ppu
                 upper = (byte)(upper >> 1);
                 lower = (byte)(lower >> 1);
 
+                if (value == 0 && skipPaletteZero)
+                {
+                    continue;
+                }
+
                 var color = value switch
                 {
                     0 => _systemPalette[palette[0]],
@@ -441,7 +484,9 @@ public class Ppu
                     _ => throw new NotSupportedException(value.ToString()),
                 };
 
-                SetPixel(x + startX, y + startY, color);
+                var finalX = flipHorizontal ? startX + 7 - x : startX + x;
+                var finalY = flipVertical ? startY + y - y : startY + y;
+                SetPixel(finalX, finalY, color);
             }
         }
     }
@@ -481,8 +526,26 @@ public class Ppu
         ];
     }
 
+    private byte[] GetSpritePaletteIndexes(int paletteIndex)
+    {
+        var start = 0x11 + (paletteIndex * 4);
+        var paletteTable = _memory.AsSpan()[0x3F00..];
+        return
+        [
+            0,
+            paletteTable[start],
+            paletteTable[start + 1],
+            paletteTable[start + 2],
+        ];
+    }
+
     private void SetPixel(int x, int y, RgbColor color)
     {
+        if (x < 0 || x >= DisplayableWidth || y < 0 || y >= DisplayableScanLines)
+        {
+            return;
+        }
+
         var index = y * DisplayableWidth + x;
         _framebuffer[index] = color;
     }
