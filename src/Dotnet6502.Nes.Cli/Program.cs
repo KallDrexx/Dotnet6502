@@ -56,7 +56,7 @@ if (commandLineValues.DebugFile != null)
 var app = new MonogameApp();
 var cancellationTokenSource = new CancellationTokenSource();
 var ppu = new Ppu(chrRomData, app);
-var memory = new NesMemory(ppu, programRomData);
+var memory = new NesMemory(ppu, programRomData, app);
 var hal = new NesHal(memory, ppu, debugWriter, cancellationTokenSource.Token);
 
 var jitCustomizer = new NesJitCustomizer();

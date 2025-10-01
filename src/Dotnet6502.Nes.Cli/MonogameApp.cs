@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -8,12 +7,13 @@ namespace Dotnet6502.Nes.Cli;
 /// <summary>
 /// Handles input and rendering of the NES game
 /// </summary>
-public class MonogameApp : Game, INesDisplay
+public class MonogameApp : Game, INesDisplay, INesInput
 {
     private const int Width = 256;
     private const int Height = 240;
 
     private readonly GraphicsDeviceManager _graphicsDeviceManager;
+    private readonly ControllerState _controllerState = new();
     private readonly object _synchronizationLock = new();
     private readonly Color[] _pixelColors = new Color[Width * Height];
     private SpriteBatch _spriteBatch = null!;
@@ -106,6 +106,15 @@ public class MonogameApp : Game, INesDisplay
         }
 
         var keyboardState = Keyboard.GetState();
+        _controllerState.Up = keyboardState.IsKeyDown(Keys.Up);
+        _controllerState.Down = keyboardState.IsKeyDown(Keys.Down);
+        _controllerState.Left = keyboardState.IsKeyDown(Keys.Left);
+        _controllerState.Right = keyboardState.IsKeyDown(Keys.Right);
+        _controllerState.Start = keyboardState.IsKeyDown(Keys.Enter);
+        _controllerState.Select = keyboardState.IsKeyDown(Keys.Back);
+        _controllerState.A = keyboardState.IsKeyDown(Keys.Z);
+        _controllerState.B = keyboardState.IsKeyDown(Keys.X);
+
         if (keyboardState.IsKeyDown(Keys.Escape))
         {
             Exit();
@@ -163,5 +172,10 @@ public class MonogameApp : Game, INesDisplay
         }
 
         return new Rectangle(startX, startY, width, height);
+    }
+
+    public ControllerState GetGamepad1State()
+    {
+        return _controllerState;
     }
 }

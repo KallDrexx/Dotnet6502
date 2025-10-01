@@ -5,13 +5,23 @@ public class NesMemory
     private const int UnmappedSpaceStart = 0x4020;
 
     private readonly Ppu _ppu;
+    private readonly INesInput _input;
     private enum MemoryType { InternalRam, Ppu, Apu, Joy1, Joy2, UnmappedSpace, PpuOamDma }
     private readonly byte[] _internalRam = new byte[0x800]; // 2KB
     private readonly byte[] _unmappedSpace = new byte[0x10000 - UnmappedSpaceStart];
+    private ControllerState _currentState;
+    private int _inputBitIndex = 0;
 
-    public NesMemory(Ppu ppu, byte[] prgRomData)
+    private readonly ControllerBits[] _bitOrder =
+    [
+        ControllerBits.A, ControllerBits.B, ControllerBits.Select, ControllerBits.Start, ControllerBits.Up,
+        ControllerBits.Down, ControllerBits.Left, ControllerBits.Right
+    ];
+
+    public NesMemory(Ppu ppu, byte[] prgRomData, INesInput input)
     {
         _ppu = ppu;
+        _input = input;
 
         if (prgRomData.Length % 0x4000 != 0)
         {
@@ -55,6 +65,8 @@ public class NesMemory
                 break;
 
             case MemoryType.Joy1:
+                _currentState = _input.GetGamepad1State();
+                _inputBitIndex = 0;
                 break; // joystick probe / latch.
 
             case MemoryType.Joy2:
@@ -85,6 +97,19 @@ public class NesMemory
                 return _unmappedSpace[offsetAddress];
 
             case MemoryType.Joy1:
+                var currentIndex = _inputBitIndex;
+                _inputBitIndex++;
+                switch (_bitOrder[currentIndex])
+                {
+                    case ControllerBits.A: return _currentState.A ? (byte)1 : (byte)0;
+                    case ControllerBits.B: return _currentState.B ? (byte)1 : (byte)0;
+                    case ControllerBits.Start: return _currentState.Start ? (byte)1 : (byte)0;
+                    case ControllerBits.Select: return _currentState.Select ? (byte)1 : (byte)0;
+                    case ControllerBits.Up: return _currentState.Up ? (byte)1 : (byte)0;
+                    case ControllerBits.Down: return _currentState.Down ? (byte)1 : (byte)0;
+                    case ControllerBits.Left: return _currentState.Left ? (byte)1 : (byte)0;
+                    case ControllerBits.Right: return _currentState.Right ? (byte)1 : (byte)0;
+                }
                 return 0;
 
             case MemoryType.Joy2:
