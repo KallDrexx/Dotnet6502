@@ -20,6 +20,8 @@ public class NesHal : I6502Hal
     private readonly Ppu _ppu;
     private readonly CancellationToken _cancellationToken;
     private readonly StreamWriter? _debugWriter;
+    private long _cpuCycleCount;
+    private long _instructionCount;
 
     public byte ARegister { get; set; }
     public byte XRegister { get; set; }
@@ -114,6 +116,8 @@ public class NesHal : I6502Hal
             throw new TaskCanceledException("Cancellation requested");
         }
 
+        _cpuCycleCount += count;
+        _instructionCount++;
         var nmiTriggered = _ppu.RunNextStep(count);
         if (nmiTriggered)
         {
@@ -135,6 +139,6 @@ public class NesHal : I6502Hal
         _debugWriter?.Write($"{info} - A:{ARegister:X2} X:{XRegister:X2} Y:{YRegister:X2} P:{ProcessorStatus:X2} ");
         _debugWriter?.Write($"SP:{StackPointer:X2} ");
         _debugWriter?.Write($"PPUCTL:{_ppu.PpuCtrl.ToByte():X2} PPUSTATUS:{_ppu.PpuStatus.ToByte():X2} ");
-        _debugWriter?.WriteLine($"PPUADDR:{_ppu.PpuAddr:X4}");
+        _debugWriter?.WriteLine($"PPUADDR:{_ppu.PpuAddr:X4} ({_cpuCycleCount:N0} cycles, {_instructionCount:N0} inst)");
     }
 }

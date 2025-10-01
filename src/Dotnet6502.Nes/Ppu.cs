@@ -82,15 +82,18 @@ public class Ppu
         PpuStatus = new PpuStatus();
         PpuMask = new PpuMask();
 
-        if (chrRomData.Length is not (0x2000 or 0x4000))
+        if (chrRomData.Length > 0)
         {
-            var message = $"Expected chrRomData to be 0x2000 or 0x4000 bytes, but was 0x{chrRomData.Length:X4}";
-            throw new ArgumentException(message);
-        }
+            if (chrRomData.Length is not (0x2000 or 0x4000))
+            {
+                var message = $"Expected chrRomData to be 0x2000 or 0x4000 bytes, but was 0x{chrRomData.Length:X4}";
+                throw new ArgumentException(message);
+            }
 
-        for (var x = 0; x < chrRomData.Length; x++)
-        {
-            _memory[x] = chrRomData[x];
+            for (var x = 0; x < chrRomData.Length; x++)
+            {
+                _memory[x] = chrRomData[x];
+            }
         }
     }
 

@@ -628,6 +628,13 @@ public static class InstructionConverter
     /// </summary>
     private static Ir6502.Instruction[] ConvertJmp(DisassembledInstruction instruction, Context context)
     {
+        if (instruction.TargetAddress == null)
+        {
+            var message = $"{instruction.Info.Mnemonic} at address 0x{instruction.CPUAddress:X4} is a jump without " +
+                          $"a corresponding target address";
+            throw new InvalidOperationException(message);
+        }
+
         var isIndirectlyAddressed = instruction.Info.AddressingMode is
             AddressingMode.IndexedIndirect or
             AddressingMode.IndirectIndexed or
@@ -646,10 +653,19 @@ public static class InstructionConverter
 
         // For non-indirect references, we've already mapped out the call site during decompilation
         // so we should be able to just jump to it.
-        var target = GetTargetLabel(instruction, context);
-        var jump = new Ir6502.Jump(target);
+        if (context.Labels.TryGetValue(instruction.TargetAddress.Value, out var label))
+        {
+            var jump = new Ir6502.Jump(new Ir6502.Identifier(label));
+            return [jump];
+        }
 
-        return [jump];
+        // We don't know this label yet. Treat it as a method call to JIT the code
+        return
+        [
+            new Ir6502.CallFunction(new Ir6502.TargetAddress(instruction.TargetAddress.Value)),
+            new Ir6502.Return(),
+        ];
+
     }
 
     /// <summary>
@@ -1263,6 +1279,25 @@ public static class InstructionConverter
                 throw new NotSupportedException(instruction.Info.AddressingMode.ToString());
         }
     }
+    //
+    // private static Ir6502.Instruction[] GetJumpInstructions(DisassembledInstruction instruction, Context context)
+    // {
+    //     if (instruction.TargetAddress != null)
+    //     {
+    //         var message = $"{instruction.Info.Mnemonic} at address 0x{instruction.CPUAddress:X4} is a jump without " +
+    //                       $"a corresponding target address";
+    //         throw new InvalidOperationException(message);
+    //     }
+    //
+    //     // If we have a target label, we can jump right to it
+    //     if (context.Labels.TryGetValue(instruction.TargetAddress, out var label))
+    //     {
+    //         switch (expression)
+    //         {
+    //
+    //         }
+    //     }
+    // }
 
     private static Ir6502.Identifier GetTargetLabel(DisassembledInstruction instruction, Context context)
     {
