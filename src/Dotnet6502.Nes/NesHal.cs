@@ -96,10 +96,10 @@ public class NesHal : I6502Hal
 
     public byte PopFromStack()
     {
+        StackPointer++;
         var stackAddress = (ushort)(0x0100 | StackPointer);
         var value = _memory.Read(stackAddress);
         _debugWriter?.WriteLine($"popped 0x{value:X2} from stack address 0x{stackAddress:X4}");
-        StackPointer++;
 
         return value;
     }
