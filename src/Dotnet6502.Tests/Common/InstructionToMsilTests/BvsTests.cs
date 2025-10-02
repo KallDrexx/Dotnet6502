@@ -55,13 +55,13 @@ public class BvsTests
 
         var jit = new TestJitCompiler();
         jit.AddMethod(0x1234, allInstructions);
-        jit.TestHal.Flags[CpuStatusFlags.Overflow] = true; // Overflow flag set
+        jit.TestHal.SetFlag(CpuStatusFlags.Overflow, true); // Overflow flag set
         jit.RunMethod(0x1234);
 
         // Branch should be taken, skipping X register assignment
         jit.TestHal.XRegister.ShouldBe((byte)0); // Should remain 0 (skipped)
         jit.TestHal.ARegister.ShouldBe((byte)42); // Should be executed at target
-        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue(); // Should remain unchanged
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeTrue(); // Should remain unchanged
     }
 
     [Fact]
@@ -102,13 +102,13 @@ public class BvsTests
 
         var jit = new TestJitCompiler();
         jit.AddMethod(0x1234, allInstructions);
-        jit.TestHal.Flags[CpuStatusFlags.Overflow] = false; // Overflow flag clear
+        jit.TestHal.SetFlag(CpuStatusFlags.Overflow, false); // Overflow flag clear
         jit.RunMethod(0x1234);
 
         // Branch should NOT be taken, continuing to next instruction
         jit.TestHal.XRegister.ShouldBe((byte)77); // Should be executed
         jit.TestHal.ARegister.ShouldBe((byte)88); // Should also be executed
-        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse(); // Should remain unchanged
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse(); // Should remain unchanged
     }
 
     [Fact]
@@ -161,7 +161,7 @@ public class BvsTests
 
         // Loop should execute 3 times before overflow flag becomes clear (exit condition)
         jit.TestHal.XRegister.ShouldBe((byte)3);
-        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse(); // Final state: overflow flag clear (loop exit condition)
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse(); // Final state: overflow flag clear (loop exit condition)
     }
 
     [Fact]
@@ -200,22 +200,22 @@ public class BvsTests
         jit.AddMethod(0x1234, allInstructions);
 
         // Set initial flag states
-        jit.TestHal.Flags[CpuStatusFlags.Overflow] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Zero] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Negative] = true;
-        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Decimal] = true;
+        jit.TestHal.SetFlag(CpuStatusFlags.Overflow, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Zero, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Negative, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.InterruptDisable, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Decimal, true);
 
         jit.RunMethod(0x1234);
 
         // BVS should not affect any flags
-        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.InterruptDisable).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Decimal).ShouldBeTrue();
     }
 
     [Fact]
@@ -255,7 +255,7 @@ public class BvsTests
         jit.TestHal.XRegister = 0x33;
         jit.TestHal.YRegister = 0x77;
         jit.TestHal.StackPointer = 0xFF;
-        jit.TestHal.Flags[CpuStatusFlags.Overflow] = true;
+        jit.TestHal.SetFlag(CpuStatusFlags.Overflow, true);
 
         jit.RunMethod(0x1234);
 
@@ -303,7 +303,7 @@ public class BvsTests
 
         var jit = new TestJitCompiler();
         jit.AddMethod(0x1234, allInstructions);
-        jit.TestHal.Flags[CpuStatusFlags.Overflow] = true;
+        jit.TestHal.SetFlag(CpuStatusFlags.Overflow, true);
         jit.RunMethod(0x1234);
 
         // Branch should be taken
@@ -403,7 +403,7 @@ public class BvsTests
 
             var jit1 = new TestJitCompiler();
             jit1.AddMethod(0x1234, allInstructions);
-            jit1.TestHal.Flags[CpuStatusFlags.Overflow] = false;
+            jit1.TestHal.SetFlag(CpuStatusFlags.Overflow, false);
             jit1.RunMethod(0x1234);
 
             // Branch should NOT be taken
@@ -433,7 +433,7 @@ public class BvsTests
 
             var jit2 = new TestJitCompiler();
             jit2.AddMethod(0x1234, allInstructions);
-            jit2.TestHal.Flags[CpuStatusFlags.Overflow] = true;
+            jit2.TestHal.SetFlag(CpuStatusFlags.Overflow, true);
             jit2.RunMethod(0x1234);
 
             // Branch SHOULD be taken

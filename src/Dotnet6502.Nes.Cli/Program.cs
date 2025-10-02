@@ -33,31 +33,11 @@ decompiler.Decompile();
 
 Console.WriteLine("Setting up HAL and JIT compiler...");
 
-StreamWriter? debugWriter = null;
-
-if (commandLineValues.DebugFile != null)
-{
-    try
-    {
-        File.Delete(commandLineValues.DebugFile.FullName);
-    }
-    catch
-    {
-        // Most likely file doesn't exist
-    }
-
-    var debugStream = File.OpenWrite(commandLineValues.DebugFile.FullName);
-    debugWriter = new StreamWriter(debugStream);
-    debugWriter.AutoFlush = true;
-
-    Console.WriteLine($"Writing debug log to {commandLineValues.DebugFile.FullName}");
-}
-
 var app = new MonogameApp();
 var cancellationTokenSource = new CancellationTokenSource();
 var ppu = new Ppu(chrRomData, app);
 var memory = new NesMemory(ppu, programRomData, app);
-var hal = new NesHal(memory, ppu, debugWriter, cancellationTokenSource.Token);
+var hal = new NesHal(memory, ppu, cancellationTokenSource.Token);
 
 var jitCustomizer = new NesJitCustomizer();
 var jitCompiler = new JitCompiler(decompiler, hal, jitCustomizer);

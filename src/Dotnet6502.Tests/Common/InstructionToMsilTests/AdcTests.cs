@@ -37,14 +37,14 @@ public class AdcTests
         var jit = new TestJitCompiler();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 10;
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = true;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)63);
-        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
     [Fact]
@@ -64,14 +64,14 @@ public class AdcTests
         var jit = new TestJitCompiler();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x02;
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = false;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)0x01);
-        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse(); // 6502: positive + negative = positive, no signed overflow
-        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse(); // 6502: positive + negative = positive, no signed overflow
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
     [Fact]
@@ -91,14 +91,14 @@ public class AdcTests
         var jit = new TestJitCompiler();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x01;
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = false;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)0x00);
-        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse(); // 6502: positive + negative = positive, no signed overflow
-        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse(); // 6502: positive + negative = positive, no signed overflow
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
     [Fact]
@@ -118,14 +118,14 @@ public class AdcTests
         var jit = new TestJitCompiler();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x50;
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = false;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)0xA0);
-        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue(); // 6502: positive + positive = negative, signed overflow!
-        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeTrue(); // 6502: positive + positive = negative, signed overflow!
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
     [Fact]
@@ -145,14 +145,14 @@ public class AdcTests
         var jit = new TestJitCompiler();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x80;
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = false;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)0x00);
-        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue(); // 6502: negative + negative = positive, signed overflow!
-        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeTrue(); // 6502: negative + negative = positive, signed overflow!
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
     [Fact]
@@ -172,14 +172,14 @@ public class AdcTests
         var jit = new TestJitCompiler();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x20;
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = true;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)0x31);
-        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
     [Fact]
@@ -199,14 +199,14 @@ public class AdcTests
         var jit = new TestJitCompiler();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x7F; // +127 in signed
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = false;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)0xFF); // -1 in signed
-        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse(); // 6502: positive + negative = negative, no signed overflow
-        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse(); // 6502: positive + negative = negative, no signed overflow
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
     [Fact]
@@ -226,14 +226,14 @@ public class AdcTests
         var jit = new TestJitCompiler();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x82; // -126 in signed
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = false;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)0x81); // -127 in signed
-        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse(); // 6502: negative + negative = negative, no signed overflow
-        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse(); // 6502: negative + negative = negative, no signed overflow
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
     // ZeroPage addressing mode tests
@@ -254,15 +254,15 @@ public class AdcTests
         var jit = new TestJitCompiler();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x05;
-        jit.TestHal.MemoryValues[0x10] = 0x03;
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = false;
+        jit.MemoryMap.MemoryBlock[0x10] = 0x03;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)0x08);
-        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
     [Fact]
@@ -282,15 +282,15 @@ public class AdcTests
         var jit = new TestJitCompiler();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0xFF;
-        jit.TestHal.MemoryValues[0x20] = 0x02;
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = false;
+        jit.MemoryMap.MemoryBlock[0x20] = 0x02;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)0x01);
-        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse(); // 6502: negative + positive = positive, no signed overflow
-        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse(); // 6502: negative + positive = positive, no signed overflow
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
     // ZeroPageX addressing mode tests
@@ -311,15 +311,15 @@ public class AdcTests
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x10;
         jit.TestHal.XRegister = 0x05;
-        jit.TestHal.MemoryValues[0x35] = 0x15; // 0x30 + 0x05
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = false;
+        jit.MemoryMap.MemoryBlock[0x35] = 0x15; // 0x30 + 0x05
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)0x25);
-        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
     [Fact]
@@ -339,16 +339,16 @@ public class AdcTests
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x01;
         jit.TestHal.XRegister = 0x02;
-        jit.TestHal.MemoryValues[0x01] = 0x07; // (0xFF + 0x02) & 0xFF = 0x01
-        jit.TestHal.MemoryValues[0x101] = 0x07; // In case implementation doesn't wrap
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = false;
+        jit.MemoryMap.MemoryBlock[0x01] = 0x07; // (0xFF + 0x02) & 0xFF = 0x01
+        jit.MemoryMap.MemoryBlock[0x101] = 0x07; // In case implementation doesn't wrap
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)0x08);
-        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
     // Absolute addressing mode tests
@@ -368,15 +368,15 @@ public class AdcTests
         var jit = new TestJitCompiler();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x42;
-        jit.TestHal.MemoryValues[0x3000] = 0x33;
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = false;
+        jit.MemoryMap.MemoryBlock[0x3000] = 0x33;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)0x75);
-        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
     [Fact]
@@ -395,15 +395,15 @@ public class AdcTests
         var jit = new TestJitCompiler();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x7F;
-        jit.TestHal.MemoryValues[0x1234] = 0x01;
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = false;
+        jit.MemoryMap.MemoryBlock[0x1234] = 0x01;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)0x80);
-        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue(); // 6502: positive + positive = negative, signed overflow!
-        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeTrue(); // 6502: positive + positive = negative, signed overflow!
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
     // AbsoluteX addressing mode tests
@@ -424,15 +424,15 @@ public class AdcTests
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x11;
         jit.TestHal.XRegister = 0x0F;
-        jit.TestHal.MemoryValues[0x200F] = 0x22;
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = false;
+        jit.MemoryMap.MemoryBlock[0x200F] = 0x22;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)0x33);
-        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
     // AbsoluteY addressing mode tests
@@ -453,15 +453,15 @@ public class AdcTests
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x08;
         jit.TestHal.YRegister = 0x10;
-        jit.TestHal.MemoryValues[0x4010] = 0x0F;
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = false;
+        jit.MemoryMap.MemoryBlock[0x4010] = 0x0F;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)0x17);
-        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
     [Fact]
@@ -481,14 +481,14 @@ public class AdcTests
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x01;
         jit.TestHal.YRegister = 0x01;
-        jit.TestHal.MemoryValues[0x5000] = 0xFE;
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = true;
+        jit.MemoryMap.MemoryBlock[0x5000] = 0xFE;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)0x00);
-        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse(); // 6502: positive + negative + carry = positive, no signed overflow
-        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse(); // 6502: positive + negative + carry = positive, no signed overflow
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 }

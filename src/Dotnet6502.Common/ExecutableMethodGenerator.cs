@@ -34,7 +34,7 @@ public static class ExecutableMethodGenerator
             MethodAttributes.Public | MethodAttributes.Static,
             CallingConventions.Standard,
             typeof(void),
-            [typeof(IJitCompiler), typeof(I6502Hal)]);
+            [typeof(IJitCompiler), typeof(Base6502Hal)]);
 
         var ilGenerator = methodBuilder.GetILGenerator();
         GenerateMsil(ilGenerator, instructions, customIlGenerators);

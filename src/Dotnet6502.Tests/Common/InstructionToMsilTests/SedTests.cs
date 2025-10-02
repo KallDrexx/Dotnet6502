@@ -33,11 +33,11 @@ public class SedTests
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Clear decimal flag initially
-        jit.TestHal.Flags[CpuStatusFlags.Decimal] = false;
+        jit.TestHal.SetFlag(CpuStatusFlags.Decimal, false);
         jit.RunMethod(0x1234);
 
         // Decimal flag should be set
-        jit.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Decimal).ShouldBeTrue();
     }
 
     [Fact]
@@ -58,11 +58,11 @@ public class SedTests
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Decimal flag already set
-        jit.TestHal.Flags[CpuStatusFlags.Decimal] = true;
+        jit.TestHal.SetFlag(CpuStatusFlags.Decimal, true);
         jit.RunMethod(0x1234);
 
         // Decimal flag should remain set
-        jit.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Decimal).ShouldBeTrue();
     }
 
     [Fact]
@@ -83,24 +83,24 @@ public class SedTests
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Set all flags except decimal
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Zero] = true;
-        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Decimal] = false;
-        jit.TestHal.Flags[CpuStatusFlags.Overflow] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Negative] = true;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Zero, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.InterruptDisable, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Decimal, false);
+        jit.TestHal.SetFlag(CpuStatusFlags.Overflow, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Negative, true);
 
         jit.RunMethod(0x1234);
 
         // Only decimal flag should be set
-        jit.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Decimal).ShouldBeTrue();
 
         // All other flags should be preserved
-        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.InterruptDisable).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
     [Fact]
@@ -124,7 +124,7 @@ public class SedTests
         jit.TestHal.XRegister = 0x33;
         jit.TestHal.YRegister = 0x77;
         jit.TestHal.StackPointer = 0xFF;
-        jit.TestHal.Flags[CpuStatusFlags.Decimal] = false;
+        jit.TestHal.SetFlag(CpuStatusFlags.Decimal, false);
 
         jit.RunMethod(0x1234);
 
@@ -135,6 +135,6 @@ public class SedTests
         jit.TestHal.StackPointer.ShouldBe((byte)0xFF);
 
         // Only decimal flag should be set
-        jit.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Decimal).ShouldBeTrue();
     }
 }

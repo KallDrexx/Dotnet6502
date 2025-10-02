@@ -31,26 +31,18 @@ public class JsrTests
         };
 
         var labels = new Dictionary<ushort, string>();
-        var functions = new Dictionary<ushort, Function>
-        {
-            { 0x9000, new Function(0x9000, "TestFunction") }
-        };
         var context = new InstructionConverter.Context(labels);
 
-        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-
-        // Add setup and verification instructions around the JSR call
-        var allInstructions = new List<Ir6502.Instruction>
-        {
-            // Set up initial state
-            new Ir6502.Copy(new Ir6502.Constant(0), new Ir6502.Register(Ir6502.RegisterName.Accumulator)),
-
-            // Add the JSR instruction (converts to CallFunction)
-            nesIrInstructions[0],
-
-            // Instruction executed after function call
-            new Ir6502.Copy(new Ir6502.Constant(42), new Ir6502.Register(Ir6502.RegisterName.XIndex))
-        };
+        var allInstructions = InstructionConverter.Convert(instruction, context)
+            .Prepend(
+                // Set up initial state
+                new Ir6502.Copy(new Ir6502.Constant(0), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
+            )
+            .Append(
+                // Instruction executed after function call
+                new Ir6502.Copy(new Ir6502.Constant(42), new Ir6502.Register(Ir6502.RegisterName.XIndex))
+            )
+            .ToArray();
 
         var jit = new TestJitCompiler();
         jit.AddMethod(0x1234, allInstructions);
@@ -239,22 +231,22 @@ public class JsrTests
         jit.AddMethod(0x9000, [callableInstruction]); // JSR target address
 
         // Set initial flag states
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Zero] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Negative] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Overflow] = true;
-        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Decimal] = true;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Zero, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Negative, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Overflow, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.InterruptDisable, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Decimal, true);
 
         jit.RunMethod(0x1234);
 
         // JSR should not affect any flags
-        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.InterruptDisable).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Decimal).ShouldBeTrue();
     }
 
     [Fact]

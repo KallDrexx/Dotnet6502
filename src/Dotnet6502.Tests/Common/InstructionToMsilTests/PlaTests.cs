@@ -37,8 +37,8 @@ public class PlaTests
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)0x42);
-        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
     [Fact]
@@ -62,8 +62,8 @@ public class PlaTests
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)0x00);
-        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
     [Fact]
@@ -87,8 +87,8 @@ public class PlaTests
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)0x80);
-        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
     [Fact]
@@ -112,8 +112,8 @@ public class PlaTests
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)0xFF);
-        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
     [Fact]
@@ -136,22 +136,22 @@ public class PlaTests
         jit.TestHal.PushToStack(0x7F);
 
         // Set some flags that should be preserved
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Overflow] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Decimal] = true;
-        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Overflow, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Decimal, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.InterruptDisable, true);
 
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)0x7F);
-        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
 
         // These flags should be preserved
-        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Decimal).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.InterruptDisable).ShouldBeTrue();
     }
 
     [Fact]
@@ -203,8 +203,8 @@ public class PlaTests
         jit1.TestHal.PushToStack(0x55);
         jit1.RunMethod(0x1234);
         jit1.TestHal.ARegister.ShouldBe((byte)0x55);
-        jit1.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        jit1.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
+        jit1.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
+        jit1.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
 
         var jit2 = new TestJitCompiler();
             jit2.AddMethod(0x1234, nesIrInstructions);
@@ -212,7 +212,7 @@ public class PlaTests
         jit2.TestHal.PushToStack(0xAA);
         jit2.RunMethod(0x1234);
         jit2.TestHal.ARegister.ShouldBe((byte)0xAA);
-        jit2.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        jit2.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
+        jit2.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
+        jit2.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 }

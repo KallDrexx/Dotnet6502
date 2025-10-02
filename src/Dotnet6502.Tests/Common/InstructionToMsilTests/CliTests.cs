@@ -33,11 +33,11 @@ public class CliTests
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Set interrupt disable flag initially
-        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
+        jit.TestHal.SetFlag(CpuStatusFlags.InterruptDisable, true);
         jit.RunMethod(0x1234);
 
         // Interrupt disable flag should be cleared
-        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.InterruptDisable).ShouldBeFalse();
     }
 
     [Fact]
@@ -58,11 +58,11 @@ public class CliTests
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Interrupt disable flag already clear
-        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable] = false;
+        jit.TestHal.SetFlag(CpuStatusFlags.InterruptDisable, false);
         jit.RunMethod(0x1234);
 
         // Interrupt disable flag should remain clear
-        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.InterruptDisable).ShouldBeFalse();
     }
 
     [Fact]
@@ -83,24 +83,24 @@ public class CliTests
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Set all flags
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Zero] = true;
-        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Decimal] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Overflow] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Negative] = true;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Zero, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.InterruptDisable, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Decimal, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Overflow, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Negative, true);
 
         jit.RunMethod(0x1234);
 
         // Only interrupt disable flag should be cleared
-        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.InterruptDisable).ShouldBeFalse();
 
         // All other flags should be preserved
-        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Decimal).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
     [Fact]
@@ -124,7 +124,7 @@ public class CliTests
         jit.TestHal.XRegister = 0x33;
         jit.TestHal.YRegister = 0x77;
         jit.TestHal.StackPointer = 0xFF;
-        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
+        jit.TestHal.SetFlag(CpuStatusFlags.InterruptDisable, true);
 
         jit.RunMethod(0x1234);
 
@@ -135,6 +135,6 @@ public class CliTests
         jit.TestHal.StackPointer.ShouldBe((byte)0xFF);
 
         // Only interrupt disable flag should be cleared
-        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.InterruptDisable).ShouldBeFalse();
     }
 }

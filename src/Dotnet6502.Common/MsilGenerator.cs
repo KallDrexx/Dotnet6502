@@ -1,4 +1,3 @@
-using System.Reflection;
 using System.Reflection.Emit;
 
 namespace Dotnet6502.Common;
@@ -197,19 +196,39 @@ public class MsilGenerator
     private static void GenerateCallFunction(Ir6502.CallFunction callFunction, ILGenerator ilGenerator)
     {
         ilGenerator.Emit(JitCompiler.LoadJitCompilerArg);
-        
-        switch (callFunction.FunctionAddress)
+
+        if (callFunction.Address.IsIndirect)
         {
-            case Ir6502.TargetAddress targetAddress:
-                ilGenerator.Emit(OpCodes.Ldc_I4, targetAddress.Address);
-                break;
-            
-            case Ir6502.IndirectMemory indirectMemory:
-                LoadIndirectMemoryValueToStack(indirectMemory, ilGenerator);
-                break;
-            
-            default:
-                throw new NotSupportedException(callFunction.FunctionAddress.GetType().FullName!);
+            // Look up the pointer to find the location of the function to call
+            var readMemoryMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.ReadMemory))!;
+            ilGenerator.Emit(JitCompiler.LoadHalArg);
+            ilGenerator.Emit(OpCodes.Ldc_I4, callFunction.Address.Value);
+            ilGenerator.Emit(OpCodes.Dup);
+            SaveStackToTempLocal(ilGenerator, 0); // save for LSB read
+
+            // Read the MSB
+            ilGenerator.Emit(OpCodes.Ldc_I4, 1);
+            ilGenerator.Emit(OpCodes.Add);
+            ilGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
+            ilGenerator.Emit(OpCodes.Conv_I4);
+            ilGenerator.Emit(OpCodes.Ldc_I4, 8);
+            ilGenerator.Emit(OpCodes.Shl);
+            SaveStackToTempLocal(ilGenerator, 1);
+
+            // Read the LSB
+            ilGenerator.Emit(JitCompiler.LoadHalArg);
+            LoadTempLocalToStack(ilGenerator, 0);
+            ilGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
+            ilGenerator.Emit(OpCodes.Conv_I4);
+
+            // Combine them together for the full address
+            LoadTempLocalToStack(ilGenerator, 1);
+            ilGenerator.Emit(OpCodes.Or);
+        }
+        else
+        {
+            // Direct call to the provided address
+            ilGenerator.Emit(OpCodes.Ldc_I4, callFunction.Address.Value);
         }
         
         var method = typeof(IJitCompiler).GetMethod(nameof(JitCompiler.RunMethod))!;
@@ -225,7 +244,7 @@ public class MsilGenerator
 
     private static void GenerateInvokeIrq(ILGenerator ilGenerator)
     {
-        var invokeMethod = typeof(I6502Hal).GetMethod(nameof(I6502Hal.TriggerSoftwareInterrupt))!;
+        var invokeMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.TriggerSoftwareInterrupt))!;
         ilGenerator.Emit(JitCompiler.LoadHalArg);
         ilGenerator.Emit(OpCodes.Callvirt, invokeMethod);
     }
@@ -281,7 +300,7 @@ public class MsilGenerator
 
     private static void GeneratePopStackValue(Ir6502.PopStackValue pop, ILGenerator ilGenerator)
     {
-        var popMethod = typeof(I6502Hal).GetMethod(nameof(I6502Hal.PopFromStack))!;
+        var popMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.PopFromStack))!;
         ilGenerator.Emit(JitCompiler.LoadHalArg);
         ilGenerator.Emit(OpCodes.Callvirt, popMethod);
         SaveStackToTempLocal(ilGenerator);
@@ -290,7 +309,7 @@ public class MsilGenerator
 
     private static void GeneratePushStackValue(Ir6502.PushStackValue push, ILGenerator ilGenerator)
     {
-        var pushMethod = typeof(I6502Hal).GetMethod(nameof(I6502Hal.PushToStack))!;
+        var pushMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.PushToStack))!;
         ilGenerator.Emit(JitCompiler.LoadHalArg);
         LoadValueToStack(push.Source, ilGenerator);
         ilGenerator.Emit(OpCodes.Callvirt, pushMethod);
@@ -338,8 +357,8 @@ public class MsilGenerator
         switch (value)
         {
             case Ir6502.AllFlags:
-                var getStatusMethod = typeof(I6502Hal)
-                    .GetProperty(nameof(I6502Hal.ProcessorStatus))!
+                var getStatusMethod = typeof(Base6502Hal)
+                    .GetProperty(nameof(Base6502Hal.ProcessorStatus))!
                     .GetMethod!;
 
                 ilGenerator.Emit(JitCompiler.LoadHalArg);
@@ -351,7 +370,7 @@ public class MsilGenerator
                 break;
 
             case Ir6502.Flag flag:
-                var getFlagMethod = typeof(I6502Hal).GetMethod(nameof(I6502Hal.GetFlag))!;
+                var getFlagMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.GetFlag))!;
                 ilGenerator.Emit(JitCompiler.LoadHalArg);
                 ilGenerator.Emit(OpCodes.Ldc_I4, (int)ConvertFlagName(flag.FlagName));
                 ilGenerator.Emit(OpCodes.Callvirt, getFlagMethod);
@@ -360,7 +379,7 @@ public class MsilGenerator
 
             case Ir6502.Memory memory:
             {
-                var readMemoryMethod = typeof(I6502Hal).GetMethod(nameof(I6502Hal.ReadMemory))!;
+                var readMemoryMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.ReadMemory))!;
 
                 ilGenerator.Emit(JitCompiler.LoadHalArg);
                 ilGenerator.Emit(OpCodes.Ldc_I4, memory.Address);
@@ -390,8 +409,8 @@ public class MsilGenerator
                 break;
 
             case Ir6502.StackPointer:
-                var getStackPointerMethod = typeof(I6502Hal)
-                    .GetProperty(nameof(I6502Hal.StackPointer))!
+                var getStackPointerMethod = typeof(Base6502Hal)
+                    .GetProperty(nameof(Base6502Hal.StackPointer))!
                     .GetMethod!;
 
                 ilGenerator.Emit(JitCompiler.LoadHalArg);
@@ -409,9 +428,10 @@ public class MsilGenerator
 
     private static void LoadIndirectMemoryValueToStack(Ir6502.IndirectMemory indirectMemory, ILGenerator ilGenerator)
     {
-        var readMemoryMethod = typeof(I6502Hal).GetMethod(nameof(I6502Hal.ReadMemory))!;
+        var readMemoryMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.ReadMemory))!;
+
         ilGenerator.Emit(JitCompiler.LoadHalArg);
-        ilGenerator.Emit(OpCodes.Ldc_I4, (int)indirectMemory.ZeroPage);
+        ilGenerator.Emit(OpCodes.Ldc_I4, (int)indirectMemory.ZeroPageAddress);
 
         // If this is pre-indexed, then add the X register to the zero page for the address lookup
         if (indirectMemory.IsPreIndexed)
@@ -439,7 +459,7 @@ public class MsilGenerator
         ilGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
         ilGenerator.Emit(OpCodes.Conv_I4);
         LoadTempLocalToStack(ilGenerator, 0);
-        ilGenerator.Emit(OpCodes.Add); // Add them together for a full 16-bit address
+        ilGenerator.Emit(OpCodes.Or); // Combine them together for a full 16-bit address
 
         // Since we need to do a memory lookup, we need to save the current address we read
         // to a temp variable, so we can load the hardware field on the stack before the
@@ -465,8 +485,8 @@ public class MsilGenerator
         switch (destination)
         {
             case Ir6502.AllFlags:
-                var setStatusMethod = typeof(I6502Hal)
-                    .GetProperty(nameof(I6502Hal.ProcessorStatus))!
+                var setStatusMethod = typeof(Base6502Hal)
+                    .GetProperty(nameof(Base6502Hal.ProcessorStatus))!
                     .SetMethod!;
 
                 ilGenerator.Emit(JitCompiler.LoadHalArg);
@@ -479,7 +499,7 @@ public class MsilGenerator
                 throw new InvalidOperationException("Can't write to constant");
 
             case Ir6502.Flag flag:
-                var setFlagMethod = typeof(I6502Hal).GetMethod(nameof(I6502Hal.SetFlag))!;
+                var setFlagMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.SetFlag))!;
                 ilGenerator.Emit(JitCompiler.LoadHalArg);
                 ilGenerator.Emit(OpCodes.Ldc_I4, (int)ConvertFlagName(flag.FlagName));
                 LoadTempLocalToStack(ilGenerator);
@@ -491,7 +511,7 @@ public class MsilGenerator
 
             case Ir6502.Memory memory:
             {
-                var writeMemoryMethod = typeof(I6502Hal).GetMethod(nameof(I6502Hal.WriteMemory))!;
+                var writeMemoryMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.WriteMemory))!;
 
                 ilGenerator.Emit(JitCompiler.LoadHalArg);
                 ilGenerator.Emit(OpCodes.Ldc_I4, memory.Address);
@@ -516,9 +536,9 @@ public class MsilGenerator
             {
                 // WARNING: Since the value we want to write ultimately is in temp index 0
                 // no code in here should save to that index.
-                var readMemoryMethod = typeof(I6502Hal).GetMethod(nameof(I6502Hal.ReadMemory))!;
+                var readMemoryMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.ReadMemory))!;
                 ilGenerator.Emit(JitCompiler.LoadHalArg);
-                ilGenerator.Emit(OpCodes.Ldc_I4, (int)indirectMemory.ZeroPage);
+                ilGenerator.Emit(OpCodes.Ldc_I4, (int)indirectMemory.ZeroPageAddress);
 
                 // If this is pre-indexed, then add the X register to the zero page for the address lookup
                 if (indirectMemory.IsPreIndexed)
@@ -546,7 +566,7 @@ public class MsilGenerator
                 ilGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
                 ilGenerator.Emit(OpCodes.Conv_I4);
                 LoadTempLocalToStack(ilGenerator, 1);
-                ilGenerator.Emit(OpCodes.Add); // Add them together for a full 16-bit address
+                ilGenerator.Emit(OpCodes.Or); // Add them together for a full 16-bit address
 
                 // Since we need to do a memory lookup, we need to save the current address we read
                 // to a temp variable, so we can load the hardware field on the stack before the
@@ -567,7 +587,7 @@ public class MsilGenerator
                 ilGenerator.Emit(OpCodes.Conv_U1); // Convert int to byte
 
                 // Write the value to the address we now have
-                var writeMemoryMethod = typeof(I6502Hal).GetMethod(nameof(I6502Hal.WriteMemory))!;
+                var writeMemoryMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.WriteMemory))!;
                 ilGenerator.Emit(OpCodes.Callvirt, writeMemoryMethod);
                 break;
             }
@@ -575,16 +595,16 @@ public class MsilGenerator
             case Ir6502.Register register:
                 var setMethod = register.Name switch
                 {
-                    Ir6502.RegisterName.Accumulator => typeof(I6502Hal)
-                        .GetProperty(nameof(I6502Hal.ARegister))!
+                    Ir6502.RegisterName.Accumulator => typeof(Base6502Hal)
+                        .GetProperty(nameof(Base6502Hal.ARegister))!
                         .SetMethod!,
 
-                    Ir6502.RegisterName.XIndex => typeof(I6502Hal)
-                        .GetProperty(nameof(I6502Hal.XRegister))!
+                    Ir6502.RegisterName.XIndex => typeof(Base6502Hal)
+                        .GetProperty(nameof(Base6502Hal.XRegister))!
                         .SetMethod!,
 
-                    Ir6502.RegisterName.YIndex => typeof(I6502Hal)
-                        .GetProperty(nameof(I6502Hal.YRegister))!
+                    Ir6502.RegisterName.YIndex => typeof(Base6502Hal)
+                        .GetProperty(nameof(Base6502Hal.YRegister))!
                         .SetMethod!,
 
                     _ => throw new NotSupportedException(register.Name.ToString()),
@@ -598,8 +618,8 @@ public class MsilGenerator
                 break;
 
             case Ir6502.StackPointer:
-                var setStackPointerMethod = typeof(I6502Hal)
-                    .GetProperty(nameof(I6502Hal.StackPointer))!
+                var setStackPointerMethod = typeof(Base6502Hal)
+                    .GetProperty(nameof(Base6502Hal.StackPointer))!
                     .SetMethod!;
 
                 ilGenerator.Emit(JitCompiler.LoadHalArg);
@@ -632,16 +652,16 @@ public class MsilGenerator
     {
         var getMethod = registerName switch
         {
-            Ir6502.RegisterName.Accumulator => typeof(I6502Hal)
-                .GetProperty(nameof(I6502Hal.ARegister))!
+            Ir6502.RegisterName.Accumulator => typeof(Base6502Hal)
+                .GetProperty(nameof(Base6502Hal.ARegister))!
                 .GetMethod!,
 
-            Ir6502.RegisterName.XIndex => typeof(I6502Hal)
-                .GetProperty(nameof(I6502Hal.XRegister))!
+            Ir6502.RegisterName.XIndex => typeof(Base6502Hal)
+                .GetProperty(nameof(Base6502Hal.XRegister))!
                 .GetMethod!,
 
-            Ir6502.RegisterName.YIndex => typeof(I6502Hal)
-                .GetProperty(nameof(I6502Hal.YRegister))!
+            Ir6502.RegisterName.YIndex => typeof(Base6502Hal)
+                .GetProperty(nameof(Base6502Hal.YRegister))!
                 .GetMethod!,
 
             _ => throw new NotSupportedException(registerName.ToString()),

@@ -1,6 +1,8 @@
+using Dotnet6502.Common;
+
 namespace Dotnet6502.Nes;
 
-public class NesMemory
+public class NesMemory : IMemoryMap
 {
     private const int UnmappedSpaceStart = 0x4020;
 
@@ -9,7 +11,7 @@ public class NesMemory
     private enum MemoryType { InternalRam, Ppu, Apu, Joy1, Joy2, UnmappedSpace, PpuOamDma }
     private readonly byte[] _internalRam = new byte[0x800]; // 2KB
     private readonly byte[] _unmappedSpace = new byte[0x10000 - UnmappedSpaceStart];
-    private ControllerState _currentState;
+    private ControllerState _currentState = new();
     private int _inputBitIndex = 0;
 
     private readonly ControllerBits[] _bitOrder =

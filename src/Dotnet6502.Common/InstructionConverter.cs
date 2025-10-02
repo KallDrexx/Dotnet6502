@@ -635,18 +635,12 @@ public static class InstructionConverter
             throw new InvalidOperationException(message);
         }
 
-        var isIndirectlyAddressed = instruction.Info.AddressingMode is
-            AddressingMode.IndexedIndirect or
-            AddressingMode.IndirectIndexed or
-            AddressingMode.Indirect;
-
+        var isIndirectlyAddressed = instruction.Info.AddressingMode is AddressingMode.Indirect;
         if (isIndirectlyAddressed)
         {
-            // Pull out the address to jump to from memory
-            var operand = ParseAddress(instruction);
             return
             [
-                new Ir6502.CallFunction((Ir6502.IndirectMemory)operand),
+                new Ir6502.CallFunction(new Ir6502.FunctionAddress(instruction.TargetAddress.Value, true)),
                 new Ir6502.Return(),
             ];
         }
@@ -662,7 +656,7 @@ public static class InstructionConverter
         // We don't know this label yet. Treat it as a method call to JIT the code
         return
         [
-            new Ir6502.CallFunction(new Ir6502.TargetAddress(instruction.TargetAddress.Value)),
+            new Ir6502.CallFunction(new Ir6502.FunctionAddress(instruction.TargetAddress.Value, false)),
             new Ir6502.Return(),
         ];
 
@@ -679,7 +673,7 @@ public static class InstructionConverter
             throw new InvalidOperationException(message);
         }
 
-        var jump = new Ir6502.CallFunction(new Ir6502.TargetAddress(instruction.TargetAddress.Value));
+        var jump = new Ir6502.CallFunction(new Ir6502.FunctionAddress(instruction.TargetAddress.Value, false));
         return [jump];
     }
 
@@ -1271,9 +1265,6 @@ public static class InstructionConverter
 
             case AddressingMode.IndirectIndexed:
                 return new Ir6502.IndirectMemory(instruction.Operands[0], false, true);
-
-            case AddressingMode.Indirect:
-                return new Ir6502.IndirectMemory(instruction.Operands[0], false, false);
 
             default:
                 throw new NotSupportedException(instruction.Info.AddressingMode.ToString());

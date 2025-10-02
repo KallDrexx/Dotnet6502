@@ -13,11 +13,11 @@ public class JitCompiler : IJitCompiler
     public static readonly OpCode LoadHalArg = OpCodes.Ldarg_1;
 
     private readonly Decompiler _decompiler;
-    private readonly I6502Hal _hal;
+    private readonly Base6502Hal _hal;
     private readonly IJitCustomizer? _jitCustomizer;
     private readonly Dictionary<ushort, ExecutableMethod> _compiledMethods = new();
 
-    public JitCompiler(Decompiler decompiler, I6502Hal hal, IJitCustomizer? jitCustomizer)
+    public JitCompiler(Decompiler decompiler, Base6502Hal hal, IJitCustomizer? jitCustomizer)
     {
         _hal = hal;
         _decompiler = decompiler;

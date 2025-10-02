@@ -9,7 +9,14 @@ public class TestJitCompiler : IJitCompiler
     public Dictionary<ushort, ExecutableMethod> Methods { get; } = new();
     public Dictionary<Type, MsilGenerator.CustomIlGenerator>? CustomGenerators { get; set; }
 
-    public Test6502Hal TestHal { get; } = new();
+    public TestMemoryMap MemoryMap { get; }
+    public Base6502Hal TestHal { get; }
+
+    public TestJitCompiler()
+    {
+        MemoryMap = new TestMemoryMap();
+        TestHal = new Base6502Hal(MemoryMap);
+    }
 
     public void RunMethod(ushort address)
     {
@@ -32,7 +39,7 @@ public class TestJitCompiler : IJitCompiler
         };
 
         var convertedInstructions = new ConvertedInstruction(nop, instructions);
-        var method = ExecutableMethodGenerator.Generate($"test_{address}", [convertedInstructions], CustomGenerators);
+        var method = ExecutableMethodGenerator.Generate($"test_0x{address:X4}", [convertedInstructions], CustomGenerators);
         Methods.Add(address, method);
     }
 }

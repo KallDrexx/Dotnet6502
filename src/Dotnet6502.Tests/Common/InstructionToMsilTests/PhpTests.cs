@@ -34,22 +34,22 @@ public class PhpTests
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Set some flags
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Zero] = false;
-        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Decimal] = false;
-        jit.TestHal.Flags[CpuStatusFlags.Overflow] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Negative] = false;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Zero, false);
+        jit.TestHal.SetFlag(CpuStatusFlags.InterruptDisable, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Decimal, false);
+        jit.TestHal.SetFlag(CpuStatusFlags.Overflow, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Negative, false);
 
         jit.RunMethod(0x1234);
 
         // Flags should be preserved
-        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.InterruptDisable).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Decimal).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
 
         // Check the value on the stack includes our flags
         var stackValue = jit.TestHal.PopFromStack();
@@ -82,22 +82,22 @@ public class PhpTests
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Set all flags
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Zero] = true;
-        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Decimal] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Overflow] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Negative] = true;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Zero, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.InterruptDisable, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Decimal, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Overflow, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Negative, true);
 
         jit.RunMethod(0x1234);
 
         // All flags should still be set
-        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.InterruptDisable).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Decimal).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
 
         // Check all flags are reflected on stack
         var stackValue = jit.TestHal.PopFromStack();
@@ -127,22 +127,22 @@ public class PhpTests
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Clear all flags
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = false;
-        jit.TestHal.Flags[CpuStatusFlags.Zero] = false;
-        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable] = false;
-        jit.TestHal.Flags[CpuStatusFlags.Decimal] = false;
-        jit.TestHal.Flags[CpuStatusFlags.Overflow] = false;
-        jit.TestHal.Flags[CpuStatusFlags.Negative] = false;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
+        jit.TestHal.SetFlag(CpuStatusFlags.Zero, false);
+        jit.TestHal.SetFlag(CpuStatusFlags.InterruptDisable, false);
+        jit.TestHal.SetFlag(CpuStatusFlags.Decimal, false);
+        jit.TestHal.SetFlag(CpuStatusFlags.Overflow, false);
+        jit.TestHal.SetFlag(CpuStatusFlags.Negative, false);
 
         jit.RunMethod(0x1234);
 
         // All flags should still be clear
-        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.InterruptDisable).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Decimal).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
 
         // Check all flags are clear on stack
         var stackValue = jit.TestHal.PopFromStack();
@@ -198,12 +198,12 @@ public class PhpTests
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Set a specific pattern: Only carry and negative flags
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Zero] = false;
-        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable] = false;
-        jit.TestHal.Flags[CpuStatusFlags.Decimal] = false;
-        jit.TestHal.Flags[CpuStatusFlags.Overflow] = false;
-        jit.TestHal.Flags[CpuStatusFlags.Negative] = true;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Zero, false);
+        jit.TestHal.SetFlag(CpuStatusFlags.InterruptDisable, false);
+        jit.TestHal.SetFlag(CpuStatusFlags.Decimal, false);
+        jit.TestHal.SetFlag(CpuStatusFlags.Overflow, false);
+        jit.TestHal.SetFlag(CpuStatusFlags.Negative, true);
 
         jit.RunMethod(0x1234);
 

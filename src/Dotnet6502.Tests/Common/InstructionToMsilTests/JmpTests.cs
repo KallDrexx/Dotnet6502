@@ -67,33 +67,29 @@ public class JmpTests
         {
             Info = instructionInfo,
             Bytes = [0x6C, 0x20, 0x80], // JMP ($8020) - indirect jump
-            TargetAddress = 0x9000 // The actual target address (stored at $8020)
+            TargetAddress = 0x8020
         };
 
-        var labels = new Dictionary<ushort, string> { { 0x9000, "jump_target" } };
-        var context = new InstructionConverter.Context(
-            labels);
+        var context = new InstructionConverter.Context(new Dictionary<ushort, string>());
 
-        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-
-        // Add setup and target instructions around the jump
-        var allInstructions = new List<Ir6502.Instruction>
-        {
-            // Add the JMP indirect instruction
-            nesIrInstructions[0],
-
-            // Instruction that should be skipped (never reached)
-            new Ir6502.Copy(new Ir6502.Constant(99), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
-
-            // Target label
-            new Ir6502.Label(new Ir6502.Identifier("jump_target")),
-
-            // Instruction that should be executed at jump target
-            new Ir6502.Copy(new Ir6502.Constant(77), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
-        };
+        var allInstructions = InstructionConverter.Convert(instruction, context)
+            .Append(
+                // Instruction that should be skipped (never reached)
+                new Ir6502.Copy(new Ir6502.Constant(99), new Ir6502.Register(Ir6502.RegisterName.XIndex))
+            )
+            .ToArray();
 
         var jit = new TestJitCompiler();
         jit.AddMethod(0x1234, allInstructions);
+
+        // Set up method that will be jumped to
+        jit.MemoryMap.MemoryBlock[0x8020] = 0x78;
+        jit.MemoryMap.MemoryBlock[0x8021] = 0x56;
+        jit.AddMethod(0x5678, [
+            new Ir6502.Copy(new Ir6502.Constant(77), new Ir6502.Register(Ir6502.RegisterName.Accumulator)),
+        ]);
+
+        // Run
         jit.RunMethod(0x1234);
 
         // Jump should always be taken, skipping X register assignment
@@ -137,22 +133,22 @@ public class JmpTests
         jit.AddMethod(0x1234, allInstructions);
 
         // Set initial flag states
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Zero] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Negative] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Overflow] = true;
-        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Decimal] = true;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Zero, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Negative, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Overflow, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.InterruptDisable, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Decimal, true);
 
         jit.RunMethod(0x1234);
 
         // JMP should not affect any flags
-        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.InterruptDisable).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Decimal).ShouldBeTrue();
     }
 
     [Fact]
@@ -191,22 +187,22 @@ public class JmpTests
         jit.AddMethod(0x1234, allInstructions);
 
         // Set initial flag states
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Zero] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Negative] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Overflow] = true;
-        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Decimal] = true;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Zero, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Negative, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Overflow, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.InterruptDisable, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Decimal, true);
 
         jit.RunMethod(0x1234);
 
         // JMP should not affect any flags
-        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.InterruptDisable).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Decimal).ShouldBeTrue();
     }
 
     [Fact]
@@ -466,13 +462,13 @@ public class JmpTests
             };
 
             var jit = new TestJitCompiler();
-        jit.AddMethod(0x1234, allInstructions);
+            jit.AddMethod(0x1234, allInstructions);
 
             // Set flag states
-            jit.TestHal.Flags[CpuStatusFlags.Carry] = carryState;
-            jit.TestHal.Flags[CpuStatusFlags.Zero] = zeroState;
-            jit.TestHal.Flags[CpuStatusFlags.Negative] = negativeState;
-            jit.TestHal.Flags[CpuStatusFlags.Overflow] = overflowState;
+            jit.TestHal.SetFlag(CpuStatusFlags.Carry, carryState);
+            jit.TestHal.SetFlag(CpuStatusFlags.Zero, zeroState);
+            jit.TestHal.SetFlag(CpuStatusFlags.Negative, negativeState);
+            jit.TestHal.SetFlag(CpuStatusFlags.Overflow, overflowState);
 
             jit.RunMethod(0x1234);
 

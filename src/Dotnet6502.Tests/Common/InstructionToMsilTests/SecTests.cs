@@ -33,11 +33,11 @@ public class SecTests
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Clear carry flag initially
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = false;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
         jit.RunMethod(0x1234);
 
         // Carry flag should be set
-        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
     }
 
     [Fact]
@@ -58,11 +58,11 @@ public class SecTests
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Carry flag already set
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = true;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
         jit.RunMethod(0x1234);
 
         // Carry flag should remain set
-        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
     }
 
     [Fact]
@@ -83,24 +83,24 @@ public class SecTests
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Set all flags except carry
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = false;
-        jit.TestHal.Flags[CpuStatusFlags.Zero] = true;
-        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Decimal] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Overflow] = true;
-        jit.TestHal.Flags[CpuStatusFlags.Negative] = true;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
+        jit.TestHal.SetFlag(CpuStatusFlags.Zero, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.InterruptDisable, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Decimal, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Overflow, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Negative, true);
 
         jit.RunMethod(0x1234);
 
         // Only carry flag should be set
-        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
 
         // All other flags should be preserved
-        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.InterruptDisable).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Decimal).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
     [Fact]
@@ -124,7 +124,7 @@ public class SecTests
         jit.TestHal.XRegister = 0x33;
         jit.TestHal.YRegister = 0x77;
         jit.TestHal.StackPointer = 0xFF;
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = false;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
 
         jit.RunMethod(0x1234);
 
@@ -135,7 +135,7 @@ public class SecTests
         jit.TestHal.StackPointer.ShouldBe((byte)0xFF);
 
         // Only carry flag should be set
-        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
     }
 
     [Fact]
@@ -156,24 +156,24 @@ public class SecTests
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Set a mixed pattern of flags
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = false; // Will be set
-        jit.TestHal.Flags[CpuStatusFlags.Zero] = false; // Should remain false
-        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable] = true;  // Should remain true
-        jit.TestHal.Flags[CpuStatusFlags.Decimal] = false; // Should remain false
-        jit.TestHal.Flags[CpuStatusFlags.Overflow] = true;  // Should remain true
-        jit.TestHal.Flags[CpuStatusFlags.Negative] = false; // Should remain false
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, false); // Will be set
+        jit.TestHal.SetFlag(CpuStatusFlags.Zero, false); // Should remain false
+        jit.TestHal.SetFlag(CpuStatusFlags.InterruptDisable, true);  // Should remain true
+        jit.TestHal.SetFlag(CpuStatusFlags.Decimal, false); // Should remain false
+        jit.TestHal.SetFlag(CpuStatusFlags.Overflow, true);  // Should remain true
+        jit.TestHal.SetFlag(CpuStatusFlags.Negative, false); // Should remain false
 
         jit.RunMethod(0x1234);
 
         // Only carry flag should be affected
-        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
 
         // All other flags should remain unchanged
-        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeTrue();
-        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.InterruptDisable).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Decimal).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
     [Fact]
@@ -194,24 +194,24 @@ public class SecTests
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Clear all flags
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = false;
-        jit.TestHal.Flags[CpuStatusFlags.Zero] = false;
-        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable] = false;
-        jit.TestHal.Flags[CpuStatusFlags.Decimal] = false;
-        jit.TestHal.Flags[CpuStatusFlags.Overflow] = false;
-        jit.TestHal.Flags[CpuStatusFlags.Negative] = false;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
+        jit.TestHal.SetFlag(CpuStatusFlags.Zero, false);
+        jit.TestHal.SetFlag(CpuStatusFlags.InterruptDisable, false);
+        jit.TestHal.SetFlag(CpuStatusFlags.Decimal, false);
+        jit.TestHal.SetFlag(CpuStatusFlags.Overflow, false);
+        jit.TestHal.SetFlag(CpuStatusFlags.Negative, false);
 
         jit.RunMethod(0x1234);
 
         // Only carry flag should be set
-        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
 
         // All other flags should remain clear
-        jit.TestHal.Flags[CpuStatusFlags.Zero].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.InterruptDisable].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Decimal].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Overflow].ShouldBeFalse();
-        jit.TestHal.Flags[CpuStatusFlags.Negative].ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.InterruptDisable).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Decimal).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
     [Fact]
@@ -232,17 +232,17 @@ public class SecTests
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Clear carry flag initially
-        jit.TestHal.Flags[CpuStatusFlags.Carry] = false;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
 
         // First SEC call
         jit.RunMethod(0x1234);
-        jit.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
 
         // Second SEC call (should have no effect)
         var jit2 = new TestJitCompiler();
             jit2.AddMethod(0x1234, nesIrInstructions);
-        jit2.TestHal.Flags[CpuStatusFlags.Carry] = true; // Already set
+        jit2.TestHal.SetFlag(CpuStatusFlags.Carry, true); // Already set
         jit2.RunMethod(0x1234);
-        jit2.TestHal.Flags[CpuStatusFlags.Carry].ShouldBeTrue();
+        jit2.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
     }
 }

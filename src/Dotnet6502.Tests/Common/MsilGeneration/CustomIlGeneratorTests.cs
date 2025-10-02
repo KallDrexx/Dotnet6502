@@ -13,7 +13,7 @@ public class CustomIlGeneratorTests
     {
         void CustomGenerator(Ir6502.Instruction instruction, ILGenerator ilGenerator)
         {
-            var pushMethod = typeof(I6502Hal).GetMethod(nameof(I6502Hal.PushToStack))!;
+            var pushMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.PushToStack))!;
             ilGenerator.Emit(JitCompiler.LoadHalArg);
             ilGenerator.Emit(OpCodes.Ldc_I4, 123);
             ilGenerator.Emit(OpCodes.Callvirt, pushMethod);

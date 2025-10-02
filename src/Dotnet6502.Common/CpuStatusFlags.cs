@@ -7,7 +7,7 @@ public enum CpuStatusFlags
     InterruptDisable = 2,
     Decimal = 3,
     BFlag = 4,
-    Always1 = 5,
+    Unused = 5,
     Overflow = 6,
     Negative = 7,
 }

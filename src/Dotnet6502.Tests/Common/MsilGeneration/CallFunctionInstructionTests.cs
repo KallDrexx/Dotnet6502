@@ -8,7 +8,7 @@ public class CallFunctionInstructionTests
     [Fact]
     public void Can_Call_Single_Function()
     {
-        var instruction = new Ir6502.CallFunction(new Ir6502.TargetAddress(0x2000));
+        var instruction = new Ir6502.CallFunction(new Ir6502.FunctionAddress(0x2000, false));
 
         var jit = new TestJitCompiler();
         jit.AddMethod(0x1234, [instruction]);
@@ -29,8 +29,8 @@ public class CallFunctionInstructionTests
     {
         var instructions = new Ir6502.Instruction[]
         {
-            new Ir6502.CallFunction(new Ir6502.TargetAddress(0x2000)),
-            new Ir6502.CallFunction(new Ir6502.TargetAddress(0x2100))
+            new Ir6502.CallFunction(new Ir6502.FunctionAddress(0x2000, false)),
+            new Ir6502.CallFunction(new Ir6502.FunctionAddress(0x2100, false))
         };
 
         var jit = new TestJitCompiler();
@@ -59,9 +59,9 @@ public class CallFunctionInstructionTests
     {
         var instructions = new Ir6502.Instruction[]
         {
-            new Ir6502.CallFunction(new Ir6502.TargetAddress(0x2000)),
-            new Ir6502.CallFunction(new Ir6502.TargetAddress(0x2000)),
-            new Ir6502.CallFunction(new Ir6502.TargetAddress(0x2000))
+            new Ir6502.CallFunction(new Ir6502.FunctionAddress(0x2000, false)),
+            new Ir6502.CallFunction(new Ir6502.FunctionAddress(0x2000, false)),
+            new Ir6502.CallFunction(new Ir6502.FunctionAddress(0x2000, false))
         };
 
         var jit = new TestJitCompiler();
@@ -89,13 +89,13 @@ public class CallFunctionInstructionTests
     [Fact]
     public void Throws_Exception_When_Function_Not_Defined()
     {
-        var instruction = new Ir6502.CallFunction(new Ir6502.TargetAddress(0x9999));
+        var instruction = new Ir6502.CallFunction(new Ir6502.FunctionAddress(0x2000, false));
 
         var jit = new TestJitCompiler();
         jit.AddMethod(0x1234, [instruction]);
 
         // Don't add the callable function at 0x9999, so it should throw when trying to call it
         Should.Throw<InvalidOperationException>(() => jit.RunMethod(0x1234))
-            .Message.ShouldContain("Method at address 9999 called but no method prepared for that");
+            .Message.ShouldContain("Method at address 2000 called but no method prepared for that");
     }
 }
