@@ -1,6 +1,6 @@
 using Dotnet6502.Common;
 
-namespace Dotnet6502.Tests.Comprehensive;
+namespace Dotnet6502.ComprehensiveTestRunner;
 
 public class TestMemoryMap : IMemoryMap
 {

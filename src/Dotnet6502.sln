@@ -10,7 +10,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dotnet6502.Tests", "Dotnet6
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dotnet6502.Nes", "Dotnet6502.Nes\Dotnet6502.Nes.csproj", "{4C0A5661-4A54-4935-97DB-0AABA6BEE5E8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dotnet6502.Tests.Comprehensive", "Dotnet6502.Tests.Comprehensive\Dotnet6502.Tests.Comprehensive.csproj", "{91F61F72-FF7F-4F16-8678-03873213C1DA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dotnet6502.ComprehensiveTestRunner", "Dotnet6502.ComprehensiveTestRunner\Dotnet6502.ComprehensiveTestRunner.csproj", "{29E009E1-BE2A-4A05-A30D-7015DBC780E0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -38,9 +38,9 @@ Global
 		{4C0A5661-4A54-4935-97DB-0AABA6BEE5E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4C0A5661-4A54-4935-97DB-0AABA6BEE5E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4C0A5661-4A54-4935-97DB-0AABA6BEE5E8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{91F61F72-FF7F-4F16-8678-03873213C1DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{91F61F72-FF7F-4F16-8678-03873213C1DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{91F61F72-FF7F-4F16-8678-03873213C1DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{91F61F72-FF7F-4F16-8678-03873213C1DA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{29E009E1-BE2A-4A05-A30D-7015DBC780E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{29E009E1-BE2A-4A05-A30D-7015DBC780E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{29E009E1-BE2A-4A05-A30D-7015DBC780E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{29E009E1-BE2A-4A05-A30D-7015DBC780E0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

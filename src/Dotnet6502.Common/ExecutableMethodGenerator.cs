@@ -28,7 +28,7 @@ public static class ExecutableMethodGenerator
         //
         // NOTE: re-using a single assembly for all generations seems to slow this down by double
         var assemblyName = new AssemblyName($"assembly_for_{name}");
-        var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
+        var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.RunAndCollect);
         var moduleBuilder = assemblyBuilder.DefineDynamicModule($"module_for_{name}");
         var typeBuilder = moduleBuilder.DefineType($"class_for_{name}", TypeAttributes.Public);
         var methodBuilder = typeBuilder.DefineMethod(

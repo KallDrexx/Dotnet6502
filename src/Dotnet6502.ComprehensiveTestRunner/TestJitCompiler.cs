@@ -2,7 +2,7 @@ using Dotnet6502.Common;
 using NESDecompiler.Core.CPU;
 using NESDecompiler.Core.Disassembly;
 
-namespace Dotnet6502.Tests.Comprehensive;
+namespace Dotnet6502.ComprehensiveTestRunner;
 
 public class TestJitCompiler : IJitCompiler
 {

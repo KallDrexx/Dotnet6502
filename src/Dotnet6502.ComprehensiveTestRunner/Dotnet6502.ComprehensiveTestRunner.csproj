@@ -1,22 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
+        <OutputType>Exe</OutputType>
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <IsPackable>false</IsPackable>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="coverlet.collector" Version="6.0.2"/>
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0"/>
-        <PackageReference Include="Shouldly" Version="4.3.0" />
-        <PackageReference Include="xunit" Version="2.9.2"/>
-        <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <Using Include="Xunit"/>
+      <ProjectReference Include="..\Dotnet6502.Common\Dotnet6502.Common.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -26,10 +18,6 @@
         <None Remove="..\..\65x02\synertek65c02\**" />
         <None Remove="..\..\65x02\wdc65c02\**" />
         <None Remove="..\..\65x02\*" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\Dotnet6502.Common\Dotnet6502.Common.csproj" />
     </ItemGroup>
 
 </Project>
