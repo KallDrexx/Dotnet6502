@@ -23,4 +23,12 @@
       <ProjectReference Include="..\Dotnet6502.Common\Dotnet6502.Common.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <None Include="../../65x02/**" CopyToOutputDirectory="Always" />
+        <None Remove="..\..\65x02\nes6502\**" />
+        <None Remove="..\..\65x02\rockwell65c02\**" />
+        <None Remove="..\..\65x02\synertek65c02\**" />
+        <None Remove="..\..\65x02\wdc65c02\**" />
+        <None Remove="..\..\65x02\*" />
+    </ItemGroup>
 </Project>

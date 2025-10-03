@@ -1,3 +1,6 @@
 [submodule "NESDecompiler"]
 	path = NESDecompiler
 	url = git@github.com:KallDrexx/NESDecompiler.git
+[submodule "65x02"]
+	path = 65x02
+	url = git@github.com:SingleStepTests/65x02.git
