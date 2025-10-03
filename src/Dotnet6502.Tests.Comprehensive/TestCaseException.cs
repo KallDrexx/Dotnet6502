@@ -34,9 +34,17 @@ public class TestCaseException : Exception
         }
         builder.AppendLine();
 
-        var accessedRamAddresses = jitCompiler.MemoryMap.ReadMemoryBlocks
-            .Select(x => $"{x} ({x:X4})")
-            .Aggregate((x, y) => $"{x}, {y}");
+        string accessedRamAddresses;
+        if (jitCompiler.MemoryMap.ReadMemoryBlocks.Any())
+        {
+            accessedRamAddresses = jitCompiler.MemoryMap.ReadMemoryBlocks
+                .Select(x => $"{x} ({x:X4})")
+                .Aggregate((x, y) => $"{x}, {y}");
+        }
+        else
+        {
+            accessedRamAddresses = "<None>";
+        }
 
         builder.AppendLine($"Accessed RAM addresses: {accessedRamAddresses}");
 

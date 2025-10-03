@@ -25,6 +25,8 @@ public static class ExecutableMethodGenerator
         // Specifically, the stack frame just shows "Lightweight function call" or something similar
         // and no real way to peek into it. Using actual assemblies provides stack frames where we
         // can actually see locals and arguments, which really helps debugging.
+        //
+        // NOTE: re-using a single assembly for all generations seems to slow this down by double
         var assemblyName = new AssemblyName($"assembly_for_{name}");
         var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
         var moduleBuilder = assemblyBuilder.DefineDynamicModule($"module_for_{name}");
