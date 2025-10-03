@@ -313,7 +313,6 @@ public class LdaTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-
     [Fact]
     public void LDA_IndexedIndirect_Basic()
     {
@@ -338,6 +337,38 @@ public class LdaTests
         jit.MemoryMap.MemoryBlock[0x26] = 0x30; // High byte of target address
 
         // Set the value at the target address
+        jit.MemoryMap.MemoryBlock[0x3000] = 0x42;
+
+        jit.RunMethod(0x1234);
+
+        jit.TestHal.ARegister.ShouldBe((byte)0x42);
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void LDA_IndexedIndirect_255()
+    {
+        var instructionInfo = InstructionSet.GetInstruction(0xA1);
+        var instruction = new DisassembledInstruction
+        {
+            Info = instructionInfo,
+            Bytes = [0xA1, 0xFA],
+        };
+
+        var context = new InstructionConverter.Context(
+            new Dictionary<ushort, string>());
+
+        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, nesIrInstructions);
+        jit.TestHal.ARegister = 0x00;
+        jit.TestHal.XRegister = 0x05;
+
+        jit.MemoryMap.MemoryBlock[0xFF] = 0x00; // Low byte of target address
+        jit.MemoryMap.MemoryBlock[0x00] = 0x30; // High byte of target address
         jit.MemoryMap.MemoryBlock[0x3000] = 0x42;
 
         jit.RunMethod(0x1234);
@@ -476,6 +507,41 @@ public class LdaTests
         // Set up the base address: $30 contains the base address $2000
         jit.MemoryMap.MemoryBlock[0x30] = 0x00; // Low byte of base address
         jit.MemoryMap.MemoryBlock[0x31] = 0x20; // High byte of base address
+
+        // Set the value at the final address ($2000 + Y) = $2010
+        jit.MemoryMap.MemoryBlock[0x2010] = 0x84;
+
+        jit.RunMethod(0x1234);
+
+        jit.TestHal.ARegister.ShouldBe((byte)0x84);
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeFalse();
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void LDA_IndirectIndexed_255()
+    {
+        var instructionInfo = InstructionSet.GetInstruction(0xB1);
+        var instruction = new DisassembledInstruction
+        {
+            Info = instructionInfo,
+            Bytes = [0xB1, 0xFF],
+        };
+
+        var context = new InstructionConverter.Context(
+            new Dictionary<ushort, string>());
+
+        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, nesIrInstructions);
+        jit.TestHal.ARegister = 0x00;
+        jit.TestHal.YRegister = 0x10;
+
+        // Set up the base address: $30 contains the base address $2000
+        jit.MemoryMap.MemoryBlock[0xFF] = 0x00; // Low byte of base address
+        jit.MemoryMap.MemoryBlock[0x00] = 0x20; // High byte of base address
 
         // Set the value at the final address ($2000 + Y) = $2010
         jit.MemoryMap.MemoryBlock[0x2010] = 0x84;
