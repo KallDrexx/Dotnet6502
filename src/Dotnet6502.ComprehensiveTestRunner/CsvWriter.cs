@@ -7,9 +7,9 @@ public static class CsvWriter
         using var writer = new StreamWriter(filePath);
 
         // Write header
-        writer.WriteLine("Mnemonic,HexBytes,InitialA,InitialX,InitialY,InitialP,InitialS,InitialPc,InitialRam," +
-                        "ExpectedA,ExpectedX,ExpectedY,ExpectedP,ExpectedS,ExpectedPc,ExpectedRam," +
-                        "ActualA,ActualX,ActualY,ActualP,ActualS,ActualPc,ActualRam," +
+        writer.WriteLine("Mnemonic,HexBytes,InitialA,InitialX,InitialY,InitialP,InitialS,InitialRam," +
+                        "ExpectedA,ExpectedX,ExpectedY,ExpectedP,ExpectedS,ExpectedRam," +
+                        "ActualA,ActualX,ActualY,ActualP,ActualS,ActualRam," +
                         "ReadRamAddresses,ErrorMessage");
 
         // Write each failure
@@ -17,26 +17,23 @@ public static class CsvWriter
         {
             writer.WriteLine($"{EscapeCsv(failure.Mnemonic)}," +
                            $"{EscapeCsv(failure.HexBytes)}," +
-                           $"{failure.InitialA}," +
-                           $"{failure.InitialX}," +
-                           $"{failure.InitialY}," +
-                           $"{failure.InitialP}," +
-                           $"{failure.InitialS}," +
-                           $"{failure.InitialPc}," +
+                           $"{failure.InitialA} (0x{failure.InitialA:X2})," +
+                           $"{failure.InitialX} (0x{failure.InitialA:X2})," +
+                           $"{failure.InitialY} (0x{failure.InitialA:X2})," +
+                           $"{failure.InitialP} (0x{failure.InitialA:X2})," +
+                           $"{failure.InitialS} (0x{failure.InitialA:X2})," +
                            $"{EscapeCsv(failure.InitialRam)}," +
-                           $"{failure.ExpectedA}," +
-                           $"{failure.ExpectedX}," +
-                           $"{failure.ExpectedY}," +
-                           $"{failure.ExpectedP}," +
-                           $"{failure.ExpectedS}," +
-                           $"{failure.ExpectedPc}," +
+                           $"{failure.ExpectedA} (0x{failure.InitialA:X2})," +
+                           $"{failure.ExpectedX} (0x{failure.InitialA:X2})," +
+                           $"{failure.ExpectedY} (0x{failure.InitialA:X2})," +
+                           $"{failure.ExpectedP} (0x{failure.InitialA:X2})," +
+                           $"{failure.ExpectedS} (0x{failure.InitialA:X2})," +
                            $"{EscapeCsv(failure.ExpectedRam)}," +
-                           $"{failure.ActualA}," +
-                           $"{failure.ActualX}," +
-                           $"{failure.ActualY}," +
-                           $"{failure.ActualP}," +
-                           $"{failure.ActualS}," +
-                           $"{failure.ActualPc}," +
+                           $"{failure.ActualA} (0x{failure.InitialA:X2})," +
+                           $"{failure.ActualX} (0x{failure.InitialA:X2})," +
+                           $"{failure.ActualY} (0x{failure.InitialA:X2})," +
+                           $"{failure.ActualP} (0x{failure.InitialA:X2})," +
+                           $"{failure.ActualS} (0x{failure.InitialA:X2})," +
                            $"{EscapeCsv(failure.ActualRam)}," +
                            $"{EscapeCsv(failure.ReadRamAddresses)}," +
                            $"{EscapeCsv(failure.ErrorMessage)}");

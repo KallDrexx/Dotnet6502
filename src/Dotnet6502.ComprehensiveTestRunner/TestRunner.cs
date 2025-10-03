@@ -217,7 +217,7 @@ public static class TestRunner
     private static string FormatRam(ushort[][] ram)
     {
         if (ram.Length == 0) return "<None>";
-        return string.Join(", ", ram.Select(r => $"[{r[0]}]={r[1]}"));
+        return string.Join(", ", ram.Select(r => $"[{r[0]}]={r[1]} (0x{r[1]:X2})"));
     }
 
     private static string FormatActualRam(ushort[][] expectedRam, byte[] memoryBlock)
