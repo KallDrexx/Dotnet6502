@@ -354,7 +354,7 @@ public class Ppu
     private void RenderFrame()
     {
         RenderFullBackground();
-        RenderSprites();
+        // RenderSprites();
         // RenderPatternTableToFrameBuffer();
 
         _nesDisplay.RenderFrame(_framebuffer);
@@ -385,7 +385,7 @@ public class Ppu
                 _ => throw new NotSupportedException(PpuCtrl.SpritePatternTableAddressFor8X8.ToString()),
             };
 
-            ShowTile((ushort)bank, tileIndex, tileX, tileY, palette, flipVertical, flipVertical, true);
+            ShowTile((ushort)bank, tileIndex, tileX, tileY, palette, flipHorizontal, flipVertical, true);
         }
     }
 

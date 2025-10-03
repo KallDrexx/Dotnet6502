@@ -5,9 +5,11 @@ namespace Dotnet6502.Tests.Common;
 public class TestMemoryMap : IMemoryMap
 {
     public byte[] MemoryBlock { get; } = new byte[1024 * 64];
+    public List<ushort> ReadMemoryBlocks { get; } = [];
 
     public byte Read(ushort address)
     {
+        ReadMemoryBlocks.Add(address);
         return MemoryBlock[address];
     }
 
