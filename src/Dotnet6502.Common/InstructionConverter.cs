@@ -91,6 +91,7 @@ public static class InstructionConverter
     /// </summary>
     private static Ir6502.Instruction[] ConvertAdc(DisassembledInstruction instruction)
     {
+        // NOTE: This does not support decimal flag logic
         var accumulator = new Ir6502.Register(Ir6502.RegisterName.Accumulator);
         var operand = ParseAddress(instruction);
         var isNegative = new Ir6502.Variable(0);
@@ -965,6 +966,7 @@ public static class InstructionConverter
     /// </summary>
     private static Ir6502.Instruction[] ConvertSbc(DisassembledInstruction instruction)
     {
+        // NOTE: this does not implement the decimal flag logic
         var accumulator = new Ir6502.Register(Ir6502.RegisterName.Accumulator);
         var operand = ParseAddress(instruction);
         var subVariable = new Ir6502.Variable(0);

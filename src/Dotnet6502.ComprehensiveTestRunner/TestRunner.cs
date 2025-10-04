@@ -42,7 +42,7 @@ public static class TestRunner
         foreach (var opcode in matchingOpcodes)
         {
             var jsonFile = $"{opcode:x2}.json";
-            var jsonFilePath = Path.Combine(Environment.CurrentDirectory, "6502", "v1", jsonFile);
+            var jsonFilePath = Path.Combine(Environment.CurrentDirectory, "nes6502", "v1", jsonFile);
 
             if (!File.Exists(jsonFilePath))
             {
