@@ -5,7 +5,7 @@ public class Base6502Hal
     private readonly IMemoryMap _memoryMap;
     private readonly Dictionary<CpuStatusFlags, bool> _flags  = new()
     {
-        { CpuStatusFlags.Unused, false },
+        { CpuStatusFlags.Unused, true },
         { CpuStatusFlags.BFlag, false },
         { CpuStatusFlags.Carry, false },
         { CpuStatusFlags.Decimal, false },
@@ -35,8 +35,6 @@ public class Base6502Hal
         {
             _flags[CpuStatusFlags.Negative] =         (value & 0b10000000) == 0b10000000;
             _flags[CpuStatusFlags.Overflow] =         (value & 0b01000000) == 0b01000000;
-            _flags[CpuStatusFlags.Unused] =           (value & 0b00100000) == 0b00100000;
-            _flags[CpuStatusFlags.BFlag] =            (value & 0b00010000) == 0b00010000;
             _flags[CpuStatusFlags.Decimal] =          (value & 0b00001000) == 0b00001000;
             _flags[CpuStatusFlags.InterruptDisable] = (value & 0b00000100) == 0b00000100;
             _flags[CpuStatusFlags.Zero] =             (value & 0b00000010) == 0b00000010;
