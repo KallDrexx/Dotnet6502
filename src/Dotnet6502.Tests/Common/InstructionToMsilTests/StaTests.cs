@@ -330,4 +330,27 @@ public class StaTests
         jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeFalse();
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
+
+    [Fact]
+    public void STA_IndexedIndirect_Test()
+    {
+        var instructionInfo = InstructionSet.GetInstruction(0x81);
+        var instruction = new DisassembledInstruction
+        {
+            Info = instructionInfo,
+            Bytes = [0x81, 0x51],
+        };
+
+        var context = new InstructionConverter.Context(new Dictionary<ushort, string>());
+        var irInstructions = InstructionConverter.Convert(instruction, context);
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, irInstructions);
+        jit.TestHal.ARegister = 0x11;
+        jit.TestHal.XRegister = 0xAE;
+        jit.MemoryMap.MemoryBlock[0xFF] = 0x74;
+        jit.MemoryMap.MemoryBlock[0x00] = 0xBB;
+        jit.RunMethod(0x1234);
+
+        jit.MemoryMap.MemoryBlock[0xBB74].ShouldBe((byte)0x11);
+    }
 }

@@ -42,7 +42,8 @@ public static class TestRunner
         foreach (var opcode in matchingOpcodes)
         {
             var jsonFile = $"{opcode:x2}.json";
-            var jsonFilePath = Path.Combine(Environment.CurrentDirectory, "nes6502", "v1", jsonFile);
+            var assemblyDirectory = Path.GetDirectoryName(typeof(TestRunner).Assembly.Location);
+            var jsonFilePath = Path.Combine(assemblyDirectory!, "nes6502", "v1", jsonFile);
 
             if (!File.Exists(jsonFilePath))
             {
@@ -183,10 +184,19 @@ public static class TestRunner
         var readRamAddresses = jit.MemoryMap.ReadMemoryBlocks.Any()
             ? string.Join(", ", jit.MemoryMap.ReadMemoryBlocks.Select(x => $"{x}(0x{x:X4})"))
             : "<None>";
+        var writtenRamAddresses = jit.MemoryMap.WrittenMemoryBlocks.Any()
+            ? string.Join(", ", jit.MemoryMap.WrittenMemoryBlocks.Select(x => $"{x}(0x{x:X4})"))
+            : "<None>";
+        var expectedCycles = FormatCycles(testCase.Cycles);
+
+        var opcode = Convert.ToByte(testCase.Name.Split(' ')[0], 16);
+        var instructionInfo = InstructionSet.GetInstruction(opcode);
+        var addressingMode = instructionInfo.AddressingMode.ToString();
 
         return new TestFailure
         {
             Mnemonic = mnemonic,
+            AddressingMode = addressingMode,
             HexBytes = testCase.Name,
             InitialA = testCase.Initial.A,
             InitialX = testCase.Initial.X,
@@ -210,6 +220,8 @@ public static class TestRunner
             ActualPc = testCase.Final.Pc, // PC is not checked/tracked by the test harness
             ActualRam = actualRam,
             ReadRamAddresses = readRamAddresses,
+            WrittenRamAddresses = writtenRamAddresses,
+            ExpectedCycles = expectedCycles,
             ErrorMessage = errorMessage
         };
     }
@@ -224,5 +236,11 @@ public static class TestRunner
     {
         if (expectedRam.Length == 0) return "<None>";
         return string.Join(", ", expectedRam.Select(r => $"[{r[0]}]={memoryBlock[r[0]]}"));
+    }
+
+    private static string FormatCycles(object[][] cycles)
+    {
+        if (cycles.Length == 0) return "<None>";
+        return string.Join(", ", cycles.Select(c => $"[{c[0]}]={c[1]} ({c[2]})"));
     }
 }

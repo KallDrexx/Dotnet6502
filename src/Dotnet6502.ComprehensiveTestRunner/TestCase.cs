@@ -5,6 +5,7 @@ public class TestCase
     public required string Name { get; set; }
     public required ValueSet Initial { get; set; }
     public required ValueSet Final { get; set; }
+    public object[][] Cycles { get; set; } = [];
 
     public class ValueSet
     {

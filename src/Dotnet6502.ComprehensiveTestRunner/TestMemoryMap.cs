@@ -6,6 +6,7 @@ public class TestMemoryMap : IMemoryMap
 {
     public byte[] MemoryBlock { get; } = new byte[1024 * 64];
     public List<ushort> ReadMemoryBlocks { get; } = [];
+    public List<ushort> WrittenMemoryBlocks { get; } = [];
 
     public byte Read(ushort address)
     {
@@ -15,6 +16,7 @@ public class TestMemoryMap : IMemoryMap
 
     public void Write(ushort address, byte value)
     {
+        WrittenMemoryBlocks.Add(address);
         MemoryBlock[address] = value;
     }
 }

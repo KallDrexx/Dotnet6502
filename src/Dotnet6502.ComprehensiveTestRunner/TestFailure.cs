@@ -3,6 +3,7 @@ namespace Dotnet6502.ComprehensiveTestRunner;
 public class TestFailure
 {
     public required string Mnemonic { get; set; }
+    public required string AddressingMode { get; set; }
     public required string HexBytes { get; set; }
 
     // Initial state
@@ -33,5 +34,7 @@ public class TestFailure
     public required string ActualRam { get; set; }
 
     public required string ReadRamAddresses { get; set; }
+    public required string WrittenRamAddresses { get; set; }
+    public required string ExpectedCycles { get; set; }
     public required string ErrorMessage { get; set; }
 }

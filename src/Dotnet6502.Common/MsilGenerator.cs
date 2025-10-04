@@ -553,6 +553,7 @@ public class MsilGenerator
                 SaveStackToTempLocal(ilGenerator, 2); // Save one value for low byte read
                 ilGenerator.Emit(OpCodes.Ldc_I4, 1);
                 ilGenerator.Emit(OpCodes.Add); // For the high byte memory address
+                ilGenerator.Emit(OpCodes.Conv_U1); // Convert back to zero page
 
                 // Retrieve the address high byte from memory,
                 ilGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);

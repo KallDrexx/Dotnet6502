@@ -7,15 +7,16 @@ public static class CsvWriter
         using var writer = new StreamWriter(filePath);
 
         // Write header
-        writer.WriteLine("Mnemonic,HexBytes,InitialA,InitialX,InitialY,InitialP,InitialS,InitialRam," +
+        writer.WriteLine("Mnemonic,AddressingMode,HexBytes,InitialA,InitialX,InitialY,InitialP,InitialS,InitialRam," +
                         "ExpectedA,ExpectedX,ExpectedY,ExpectedP,ExpectedS,ExpectedRam," +
                         "ActualA,ActualX,ActualY,ActualP,ActualS,ActualRam," +
-                        "ReadRamAddresses,ErrorMessage");
+                        "ReadRamAddresses,WrittenRamAddresses,ExpectedCycles,ErrorMessage");
 
         // Write each failure
         foreach (var failure in failures)
         {
             writer.WriteLine($"{EscapeCsv(failure.Mnemonic)}," +
+                           $"{EscapeCsv(failure.AddressingMode)}," +
                            $"{EscapeCsv(failure.HexBytes)}," +
                            $"{failure.InitialA} (0x{failure.InitialA:X2})," +
                            $"{failure.InitialX} (0x{failure.InitialX:X2})," +
@@ -36,6 +37,8 @@ public static class CsvWriter
                            $"{failure.ActualS} (0x{failure.ActualS:X2})," +
                            $"{EscapeCsv(failure.ActualRam)}," +
                            $"{EscapeCsv(failure.ReadRamAddresses)}," +
+                           $"{EscapeCsv(failure.WrittenRamAddresses)}," +
+                           $"{EscapeCsv(failure.ExpectedCycles)}," +
                            $"{EscapeCsv(failure.ErrorMessage)}");
         }
     }
