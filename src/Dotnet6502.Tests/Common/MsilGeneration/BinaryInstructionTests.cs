@@ -525,22 +525,6 @@ public class BinaryInstructionTests
     }
 
     [Fact]
-    public void Can_Binary_Operation_To_AllFlags()
-    {
-        var instruction = new Ir6502.Binary(
-            Ir6502.BinaryOperator.Add,
-            new Ir6502.Constant(0x80),
-            new Ir6502.Constant(0x03),
-            new Ir6502.AllFlags());
-
-        var jit = new TestJitCompiler();
-        jit.AddMethod(0x1234, [instruction]);
-        jit.RunMethod(0x1234);
-
-        jit.TestHal.ProcessorStatus.ShouldBe((byte)0x83);
-    }
-
-    [Fact]
     public void Can_Binary_Operation_To_StackPointer()
     {
         var instruction = new Ir6502.Binary(

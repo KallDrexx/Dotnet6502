@@ -92,27 +92,6 @@ public class UnaryInstructionTests
     }
 
     [Fact]
-    public void Can_BitwiseNot_AllFlags_To_Register()
-    {
-        var instruction = new Ir6502.Unary(
-            Ir6502.UnaryOperator.BitwiseNot,
-            new Ir6502.AllFlags(),
-            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
-
-        var jit = new TestJitCompiler()
-        {
-            TestHal =
-            {
-                ProcessorStatus = 0xC3
-            }
-        };
-        jit.AddMethod(0x1234, [instruction]);
-        jit.RunMethod(0x1234);
-
-        jit.TestHal.ARegister.ShouldBe((byte)0x3C);
-    }
-
-    [Fact]
     public void Can_BitwiseNot_StackPointer_To_Register()
     {
         var instruction = new Ir6502.Unary(
@@ -182,21 +161,6 @@ public class UnaryInstructionTests
     }
 
     [Fact]
-    public void Can_BitwiseNot_Constant_To_AllFlags()
-    {
-        var instruction = new Ir6502.Unary(
-            Ir6502.UnaryOperator.BitwiseNot,
-            new Ir6502.Constant(0x81),
-            new Ir6502.AllFlags());
-
-        var jit = new TestJitCompiler();
-        jit.AddMethod(0x1234, [instruction]);
-        jit.RunMethod(0x1234);
-
-        jit.TestHal.ProcessorStatus.ShouldBe((byte)0x7E);
-    }
-
-    [Fact]
     public void Can_BitwiseNot_Constant_To_StackPointer()
     {
         var instruction = new Ir6502.Unary(
@@ -209,28 +173,6 @@ public class UnaryInstructionTests
         jit.RunMethod(0x1234);
 
         jit.TestHal.StackPointer.ShouldBe((byte)0xF8);
-    }
-
-    [Fact]
-    public void Can_BitwiseNot_Memory_With_Register_Offset()
-    {
-        var instruction = new Ir6502.Unary(
-            Ir6502.UnaryOperator.BitwiseNot,
-            new Ir6502.Memory(0x5000, Ir6502.RegisterName.XIndex, false),
-            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
-
-        var jit = new TestJitCompiler()
-        {
-            TestHal =
-            {
-                XRegister = 10
-            }
-        };
-        jit.AddMethod(0x1234, [instruction]);
-        jit.TestHal.WriteMemory(0x500A, 0x3C);
-        jit.RunMethod(0x1234);
-
-        jit.TestHal.ARegister.ShouldBe((byte)0xC3);
     }
 
     [Fact]

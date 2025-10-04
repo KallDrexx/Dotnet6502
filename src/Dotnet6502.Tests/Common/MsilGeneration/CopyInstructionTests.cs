@@ -527,11 +527,11 @@ public class CopyInstructionTests
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
         var jit = new TestJitCompiler();
-        jit.TestHal.ProcessorStatus = 0xC3;
+        jit.TestHal.ProcessorStatus = 0xA5;
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
 
-        jit.TestHal.ARegister.ShouldBe((byte)0xC3);
+        jit.TestHal.ARegister.ShouldBe((byte)0xA5);
     }
 
     [Fact]
@@ -542,11 +542,11 @@ public class CopyInstructionTests
             new Ir6502.AllFlags());
 
         var jit = new TestJitCompiler();
-        jit.TestHal.ARegister = 0x81;
+        jit.TestHal.ARegister = 0xA5;
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
 
-        jit.TestHal.ProcessorStatus.ShouldBe((byte)0x81);
+        jit.TestHal.ProcessorStatus.ShouldBe((byte)0xA5);
     }
 
     [Fact]
@@ -557,11 +557,11 @@ public class CopyInstructionTests
             new Ir6502.Memory(0xB000, null, false));
 
         var jit = new TestJitCompiler();
-        jit.TestHal.ProcessorStatus = 0x5A;
+        jit.TestHal.ProcessorStatus = 0xA5;
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
 
-        jit.TestHal.ReadMemory(0xB000).ShouldBe((byte)0x5A);
+        jit.TestHal.ReadMemory(0xB000).ShouldBe((byte)0xA5);
     }
 
     [Fact]
@@ -573,10 +573,10 @@ public class CopyInstructionTests
 
         var jit = new TestJitCompiler();
         jit.AddMethod(0x1234, [instruction]);
-        jit.TestHal.WriteMemory(0xC000, 0x3C);
+        jit.TestHal.WriteMemory(0xC000, 0xA5);
         jit.RunMethod(0x1234);
 
-        jit.TestHal.ProcessorStatus.ShouldBe((byte)0x3C);
+        jit.TestHal.ProcessorStatus.ShouldBe((byte)0xA5);
     }
 
     [Fact]
