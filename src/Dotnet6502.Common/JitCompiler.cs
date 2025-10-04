@@ -44,8 +44,16 @@ public class JitCompiler : IJitCompiler
     {
         if (!_decompiler.Functions.TryGetValue(address, out var function))
         {
-            var message = $"No known function exists at address {address:X4}";
-            throw new InvalidOperationException(message);
+            Console.WriteLine($"Calling unknown function at {address:X4}. Attempting to compile it");
+            _decompiler.Disassembler.AddEntyPoint(address);
+            _decompiler.Disassembler.Disassemble();
+            _decompiler.Decompile();
+
+            if (!_decompiler.Functions.TryGetValue(address, out function))
+            {
+                var message = $"No known function exists at address {address:X4}";
+                throw new InvalidOperationException(message);
+            }
         }
 
         var disassembledInstructions = _decompiler.Disassembler.Instructions

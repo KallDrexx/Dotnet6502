@@ -86,6 +86,8 @@ public class MonogameApp : Game, INesDisplay, INesInput
             {
                 Console.WriteLine("NES code ended");
                 Exit();
+
+                return;
             }
 
             if (NesCodeTask.Exception != null)

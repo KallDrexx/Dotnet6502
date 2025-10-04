@@ -654,13 +654,7 @@ public static class InstructionConverter
             return [jump];
         }
 
-        // We don't know this label yet. Treat it as a method call to JIT the code
-        return
-        [
-            new Ir6502.CallFunction(new Ir6502.FunctionAddress(instruction.TargetAddress.Value, false)),
-            new Ir6502.Return(),
-        ];
-
+        throw new InvalidOperationException($"No label found for jump target 0x{instruction.TargetAddress.Value:X4}");
     }
 
     /// <summary>
