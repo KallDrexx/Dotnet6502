@@ -668,7 +668,61 @@ public static class InstructionConverter
             throw new InvalidOperationException(message);
         }
 
-        var jump = new Ir6502.CallFunction(new Ir6502.FunctionAddress(instruction.TargetAddress.Value, false));
+        // An actual 6502 will store the current PC onto the stack, and RTS will pop that off to know where to
+        // continue execution from. However, some programs redirect where RTS is by pushing a new PC value
+        // onto the stack. In the cases I've seen, this only seems to be done to have an intermediary function
+        // before resuming to this current spot.
+        //
+        // So to replicate this, we need to push the current instruction address onto the stack, then after the
+        // function we call returns pop the stack. If the address is different than we expect, then we need to
+        // perform a new `callFunction` call into that address and repeat until we have the expected location.
+
+        var currentAddressHighBit = new Ir6502.Constant((byte)(instruction.CPUAddress >> 8));
+        var currentAddressLowBit = new Ir6502.Constant((byte)(instruction.CPUAddress & 0x00FF));
+        var lowByteVariable = new Ir6502.Variable(0);
+        var highByteVariable = new Ir6502.Variable(1);
+        var comparisonResult = new Ir6502.Variable(2);
+        var fullAddress = new Ir6502.Variable(3);
+
+        var pushHigh = new Ir6502.PushStackValue(currentAddressHighBit);
+        var pushLow = new Ir6502.PushStackValue(currentAddressLowBit);
+        var initialCall = new Ir6502.CallFunction(new Ir6502.FunctionAddress(instruction.TargetAddress.Value, false));
+
+        var retryStartLabelId = new Ir6502.Identifier("jsr_redirect_check");
+        var retryFailLabelId = new Ir6502.Identifier("jsr_redirect_fail");
+        var retryFinishedLabelId = new Ir6502.Identifier("jsr_redirect_finished");
+
+        var retryStart = new Ir6502.Label(retryStartLabelId);
+        var popLow = new Ir6502.PopStackValue(lowByteVariable);
+        var popHigh = new Ir6502.PopStackValue(highByteVariable);
+        var compareLow = new Ir6502.Binary(
+            Ir6502.BinaryOperator.NotEquals,
+            lowByteVariable,
+            currentAddressLowBit,
+            comparisonResult);
+
+        var lowNotEquals = new Ir6502.JumpIfNotZero(comparisonResult, retryFailLabelId);
+        var compareHigh = new Ir6502.Binary(
+            Ir6502.BinaryOperator.NotEquals,
+            highByteVariable,
+            currentAddressHighBit,
+            comparisonResult);
+
+        var highNotEquals = new Ir6502.JumpIfNotZero(comparisonResult, retryFailLabelId);
+        var jumpToSuccess = new Ir6502.Jump(retryFinishedLabelId);
+
+        var retryFail = new Ir6502.Label(retryFailLabelId);
+        var pushHigh2 = new Ir6502.PushStackValue(currentAddressHighBit);
+        var pushLow2 = new Ir6502.PushStackValue(currentAddressLowBit);
+
+        // Store the full address
+        var storeHigh = new Ir6502.Copy(highByteVariable, fullAddress);
+        var shiftLeft = new Ir6502.Binary(Ir6502.BinaryOperator.ShiftLeft, fullAddress, new Ir6502.Constant())
+
+        var call2 = new Ir6502.CallFunction(new Ir6502.FunctionAddress(instruction.TargetAddress.Value, false));
+
+
+
         return [jump];
     }
 

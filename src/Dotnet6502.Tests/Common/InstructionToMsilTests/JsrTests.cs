@@ -8,14 +8,6 @@ namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 
 /// <summary>
 /// Tests for 6502 JSR (Jump to Subroutine) instruction
-///
-/// JSR calls a subroutine at the target address:
-/// - JSR Absolute (0x20): Call subroutine at 16-bit absolute address
-/// - Converts to NesIr.CallFunction instruction
-/// - Does NOT affect any flags
-/// - Does NOT affect any registers
-/// - Requires function to be defined in the InstructionConverter.Context
-/// - Target address must be mapped to a known function
 /// </summary>
 public class JsrTests
 {
@@ -373,5 +365,54 @@ public class JsrTests
         // Should throw exception when JSR has no target address
         Should.Throw<InvalidOperationException>(() => InstructionConverter.Convert(instruction, context))
             .Message.ShouldContain("JSR instruction with no target address");
+    }
+
+    [Fact]
+    public void JSR_Calls_Second_Function_If_Different_Address_On_Stack_When_Returned()
+    {
+        var instructionInfo = InstructionSet.GetInstruction(0x20);
+        var instruction = new DisassembledInstruction
+        {
+            Info = instructionInfo,
+            Bytes = [0x20, 0x00, 0x90], // JSR $9000
+            TargetAddress = 0x9000, // Target address for function call
+            CPUAddress = 0x5678,
+        };
+
+        var context = new InstructionConverter.Context(new Dictionary<ushort, string>());
+        var allInstructions = InstructionConverter.Convert(instruction, context)
+            .Append(
+                // Instruction executed after function call
+                new Ir6502.Copy(new Ir6502.Constant(42), new Ir6502.Register(Ir6502.RegisterName.XIndex))
+            )
+            .ToArray();
+
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, allInstructions);
+
+        // Add the directly called method
+        jit.AddMethod(0x9000, [
+            new Ir6502.Copy(new Ir6502.Constant(25), new Ir6502.Register(Ir6502.RegisterName.YIndex)),
+            new Ir6502.PushStackValue(new Ir6502.Constant(0x98)),
+            new Ir6502.PushStackValue(new Ir6502.Constant(0x76)),
+        ]);
+
+        // Add equivalent of RTS redirected function
+        jit.AddMethod(0x9876, [new Ir6502.Copy(
+            new Ir6502.Constant(99),
+            new Ir6502.Memory(0x4000, null, false))
+        ]);
+
+        jit.RunMethod(0x1234);
+
+        // Verify the function was called and execution continued
+        jit.TestHal.XRegister.ShouldBe((byte)42); // Should be executed after JSR
+
+        // verify the direct function was invoked
+        jit.TestHal.YRegister.ShouldBe((byte)25);
+
+        // Verify the indirect function was actually invoked
+        jit.TestHal.ReadMemory(0x4000).ShouldBe((byte)99);
+
     }
 }

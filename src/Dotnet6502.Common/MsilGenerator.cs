@@ -202,7 +202,7 @@ public class MsilGenerator
             // Look up the pointer to find the location of the function to call
             var readMemoryMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.ReadMemory))!;
             ilGenerator.Emit(JitCompiler.LoadHalArg);
-            ilGenerator.Emit(OpCodes.Ldc_I4, callFunction.Address.Value);
+            ilGenerator.Emit(OpCodes.Ldc_I4, callFunction.Address.Address);
             ilGenerator.Emit(OpCodes.Dup);
             SaveStackToTempLocal(ilGenerator, 0); // save for LSB read
 
@@ -228,7 +228,7 @@ public class MsilGenerator
         else
         {
             // Direct call to the provided address
-            ilGenerator.Emit(OpCodes.Ldc_I4, callFunction.Address.Value);
+            ilGenerator.Emit(OpCodes.Ldc_I4, callFunction.Address.Address);
         }
         
         var method = typeof(IJitCompiler).GetMethod(nameof(JitCompiler.RunMethod))!;

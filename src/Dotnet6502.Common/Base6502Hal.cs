@@ -19,6 +19,7 @@ public class Base6502Hal
     public byte XRegister { get; set; }
     public byte YRegister { get; set; }
     public byte StackPointer { get; set; } = 0xFF;
+    public ushort ProgramCounter { get; set; } // Mostly only used for redirected jumps
 
     public byte ProcessorStatus
     {

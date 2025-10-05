@@ -9,7 +9,7 @@ public static class Ir6502
 
     public abstract record JumpTarget;
 
-    public interface IFunctionAddress;
+    public interface ICallTarget;
 
     public record Copy(Value Source, Value Destination) : Instruction;
 
@@ -21,7 +21,7 @@ public static class Ir6502
 
     public record Label(Identifier Name) : Instruction;
 
-    public record CallFunction(FunctionAddress Address) : Instruction;
+    public record CallFunction(ICallTarget CallTarget) : Instruction;
 
     public record Jump(Identifier Target) : Instruction;
 
@@ -50,7 +50,7 @@ public static class Ir6502
 
     public record IndirectMemory(byte ZeroPageAddress, bool IsPreIndexed, bool IsPostIndexed) : Value;
 
-    public record Variable(int Index) : Value;
+    public record Variable(int Index) : Value, ICallTarget;
 
     public record Register(RegisterName Name) : Value;
 
@@ -62,10 +62,8 @@ public static class Ir6502
 
     public record Identifier(string Characters) : JumpTarget;
 
-    public record TargetAddress(ushort Address) : JumpTarget;
+    public record FunctionAddress(ushort Address, bool IsIndirect) : ICallTarget;
 
-    public record FunctionAddress(ushort Value, bool IsIndirect);
-    
     public enum RegisterName { Accumulator, XIndex, YIndex }
 
     public enum FlagName { Carry, Zero, InterruptDisable, BFlag, Decimal, Overflow, Negative }
