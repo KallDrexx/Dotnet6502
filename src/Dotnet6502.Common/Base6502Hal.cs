@@ -5,7 +5,7 @@ public class Base6502Hal
     private readonly IMemoryMap _memoryMap;
     private readonly Dictionary<CpuStatusFlags, bool> _flags  = new()
     {
-        { CpuStatusFlags.Unused, true },
+        { CpuStatusFlags.Unused, false },
         { CpuStatusFlags.BFlag, false },
         { CpuStatusFlags.Carry, false },
         { CpuStatusFlags.Decimal, false },
@@ -77,6 +77,11 @@ public class Base6502Hal
 
     public byte PopFromStack()
     {
+        if (StackPointer == byte.MaxValue)
+        {
+            throw new InvalidOperationException("Stack pointer overflowed");
+        }
+
         StackPointer++;
         var value = _memoryMap.Read(StackAddress);
 

@@ -37,7 +37,12 @@ var app = new MonogameApp();
 var cancellationTokenSource = new CancellationTokenSource();
 var ppu = new Ppu(chrRomData, app);
 var memory = new NesMemory(ppu, programRomData, app);
-var hal = new NesHal(memory, ppu, cancellationTokenSource.Token);
+
+var debugWriter = commandLineValues.DebugLogFile != null
+    ? new DebugWriter(commandLineValues.DebugLogFile, commandLineValues.Sections ?? DebugLogSections.All, ppu)
+    : null;
+
+var hal = new NesHal(memory, ppu, debugWriter, cancellationTokenSource.Token);
 
 var jitCustomizer = new NesJitCustomizer();
 var jitCompiler = new JitCompiler(decompiler, hal, jitCustomizer);

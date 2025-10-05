@@ -2,7 +2,7 @@ namespace Dotnet6502.Nes.Cli;
 
 public static class CommandLineHandler
 {
-    public record Values(FileInfo RomFile);
+    public record Values(FileInfo RomFile, FileInfo? DebugLogFile, DebugLogSections? Sections);
 
     public static Values? Parse(string[] args)
     {
@@ -13,6 +13,8 @@ public static class CommandLineHandler
         }
 
         FileInfo? romFile = null;
+        FileInfo? debugLogFile = null;
+        DebugLogSections? debugLogSections = null;
 
         for (int i = 0; i < args.Length; i++)
         {
@@ -23,6 +25,51 @@ public static class CommandLineHandler
                     if (i + 1 < args.Length)
                     {
                         romFile = new FileInfo(args[++i]);
+                    }
+                    else
+                    {
+                        Console.Error.WriteLine("Error: --rom requires a file path");
+                        return null;
+                    }
+                    break;
+
+                case "--debug":
+                case "-d":
+                    if (i + 1 < args.Length)
+                    {
+                        debugLogFile = new FileInfo(args[++i]);
+                    }
+                    else
+                    {
+                        Console.Error.WriteLine("Error: --debug requires a file path");
+                        return null;
+                    }
+                    break;
+
+                case "--debugSection":
+                case "-s":
+                    if (i + 1 < args.Length)
+                    {
+                        var sectionName = args[++i];
+                        switch (sectionName.ToLower())
+                        {
+                            case "all":
+                                debugLogSections = DebugLogSections.All;
+                                break;
+
+                            case "onlynmi":
+                                debugLogSections = DebugLogSections.OnlyNmi;
+                                break;
+
+                            case "notnmi":
+                                debugLogSections = DebugLogSections.OnlyNonNmi;
+                                break;
+
+                            default:
+                                Console.Error.WriteLine($"Error: Invalid debug section of '{sectionName}'. " +
+                                                        $"Valid values are: all, OnlyNmi, NotNmi");
+                                return null;
+                        }
                     }
                     else
                     {
@@ -57,7 +104,7 @@ public static class CommandLineHandler
             return null;
         }
 
-        return new Values(romFile);
+        return new Values(romFile, debugLogFile, debugLogSections);
     }
 
     private static void ShowHelp()

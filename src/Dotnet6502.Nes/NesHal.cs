@@ -6,14 +6,17 @@ public class NesHal : Base6502Hal
 {
     private readonly Ppu _ppu;
     private readonly CancellationToken _cancellationToken;
+    private readonly DebugWriter? _debugWriter;
+    private bool _isInNmi;
 
     public Action? NmiHandler { get; set; }
 
-    public NesHal(NesMemory memory, Ppu ppu, CancellationToken cancellationToken)
-    : base(memory)
+    public NesHal(NesMemory memory, Ppu ppu, DebugWriter? debugWriter, CancellationToken cancellationToken)
+        : base(memory)
     {
         _ppu = ppu;
         _cancellationToken = cancellationToken;
+        _debugWriter = debugWriter;
     }
 
     public void IncrementCpuCycleCount(int count)
@@ -28,7 +31,10 @@ public class NesHal : Base6502Hal
         {
             if (NmiHandler != null)
             {
+                PushToStack(ProcessorStatus);
+                _isInNmi = true;
                 NmiHandler();
+                _isInNmi = true;
             }
             else
             {
@@ -39,5 +45,6 @@ public class NesHal : Base6502Hal
 
     public void DebugHook(string info)
     {
+        _debugWriter?.Log(_isInNmi, this, info, true);
     }
 }
