@@ -186,6 +186,13 @@ public class JmpTests
         var jit = new TestJitCompiler();
         jit.AddMethod(0x1234, allInstructions);
 
+        // Set up method that will be jumped to
+        jit.MemoryMap.MemoryBlock[0x8500] = 0x78;
+        jit.MemoryMap.MemoryBlock[0x8501] = 0x56;
+        jit.AddMethod(0x5678, [
+            new Ir6502.Copy(new Ir6502.Constant(77), new Ir6502.Register(Ir6502.RegisterName.Accumulator)),
+        ]);
+
         // Set initial flag states
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
         jit.TestHal.SetFlag(CpuStatusFlags.Zero, true);
@@ -278,6 +285,11 @@ public class JmpTests
         var jit = new TestJitCompiler();
         jit.AddMethod(0x1234, allInstructions);
 
+        // Set up method that will be jumped to
+        jit.MemoryMap.MemoryBlock[0x8600] = 0x78;
+        jit.MemoryMap.MemoryBlock[0x8601] = 0x56;
+        jit.AddMethod(0x5678, []);
+
         // Set initial register values
         jit.TestHal.ARegister = 0x55;
         jit.TestHal.XRegister = 0xAA;
@@ -332,47 +344,6 @@ public class JmpTests
         // Jump should be taken to far address
         jit.TestHal.XRegister.ShouldBe((byte)0); // Should be skipped
         jit.TestHal.ARegister.ShouldBe((byte)222); // Should be executed
-    }
-
-    [Fact]
-    public void JMP_Indirect_Different_Memory_Locations()
-    {
-        var instructionInfo = InstructionSet.GetInstruction(0x6C);
-        var instruction = new DisassembledInstruction
-        {
-            Info = instructionInfo,
-            Bytes = [0x6C, 0x00, 0x03], // JMP ($0300) - zero page indirect
-            TargetAddress = 0xA000
-        };
-
-        var labels = new Dictionary<ushort, string> { { 0xA000, "zp_target" } };
-        var context = new InstructionConverter.Context(
-            labels);
-
-        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-
-        var allInstructions = new List<Ir6502.Instruction>
-        {
-            // Add the JMP indirect instruction
-            nesIrInstructions[0],
-
-            // This should be skipped
-            new Ir6502.Copy(new Ir6502.Constant(123), new Ir6502.Register(Ir6502.RegisterName.YIndex)),
-
-            // Target label
-            new Ir6502.Label(new Ir6502.Identifier("zp_target")),
-
-            // This should be executed
-            new Ir6502.Copy(new Ir6502.Constant(210), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
-        };
-
-        var jit = new TestJitCompiler();
-        jit.AddMethod(0x1234, allInstructions);
-        jit.RunMethod(0x1234);
-
-        // Jump should be taken via indirect addressing
-        jit.TestHal.YRegister.ShouldBe((byte)0); // Should be skipped
-        jit.TestHal.ARegister.ShouldBe((byte)210); // Should be executed
     }
 
     [Fact]

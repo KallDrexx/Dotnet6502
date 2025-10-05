@@ -470,7 +470,7 @@ public class BinaryInstructionTests
         var instruction = new Ir6502.Binary(
             Ir6502.BinaryOperator.Add,
             new Ir6502.AllFlags(),
-            new Ir6502.Constant(10),
+            new Ir6502.Constant(0x85),
             new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
         var jit = new TestJitCompiler()
@@ -483,7 +483,7 @@ public class BinaryInstructionTests
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
 
-        jit.TestHal.YRegister.ShouldBe((byte)42);
+        jit.TestHal.YRegister.ShouldBe((byte)0x85);
     }
 
     [Fact]

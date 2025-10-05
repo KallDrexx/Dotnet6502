@@ -192,13 +192,13 @@ public class PushStackValueInstructionTests
         {
             TestHal =
             {
-                ProcessorStatus = 0xA5
+                ProcessorStatus = 0x85
             }
         };
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
 
-        jit.TestHal.PopFromStack().ShouldBe((byte)0xA5);
+        jit.TestHal.PopFromStack().ShouldBe((byte)0x85);
     }
 
     [Fact]

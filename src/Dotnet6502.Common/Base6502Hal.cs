@@ -18,7 +18,7 @@ public class Base6502Hal
     public byte ARegister { get; set; }
     public byte XRegister { get; set; }
     public byte YRegister { get; set; }
-    public byte StackPointer { get; set; }
+    public byte StackPointer { get; set; } = 0xFF;
 
     public byte ProcessorStatus
     {

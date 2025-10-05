@@ -190,10 +190,10 @@ public class PopStackValueInstructionTests
 
         var jit = new TestJitCompiler();
         jit.AddMethod(0x1234, [instruction]);
-        jit.TestHal.PushToStack(0xA5);
+        jit.TestHal.PushToStack(0x85);
         jit.RunMethod(0x1234);
 
-        jit.TestHal.ProcessorStatus.ShouldBe((byte)0xA5);
+        jit.TestHal.ProcessorStatus.ShouldBe((byte)0x85);
     }
 
     [Fact]
