@@ -64,7 +64,8 @@ public class JsrTests
         {
             Info = instructionInfo,
             Bytes = [0x20, 0x00, 0x90], // JSR $9000
-            TargetAddress = 0x9000
+            TargetAddress = 0x9000,
+            CPUAddress = 0x5678,
         };
 
         // Second JSR instruction
@@ -72,34 +73,21 @@ public class JsrTests
         {
             Info = instructionInfo,
             Bytes = [0x20, 0x00, 0x91], // JSR $9100
-            TargetAddress = 0x9100
+            TargetAddress = 0x9100,
+            CPUAddress = 0x6789,
         };
 
-        var labels = new Dictionary<ushort, string>();
-        var functions = new Dictionary<ushort, Function>
-        {
-            { 0x9000, new Function(0x9000, "FirstFunction") },
-            { 0x9100, new Function(0x9100, "SecondFunction") }
-        };
-        var context = new InstructionConverter.Context(labels);
+        var context = new InstructionConverter.Context(new Dictionary<ushort, string>());
 
-        var nesIrInstructions1 = InstructionConverter.Convert(instruction1, context);
-        var nesIrInstructions2 = InstructionConverter.Convert(instruction2, context);
-
-        var allInstructions = new List<Ir6502.Instruction>
-        {
-            // First JSR call
-            nesIrInstructions1[0],
-
-            // Instruction between calls
-            new Ir6502.Copy(new Ir6502.Constant(77), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
-
-            // Second JSR call
-            nesIrInstructions2[0],
-
-            // Final instruction
-            new Ir6502.Copy(new Ir6502.Constant(88), new Ir6502.Register(Ir6502.RegisterName.YIndex))
-        };
+        var allInstructions = InstructionConverter.Convert(instruction1, context)
+            .Append(new Ir6502.Copy(
+                new Ir6502.Constant(77),
+                new Ir6502.Register(Ir6502.RegisterName.XIndex)))
+            .Concat(InstructionConverter.Convert(instruction2, context))
+            .Append(
+                new Ir6502.Copy(new Ir6502.Constant(88),
+                    new Ir6502.Register(Ir6502.RegisterName.YIndex)))
+            .ToArray();
 
         var jit = new TestJitCompiler();
         jit.AddMethod(0x1234, allInstructions);
@@ -137,29 +125,21 @@ public class JsrTests
             TargetAddress = 0x9000
         };
 
-        var labels = new Dictionary<ushort, string>();
-        var functions = new Dictionary<ushort, Function>
-        {
-            { 0x9000, new Function(0x9000, "RepeatedFunction") }
-        };
-        var context = new InstructionConverter.Context(labels);
+        var context = new InstructionConverter.Context(new Dictionary<ushort, string>());
+        var allInstructions = InstructionConverter.Convert(instruction, context)
+            .Concat(new List<Ir6502.Instruction>
+            {
+                new Ir6502.Copy(new Ir6502.Constant(11), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
-        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+                // Second call (create new instruction conversion for same function)
+                InstructionConverter.Convert(instruction, context)[0],
+                new Ir6502.Copy(new Ir6502.Constant(22), new Ir6502.Register(Ir6502.RegisterName.YIndex)),
 
-        var allInstructions = new List<Ir6502.Instruction>
-        {
-            // First call
-            nesIrInstructions[0],
-            new Ir6502.Copy(new Ir6502.Constant(11), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
-
-            // Second call (create new instruction conversion for same function)
-            InstructionConverter.Convert(instruction, context)[0],
-            new Ir6502.Copy(new Ir6502.Constant(22), new Ir6502.Register(Ir6502.RegisterName.YIndex)),
-
-            // Third call
-            InstructionConverter.Convert(instruction, context)[0],
-            new Ir6502.Copy(new Ir6502.Constant(33), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
-        };
+                // Third call
+                InstructionConverter.Convert(instruction, context)[0],
+                new Ir6502.Copy(new Ir6502.Constant(33), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
+            })
+            .ToArray();
 
         var jit = new TestJitCompiler();
         jit.AddMethod(0x1234, allInstructions);
@@ -249,28 +229,16 @@ public class JsrTests
         {
             Info = instructionInfo,
             Bytes = [0x20, 0x00, 0x90],
-            TargetAddress = 0x9000
+            TargetAddress = 0x9000,
+            CPUAddress = 0x2345,
         };
 
-        var labels = new Dictionary<ushort, string>();
-        var functions = new Dictionary<ushort, Function>
-        {
-            { 0x9000, new Function(0x9000, "TestFunction") }
-        };
-        var context = new InstructionConverter.Context(labels);
-
-        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-
-        var allInstructions = new List<Ir6502.Instruction>
-        {
-            // Add the JSR instruction
-            nesIrInstructions[0]
-        };
+        var context = new InstructionConverter.Context(new Dictionary<ushort, string>());
+        var irInstructions = InstructionConverter.Convert(instruction, context);
 
         var jit = new TestJitCompiler();
-        jit.AddMethod(0x1234, allInstructions);
+        jit.AddMethod(0x1234, irInstructions);
 
-        // Add a callable function at the JSR target address
         var callableInstruction = new Ir6502.Copy(
             new Ir6502.Constant(103),
             new Ir6502.Memory(0x5004, null, false));
@@ -292,62 +260,6 @@ public class JsrTests
     }
 
     [Fact]
-    public void JSR_With_Various_Function_Names()
-    {
-        var instructionInfo = InstructionSet.GetInstruction(0x20);
-
-        // Test different function name formats
-        var testCases = new[]
-        {
-            (Address: (ushort)0x9000, Name: "Function1"),
-            (Address: (ushort)0x9100, Name: "my_function_2"),
-            (Address: (ushort)0x9200, Name: "CamelCaseFunction"),
-            (Address: (ushort)0x9300, Name: "UPPER_CASE_FUNC")
-        };
-
-        foreach (var testCase in testCases)
-        {
-            var instruction = new DisassembledInstruction
-            {
-                Info = instructionInfo,
-                Bytes = [0x20, (byte)(testCase.Address & 0xFF), (byte)(testCase.Address >> 8)],
-                TargetAddress = testCase.Address
-            };
-
-            var labels = new Dictionary<ushort, string>();
-            var functions = new Dictionary<ushort, Function>
-            {
-                { testCase.Address, new Function(testCase.Address, testCase.Name) }
-            };
-            var context = new InstructionConverter.Context(labels);
-
-            var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-
-            var allInstructions = new List<Ir6502.Instruction>
-            {
-                nesIrInstructions[0],
-                new Ir6502.Copy(new Ir6502.Constant(99), new Ir6502.Register(Ir6502.RegisterName.XIndex))
-            };
-
-            var jit = new TestJitCompiler();
-            jit.AddMethod(0x1234, allInstructions);
-
-            // Add a callable function at the JSR target address
-            var callableInstruction = new Ir6502.Copy(
-                new Ir6502.Constant(104),
-                new Ir6502.Memory((ushort)(0x5005 + (testCase.Address - 0x9000) / 0x100), null, false));
-            jit.AddMethod(testCase.Address, [callableInstruction]); // JSR target address
-
-            jit.RunMethod(0x1234);
-
-            // Verify function was called and execution continued
-            jit.TestHal.XRegister.ShouldBe((byte)99);
-
-            jit.TestHal.ReadMemory((ushort)(0x5005 + (testCase.Address - 0x9000) / 0x100)).ShouldBe((byte)104);
-        }
-    }
-
-    [Fact]
     public void JSR_Target_Address_Required()
     {
         var instructionInfo = InstructionSet.GetInstruction(0x20);
@@ -358,9 +270,7 @@ public class JsrTests
             TargetAddress = null // No target address specified
         };
 
-        var labels = new Dictionary<ushort, string>();
-        var functions = new Dictionary<ushort, Function>();
-        var context = new InstructionConverter.Context(labels);
+        var context = new InstructionConverter.Context(new Dictionary<ushort, string>());
 
         // Should throw exception when JSR has no target address
         Should.Throw<InvalidOperationException>(() => InstructionConverter.Convert(instruction, context))
@@ -387,7 +297,14 @@ public class JsrTests
             )
             .ToArray();
 
-        var jit = new TestJitCompiler();
+        var jit = new TestJitCompiler
+        {
+            TestHal =
+            {
+                StackPointer = 0xFF,
+            }
+        };
+
         jit.AddMethod(0x1234, allInstructions);
 
         // Add the directly called method
@@ -414,5 +331,6 @@ public class JsrTests
         // Verify the indirect function was actually invoked
         jit.TestHal.ReadMemory(0x4000).ShouldBe((byte)99);
 
+        jit.TestHal.StackPointer.ShouldBe((byte)0xFF);
     }
 }

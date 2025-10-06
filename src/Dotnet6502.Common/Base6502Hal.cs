@@ -70,13 +70,13 @@ public class Base6502Hal
         _memoryMap.Write(address, value);
     }
 
-    public void PushToStack(byte value)
+    public virtual void PushToStack(byte value)
     {
         _memoryMap.Write(StackAddress, value);
         StackPointer--;
     }
 
-    public byte PopFromStack()
+    public virtual byte PopFromStack()
     {
         if (StackPointer == byte.MaxValue)
         {

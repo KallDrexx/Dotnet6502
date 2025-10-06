@@ -688,9 +688,9 @@ public static class InstructionConverter
         var pushLow = new Ir6502.PushStackValue(currentAddressLowBit);
         var initialCall = new Ir6502.CallFunction(new Ir6502.FunctionAddress(instruction.TargetAddress.Value, false));
 
-        var retryStartLabelId = new Ir6502.Identifier("jsr_redirect_check");
-        var retryFailLabelId = new Ir6502.Identifier("jsr_redirect_fail");
-        var retryFinishedLabelId = new Ir6502.Identifier("jsr_redirect_finished");
+        var retryStartLabelId = new Ir6502.Identifier($"jsr_redirect_check_{instruction.CPUAddress:X4}");
+        var retryFailLabelId = new Ir6502.Identifier($"jsr_redirect_fail_{instruction.CPUAddress:X4}");
+        var retryFinishedLabelId = new Ir6502.Identifier($"jsr_redirect_finished_{instruction.CPUAddress:X4}");
 
         var retryStart = new Ir6502.Label(retryStartLabelId);
         var popLow = new Ir6502.PopStackValue(lowByteVariable);
@@ -712,18 +712,33 @@ public static class InstructionConverter
         var jumpToSuccess = new Ir6502.Jump(retryFinishedLabelId);
 
         var retryFail = new Ir6502.Label(retryFailLabelId);
-        var pushHigh2 = new Ir6502.PushStackValue(currentAddressHighBit);
-        var pushLow2 = new Ir6502.PushStackValue(currentAddressLowBit);
 
         // Store the full address
         var storeHigh = new Ir6502.Copy(highByteVariable, fullAddress);
-        var shiftLeft = new Ir6502.Binary(Ir6502.BinaryOperator.ShiftLeft, fullAddress, new Ir6502.Constant())
+        var shiftLeft = new Ir6502.Binary(
+            Ir6502.BinaryOperator.ShiftLeft,
+            fullAddress,
+            new Ir6502.Constant(8),
+            fullAddress);
 
-        var call2 = new Ir6502.CallFunction(new Ir6502.FunctionAddress(instruction.TargetAddress.Value, false));
+        var addLow = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Add,
+            fullAddress,
+            lowByteVariable,
+            fullAddress);
 
+        var call2 = new Ir6502.CallFunction(fullAddress);
+        var jumpToRetry = new Ir6502.Jump(retryStartLabelId);
 
+        var retryEndLabel = new Ir6502.Label(retryFinishedLabelId);
+        var done = new Ir6502.StoreDebugString("done");
 
-        return [jump];
+        return
+        [
+            pushHigh, pushLow, initialCall, retryStart, popLow, popHigh, compareLow, lowNotEquals,
+            compareHigh, highNotEquals, jumpToSuccess, retryFail, storeHigh,
+            shiftLeft, addLow, call2, jumpToRetry, retryEndLabel, done, done, done
+        ];
     }
 
     /// <summary>

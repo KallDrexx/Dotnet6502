@@ -13,6 +13,7 @@ public static class ExecutableMethodGenerator
         IReadOnlyList<ConvertedInstruction> instructions,
         IReadOnlyDictionary<Type, MsilGenerator.CustomIlGenerator>? customIlGenerators = null)
     {
+        // GenerateDebuggableDll(name, instructions, customIlGenerators);
         return GenerateViaAssemblies(name, instructions, customIlGenerators);
     }
 
@@ -115,5 +116,43 @@ public static class ExecutableMethodGenerator
         }
 
         return largestLocalCount;
+    }
+
+    private static void GenerateDebuggableDll(
+        string name,
+        IReadOnlyList<ConvertedInstruction> instructions,
+        IReadOnlyDictionary<Type, MsilGenerator.CustomIlGenerator>? customIlGenerators)
+    {
+        var assemblyName = new AssemblyName($"assembly_for_{name}");
+        var assemblyBuilder = new PersistedAssemblyBuilder(assemblyName, typeof(object).Assembly);
+        var moduleBuilder = assemblyBuilder.DefineDynamicModule($"module_for_{name}");
+        var typeBuilder = moduleBuilder.DefineType($"class_for_{name}", TypeAttributes.Public);
+        var methodBuilder = typeBuilder.DefineMethod(
+            name,
+            MethodAttributes.Public | MethodAttributes.Static,
+            CallingConventions.Standard,
+            typeof(void),
+            [typeof(IJitCompiler), typeof(Base6502Hal)]);
+
+        var ilGenerator = methodBuilder.GetILGenerator();
+        GenerateMsil(ilGenerator, instructions, customIlGenerators);
+
+        typeBuilder.CreateType();
+
+        // Output dll for inspection
+        var fileName = $"/tmp/func_{name}.dll";
+        try
+        {
+            File.Delete(fileName);
+        }
+        catch
+        {
+            // Swallow
+        }
+
+        using var file = File.OpenWrite(fileName);
+        assemblyBuilder.Save(file);
+
+        Console.WriteLine("Generated assembly " + fileName);
     }
 }

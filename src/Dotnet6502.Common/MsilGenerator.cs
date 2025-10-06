@@ -197,40 +197,53 @@ public class MsilGenerator
     {
         ilGenerator.Emit(JitCompiler.LoadJitCompilerArg);
 
-        if (callFunction.Address.IsIndirect)
+        switch (callFunction.CallTarget)
         {
-            // Look up the pointer to find the location of the function to call
-            var readMemoryMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.ReadMemory))!;
-            ilGenerator.Emit(JitCompiler.LoadHalArg);
-            ilGenerator.Emit(OpCodes.Ldc_I4, callFunction.Address.Address);
-            ilGenerator.Emit(OpCodes.Dup);
-            SaveStackToTempLocal(ilGenerator, 0); // save for LSB read
+            case Ir6502.FunctionAddress functionAddress:
+                if (functionAddress.IsIndirect)
+                {
+                    // Look up the pointer to find the location of the function to call
+                    var readMemoryMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.ReadMemory))!;
+                    ilGenerator.Emit(JitCompiler.LoadHalArg);
+                    ilGenerator.Emit(OpCodes.Ldc_I4, functionAddress.Address);
+                    ilGenerator.Emit(OpCodes.Dup);
+                    SaveStackToTempLocal(ilGenerator, 0); // save for LSB read
 
-            // Read the MSB
-            ilGenerator.Emit(OpCodes.Ldc_I4, 1);
-            ilGenerator.Emit(OpCodes.Add);
-            ilGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
-            ilGenerator.Emit(OpCodes.Conv_I4);
-            ilGenerator.Emit(OpCodes.Ldc_I4, 8);
-            ilGenerator.Emit(OpCodes.Shl);
-            SaveStackToTempLocal(ilGenerator, 1);
+                    // Read the MSB
+                    ilGenerator.Emit(OpCodes.Ldc_I4, 1);
+                    ilGenerator.Emit(OpCodes.Add);
+                    ilGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
+                    ilGenerator.Emit(OpCodes.Conv_I4);
+                    ilGenerator.Emit(OpCodes.Ldc_I4, 8);
+                    ilGenerator.Emit(OpCodes.Shl);
+                    SaveStackToTempLocal(ilGenerator, 1);
 
-            // Read the LSB
-            ilGenerator.Emit(JitCompiler.LoadHalArg);
-            LoadTempLocalToStack(ilGenerator, 0);
-            ilGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
-            ilGenerator.Emit(OpCodes.Conv_I4);
+                    // Read the LSB
+                    ilGenerator.Emit(JitCompiler.LoadHalArg);
+                    LoadTempLocalToStack(ilGenerator, 0);
+                    ilGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
+                    ilGenerator.Emit(OpCodes.Conv_I4);
 
-            // Combine them together for the full address
-            LoadTempLocalToStack(ilGenerator, 1);
-            ilGenerator.Emit(OpCodes.Or);
+                    // Combine them together for the full address
+                    LoadTempLocalToStack(ilGenerator, 1);
+                    ilGenerator.Emit(OpCodes.Or);
+                }
+                else
+                {
+                    // Direct call to the provided address
+                    ilGenerator.Emit(OpCodes.Ldc_I4, functionAddress.Address);
+                }
+
+                break;
+
+            case Ir6502.Variable variable:
+                LoadValueToStack(variable, ilGenerator);
+                break;
+
+            default:
+                throw new NotSupportedException(callFunction.CallTarget.GetType().ToString());
         }
-        else
-        {
-            // Direct call to the provided address
-            ilGenerator.Emit(OpCodes.Ldc_I4, callFunction.Address.Address);
-        }
-        
+
         var method = typeof(IJitCompiler).GetMethod(nameof(JitCompiler.RunMethod))!;
         ilGenerator.Emit(OpCodes.Callvirt, method);
     }

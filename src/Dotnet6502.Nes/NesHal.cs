@@ -43,6 +43,20 @@ public class NesHal : Base6502Hal
         }
     }
 
+    public override byte PopFromStack()
+    {
+        var value = base.PopFromStack();
+        _debugWriter?.Log(_isInNmi, this, $"Popped 0x{value:X2} from stack", true);
+
+        return value;
+    }
+
+    public override void PushToStack(byte value)
+    {
+        base.PushToStack(value);
+        _debugWriter?.Log(_isInNmi, this, $"Pushed 0x{value:X2} to stack", true);
+    }
+
     public void DebugHook(string info)
     {
         _debugWriter?.Log(_isInNmi, this, info, true);
