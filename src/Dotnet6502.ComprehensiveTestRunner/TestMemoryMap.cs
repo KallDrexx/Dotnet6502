@@ -19,4 +19,9 @@ public class TestMemoryMap : IMemoryMap
         WrittenMemoryBlocks.Add(address);
         MemoryBlock[address] = value;
     }
+
+    public IReadOnlyList<CodeRegion> GetCodeRegions()
+    {
+        return [new CodeRegion(0, MemoryBlock)];
+    }
 }

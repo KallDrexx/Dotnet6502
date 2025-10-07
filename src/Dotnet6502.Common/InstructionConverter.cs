@@ -1335,32 +1335,13 @@ public static class InstructionConverter
                 throw new NotSupportedException(instruction.Info.AddressingMode.ToString());
         }
     }
-    //
-    // private static Ir6502.Instruction[] GetJumpInstructions(DisassembledInstruction instruction, Context context)
-    // {
-    //     if (instruction.TargetAddress != null)
-    //     {
-    //         var message = $"{instruction.Info.Mnemonic} at address 0x{instruction.CPUAddress:X4} is a jump without " +
-    //                       $"a corresponding target address";
-    //         throw new InvalidOperationException(message);
-    //     }
-    //
-    //     // If we have a target label, we can jump right to it
-    //     if (context.Labels.TryGetValue(instruction.TargetAddress, out var label))
-    //     {
-    //         switch (expression)
-    //         {
-    //
-    //         }
-    //     }
-    // }
 
     private static Ir6502.Identifier GetTargetLabel(DisassembledInstruction instruction, Context context)
     {
         if (instruction.TargetAddress == null ||
             !context.Labels.TryGetValue(instruction.TargetAddress.Value, out var label))
         {
-            var message = $"{instruction.Info.Mnemonic} instruction targeting address '{instruction.TargetAddress}' " +
+            var message = $"{instruction.Info.Mnemonic} instruction targeting address '{instruction.TargetAddress:X4}' " +
                           $"but that address has no known label";
 
             throw new InvalidOperationException(message);

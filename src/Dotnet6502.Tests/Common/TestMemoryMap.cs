@@ -17,4 +17,9 @@ public class TestMemoryMap : IMemoryMap
     {
         MemoryBlock[address] = value;
     }
+
+    public IReadOnlyList<CodeRegion> GetCodeRegions()
+    {
+        return [new CodeRegion(0, MemoryBlock)];
+    }
 }

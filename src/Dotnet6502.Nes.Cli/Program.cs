@@ -45,7 +45,7 @@ var debugWriter = commandLineValues.DebugLogFile != null
 var hal = new NesHal(memory, ppu, debugWriter, cancellationTokenSource.Token);
 
 var jitCustomizer = new NesJitCustomizer();
-var jitCompiler = new JitCompiler(decompiler, hal, jitCustomizer);
+var jitCompiler = new JitCompiler(decompiler, hal, jitCustomizer, memory);
 
 var nmiAddress = romInfo.NmiVector;
 if (nmiAddress == 0)

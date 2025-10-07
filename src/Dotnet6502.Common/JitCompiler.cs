@@ -1,5 +1,6 @@
 using System.Reflection.Emit;
 using NESDecompiler.Core.Decompilation;
+using NESDecompiler.Core.Disassembly;
 
 namespace Dotnet6502.Common;
 
@@ -15,13 +16,15 @@ public class JitCompiler : IJitCompiler
     private readonly Decompiler _decompiler;
     private readonly Base6502Hal _hal;
     private readonly IJitCustomizer? _jitCustomizer;
+    private readonly IMemoryMap _memoryMap;
     private readonly Dictionary<ushort, ExecutableMethod> _compiledMethods = new();
 
-    public JitCompiler(Decompiler decompiler, Base6502Hal hal, IJitCustomizer? jitCustomizer)
+    public JitCompiler(Decompiler decompiler, Base6502Hal hal, IJitCustomizer? jitCustomizer, IMemoryMap memoryMap)
     {
         _hal = hal;
         _decompiler = decompiler;
         _jitCustomizer = jitCustomizer;
+        _memoryMap = memoryMap;
     }
 
     /// <summary>
@@ -50,26 +53,43 @@ public class JitCompiler : IJitCompiler
 
     private IReadOnlyList<ConvertedInstruction> GetIrInstructions(ushort address)
     {
-        if (!_decompiler.Functions.TryGetValue(address, out var function))
-        {
-            Console.WriteLine($"Calling unknown function at {address:X4}. Attempting to compile it");
-            _decompiler.Disassembler.AddEntyPoint(address);
-            _decompiler.Disassembler.Disassemble();
-            _decompiler.Decompile();
+        var region = _memoryMap.GetCodeRegions()
+            .Where(x => x.BaseAddress <= address)
+            .Where(x => x.BaseAddress + x.Bytes.Length > address)
+            .FirstOrDefault();
 
-            if (!_decompiler.Functions.TryGetValue(address, out function))
-            {
-                var message = $"No known function exists at address {address:X4}";
-                throw new InvalidOperationException(message);
-            }
+        if (region == null)
+        {
+            var message = $"No known code region contains the address 0x{address:X4}";
+            throw new InvalidOperationException(message);
         }
 
-        var disassembledInstructions = _decompiler.Disassembler.Instructions
+        var disassembler = new Disassembler(region.BaseAddress, region.Bytes);
+        disassembler.AddEntyPoint(address);
+        disassembler.Disassemble();
+
+        // Rom info only needed for string functions, which we don't use
+        var decompiler = new Decompiler(_decompiler.ROMInfo, disassembler);
+        decompiler.Decompile();
+
+        if (!decompiler.Functions.TryGetValue(address, out var function))
+        {
+            var message = $"Address 0x{address:X4} did not contain a decompilable function";
+            throw new InvalidOperationException(message);
+        }
+
+        if (function.Instructions.Count == 0)
+        {
+            var message = $"Function at address 0x{address:X4} contained no instructions";
+            throw new InvalidOperationException(message);
+        }
+
+        var disassembledInstructions = disassembler.Instructions
             .Where(x => function.Instructions.Contains(x.CPUAddress))
             .OrderBy(x => x.CPUAddress)
             .ToArray();
 
-        var instructionConverterContext = new InstructionConverter.Context(_decompiler.Disassembler.Labels);
+        var instructionConverterContext = new InstructionConverter.Context(disassembler.Labels);
 
         // Convert each 6502 instruction into one or more IR instructions
         IReadOnlyList<ConvertedInstruction> convertedInstructions = disassembledInstructions

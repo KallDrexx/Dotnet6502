@@ -122,6 +122,18 @@ public class NesMemory : IMemoryMap
         }
     }
 
+    public IReadOnlyList<CodeRegion> GetCodeRegions()
+    {
+        return
+        [
+            new CodeRegion(0x0000, _internalRam),
+            new CodeRegion(0x0800, _internalRam), // ram mirrors
+            new CodeRegion(0x1000, _internalRam),
+            new CodeRegion(0x1800, _internalRam),
+            new CodeRegion(0x4020, _unmappedSpace),
+        ];
+    }
+
     private static MemoryType GetMemoryType(ushort address)
     {
         return address switch
