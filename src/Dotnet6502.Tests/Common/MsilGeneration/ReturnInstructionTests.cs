@@ -24,7 +24,7 @@ public class ReturnInstructionTests
             new Ir6502.Constant(99),
             new Ir6502.Variable(0));
 
-        var returnInstruction = new Ir6502.Return();
+        var returnInstruction = new Ir6502.Return(false);
         var modifyAccumulator = new Ir6502.Copy(
             new Ir6502.Constant(11),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));

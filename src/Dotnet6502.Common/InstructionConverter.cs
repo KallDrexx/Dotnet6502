@@ -337,7 +337,6 @@ public static class InstructionConverter
     private static Ir6502.Instruction[] ConvertBrk()
     {
         var pushFlags = new Ir6502.PushStackValue(new Ir6502.AllFlags());
-        var triggerInterrupt = new Ir6502.InvokeSoftwareInterrupt();
         var setInterruptDisable = new Ir6502.Copy(
             new Ir6502.Constant(1),
             new Ir6502.Flag(Ir6502.FlagName.InterruptDisable));
@@ -345,6 +344,8 @@ public static class InstructionConverter
         var setBFlag = new Ir6502.Copy(
             new Ir6502.Constant(1),
             new Ir6502.Flag(Ir6502.FlagName.BFlag));
+
+        var triggerInterrupt = new Ir6502.CallFunction(new Ir6502.FunctionAddress(0xFFFE, true));
 
         return [pushFlags, setInterruptDisable, setBFlag, triggerInterrupt];
     }
@@ -642,7 +643,7 @@ public static class InstructionConverter
             return
             [
                 new Ir6502.CallFunction(new Ir6502.FunctionAddress(instruction.TargetAddress.Value, true)),
-                new Ir6502.Return(),
+                new Ir6502.Return(false),
             ];
         }
 
@@ -677,8 +678,9 @@ public static class InstructionConverter
         // function we call returns pop the stack. If the address is different than we expect, then we need to
         // perform a new `callFunction` call into that address and repeat until we have the expected location.
 
-        var currentAddressHighBit = new Ir6502.Constant((byte)(instruction.CPUAddress >> 8));
-        var currentAddressLowBit = new Ir6502.Constant((byte)(instruction.CPUAddress & 0x00FF));
+        var pcValue = instruction.CPUAddress + 2; // JSR pushes PC + 2 to the stack
+        var currentAddressHighBit = new Ir6502.Constant((byte)(pcValue >> 8));
+        var currentAddressLowBit = new Ir6502.Constant((byte)(pcValue & 0x00FF));
         var lowByteVariable = new Ir6502.Variable(0);
         var highByteVariable = new Ir6502.Variable(1);
         var comparisonResult = new Ir6502.Variable(2);
@@ -727,6 +729,26 @@ public static class InstructionConverter
             lowByteVariable,
             fullAddress);
 
+        // RTS usually adds 1 to the PC, so we need to do the same here. However, RTI does *NOT*
+        // add one, and therefore we need to keep the same value in that case.
+        var addFinishedId = new Ir6502.Identifier($"add_finished_{instruction.CPUAddress:x4}");
+        var rtiCompare = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Equals,
+            new Ir6502.Constant(0),
+            new Ir6502.RtiIndicator(),
+            comparisonResult);
+
+        var noAddJump = new Ir6502.JumpIfNotZero(comparisonResult, addFinishedId);
+
+        var addOne = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Add,
+            fullAddress,
+            new Ir6502.Constant(1),
+            fullAddress);
+
+        var addFinishedLabel = new Ir6502.Label(addFinishedId);
+        var clearRtiIndicator = new Ir6502.Copy(new Ir6502.Constant(0), new Ir6502.RtiIndicator());
+
         var call2 = new Ir6502.CallFunction(fullAddress);
         var jumpToRetry = new Ir6502.Jump(retryStartLabelId);
 
@@ -737,7 +759,8 @@ public static class InstructionConverter
         [
             pushHigh, pushLow, initialCall, retryStart, popLow, popHigh, compareLow, lowNotEquals,
             compareHigh, highNotEquals, jumpToSuccess, retryFail, storeHigh,
-            shiftLeft, addLow, call2, jumpToRetry, retryEndLabel, done, done, done
+            shiftLeft, addLow, rtiCompare, noAddJump, addOne, addFinishedLabel, clearRtiIndicator,
+            addOne, call2, jumpToRetry, retryEndLabel, done, done, done
         ];
     }
 
@@ -1009,7 +1032,7 @@ public static class InstructionConverter
     private static Ir6502.Instruction[] ConvertRti()
     {
         var pop = new Ir6502.PopStackValue(new Ir6502.AllFlags());
-        var ret = new Ir6502.Return();
+        var ret = new Ir6502.Return(true);
 
         return [pop, ret];
     }
@@ -1019,7 +1042,7 @@ public static class InstructionConverter
     /// </summary>
     private static Ir6502.Instruction[] ConvertRts()
     {
-        var ret = new Ir6502.Return();
+        var ret = new Ir6502.Return(false);
 
         return [ret];
     }

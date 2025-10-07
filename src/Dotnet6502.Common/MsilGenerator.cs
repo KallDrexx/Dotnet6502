@@ -71,10 +71,6 @@ public class MsilGenerator
                 GenerateCopy(copy, ilGenerator);
                 break;
 
-            case Ir6502.InvokeSoftwareInterrupt:
-                GenerateInvokeIrq(ilGenerator);
-                break;
-
             case Ir6502.Jump jump:
                 GenerateJump(jump, ilGenerator);
                 break;
@@ -99,8 +95,8 @@ public class MsilGenerator
                 GeneratePushStackValue(push, ilGenerator);
                 break;
 
-            case Ir6502.Return:
-                GenerateReturn(ilGenerator);
+            case Ir6502.Return returnInstruction:
+                GenerateReturn(returnInstruction, ilGenerator);
                 break;
 
             case Ir6502.Unary unary:
@@ -109,6 +105,10 @@ public class MsilGenerator
 
             case Ir6502.StoreDebugString debugString:
                 GenerateDebugString(debugString, ilGenerator);
+                break;
+
+            case Ir6502.DebugValue debugValue:
+                GenerateDebugValue(debugValue, ilGenerator);
                 break;
 
             default:
@@ -266,13 +266,6 @@ public class MsilGenerator
         WriteTempLocalToValue(copy.Destination, ilGenerator);
     }
 
-    private static void GenerateInvokeIrq(ILGenerator ilGenerator)
-    {
-        var invokeMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.TriggerSoftwareInterrupt))!;
-        ilGenerator.Emit(JitCompiler.LoadHalArg);
-        ilGenerator.Emit(OpCodes.Callvirt, invokeMethod);
-    }
-
     private void GenerateJump(Ir6502.Jump jump, ILGenerator ilGenerator)
     {
         if (!_labels.TryGetValue(jump.Target, out var label))
@@ -339,8 +332,17 @@ public class MsilGenerator
         ilGenerator.Emit(OpCodes.Callvirt, pushMethod);
     }
 
-    private static void GenerateReturn(ILGenerator ilGenerator)
+    private static void GenerateReturn(Ir6502.Return returnInstruction, ILGenerator ilGenerator)
     {
+        var setRtiIndicator = typeof(Base6502Hal)
+            .GetProperty(nameof(Base6502Hal.LastReturnWasRti))!
+            .SetMethod!;
+
+        ilGenerator.Emit(JitCompiler.LoadHalArg);
+        var value = returnInstruction.WasFromInterrupt ? 1 : 0;
+        ilGenerator.Emit(OpCodes.Ldc_I4, value);
+        ilGenerator.Emit(OpCodes.Callvirt, setRtiIndicator);
+
         ilGenerator.Emit(OpCodes.Ret);
     }
 
@@ -374,6 +376,24 @@ public class MsilGenerator
     {
         ilGenerator.Emit(OpCodes.Ldstr, debugString.Text);
         ilGenerator.Emit(OpCodes.Stloc, InstructionDebugStringLocalIndex);
+    }
+
+    private void GenerateDebugValue(Ir6502.DebugValue debugValue, ILGenerator ilGenerator)
+    {
+        var debugHookMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.DebugHook))!;
+        var toStringMethod = debugValue.ValueToLog.GetType().GetMethod(nameof(debugValue.ValueToLog.ToString))!;
+        var concatMethod = typeof(string).GetMethod(nameof(string.Concat))!;
+
+        ilGenerator.Emit(JitCompiler.LoadHalArg);
+
+        var typeString = $"{debugValue.ValueToLog.GetType()} value: ";
+        ilGenerator.Emit(OpCodes.Ldstr, typeString);
+        LoadValueToStack(debugValue.ValueToLog, ilGenerator);
+        ilGenerator.Emit(OpCodes.Call, toStringMethod);
+        ilGenerator.Emit(OpCodes.Call, concatMethod);
+
+        // Should have a string on the stack, now call the hook
+        ilGenerator.Emit(OpCodes.Callvirt, debugHookMethod);
     }
 
     private static void LoadValueToStack(Ir6502.Value value, ILGenerator ilGenerator)
@@ -443,6 +463,15 @@ public class MsilGenerator
 
             case Ir6502.Variable variable:
                 ilGenerator.Emit(OpCodes.Ldloc, variable.Index + TemporaryLocalsRequired);
+                break;
+
+            case Ir6502.RtiIndicator:
+                var getRtiIndicator = typeof(Base6502Hal)
+                    .GetProperty(nameof(Base6502Hal.LastReturnWasRti))!
+                    .GetMethod!;
+
+                ilGenerator.Emit(JitCompiler.LoadHalArg);
+                ilGenerator.Emit(OpCodes.Callvirt, getRtiIndicator);
                 break;
 
             default:
@@ -657,6 +686,19 @@ public class MsilGenerator
             case Ir6502.Variable variable:
                 LoadTempLocalToStack(ilGenerator);
                 ilGenerator.Emit(OpCodes.Stloc, variable.Index + TemporaryLocalsRequired);
+                break;
+
+            case Ir6502.RtiIndicator:
+                var setRtiIndicator = typeof(Base6502Hal)
+                    .GetProperty(nameof(Base6502Hal.LastReturnWasRti))!
+                    .SetMethod!;
+
+                ilGenerator.Emit(JitCompiler.LoadHalArg);
+                LoadTempLocalToStack(ilGenerator);
+                // Convert int to bool (0 = false, anything else = true)
+                ilGenerator.Emit(OpCodes.Ldc_I4_0);
+                ilGenerator.Emit(OpCodes.Cgt_Un);
+                ilGenerator.Emit(OpCodes.Callvirt, setRtiIndicator);
                 break;
 
             default:

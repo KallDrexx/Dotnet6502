@@ -314,8 +314,9 @@ public class JsrTests
             new Ir6502.PushStackValue(new Ir6502.Constant(0x76)),
         ]);
 
-        // Add equivalent of RTS redirected function
-        jit.AddMethod(0x9876, [new Ir6502.Copy(
+        // Add equivalent of RTS redirected function. It's 1 more than the stack values because
+        // RTS always sets the PC to the stack values + 1
+        jit.AddMethod(0x9877, [new Ir6502.Copy(
             new Ir6502.Constant(99),
             new Ir6502.Memory(0x4000, null, false))
         ]);

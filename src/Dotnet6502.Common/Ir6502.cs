@@ -13,7 +13,7 @@ public static class Ir6502
 
     public record Copy(Value Source, Value Destination) : Instruction;
 
-    public record Return : Instruction;
+    public record Return(bool WasFromInterrupt) : Instruction;
 
     public record Unary(UnaryOperator Operator, Value Source, Value Destination) : Instruction;
 
@@ -35,12 +35,12 @@ public static class Ir6502
 
     public record ConvertVariableToByte(Variable Variable) : Instruction;
 
-    public record InvokeSoftwareInterrupt : Instruction;
-
     /// <summary>
     /// Adds the specified text into a location that's visible while debugging
     /// </summary>
     public record StoreDebugString(string Text) : Instruction;
+
+    public record DebugValue(Value ValueToLog) : Instruction;
 
     public abstract record Value;
 
@@ -59,6 +59,8 @@ public static class Ir6502
     public record AllFlags : Value;
 
     public record StackPointer : Value;
+
+    public record RtiIndicator : Value;
 
     public record Identifier(string Characters) : JumpTarget;
 
