@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Reflection.Emit;
 
 namespace Dotnet6502.Common;
@@ -381,14 +382,30 @@ public class MsilGenerator
     private void GenerateDebugValue(Ir6502.DebugValue debugValue, ILGenerator ilGenerator)
     {
         var debugHookMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.DebugHook))!;
-        var toStringMethod = debugValue.ValueToLog.GetType().GetMethod(nameof(debugValue.ValueToLog.ToString))!;
-        var concatMethod = typeof(string).GetMethod(nameof(string.Concat))!;
+
+        // Since the result of every value is a number, and the .net runtime stores these on the
+        // stack as ints, then we can use int.ToString() to get a string representation
+        var toStringMethod = typeof(int)
+            .GetMethods(BindingFlags.Public | BindingFlags.Instance)
+            .Where(x => x.Name == nameof(int.ToString))
+            .Where(x => x.GetParameters().Length == 0)
+            .First();
+
+        var concatMethod = typeof(string)
+            .GetMethods(BindingFlags.Public | BindingFlags.Static)
+            .Where(x => x.Name == nameof(string.Concat))
+            .Where(x => x.GetParameters().Length == 2)
+            .Where(x => x.GetParameters()[0].ParameterType == typeof(string))
+            .Where(x => x.GetParameters()[1].ParameterType == typeof(string))
+            .First();
 
         ilGenerator.Emit(JitCompiler.LoadHalArg);
 
-        var typeString = $"{debugValue.ValueToLog.GetType()} value: ";
+        var typeString = $"{debugValue.ValueToLog} value: ";
         ilGenerator.Emit(OpCodes.Ldstr, typeString);
         LoadValueToStack(debugValue.ValueToLog, ilGenerator);
+        SaveStackToTempLocal(ilGenerator, 0);
+        ilGenerator.Emit(OpCodes.Ldloca, 0);
         ilGenerator.Emit(OpCodes.Call, toStringMethod);
         ilGenerator.Emit(OpCodes.Call, concatMethod);
 
