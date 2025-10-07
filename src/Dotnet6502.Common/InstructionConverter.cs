@@ -738,8 +738,7 @@ public static class InstructionConverter
             new Ir6502.RtiIndicator(),
             comparisonResult);
 
-        var noAddJump = new Ir6502.JumpIfNotZero(comparisonResult, addFinishedId);
-
+        var noAddJump = new Ir6502.JumpIfZero(comparisonResult, addFinishedId);
         var addOne = new Ir6502.Binary(
             Ir6502.BinaryOperator.Add,
             fullAddress,
@@ -757,10 +756,10 @@ public static class InstructionConverter
 
         return
         [
-            pushHigh, pushLow, initialCall, retryStart, popLow, popHigh, compareLow, lowNotEquals,
+            pushHigh, pushLow, clearRtiIndicator, initialCall, retryStart, popLow, popHigh, compareLow, lowNotEquals,
             compareHigh, highNotEquals, jumpToSuccess, retryFail, storeHigh,
             shiftLeft, addLow, rtiCompare, noAddJump, addOne, addFinishedLabel, clearRtiIndicator,
-            addOne, call2, jumpToRetry, retryEndLabel, done, done, done
+            call2, jumpToRetry, retryEndLabel, done, done, done
         ];
     }
 
