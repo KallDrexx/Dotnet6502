@@ -210,8 +210,19 @@ public class MsilGenerator
                     SaveStackToTempLocal(ilGenerator, 0); // save for LSB read
 
                     // Read the MSB
-                    ilGenerator.Emit(OpCodes.Ldc_I4, 1);
-                    ilGenerator.Emit(OpCodes.Add);
+                    if ((functionAddress.Address & 0xFF) == 0xFF)
+                    {
+                        // 6502 has a bug that if it crosses the page boundary, it does not increment the page
+                        // and instead wraps around.
+                        ilGenerator.Emit(OpCodes.Ldc_I4, 0xFF00);
+                        ilGenerator.Emit(OpCodes.And);
+                    }
+                    else
+                    {
+                        ilGenerator.Emit(OpCodes.Ldc_I4, 1);
+                        ilGenerator.Emit(OpCodes.Add);
+                    }
+
                     ilGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
                     ilGenerator.Emit(OpCodes.Conv_I4);
                     ilGenerator.Emit(OpCodes.Ldc_I4, 8);

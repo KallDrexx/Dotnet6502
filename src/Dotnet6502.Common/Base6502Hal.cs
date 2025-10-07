@@ -93,4 +93,8 @@ public class Base6502Hal
     {
         throw new NotImplementedException();
     }
+
+    public virtual void DebugHook(string info)
+    {
+    }
 }

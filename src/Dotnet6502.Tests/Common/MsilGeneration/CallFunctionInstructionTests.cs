@@ -98,4 +98,47 @@ public class CallFunctionInstructionTests
         Should.Throw<InvalidOperationException>(() => jit.RunMethod(0x1234))
             .Message.ShouldContain("Method at address 2000 called but no method prepared for that");
     }
+
+    [Fact]
+    public void Can_Call_Function_Via_Indirect_Address()
+    {
+        var instruction = new Ir6502.CallFunction(new Ir6502.FunctionAddress(0x20AB, true));
+
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+
+        // Add a callable function that writes a test value to memory, and point some memory to that address
+        jit.MemoryMap.MemoryBlock[0x20AB] = 0x45;
+        jit.MemoryMap.MemoryBlock[0x20AC] = 0x23;
+
+        var callableInstruction = new Ir6502.Copy(
+            new Ir6502.Constant(42),
+            new Ir6502.Memory(0x3000, null, false));
+        jit.AddMethod(0x2345, [callableInstruction]);
+
+        jit.RunMethod(0x1234);
+        jit.TestHal.ReadMemory(0x3000).ShouldBe((byte)42);
+    }
+
+    [Fact]
+    public void Can_Call_Function_Via_Indirect_Address_Including_Page_Boundary_Bug()
+    {
+        var instruction = new Ir6502.CallFunction(new Ir6502.FunctionAddress(0x20FF, true));
+
+        var jit = new TestJitCompiler();
+        jit.AddMethod(0x1234, [instruction]);
+
+        // Add a callable function that writes a test value to memory, and point some memory to that address.
+        // 6502 has a bug that an indirect jump across page boundaries doesn't increment the page number.
+        jit.MemoryMap.MemoryBlock[0x20FF] = 0x45;
+        jit.MemoryMap.MemoryBlock[0x2000] = 0x23;
+
+        var callableInstruction = new Ir6502.Copy(
+            new Ir6502.Constant(42),
+            new Ir6502.Memory(0x3000, null, false));
+        jit.AddMethod(0x2345, [callableInstruction]);
+
+        jit.RunMethod(0x1234);
+        jit.TestHal.ReadMemory(0x3000).ShouldBe((byte)42);
+    }
 }

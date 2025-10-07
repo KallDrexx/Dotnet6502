@@ -32,12 +32,20 @@ public class JitCompiler : IJitCompiler
         if (!_compiledMethods.TryGetValue(address, out var method))
         {
             var instructions = GetIrInstructions(address);
+            if (instructions.Count == 0)
+            {
+                var message = $"Function at address 0x{address:X4} has no instructions";
+                throw new InvalidOperationException(message);
+            }
+
             var customGenerators = _jitCustomizer?.GetCustomIlGenerators();
             method = ExecutableMethodGenerator.Generate($"func_{address:X4}", instructions, customGenerators);
             _compiledMethods.Add(address, method);
         }
 
+        _hal.DebugHook($"Entering function 0x{address:X4}");
         method(this, _hal);
+        _hal.DebugHook($"Exiting function 0x{address:X4}");
     }
 
     private IReadOnlyList<ConvertedInstruction> GetIrInstructions(ushort address)

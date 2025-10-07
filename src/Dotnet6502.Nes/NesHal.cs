@@ -57,7 +57,7 @@ public class NesHal : Base6502Hal
         _debugWriter?.Log(_isInNmi, this, $"Pushed 0x{value:X2} to stack", true);
     }
 
-    public void DebugHook(string info)
+    public override void DebugHook(string info)
     {
         _debugWriter?.Log(_isInNmi, this, info, true);
     }
