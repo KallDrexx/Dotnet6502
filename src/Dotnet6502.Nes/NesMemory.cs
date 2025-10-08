@@ -1,4 +1,5 @@
 using Dotnet6502.Common;
+using Dotnet6502.Common.Hardware;
 
 namespace Dotnet6502.Nes;
 

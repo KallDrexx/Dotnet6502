@@ -1,4 +1,5 @@
 using Dotnet6502.Common;
+using Dotnet6502.Common.Compilation;
 
 namespace Dotnet6502.Tests.Common.MsilGeneration;
 

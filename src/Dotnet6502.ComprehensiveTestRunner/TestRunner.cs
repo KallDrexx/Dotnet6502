@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Dotnet6502.Common;
+using Dotnet6502.Common.Compilation;
 using NESDecompiler.Core.CPU;
 using NESDecompiler.Core.Disassembly;
 

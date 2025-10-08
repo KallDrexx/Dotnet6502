@@ -5,6 +5,7 @@ using NESDecompiler.Core.ROM;
 using System.Reflection;
 using System.Runtime.Loader;
 using Dotnet6502.Common;
+using Dotnet6502.Common.Compilation;
 using Dotnet6502.Nes;
 
 // Parse command line arguments

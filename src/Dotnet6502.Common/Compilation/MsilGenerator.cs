@@ -1,7 +1,8 @@
 using System.Reflection;
 using System.Reflection.Emit;
+using Dotnet6502.Common.Hardware;
 
-namespace Dotnet6502.Common;
+namespace Dotnet6502.Common.Compilation;
 
 /// <summary>
 /// Generates MSIL for a NES Intermediary Representation instruction
@@ -53,7 +54,7 @@ public class MsilGenerator
             generator.Invoke(instruction, ilGenerator);
             return;
         }
-        
+
         switch (instruction)
         {
             case Ir6502.Binary binary:
@@ -175,19 +176,19 @@ public class MsilGenerator
                 case Ir6502.BinaryOperator.ShiftLeft:
                     ilGenerator.Emit(OpCodes.Shl);
                     break;
-            
+
                 case Ir6502.BinaryOperator.ShiftRight:
                     ilGenerator.Emit(OpCodes.Shr);
                     break;
-            
+
                 case Ir6502.BinaryOperator.Subtract:
                     ilGenerator.Emit(OpCodes.Sub);
                     break;
-            
+
                 case Ir6502.BinaryOperator.Xor:
                     ilGenerator.Emit(OpCodes.Xor);
                     break;
-            
+
                 default:
                     throw new NotSupportedException(binary.Operator.ToString());
             }
@@ -356,16 +357,17 @@ public class MsilGenerator
             case Ir6502.UnaryOperator.BitwiseNot:
                 ilGenerator.Emit(OpCodes.Not);
                 break;
-            
+
             default:
                 throw new NotSupportedException(unary.Operator.ToString());
         }
-        
+
         SaveStackToTempLocal(ilGenerator);
         WriteTempLocalToValue(unary.Destination, ilGenerator);
     }
 
-    private static void GenerateConvertToByte(Ir6502.ConvertVariableToByte convertVariableToByte, ILGenerator ilGenerator)
+    private static void GenerateConvertToByte(Ir6502.ConvertVariableToByte convertVariableToByte,
+        ILGenerator ilGenerator)
     {
         LoadValueToStack(convertVariableToByte.Variable, ilGenerator);
         ilGenerator.Emit(OpCodes.Conv_U1);

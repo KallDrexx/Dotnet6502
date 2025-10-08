@@ -1,4 +1,4 @@
-namespace Dotnet6502.Common;
+namespace Dotnet6502.Common.Compilation;
 
 public interface IJitCompiler
 {

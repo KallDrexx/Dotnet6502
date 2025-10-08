@@ -1,5 +1,6 @@
 using System.Reflection.Emit;
 using Dotnet6502.Common;
+using Dotnet6502.Common.Compilation;
 
 namespace Dotnet6502.Nes;
 

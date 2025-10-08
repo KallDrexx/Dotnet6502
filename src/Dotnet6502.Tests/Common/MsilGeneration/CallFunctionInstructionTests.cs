@@ -1,4 +1,5 @@
 using Dotnet6502.Common;
+using Dotnet6502.Common.Compilation;
 using Shouldly;
 
 namespace Dotnet6502.Tests.Common.MsilGeneration;

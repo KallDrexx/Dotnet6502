@@ -1,4 +1,4 @@
-namespace Dotnet6502.Common;
+namespace Dotnet6502.Common.Compilation;
 
 /// <summary>
 /// Allows customizing JIT operations

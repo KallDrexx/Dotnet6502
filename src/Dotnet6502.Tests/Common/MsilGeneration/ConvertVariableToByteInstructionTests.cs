@@ -1,4 +1,6 @@
 using Dotnet6502.Common;
+using Dotnet6502.Common.Compilation;
+using Dotnet6502.Common.Hardware;
 using Shouldly;
 
 namespace Dotnet6502.Tests.Common.MsilGeneration;

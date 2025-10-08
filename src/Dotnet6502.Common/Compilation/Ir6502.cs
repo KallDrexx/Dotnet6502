@@ -1,4 +1,4 @@
-namespace Dotnet6502.Common;
+namespace Dotnet6502.Common.Compilation;
 
 /// <summary>
 /// Intermediary representation to support 6502 instructions

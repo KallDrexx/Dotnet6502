@@ -1,7 +1,8 @@
 using System.Reflection;
 using System.Reflection.Emit;
+using Dotnet6502.Common.Hardware;
 
-namespace Dotnet6502.Common;
+namespace Dotnet6502.Common.Compilation;
 
 /// <summary>
 /// Generates an executable method from 6502 assembly instruction
@@ -49,7 +50,7 @@ public static class ExecutableMethodGenerator
             throw new InvalidOperationException("Failed to get method from newly constructed type");
         }
 
-        return (ExecutableMethod) Delegate.CreateDelegate(typeof(ExecutableMethod), method, true)!;
+        return (ExecutableMethod)Delegate.CreateDelegate(typeof(ExecutableMethod), method, true)!;
     }
 
     /// <summary>

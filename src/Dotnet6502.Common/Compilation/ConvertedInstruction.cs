@@ -1,6 +1,6 @@
 using NESDecompiler.Core.Disassembly;
 
-namespace Dotnet6502.Common;
+namespace Dotnet6502.Common.Compilation;
 
 /// <summary>
 /// Represent a single 6502 assembly instruction that has been converted to the

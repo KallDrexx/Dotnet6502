@@ -1,8 +1,9 @@
 using System.Reflection.Emit;
+using Dotnet6502.Common.Hardware;
 using NESDecompiler.Core.Decompilation;
 using NESDecompiler.Core.Disassembly;
 
-namespace Dotnet6502.Common;
+namespace Dotnet6502.Common.Compilation;
 
 /// <summary>
 /// Compiles 6502 assembly functions based on a specified method entry point

@@ -1,7 +1,7 @@
 using NESDecompiler.Core.CPU;
 using NESDecompiler.Core.Disassembly;
 
-namespace Dotnet6502.Common;
+namespace Dotnet6502.Common.Compilation;
 
 /// <summary>
 /// Converts a disassembled 6502 instruction into an AST instruction
@@ -223,7 +223,11 @@ public static class InstructionConverter
         var (checkForNegative, setNegative) = NegativeFlagInstructions(operandVariable, tempVariable);
         var storeOperand = new Ir6502.Copy(operandVariable, operand);
 
-        return [preserveOperand, carry, carryFlag, shift, convertToByte, zeroFlag, checkForNegative, setNegative, storeOperand];
+        return
+        [
+            preserveOperand, carry, carryFlag, shift, convertToByte, zeroFlag, checkForNegative, setNegative,
+            storeOperand
+        ];
     }
 
     /// <summary>
@@ -966,7 +970,8 @@ public static class InstructionConverter
         var zero = ZeroFlagInstruction(operandVariable);
         var (checkNegative, setNegative) = NegativeFlagInstructions(operandVariable, tempVariable);
 
-        return [
+        return
+        [
             preserveOperand, copyCarry, compareLastBit, setCarry, shift, setBit0, convertToByte, zero,
             checkNegative, setNegative, storeOperand,
         ];
@@ -1363,8 +1368,9 @@ public static class InstructionConverter
         if (instruction.TargetAddress == null ||
             !context.Labels.TryGetValue(instruction.TargetAddress.Value, out var label))
         {
-            var message = $"{instruction.Info.Mnemonic} instruction targeting address '{instruction.TargetAddress:X4}' " +
-                          $"but that address has no known label";
+            var message =
+                $"{instruction.Info.Mnemonic} instruction targeting address '{instruction.TargetAddress:X4}' " +
+                $"but that address has no known label";
 
             throw new InvalidOperationException(message);
         }
