@@ -89,10 +89,14 @@ public class JitCompiler : IJitCompiler
             .OrderBy(x => x.CPUAddress)
             .ToArray();
 
+        var preInstructions = disassembledInstructions.Where(x => x.CPUAddress < address);
+        var postInstructions = disassembledInstructions.Where(x => x.CPUAddress >= address);
+        var orderedInstructions = postInstructions.Concat(preInstructions).ToArray();
+
         var instructionConverterContext = new InstructionConverter.Context(disassembler.Labels);
 
         // Convert each 6502 instruction into one or more IR instructions
-        IReadOnlyList<ConvertedInstruction> convertedInstructions = disassembledInstructions
+        IReadOnlyList<ConvertedInstruction> convertedInstructions = orderedInstructions
             .Select(x => new ConvertedInstruction(x, InstructionConverter.Convert(x, instructionConverterContext)))
             .ToArray();
 
