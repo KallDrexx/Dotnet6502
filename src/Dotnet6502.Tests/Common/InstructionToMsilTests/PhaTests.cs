@@ -31,7 +31,7 @@ public class PhaTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x42;
         jit.RunMethod(0x1234);
@@ -54,7 +54,7 @@ public class PhaTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.RunMethod(0x1234);
@@ -77,7 +77,7 @@ public class PhaTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0xFF;
         jit.RunMethod(0x1234);
@@ -100,7 +100,7 @@ public class PhaTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x80;
 
@@ -137,7 +137,7 @@ public class PhaTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x42;
         jit.TestHal.XRegister = 0x33;
@@ -166,13 +166,13 @@ public class PhaTests
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
         // Test pushing multiple values
-        var jit1 = new TestJitCompiler();
+        var jit1 = TestJitCompiler.Create();
             jit1.AddMethod(0x1234, nesIrInstructions);
         jit1.TestHal.ARegister = 0x55;
         jit1.RunMethod(0x1234);
         jit1.TestHal.PopFromStack().ShouldBe((byte)0x55);
 
-        var jit2 = new TestJitCompiler();
+        var jit2 = TestJitCompiler.Create();
             jit2.AddMethod(0x1234, nesIrInstructions);
         jit2.TestHal.ARegister = 0xAA;
         jit2.RunMethod(0x1234);

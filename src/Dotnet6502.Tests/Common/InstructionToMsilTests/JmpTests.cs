@@ -52,7 +52,7 @@ public class JmpTests
             new Ir6502.Copy(new Ir6502.Constant(42), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
         };
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
         jit.RunMethod(0x1234);
 
@@ -81,7 +81,7 @@ public class JmpTests
             )
             .ToArray();
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
 
         // Set up method that will be jumped to
@@ -131,7 +131,7 @@ public class JmpTests
             new Ir6502.Label(new Ir6502.Identifier("target"))
         };
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
 
         // Set initial flag states
@@ -185,7 +185,7 @@ public class JmpTests
             new Ir6502.Label(new Ir6502.Identifier("target"))
         };
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
 
         // Set up method that will be jumped to
@@ -240,7 +240,7 @@ public class JmpTests
             new Ir6502.Label(new Ir6502.Identifier("target"))
         };
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
 
         // Set initial register values
@@ -284,7 +284,7 @@ public class JmpTests
             new Ir6502.Label(new Ir6502.Identifier("target"))
         };
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
 
         // Set up method that will be jumped to
@@ -339,7 +339,7 @@ public class JmpTests
             new Ir6502.Copy(new Ir6502.Constant(222), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
         };
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
         jit.RunMethod(0x1234);
 
@@ -380,7 +380,7 @@ public class JmpTests
             new Ir6502.Copy(new Ir6502.Constant(99), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
         };
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
         jit.RunMethod(0x1234);
 
@@ -434,7 +434,7 @@ public class JmpTests
                 new Ir6502.Copy(new Ir6502.Constant(55), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
             };
 
-            var jit = new TestJitCompiler();
+            var jit = TestJitCompiler.Create();
             jit.AddMethod(0x1234, allInstructions);
 
             // Set flag states

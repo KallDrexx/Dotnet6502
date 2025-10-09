@@ -32,7 +32,7 @@ public class PlpTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Clear all flags initially
@@ -71,7 +71,7 @@ public class PlpTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Clear all flags initially
@@ -111,7 +111,7 @@ public class PlpTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Set all flags initially
@@ -150,7 +150,7 @@ public class PlpTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Start with opposite pattern
@@ -190,7 +190,7 @@ public class PlpTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x42;
         jit.TestHal.XRegister = 0x33;
@@ -220,7 +220,7 @@ public class PlpTests
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
         // Test with just carry flag
-        var jit1 = new TestJitCompiler();
+        var jit1 = TestJitCompiler.Create();
             jit1.AddMethod(0x1234, nesIrInstructions);
         jit1.TestHal.PushToStack(0x01); // Just carry flag
         jit1.RunMethod(0x1234);
@@ -228,7 +228,7 @@ public class PlpTests
         jit1.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
 
         // Test with alternating pattern
-        var jit2 = new TestJitCompiler();
+        var jit2 = TestJitCompiler.Create();
             jit2.AddMethod(0x1234, nesIrInstructions);
         jit2.TestHal.PushToStack(0xAA); // 10101010 pattern
         jit2.RunMethod(0x1234);

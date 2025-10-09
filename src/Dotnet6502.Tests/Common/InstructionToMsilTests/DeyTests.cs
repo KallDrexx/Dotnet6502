@@ -33,7 +33,7 @@ public class DeyTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x05;
         jit.RunMethod(0x1234);
@@ -59,7 +59,7 @@ public class DeyTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x01; // 0x01 - 1 = 0x00
         jit.RunMethod(0x1234);
@@ -85,7 +85,7 @@ public class DeyTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x00; // 0x00 - 1 = 0xFF (wraparound)
         jit.RunMethod(0x1234);
@@ -111,7 +111,7 @@ public class DeyTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x81; // 0x81 - 1 = 0x80 (still negative)
         jit.RunMethod(0x1234);
@@ -137,7 +137,7 @@ public class DeyTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x42;
         jit.RunMethod(0x1234);
@@ -163,7 +163,7 @@ public class DeyTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x7F; // 127, decrement to 126 (0x7E, still positive)
         jit.RunMethod(0x1234);
@@ -189,7 +189,7 @@ public class DeyTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0xFE; // -2, decrement to -3 (0xFD)
         jit.RunMethod(0x1234);
@@ -215,7 +215,7 @@ public class DeyTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x80; // -128, decrement to 127 (0x7F, becomes positive)
         jit.RunMethod(0x1234);

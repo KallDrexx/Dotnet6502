@@ -32,7 +32,7 @@ public class PhpTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Set some flags
@@ -80,7 +80,7 @@ public class PhpTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Set all flags
@@ -125,7 +125,7 @@ public class PhpTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Clear all flags
@@ -170,7 +170,7 @@ public class PhpTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x42;
         jit.TestHal.XRegister = 0x33;
@@ -196,7 +196,7 @@ public class PhpTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Set a specific pattern: Only carry and negative flags

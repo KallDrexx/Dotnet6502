@@ -32,7 +32,7 @@ public class CustomIlGeneratorTests
             new Ir6502.PushStackValue(new Ir6502.Constant(55)),
         ];
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.CustomGenerators = customGenerators;
         jit.AddMethod(0x1234, instructions);
         jit.RunMethod(0x1234);

@@ -37,7 +37,7 @@ public class CpyTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x42;
         jit.TestHal.SetFlag(CpuStatusFlags.Overflow, true);
@@ -64,7 +64,7 @@ public class CpyTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x50;
         jit.RunMethod(0x1234);
@@ -89,7 +89,7 @@ public class CpyTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x30;
         jit.RunMethod(0x1234);
@@ -114,7 +114,7 @@ public class CpyTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x80;
         jit.RunMethod(0x1234);
@@ -139,7 +139,7 @@ public class CpyTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x7F;
         jit.MemoryMap.MemoryBlock[0x10] = 0x7F;
@@ -165,7 +165,7 @@ public class CpyTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x90;
         jit.MemoryMap.MemoryBlock[0x20] = 0x80;
@@ -191,7 +191,7 @@ public class CpyTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x10;
         jit.MemoryMap.MemoryBlock[0x30] = 0x20;
@@ -217,7 +217,7 @@ public class CpyTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0xAA;
         jit.MemoryMap.MemoryBlock[0x3000] = 0xAA;
@@ -243,7 +243,7 @@ public class CpyTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0xFF;
         jit.MemoryMap.MemoryBlock[0x1234] = 0x01;
@@ -269,7 +269,7 @@ public class CpyTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x00;
         jit.MemoryMap.MemoryBlock[0x4FFF] = 0xFF;
@@ -295,7 +295,7 @@ public class CpyTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x7F;
         jit.RunMethod(0x1234);
@@ -320,7 +320,7 @@ public class CpyTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0xFF;
         jit.RunMethod(0x1234);

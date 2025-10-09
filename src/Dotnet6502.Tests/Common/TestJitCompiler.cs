@@ -1,34 +1,33 @@
-using Dotnet6502.Common;
 using Dotnet6502.Common.Compilation;
 using Dotnet6502.Common.Hardware;
 using NESDecompiler.Core.CPU;
+using NESDecompiler.Core.Decompilation;
 using NESDecompiler.Core.Disassembly;
+using NESDecompiler.Core.ROM;
 
 namespace Dotnet6502.Tests.Common;
 
-public class TestJitCompiler : IJitCompiler
+public class TestJitCompiler : JitCompiler
 {
-    private readonly Dictionary<ushort, ExecutableMethod> _methods = new();
     public Dictionary<Type, MsilGenerator.CustomIlGenerator>? CustomGenerators { get; set; }
 
     public TestMemoryMap MemoryMap { get; }
     public Base6502Hal TestHal { get; }
 
-    public TestJitCompiler()
+    private TestJitCompiler(Decompiler decompiler, TestHal testHal, TestMemoryMap memoryMap)
+        : base(decompiler, testHal, null, memoryMap)
     {
-        MemoryMap = new TestMemoryMap();
-        TestHal = new TestHal(MemoryMap);
+        MemoryMap = memoryMap;
+        TestHal = testHal;
     }
 
-    public void RunMethod(ushort address)
+    public static TestJitCompiler Create()
     {
-        if (!_methods.TryGetValue(address, out var method))
-        {
-            var message = $"Method at address {address:X4} called but no method prepared for that";
-            throw new InvalidOperationException(message);
-        }
+        var memoryMap = new TestMemoryMap();
+        var hal = new TestHal(memoryMap);
+        var decompiler = new Decompiler(new ROMInfo(), new Disassembler(0, Array.Empty<byte>()));
 
-        method(this, TestHal);
+        return new TestJitCompiler(decompiler, hal, memoryMap);
     }
 
     public void AddMethod(ushort address, IReadOnlyList<Ir6502.Instruction> instructions)
@@ -42,6 +41,12 @@ public class TestJitCompiler : IJitCompiler
 
         var convertedInstructions = new ConvertedInstruction(nop, instructions);
         var method = ExecutableMethodGenerator.Generate($"test_0x{address:X4}", [convertedInstructions], CustomGenerators);
-        _methods.Add(address, method);
+        CompiledMethods.Add(address, method);
+    }
+
+    protected override IReadOnlyList<ConvertedInstruction> GetIrInstructions(ushort address)
+    {
+        var message = $"Function address 0x{address:X4} called but that address has not been configured";
+        throw new InvalidOperationException(message);
     }
 }

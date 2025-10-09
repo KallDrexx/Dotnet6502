@@ -30,7 +30,7 @@ public class StxTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x42;
         jit.MemoryMap.MemoryBlock[0x10] = 0x00; // Initial value
@@ -60,7 +60,7 @@ public class StxTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x00;
         jit.MemoryMap.MemoryBlock[0x20] = 0xFF; // Initial value
@@ -90,7 +90,7 @@ public class StxTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x80; // Negative value
         jit.MemoryMap.MemoryBlock[0x30] = 0x00; // Initial value
@@ -120,7 +120,7 @@ public class StxTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x55;
         jit.TestHal.YRegister = 0x05;
@@ -151,7 +151,7 @@ public class StxTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x77;
         jit.TestHal.YRegister = 0x02;
@@ -184,7 +184,7 @@ public class StxTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x99;
         jit.MemoryMap.MemoryBlock[0x3000] = 0x00; // Initial value
@@ -214,7 +214,7 @@ public class StxTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0xAB;
         jit.MemoryMap.MemoryBlock[0x1234] = 0x00; // Initial value
@@ -244,7 +244,7 @@ public class StxTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0xFF;
         // Set all flags that should be preserved
@@ -283,7 +283,7 @@ public class StxTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0xAA;
         jit.MemoryMap.MemoryBlock[0x60] = 0x55; // Existing value to be overwritten
@@ -313,7 +313,7 @@ public class StxTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x11;
         jit.TestHal.XRegister = 0x22;
@@ -347,7 +347,7 @@ public class StxTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0xCC;
         jit.TestHal.YRegister = 0xFF;
@@ -378,7 +378,7 @@ public class StxTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0xFF; // Maximum value
         jit.MemoryMap.MemoryBlock[0x80] = 0x00; // Initial value

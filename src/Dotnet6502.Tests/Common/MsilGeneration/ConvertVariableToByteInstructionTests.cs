@@ -18,7 +18,7 @@ public class ConvertVariableToByteInstructionTests
             new Ir6502.Variable(0),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [setupVar, convertInstruction, readVar]);
         jit.RunMethod(0x1234);
 
@@ -36,7 +36,7 @@ public class ConvertVariableToByteInstructionTests
             new Ir6502.Variable(1),
             new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [setupVar, convertInstruction, readVar]);
         jit.RunMethod(0x1234);
 
@@ -54,7 +54,7 @@ public class ConvertVariableToByteInstructionTests
             new Ir6502.Variable(2),
             new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [setupVar, convertInstruction, readVar]);
         jit.RunMethod(0x1234);
 
@@ -72,7 +72,7 @@ public class ConvertVariableToByteInstructionTests
             new Ir6502.Variable(0),
             new Ir6502.Memory(0x2000, null, false));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [setupVar, convertInstruction, writeToMemory]);
         jit.RunMethod(0x1234);
 
@@ -90,7 +90,7 @@ public class ConvertVariableToByteInstructionTests
             new Ir6502.Variable(0),
             new Ir6502.Flag(Ir6502.FlagName.Carry));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [setupVar, convertInstruction, copyToFlag]);
         jit.RunMethod(0x1234);
 
@@ -108,7 +108,7 @@ public class ConvertVariableToByteInstructionTests
             new Ir6502.Variable(3),
             new Ir6502.StackPointer());
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [setupVar, convertInstruction, copyToStackPointer]);
         jit.RunMethod(0x1234);
 
@@ -134,7 +134,7 @@ public class ConvertVariableToByteInstructionTests
             new Ir6502.Variable(2),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [setupVar1, setupVar2, addOperation, convertInstruction, readResult]);
         jit.RunMethod(0x1234);
 

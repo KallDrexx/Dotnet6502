@@ -31,7 +31,7 @@ public class TxsTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x42;
         jit.TestHal.StackPointer = 0xFF;
@@ -59,7 +59,7 @@ public class TxsTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x00;
         jit.TestHal.StackPointer = 0xFF;
@@ -86,7 +86,7 @@ public class TxsTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x80;
         jit.TestHal.StackPointer = 0xFF;
@@ -113,7 +113,7 @@ public class TxsTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0xFF;
         jit.TestHal.StackPointer = 0x00;
@@ -139,7 +139,7 @@ public class TxsTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x80; // Negative value
         jit.TestHal.StackPointer = 0xFF;
@@ -180,7 +180,7 @@ public class TxsTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x11;
         jit.TestHal.XRegister = 0x42;
@@ -208,7 +208,7 @@ public class TxsTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x00; // Zero value
         jit.TestHal.StackPointer = 0xFF;

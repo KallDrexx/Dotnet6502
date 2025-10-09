@@ -1,4 +1,3 @@
-using Dotnet6502.Common;
 using Dotnet6502.Common.Compilation;
 using Dotnet6502.Common.Hardware;
 using Shouldly;
@@ -12,7 +11,7 @@ public class PushStackValueInstructionTests
     {
         var instruction = new Ir6502.PushStackValue(new Ir6502.Constant(42));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
 
@@ -24,13 +23,8 @@ public class PushStackValueInstructionTests
     {
         var instruction = new Ir6502.PushStackValue(new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var jit = new TestJitCompiler()
-        {
-            TestHal =
-            {
-                ARegister = 123
-            }
-        };
+        var jit = TestJitCompiler.Create();
+        jit.TestHal.ARegister = 123;
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
 
@@ -42,13 +36,8 @@ public class PushStackValueInstructionTests
     {
         var instruction = new Ir6502.PushStackValue(new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
-        var jit = new TestJitCompiler()
-        {
-            TestHal =
-            {
-                XRegister = 55
-            }
-        };
+        var jit = TestJitCompiler.Create();
+        jit.TestHal.XRegister = 55;
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
 
@@ -60,13 +49,8 @@ public class PushStackValueInstructionTests
     {
         var instruction = new Ir6502.PushStackValue(new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
-        var jit = new TestJitCompiler()
-        {
-            TestHal =
-            {
-                YRegister = 88
-            }
-        };
+        var jit = TestJitCompiler.Create();
+        jit.TestHal.YRegister = 88;
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
 
@@ -78,7 +62,7 @@ public class PushStackValueInstructionTests
     {
         var instruction = new Ir6502.PushStackValue(new Ir6502.Memory(0x2000, null, false));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
         jit.TestHal.WriteMemory(0x2000, 156);
         jit.RunMethod(0x1234);
@@ -91,13 +75,8 @@ public class PushStackValueInstructionTests
     {
         var instruction = new Ir6502.PushStackValue(new Ir6502.Memory(0x4000, Ir6502.RegisterName.XIndex, false));
 
-        var jit = new TestJitCompiler()
-        {
-            TestHal =
-            {
-                XRegister = 5
-            }
-        };
+        var jit = TestJitCompiler.Create();
+        jit.TestHal.XRegister = 5;
         jit.AddMethod(0x1234, [instruction]);
         jit.TestHal.WriteMemory(0x4005, 211);
         jit.RunMethod(0x1234);
@@ -113,7 +92,7 @@ public class PushStackValueInstructionTests
             new Ir6502.Variable(0));
         var pushInstruction = new Ir6502.PushStackValue(new Ir6502.Variable(0));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [setupInstruction, pushInstruction]);
         jit.RunMethod(0x1234);
 
@@ -125,7 +104,7 @@ public class PushStackValueInstructionTests
     {
         var instruction = new Ir6502.PushStackValue(new Ir6502.Flag(Ir6502.FlagName.Carry));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
         jit.RunMethod(0x1234);
@@ -138,7 +117,7 @@ public class PushStackValueInstructionTests
     {
         var instruction = new Ir6502.PushStackValue(new Ir6502.Flag(Ir6502.FlagName.Zero));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
         jit.TestHal.SetFlag(CpuStatusFlags.Zero, false);
         jit.RunMethod(0x1234);
@@ -151,7 +130,7 @@ public class PushStackValueInstructionTests
     {
         var instruction = new Ir6502.PushStackValue(new Ir6502.Flag(Ir6502.FlagName.InterruptDisable));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
         jit.TestHal.SetFlag(CpuStatusFlags.InterruptDisable, true);
         jit.RunMethod(0x1234);
@@ -164,7 +143,7 @@ public class PushStackValueInstructionTests
     {
         var instruction = new Ir6502.PushStackValue(new Ir6502.Flag(Ir6502.FlagName.Overflow));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
         jit.TestHal.SetFlag(CpuStatusFlags.Overflow, true);
         jit.RunMethod(0x1234);
@@ -177,7 +156,7 @@ public class PushStackValueInstructionTests
     {
         var instruction = new Ir6502.PushStackValue(new Ir6502.Flag(Ir6502.FlagName.Negative));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
         jit.TestHal.SetFlag(CpuStatusFlags.Negative, true);
         jit.RunMethod(0x1234);
@@ -190,13 +169,8 @@ public class PushStackValueInstructionTests
     {
         var instruction = new Ir6502.PushStackValue(new Ir6502.AllFlags());
 
-        var jit = new TestJitCompiler()
-        {
-            TestHal =
-            {
-                ProcessorStatus = 0x85
-            }
-        };
+        var jit = TestJitCompiler.Create();
+        jit.TestHal.ProcessorStatus = 0x85;
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
 
@@ -208,13 +182,8 @@ public class PushStackValueInstructionTests
     {
         var instruction = new Ir6502.PushStackValue(new Ir6502.StackPointer());
 
-        var jit = new TestJitCompiler()
-        {
-            TestHal =
-            {
-                StackPointer = 0xF8
-            }
-        };
+        var jit = TestJitCompiler.Create();
+        jit.TestHal.StackPointer = 0xF8;
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
 

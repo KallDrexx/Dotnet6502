@@ -55,7 +55,7 @@ public class BccTests
             new Ir6502.Copy(new Ir6502.Constant(42), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
         };
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false); // Carry clear
         jit.RunMethod(0x1234);
@@ -102,7 +102,7 @@ public class BccTests
             new Ir6502.Copy(new Ir6502.Constant(88), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
         };
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true); // Carry set
         jit.RunMethod(0x1234);
@@ -165,7 +165,7 @@ public class BccTests
             nesIrInstructions[0]
         };
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
         jit.RunMethod(0x1234);
 
@@ -206,7 +206,7 @@ public class BccTests
             new Ir6502.Label(new Ir6502.Identifier("target"))
         };
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
 
         // Set initial flag states
@@ -257,7 +257,7 @@ public class BccTests
             new Ir6502.Label(new Ir6502.Identifier("target"))
         };
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
 
         // Set initial register values
@@ -311,7 +311,7 @@ public class BccTests
             new Ir6502.Copy(new Ir6502.Constant(222), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
         };
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
         jit.RunMethod(0x1234);
@@ -371,7 +371,7 @@ public class BccTests
             nesIrInstructions[0]
         };
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
         jit.TestHal.XRegister = 0; // Start with 0 to trigger branch once
         jit.RunMethod(0x1234);
@@ -418,7 +418,7 @@ public class BccTests
                 new Ir6502.Copy(new Ir6502.Constant(100), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
             };
 
-            var jit1 = new TestJitCompiler();
+            var jit1 = TestJitCompiler.Create();
             jit1.AddMethod(0x1234, allInstructions);
             jit1.TestHal.SetFlag(CpuStatusFlags.Carry, true);
             jit1.RunMethod(0x1234);
@@ -448,7 +448,7 @@ public class BccTests
                 new Ir6502.Copy(new Ir6502.Constant(150), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
             };
 
-            var jit2 = new TestJitCompiler();
+            var jit2 = TestJitCompiler.Create();
             jit2.AddMethod(0x1234, allInstructions);
             jit2.TestHal.SetFlag(CpuStatusFlags.Carry, false);
             jit2.RunMethod(0x1234);

@@ -197,8 +197,6 @@ public class MsilGenerator
 
     private static void GenerateCallFunction(Ir6502.CallFunction callFunction, ILGenerator ilGenerator)
     {
-        ilGenerator.Emit(JitCompiler.LoadJitCompilerArg);
-
         switch (callFunction.CallTarget)
         {
             case Ir6502.FunctionAddress functionAddress:
@@ -257,8 +255,9 @@ public class MsilGenerator
                 throw new NotSupportedException(callFunction.CallTarget.GetType().ToString());
         }
 
-        var method = typeof(IJitCompiler).GetMethod(nameof(JitCompiler.RunMethod))!;
-        ilGenerator.Emit(OpCodes.Callvirt, method);
+        // Return from the current function using the value we loaded from the stack as the instruction
+        // to the function we want to call.
+        ilGenerator.Emit(OpCodes.Ret);
     }
 
     private static void GenerateCopy(Ir6502.Copy copy, ILGenerator ilGenerator)
@@ -336,15 +335,7 @@ public class MsilGenerator
 
     private static void GenerateReturn(Ir6502.Return returnInstruction, ILGenerator ilGenerator)
     {
-        var setRtiIndicator = typeof(Base6502Hal)
-            .GetProperty(nameof(Base6502Hal.LastReturnWasRti))!
-            .SetMethod!;
-
-        ilGenerator.Emit(JitCompiler.LoadHalArg);
-        var value = returnInstruction.WasFromInterrupt ? 1 : 0;
-        ilGenerator.Emit(OpCodes.Ldc_I4, value);
-        ilGenerator.Emit(OpCodes.Callvirt, setRtiIndicator);
-
+        LoadValueToStack(returnInstruction.VariableWithReturnAddress, ilGenerator);
         ilGenerator.Emit(OpCodes.Ret);
     }
 
@@ -482,15 +473,6 @@ public class MsilGenerator
 
             case Ir6502.Variable variable:
                 ilGenerator.Emit(OpCodes.Ldloc, variable.Index + TemporaryLocalsRequired);
-                break;
-
-            case Ir6502.RtiIndicator:
-                var getRtiIndicator = typeof(Base6502Hal)
-                    .GetProperty(nameof(Base6502Hal.LastReturnWasRti))!
-                    .GetMethod!;
-
-                ilGenerator.Emit(JitCompiler.LoadHalArg);
-                ilGenerator.Emit(OpCodes.Callvirt, getRtiIndicator);
                 break;
 
             default:
@@ -705,19 +687,6 @@ public class MsilGenerator
             case Ir6502.Variable variable:
                 LoadTempLocalToStack(ilGenerator);
                 ilGenerator.Emit(OpCodes.Stloc, variable.Index + TemporaryLocalsRequired);
-                break;
-
-            case Ir6502.RtiIndicator:
-                var setRtiIndicator = typeof(Base6502Hal)
-                    .GetProperty(nameof(Base6502Hal.LastReturnWasRti))!
-                    .SetMethod!;
-
-                ilGenerator.Emit(JitCompiler.LoadHalArg);
-                LoadTempLocalToStack(ilGenerator);
-                // Convert int to bool (0 = false, anything else = true)
-                ilGenerator.Emit(OpCodes.Ldc_I4_0);
-                ilGenerator.Emit(OpCodes.Cgt_Un);
-                ilGenerator.Emit(OpCodes.Callvirt, setRtiIndicator);
                 break;
 
             default:

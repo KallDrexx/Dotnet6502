@@ -31,7 +31,7 @@ public class ClcTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Set carry flag initially
@@ -56,7 +56,7 @@ public class ClcTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Carry flag already clear
@@ -81,7 +81,7 @@ public class ClcTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Set all flags
@@ -119,7 +119,7 @@ public class ClcTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
 
         jit.TestHal.ARegister = 0x42;
@@ -154,7 +154,7 @@ public class ClcTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Set a mixed pattern of flags
@@ -192,7 +192,7 @@ public class ClcTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Set carry flag initially
@@ -203,7 +203,7 @@ public class ClcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeFalse();
 
         // Second CLC call (should have no effect)
-        var jit2 = new TestJitCompiler();
+        var jit2 = TestJitCompiler.Create();
             jit2.AddMethod(0x1234, nesIrInstructions);
         jit2.TestHal.SetFlag(CpuStatusFlags.Carry, false); // Already clear
         jit2.RunMethod(0x1234);

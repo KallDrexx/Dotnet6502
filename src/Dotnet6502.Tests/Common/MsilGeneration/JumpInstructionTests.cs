@@ -19,7 +19,7 @@ public class JumpInstructionTests
             new Ir6502.Constant(22),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [jump, copy1, label, copy2]);
         jit.RunMethod(0x1234);
 
@@ -54,7 +54,7 @@ public class JumpInstructionTests
             new Ir6502.Variable(1),
             new Ir6502.Identifier("loop"));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [copy1, label, copy2, addVar, copyBack, comparison, conditionalJump]);
         jit.RunMethod(0x1234);
 
@@ -74,7 +74,7 @@ public class JumpInstructionTests
             new Ir6502.Constant(20),
             new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [label1, copy1, jump, label2, copy2]);
         jit.RunMethod(0x1234);
 
@@ -99,7 +99,7 @@ public class JumpInstructionTests
             new Ir6502.Constant(42),
             new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [setCondition, jumpIfZero, skipInstruction, label, executeInstruction]);
         jit.RunMethod(0x1234);
 
@@ -125,7 +125,7 @@ public class JumpInstructionTests
             new Ir6502.Constant(88),
             new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [setCondition, jumpIfZero, executeInstruction, label, skipInstruction]);
         jit.RunMethod(0x1234);
 
@@ -151,7 +151,7 @@ public class JumpInstructionTests
             new Ir6502.Constant(33),
             new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [setCondition, jumpIfNotZero, skipInstruction, label, executeInstruction]);
         jit.RunMethod(0x1234);
 
@@ -177,7 +177,7 @@ public class JumpInstructionTests
             new Ir6502.Constant(55),
             new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [setCondition, jumpIfNotZero, executeInstruction, label, skipInstruction]);
         jit.RunMethod(0x1234);
 
@@ -203,7 +203,7 @@ public class JumpInstructionTests
             new Ir6502.Constant(200),
             new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [setMemory, jumpIfZero, skipInstruction, label, executeInstruction]);
         jit.RunMethod(0x1234);
 
@@ -229,7 +229,7 @@ public class JumpInstructionTests
             new Ir6502.Variable(0),
             new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [setVariable, jumpIfNotZero, skipInstruction, label, executeInstruction]);
         jit.RunMethod(0x1234);
 
@@ -254,7 +254,7 @@ public class JumpInstructionTests
             new Ir6502.Constant(156),
             new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [setFlag, jumpIfZero, skipInstruction, label, executeInstruction]);
         jit.RunMethod(0x1234);
 
@@ -287,7 +287,7 @@ public class JumpInstructionTests
             new Ir6502.Register(Ir6502.RegisterName.XIndex),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [initCounter, label, incrementCounter, checkCondition, conditionalJump, finalCopy]);
         jit.RunMethod(0x1234);
 

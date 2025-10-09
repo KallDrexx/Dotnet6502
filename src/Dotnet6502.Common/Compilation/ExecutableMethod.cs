@@ -2,4 +2,5 @@ using Dotnet6502.Common.Hardware;
 
 namespace Dotnet6502.Common.Compilation;
 
-public delegate void ExecutableMethod(IJitCompiler jitCompiler, Base6502Hal hal);
+// Returns an int to not have to deal with nullable value types
+public delegate int ExecutableMethod(JitCompiler jitCompiler, Base6502Hal hal);

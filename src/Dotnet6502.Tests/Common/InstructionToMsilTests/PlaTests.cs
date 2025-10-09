@@ -32,7 +32,7 @@ public class PlaTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.TestHal.PushToStack(0x42);
@@ -57,7 +57,7 @@ public class PlaTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0xFF;
         jit.TestHal.PushToStack(0x00);
@@ -82,7 +82,7 @@ public class PlaTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.TestHal.PushToStack(0x80);
@@ -107,7 +107,7 @@ public class PlaTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.TestHal.PushToStack(0xFF);
@@ -132,7 +132,7 @@ public class PlaTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.TestHal.PushToStack(0x7F);
@@ -170,7 +170,7 @@ public class PlaTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.TestHal.XRegister = 0x33;
@@ -199,7 +199,7 @@ public class PlaTests
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
 
         // Test pulling multiple different values
-        var jit1 = new TestJitCompiler();
+        var jit1 = TestJitCompiler.Create();
             jit1.AddMethod(0x1234, nesIrInstructions);
         jit1.TestHal.ARegister = 0x00;
         jit1.TestHal.PushToStack(0x55);
@@ -208,7 +208,7 @@ public class PlaTests
         jit1.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
         jit1.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
 
-        var jit2 = new TestJitCompiler();
+        var jit2 = TestJitCompiler.Create();
             jit2.AddMethod(0x1234, nesIrInstructions);
         jit2.TestHal.ARegister = 0xFF;
         jit2.TestHal.PushToStack(0xAA);

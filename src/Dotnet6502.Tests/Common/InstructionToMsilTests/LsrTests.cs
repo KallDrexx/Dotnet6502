@@ -34,7 +34,7 @@ public class LsrTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.MemoryMap.MemoryBlock[0x10] = 0xFE;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
@@ -60,7 +60,7 @@ public class LsrTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.MemoryMap.MemoryBlock[0x20] = 0x01;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
@@ -86,7 +86,7 @@ public class LsrTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x05;
         jit.MemoryMap.MemoryBlock[0x35] = 0xAA;
@@ -113,7 +113,7 @@ public class LsrTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x02;
         jit.MemoryMap.MemoryBlock[0x01] = 0x63;
@@ -140,7 +140,7 @@ public class LsrTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.MemoryMap.MemoryBlock[0x3000] = 0x88;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
@@ -166,7 +166,7 @@ public class LsrTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x0F;
         jit.MemoryMap.MemoryBlock[0x200F] = 0xFF;
@@ -193,7 +193,7 @@ public class LsrTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0xFE;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);

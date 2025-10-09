@@ -37,8 +37,8 @@ public static class ExecutableMethodGenerator
             name,
             MethodAttributes.Public | MethodAttributes.Static,
             CallingConventions.Standard,
-            typeof(void),
-            [typeof(IJitCompiler), typeof(Base6502Hal)]);
+            typeof(int),
+            [typeof(JitCompiler), typeof(Base6502Hal)]);
 
         var ilGenerator = methodBuilder.GetILGenerator();
         GenerateMsil(ilGenerator, instructions, customIlGenerators);
@@ -88,6 +88,9 @@ public static class ExecutableMethodGenerator
             }
         }
 
+        // No next address if we somehow exit without an expected return path. Shouldn't happen though
+        // Note: LdNull will return 0 due to value type semantics.
+        ilGenerator.Emit(OpCodes.Ldc_I4, -1);
         ilGenerator.Emit(OpCodes.Ret);
     }
 
@@ -132,8 +135,8 @@ public static class ExecutableMethodGenerator
             name,
             MethodAttributes.Public | MethodAttributes.Static,
             CallingConventions.Standard,
-            typeof(void),
-            [typeof(IJitCompiler), typeof(Base6502Hal)]);
+            typeof(ushort?),
+            [typeof(JitCompiler), typeof(Base6502Hal)]);
 
         var ilGenerator = methodBuilder.GetILGenerator();
         GenerateMsil(ilGenerator, instructions, customIlGenerators);

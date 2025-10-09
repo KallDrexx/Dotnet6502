@@ -31,7 +31,7 @@ public class LdxTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x00;
         jit.RunMethod(0x1234);
@@ -57,7 +57,7 @@ public class LdxTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0xFF;
         jit.RunMethod(0x1234);
@@ -83,7 +83,7 @@ public class LdxTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x00;
         jit.RunMethod(0x1234);
@@ -109,7 +109,7 @@ public class LdxTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x00;
         jit.RunMethod(0x1234);
@@ -135,7 +135,7 @@ public class LdxTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x00;
         jit.MemoryMap.MemoryBlock[0x10] = 0x33;
@@ -162,7 +162,7 @@ public class LdxTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0xFF;
         jit.MemoryMap.MemoryBlock[0x20] = 0x00;
@@ -189,7 +189,7 @@ public class LdxTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x00;
         jit.TestHal.YRegister = 0x05;
@@ -217,7 +217,7 @@ public class LdxTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x00;
         jit.TestHal.YRegister = 0x02;
@@ -246,7 +246,7 @@ public class LdxTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x00;
         jit.MemoryMap.MemoryBlock[0x3000] = 0x99;
@@ -273,7 +273,7 @@ public class LdxTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x00;
         jit.TestHal.YRegister = 0x10;
@@ -301,7 +301,7 @@ public class LdxTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x00;
         jit.TestHal.YRegister = 0x02;
@@ -329,7 +329,7 @@ public class LdxTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x00;
 
@@ -366,7 +366,7 @@ public class LdxTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x11;
         jit.TestHal.XRegister = 0x00;
@@ -396,7 +396,7 @@ public class LdxTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x00;
         jit.TestHal.YRegister = 0x08;
@@ -424,7 +424,7 @@ public class LdxTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0xFF;
         jit.MemoryMap.MemoryBlock[0x1234] = 0x00;

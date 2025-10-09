@@ -10,7 +10,7 @@ public class DebugValueTests
     {
         var instruction = new Ir6502.DebugValue(new Ir6502.Constant(5));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x9898, [instruction]);
         jit.RunMethod(0x9898);
     }

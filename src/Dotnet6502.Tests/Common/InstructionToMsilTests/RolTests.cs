@@ -37,7 +37,7 @@ public class RolTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.MemoryMap.MemoryBlock[0x10] = 0x55;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
@@ -63,7 +63,7 @@ public class RolTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.MemoryMap.MemoryBlock[0x20] = 0x7E;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
@@ -89,7 +89,7 @@ public class RolTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x05;
         jit.MemoryMap.MemoryBlock[0x35] = 0x81;
@@ -116,7 +116,7 @@ public class RolTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x02;
         jit.MemoryMap.MemoryBlock[0x01] = 0x33;
@@ -143,7 +143,7 @@ public class RolTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.MemoryMap.MemoryBlock[0x3000] = 0x42;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
@@ -169,7 +169,7 @@ public class RolTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x0F;
         jit.MemoryMap.MemoryBlock[0x200F] = 0x01;
@@ -196,7 +196,7 @@ public class RolTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x01;
         jit.MemoryMap.MemoryBlock[0x5000] = 0x80;

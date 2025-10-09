@@ -13,7 +13,7 @@ public static class Ir6502
 
     public record Copy(Value Source, Value Destination) : Instruction;
 
-    public record Return(bool WasFromInterrupt) : Instruction;
+    public record Return(Variable VariableWithReturnAddress) : Instruction;
 
     public record Unary(UnaryOperator Operator, Value Source, Value Destination) : Instruction;
 
@@ -59,8 +59,6 @@ public static class Ir6502
     public record AllFlags : Value;
 
     public record StackPointer : Value;
-
-    public record RtiIndicator : Value;
 
     public record Identifier(string Characters) : JumpTarget;
 

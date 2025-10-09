@@ -82,17 +82,12 @@ public static class TestRunner
 
         foreach (var testCase in testCases)
         {
-            var jit = new TestJitCompiler
-            {
-                TestHal =
-                {
-                    ARegister = testCase.Initial.A,
-                    XRegister = testCase.Initial.X,
-                    YRegister = testCase.Initial.Y,
-                    ProcessorStatus = testCase.Initial.P,
-                    StackPointer = testCase.Initial.S
-                }
-            };
+            var jit = TestJitCompiler.Create();
+            jit.TestHal.ARegister = testCase.Initial.A;
+            jit.TestHal.XRegister = testCase.Initial.X;
+            jit.TestHal.YRegister = testCase.Initial.Y;
+            jit.TestHal.ProcessorStatus = testCase.Initial.P;
+            jit.TestHal.StackPointer = testCase.Initial.S;
 
             foreach (var ramArrayToSet in testCase.Initial.Ram)
             {

@@ -647,7 +647,6 @@ public static class InstructionConverter
             return
             [
                 new Ir6502.CallFunction(new Ir6502.FunctionAddress(instruction.TargetAddress.Value, true)),
-                new Ir6502.Return(false),
             ];
         }
 
@@ -673,98 +672,12 @@ public static class InstructionConverter
             throw new InvalidOperationException(message);
         }
 
-        // An actual 6502 will store the current PC onto the stack, and RTS will pop that off to know where to
-        // continue execution from. However, some programs redirect where RTS is by pushing a new PC value
-        // onto the stack. In the cases I've seen, this only seems to be done to have an intermediary function
-        // before resuming to this current spot.
-        //
-        // So to replicate this, we need to push the current instruction address onto the stack, then after the
-        // function we call returns pop the stack. If the address is different than we expect, then we need to
-        // perform a new `callFunction` call into that address and repeat until we have the expected location.
-
         var pcValue = instruction.CPUAddress + 2; // JSR pushes PC + 2 to the stack
-        var currentAddressHighBit = new Ir6502.Constant((byte)(pcValue >> 8));
-        var currentAddressLowBit = new Ir6502.Constant((byte)(pcValue & 0x00FF));
-        var lowByteVariable = new Ir6502.Variable(0);
-        var highByteVariable = new Ir6502.Variable(1);
-        var comparisonResult = new Ir6502.Variable(2);
-        var fullAddress = new Ir6502.Variable(3);
+        var pushHigh = new Ir6502.PushStackValue(new Ir6502.Constant((byte)((pcValue & 0xFF00) >> 8)));
+        var pushLow = new Ir6502.PushStackValue(new Ir6502.Constant((byte)(pcValue & 0xFF)));
+        var call = new Ir6502.CallFunction(new Ir6502.FunctionAddress(instruction.TargetAddress.Value, false));
 
-        var pushHigh = new Ir6502.PushStackValue(currentAddressHighBit);
-        var pushLow = new Ir6502.PushStackValue(currentAddressLowBit);
-        var initialCall = new Ir6502.CallFunction(new Ir6502.FunctionAddress(instruction.TargetAddress.Value, false));
-
-        var retryStartLabelId = new Ir6502.Identifier($"jsr_redirect_check_{instruction.CPUAddress:X4}");
-        var retryFailLabelId = new Ir6502.Identifier($"jsr_redirect_fail_{instruction.CPUAddress:X4}");
-        var retryFinishedLabelId = new Ir6502.Identifier($"jsr_redirect_finished_{instruction.CPUAddress:X4}");
-
-        var retryStart = new Ir6502.Label(retryStartLabelId);
-        var popLow = new Ir6502.PopStackValue(lowByteVariable);
-        var popHigh = new Ir6502.PopStackValue(highByteVariable);
-        var compareLow = new Ir6502.Binary(
-            Ir6502.BinaryOperator.NotEquals,
-            lowByteVariable,
-            currentAddressLowBit,
-            comparisonResult);
-
-        var lowNotEquals = new Ir6502.JumpIfNotZero(comparisonResult, retryFailLabelId);
-        var compareHigh = new Ir6502.Binary(
-            Ir6502.BinaryOperator.NotEquals,
-            highByteVariable,
-            currentAddressHighBit,
-            comparisonResult);
-
-        var highNotEquals = new Ir6502.JumpIfNotZero(comparisonResult, retryFailLabelId);
-        var jumpToSuccess = new Ir6502.Jump(retryFinishedLabelId);
-
-        var retryFail = new Ir6502.Label(retryFailLabelId);
-
-        // Store the full address
-        var storeHigh = new Ir6502.Copy(highByteVariable, fullAddress);
-        var shiftLeft = new Ir6502.Binary(
-            Ir6502.BinaryOperator.ShiftLeft,
-            fullAddress,
-            new Ir6502.Constant(8),
-            fullAddress);
-
-        var addLow = new Ir6502.Binary(
-            Ir6502.BinaryOperator.Add,
-            fullAddress,
-            lowByteVariable,
-            fullAddress);
-
-        // RTS usually adds 1 to the PC, so we need to do the same here. However, RTI does *NOT*
-        // add one, and therefore we need to keep the same value in that case.
-        var addFinishedId = new Ir6502.Identifier($"add_finished_{instruction.CPUAddress:x4}");
-        var rtiCompare = new Ir6502.Binary(
-            Ir6502.BinaryOperator.Equals,
-            new Ir6502.Constant(0),
-            new Ir6502.RtiIndicator(),
-            comparisonResult);
-
-        var noAddJump = new Ir6502.JumpIfZero(comparisonResult, addFinishedId);
-        var addOne = new Ir6502.Binary(
-            Ir6502.BinaryOperator.Add,
-            fullAddress,
-            new Ir6502.Constant(1),
-            fullAddress);
-
-        var addFinishedLabel = new Ir6502.Label(addFinishedId);
-        var clearRtiIndicator = new Ir6502.Copy(new Ir6502.Constant(0), new Ir6502.RtiIndicator());
-
-        var call2 = new Ir6502.CallFunction(fullAddress);
-        var jumpToRetry = new Ir6502.Jump(retryStartLabelId);
-
-        var retryEndLabel = new Ir6502.Label(retryFinishedLabelId);
-        var done = new Ir6502.StoreDebugString("done");
-
-        return
-        [
-            pushHigh, pushLow, clearRtiIndicator, initialCall, retryStart, popLow, popHigh, compareLow, lowNotEquals,
-            compareHigh, highNotEquals, jumpToSuccess, retryFail, storeHigh,
-            shiftLeft, addLow, rtiCompare, noAddJump, addOne, addFinishedLabel, clearRtiIndicator,
-            call2, jumpToRetry, retryEndLabel, done, done, done
-        ];
+        return [pushHigh, pushLow, call];
     }
 
     /// <summary>
@@ -1035,10 +948,27 @@ public static class InstructionConverter
     /// </summary>
     private static Ir6502.Instruction[] ConvertRti()
     {
-        var pop = new Ir6502.PopStackValue(new Ir6502.AllFlags());
-        var ret = new Ir6502.Return(true);
+        var lowAddress = new Ir6502.Variable(0);
+        var fullAddress = new Ir6502.Variable(1);
 
-        return [pop, ret];
+        var popFlags = new Ir6502.PopStackValue(new Ir6502.AllFlags());
+        var popLow = new Ir6502.PopStackValue(lowAddress);
+        var popHigh = new Ir6502.PopStackValue(fullAddress);
+        var shiftHigh = new Ir6502.Binary(
+            Ir6502.BinaryOperator.ShiftLeft,
+            fullAddress,
+            new Ir6502.Constant(8),
+            fullAddress);
+
+        var addLow = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Add,
+            fullAddress,
+            lowAddress,
+            fullAddress);
+
+        var ret = new Ir6502.Return(fullAddress);
+
+        return [popFlags, popLow, popHigh, shiftHigh, addLow, ret];
     }
 
     /// <summary>
@@ -1046,9 +976,34 @@ public static class InstructionConverter
     /// </summary>
     private static Ir6502.Instruction[] ConvertRts()
     {
-        var ret = new Ir6502.Return(false);
+        var lowAddress = new Ir6502.Variable(0);
+        var fullAddress = new Ir6502.Variable(1);
 
-        return [ret];
+        var popFlags = new Ir6502.PopStackValue(new Ir6502.AllFlags());
+        var popLow = new Ir6502.PopStackValue(lowAddress);
+        var popHigh = new Ir6502.PopStackValue(fullAddress);
+        var shiftHigh = new Ir6502.Binary(
+            Ir6502.BinaryOperator.ShiftLeft,
+            fullAddress,
+            new Ir6502.Constant(8),
+            fullAddress);
+
+        var addLow = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Add,
+            fullAddress,
+            lowAddress,
+            fullAddress);
+
+        // RTS adds 1 to the address
+        var addOne = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Add,
+            fullAddress,
+            new Ir6502.Constant(1),
+            fullAddress);
+
+        var ret = new Ir6502.Return(fullAddress);
+
+        return [popFlags, popLow, popHigh, shiftHigh, addLow, addOne, ret];
     }
 
     /// <summary>

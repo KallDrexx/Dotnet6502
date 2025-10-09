@@ -39,7 +39,7 @@ public class SbcTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x10;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true); // No borrow
@@ -66,7 +66,7 @@ public class SbcTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x10;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false); // Borrow
@@ -93,7 +93,7 @@ public class SbcTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x05;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true); // No borrow
@@ -120,7 +120,7 @@ public class SbcTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true); // No initial borrow
@@ -147,7 +147,7 @@ public class SbcTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x10;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true); // No initial borrow
@@ -174,7 +174,7 @@ public class SbcTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x7F; // +127 in signed
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true); // No initial borrow
@@ -201,7 +201,7 @@ public class SbcTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x80; // -128 in signed
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true); // No initial borrow
@@ -228,7 +228,7 @@ public class SbcTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x50; // +80 in signed
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true); // No initial borrow
@@ -255,7 +255,7 @@ public class SbcTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0xA0; // -96 in signed
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true); // No initial borrow
@@ -282,7 +282,7 @@ public class SbcTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x20;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false); // Previous borrow
@@ -310,7 +310,7 @@ public class SbcTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x20;
         jit.MemoryMap.MemoryBlock[0x10] = 0x08;
@@ -338,7 +338,7 @@ public class SbcTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x05;
         jit.MemoryMap.MemoryBlock[0x20] = 0x10;
@@ -367,7 +367,7 @@ public class SbcTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x50;
         jit.TestHal.XRegister = 0x05;
@@ -396,7 +396,7 @@ public class SbcTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x10;
         jit.TestHal.XRegister = 0x02;
@@ -427,7 +427,7 @@ public class SbcTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x40;
         jit.MemoryMap.MemoryBlock[0x3000] = 0x20;
@@ -455,7 +455,7 @@ public class SbcTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x80; // -128 in signed
         jit.MemoryMap.MemoryBlock[0x1234] = 0x7F; // +127 in signed
@@ -484,7 +484,7 @@ public class SbcTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x30;
         jit.TestHal.XRegister = 0x0F;
@@ -514,7 +514,7 @@ public class SbcTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x25;
         jit.TestHal.YRegister = 0x10;
@@ -543,7 +543,7 @@ public class SbcTests
             new Dictionary<ushort, string>());
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x01;
         jit.TestHal.YRegister = 0x01;

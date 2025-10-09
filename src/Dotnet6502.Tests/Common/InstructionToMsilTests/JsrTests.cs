@@ -1,4 +1,3 @@
-using Dotnet6502.Common;
 using Dotnet6502.Common.Compilation;
 using Dotnet6502.Common.Hardware;
 using NESDecompiler.Core.CPU;
@@ -38,7 +37,7 @@ public class JsrTests
             )
             .ToArray();
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
 
         // Add a callable function at the JSR target address that writes a test value to memory
@@ -91,7 +90,7 @@ public class JsrTests
                     new Ir6502.Register(Ir6502.RegisterName.YIndex)))
             .ToArray();
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
 
         // Add callable functions at the JSR target addresses
@@ -143,7 +142,7 @@ public class JsrTests
             })
             .ToArray();
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
 
         // Add a callable function at the JSR target address
@@ -195,7 +194,7 @@ public class JsrTests
             nesIrInstructions[0]
         };
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
 
         // Add a callable function at the JSR target address
@@ -238,7 +237,7 @@ public class JsrTests
         var context = new InstructionConverter.Context(new Dictionary<ushort, string>());
         var irInstructions = InstructionConverter.Convert(instruction, context);
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, irInstructions);
 
         var callableInstruction = new Ir6502.Copy(
@@ -277,122 +276,5 @@ public class JsrTests
         // Should throw exception when JSR has no target address
         Should.Throw<InvalidOperationException>(() => InstructionConverter.Convert(instruction, context))
             .Message.ShouldContain("JSR instruction with no target address");
-    }
-
-    [Fact]
-    public void JSR_Calls_Second_Function_If_Different_Address_On_Stack_When_Returned()
-    {
-        var instructionInfo = InstructionSet.GetInstruction(0x20);
-        var instruction = new DisassembledInstruction
-        {
-            Info = instructionInfo,
-            Bytes = [0x20, 0x00, 0x90], // JSR $9000
-            TargetAddress = 0x9000, // Target address for function call
-            CPUAddress = 0x5678,
-        };
-
-        var context = new InstructionConverter.Context(new Dictionary<ushort, string>());
-        var allInstructions = InstructionConverter.Convert(instruction, context)
-            .Append(
-                // Instruction executed after function call
-                new Ir6502.Copy(new Ir6502.Constant(42), new Ir6502.Register(Ir6502.RegisterName.XIndex))
-            )
-            .ToArray();
-
-        var jit = new TestJitCompiler
-        {
-            TestHal =
-            {
-                StackPointer = 0xFF,
-            }
-        };
-
-        jit.AddMethod(0x1234, allInstructions);
-
-        // Add the directly called method
-        jit.AddMethod(0x9000, [
-            new Ir6502.Copy(new Ir6502.Constant(25), new Ir6502.Register(Ir6502.RegisterName.YIndex)),
-            new Ir6502.PushStackValue(new Ir6502.Constant(0x98)),
-            new Ir6502.PushStackValue(new Ir6502.Constant(0x76)),
-            new Ir6502.Return(false),
-        ]);
-
-        // Add equivalent of RTS redirected function. It's 1 more than the stack values because
-        // RTS always sets the PC to the stack values + 1
-        jit.AddMethod(0x9877, [new Ir6502.Copy(
-            new Ir6502.Constant(99),
-            new Ir6502.Memory(0x4000, null, false))
-        ]);
-
-        jit.RunMethod(0x1234);
-
-        // Verify the function was called and execution continued
-        jit.TestHal.XRegister.ShouldBe((byte)42); // Should be executed after JSR
-
-        // verify the direct function was invoked
-        jit.TestHal.YRegister.ShouldBe((byte)25);
-
-        // Verify the indirect function was actually invoked
-        jit.TestHal.ReadMemory(0x4000).ShouldBe((byte)99);
-
-        jit.TestHal.StackPointer.ShouldBe((byte)0xFF);
-    }
-
-    [Fact]
-    public void JSR_Calls_Second_Function_If_Different_Address_On_Stack_When_Returned_With_Rti_Indicator()
-    {
-        var instructionInfo = InstructionSet.GetInstruction(0x20);
-        var instruction = new DisassembledInstruction
-        {
-            Info = instructionInfo,
-            Bytes = [0x20, 0x00, 0x90], // JSR $9000
-            TargetAddress = 0x9000, // Target address for function call
-            CPUAddress = 0x5678,
-        };
-
-        var context = new InstructionConverter.Context(new Dictionary<ushort, string>());
-        var allInstructions = InstructionConverter.Convert(instruction, context)
-            .Append(
-                // Instruction executed after function call
-                new Ir6502.Copy(new Ir6502.Constant(42), new Ir6502.Register(Ir6502.RegisterName.XIndex))
-            )
-            .ToArray();
-
-        var jit = new TestJitCompiler
-        {
-            TestHal =
-            {
-                StackPointer = 0xFF,
-            }
-        };
-
-        jit.AddMethod(0x1234, allInstructions);
-
-        // Add the directly called method
-        jit.AddMethod(0x9000, [
-            new Ir6502.Copy(new Ir6502.Constant(25), new Ir6502.Register(Ir6502.RegisterName.YIndex)),
-            new Ir6502.PushStackValue(new Ir6502.Constant(0x98)),
-            new Ir6502.PushStackValue(new Ir6502.Constant(0x76)),
-            new Ir6502.Return(true),
-        ]);
-
-        // Add equivalent of RTI redirected function. Since it's an RTI, no +1 PC should occur
-        jit.AddMethod(0x9876, [new Ir6502.Copy(
-            new Ir6502.Constant(99),
-            new Ir6502.Memory(0x4000, null, false))
-        ]);
-
-        jit.RunMethod(0x1234);
-
-        // Verify the function was called and execution continued
-        jit.TestHal.XRegister.ShouldBe((byte)42); // Should be executed after JSR
-
-        // verify the direct function was invoked
-        jit.TestHal.YRegister.ShouldBe((byte)25);
-
-        // Verify the indirect function was actually invoked
-        jit.TestHal.ReadMemory(0x4000).ShouldBe((byte)99);
-
-        jit.TestHal.StackPointer.ShouldBe((byte)0xFF);
     }
 }

@@ -11,7 +11,7 @@ public class CallFunctionInstructionTests
     {
         var instruction = new Ir6502.CallFunction(new Ir6502.FunctionAddress(0x2000, false));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
 
         // Add a callable function at address 0x2000 that writes a test value to memory
@@ -34,7 +34,7 @@ public class CallFunctionInstructionTests
             new Ir6502.CallFunction(new Ir6502.FunctionAddress(0x2100, false))
         };
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, instructions);
 
         // Add first callable function at address 0x2000 that writes 10 to memory
@@ -65,7 +65,7 @@ public class CallFunctionInstructionTests
             new Ir6502.CallFunction(new Ir6502.FunctionAddress(0x2000, false))
         };
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, instructions);
 
         // Add a callable function that increments a counter in memory
@@ -92,7 +92,7 @@ public class CallFunctionInstructionTests
     {
         var instruction = new Ir6502.CallFunction(new Ir6502.FunctionAddress(0x2000, false));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
 
         // Don't add the callable function at 0x9999, so it should throw when trying to call it
@@ -105,7 +105,7 @@ public class CallFunctionInstructionTests
     {
         var instruction = new Ir6502.CallFunction(new Ir6502.FunctionAddress(0x20AB, true));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
 
         // Add a callable function that writes a test value to memory, and point some memory to that address
@@ -126,7 +126,7 @@ public class CallFunctionInstructionTests
     {
         var instruction = new Ir6502.CallFunction(new Ir6502.FunctionAddress(0x20FF, true));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
 
         // Add a callable function that writes a test value to memory, and point some memory to that address.

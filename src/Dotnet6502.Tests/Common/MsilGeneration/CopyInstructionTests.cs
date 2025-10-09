@@ -14,7 +14,7 @@ public class CopyInstructionTests
             new Ir6502.Constant(23),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
 
@@ -28,7 +28,7 @@ public class CopyInstructionTests
             new Ir6502.Constant(42),
             new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
 
@@ -42,7 +42,7 @@ public class CopyInstructionTests
             new Ir6502.Constant(99),
             new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
 
@@ -56,7 +56,7 @@ public class CopyInstructionTests
             new Ir6502.Constant(77),
             new Ir6502.Memory(0x1000, null, false));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
 
@@ -74,7 +74,7 @@ public class CopyInstructionTests
             new Ir6502.Variable(0),
             new Ir6502.Memory(0x3434, null, false));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction, instruction2]);
         jit.RunMethod(0x1234);
 
@@ -88,7 +88,7 @@ public class CopyInstructionTests
             new Ir6502.Constant(1),
             new Ir6502.Flag(Ir6502.FlagName.Carry));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
 
@@ -102,7 +102,7 @@ public class CopyInstructionTests
             new Ir6502.Constant(0xFD),
             new Ir6502.StackPointer());
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
 
@@ -116,7 +116,7 @@ public class CopyInstructionTests
             new Ir6502.Register(Ir6502.RegisterName.Accumulator),
             new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.TestHal.ARegister = 55;
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
@@ -131,7 +131,7 @@ public class CopyInstructionTests
             new Ir6502.Register(Ir6502.RegisterName.Accumulator),
             new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.TestHal.ARegister = 66;
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
@@ -146,7 +146,7 @@ public class CopyInstructionTests
             new Ir6502.Register(Ir6502.RegisterName.XIndex),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.TestHal.XRegister = 33;
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
@@ -161,7 +161,7 @@ public class CopyInstructionTests
             new Ir6502.Register(Ir6502.RegisterName.XIndex),
             new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.TestHal.XRegister = 44;
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
@@ -176,7 +176,7 @@ public class CopyInstructionTests
             new Ir6502.Register(Ir6502.RegisterName.YIndex),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.TestHal.YRegister = 77;
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
@@ -191,7 +191,7 @@ public class CopyInstructionTests
             new Ir6502.Register(Ir6502.RegisterName.YIndex),
             new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.TestHal.YRegister = 88;
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
@@ -206,7 +206,7 @@ public class CopyInstructionTests
             new Ir6502.Register(Ir6502.RegisterName.Accumulator),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.TestHal.ARegister = 123;
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
@@ -221,7 +221,7 @@ public class CopyInstructionTests
             new Ir6502.Memory(0x2000, null, false),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
         jit.TestHal.WriteMemory(0x2000, 156);
         jit.RunMethod(0x1234);
@@ -236,7 +236,7 @@ public class CopyInstructionTests
             new Ir6502.Memory(0x00FF, Ir6502.RegisterName.XIndex, false),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
         jit.TestHal.XRegister = 10;
 
@@ -253,7 +253,7 @@ public class CopyInstructionTests
             new Ir6502.Memory(0x00FF, Ir6502.RegisterName.XIndex, true),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
         jit.TestHal.XRegister = 10;
 
@@ -270,7 +270,7 @@ public class CopyInstructionTests
             new Ir6502.Register(Ir6502.RegisterName.XIndex),
             new Ir6502.Memory(0x3000, null, false));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
         jit.TestHal.XRegister = 199;
         jit.RunMethod(0x1234);
@@ -285,7 +285,7 @@ public class CopyInstructionTests
             new Ir6502.Register(Ir6502.RegisterName.XIndex),
             new Ir6502.Memory(0x0000, Ir6502.RegisterName.YIndex, true));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
         jit.TestHal.XRegister = 199;
         jit.TestHal.YRegister = 0xFF;
@@ -301,7 +301,7 @@ public class CopyInstructionTests
             new Ir6502.Memory(0x4000, Ir6502.RegisterName.XIndex, false),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
         jit.TestHal.XRegister = 5;
         jit.TestHal.WriteMemory(0x4005, 211);
@@ -317,7 +317,7 @@ public class CopyInstructionTests
             new Ir6502.Register(Ir6502.RegisterName.YIndex),
             new Ir6502.Memory(0x00FF, Ir6502.RegisterName.XIndex, false));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
         jit.TestHal.XRegister = 10;
         jit.TestHal.YRegister = 222;
@@ -333,7 +333,7 @@ public class CopyInstructionTests
             new Ir6502.Register(Ir6502.RegisterName.YIndex),
             new Ir6502.Memory(0x00FF, Ir6502.RegisterName.XIndex, true));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
         jit.TestHal.XRegister = 10;
         jit.TestHal.YRegister = 222;
@@ -349,7 +349,7 @@ public class CopyInstructionTests
             new Ir6502.Memory(0x6000, null, false),
             new Ir6502.Memory(0x7000, null, false));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
         jit.TestHal.WriteMemory(0x6000, 133);
         jit.RunMethod(0x1234);
@@ -367,7 +367,7 @@ public class CopyInstructionTests
             new Ir6502.Variable(0),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [copyToVar, copyFromVar]);
         jit.RunMethod(0x1234);
 
@@ -384,7 +384,7 @@ public class CopyInstructionTests
             new Ir6502.Variable(1),
             new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [copyToVar, copyFromVar]);
         jit.TestHal.XRegister = 177;
         jit.RunMethod(0x1234);
@@ -402,7 +402,7 @@ public class CopyInstructionTests
             new Ir6502.Variable(2),
             new Ir6502.Memory(0x8000, null, false));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [copyToVar, copyFromVar]);
         jit.RunMethod(0x1234);
 
@@ -422,7 +422,7 @@ public class CopyInstructionTests
             new Ir6502.Variable(1),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [copyToVar1, copyVar1ToVar2, copyVar2ToReg]);
         jit.RunMethod(0x1234);
 
@@ -436,7 +436,7 @@ public class CopyInstructionTests
             new Ir6502.Flag(Ir6502.FlagName.Zero),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
         jit.TestHal.SetFlag(CpuStatusFlags.Zero, true);
         jit.RunMethod(0x1234);
@@ -451,7 +451,7 @@ public class CopyInstructionTests
             new Ir6502.Register(Ir6502.RegisterName.Accumulator),
             new Ir6502.Flag(Ir6502.FlagName.Negative));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.TestHal.ARegister = 1;
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
@@ -466,7 +466,7 @@ public class CopyInstructionTests
             new Ir6502.Constant(0),
             new Ir6502.Flag(Ir6502.FlagName.Overflow));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
 
@@ -480,7 +480,7 @@ public class CopyInstructionTests
             new Ir6502.Flag(Ir6502.FlagName.Carry),
             new Ir6502.Memory(0x9000, null, false));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
         jit.RunMethod(0x1234);
@@ -495,7 +495,7 @@ public class CopyInstructionTests
             new Ir6502.Memory(0xA000, null, false),
             new Ir6502.Flag(Ir6502.FlagName.InterruptDisable));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
         jit.TestHal.WriteMemory(0xA000, 1);
         jit.RunMethod(0x1234);
@@ -513,7 +513,7 @@ public class CopyInstructionTests
             new Ir6502.Variable(0),
             new Ir6502.Flag(Ir6502.FlagName.Zero));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [copyCarryToVar, copyVarToZero]);
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
         jit.RunMethod(0x1234);
@@ -528,7 +528,7 @@ public class CopyInstructionTests
             new Ir6502.AllFlags(),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.TestHal.ProcessorStatus = 0x85;
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
@@ -543,7 +543,7 @@ public class CopyInstructionTests
             new Ir6502.Register(Ir6502.RegisterName.Accumulator),
             new Ir6502.AllFlags());
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.TestHal.ARegister = 0x85;
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
@@ -558,7 +558,7 @@ public class CopyInstructionTests
             new Ir6502.AllFlags(),
             new Ir6502.Memory(0xB000, null, false));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.TestHal.ProcessorStatus = 0x85;
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
@@ -573,7 +573,7 @@ public class CopyInstructionTests
             new Ir6502.Memory(0xC000, null, false),
             new Ir6502.AllFlags());
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
         jit.TestHal.WriteMemory(0xC000, 0x85);
         jit.RunMethod(0x1234);
@@ -588,7 +588,7 @@ public class CopyInstructionTests
             new Ir6502.StackPointer(),
             new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.TestHal.StackPointer = 0xF8;
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
@@ -603,7 +603,7 @@ public class CopyInstructionTests
             new Ir6502.Register(Ir6502.RegisterName.YIndex),
             new Ir6502.StackPointer());
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.TestHal.YRegister = 0xE5;
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
@@ -618,7 +618,7 @@ public class CopyInstructionTests
             new Ir6502.StackPointer(),
             new Ir6502.Memory(0xD000, null, false));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.TestHal.StackPointer = 0xCC;
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
@@ -633,7 +633,7 @@ public class CopyInstructionTests
             new Ir6502.Memory(0xE000, null, false),
             new Ir6502.StackPointer());
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
         jit.TestHal.WriteMemory(0xE000, 0xAA);
         jit.RunMethod(0x1234);
@@ -648,7 +648,7 @@ public class CopyInstructionTests
             new Ir6502.IndirectMemory(0x20, true, false), // Indexed-Indirect: (zp,X)
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.TestHal.XRegister = 5;
         jit.AddMethod(0x1234, [instruction]);
 
@@ -671,7 +671,7 @@ public class CopyInstructionTests
             new Ir6502.IndirectMemory(0x30, false, true), // Indirect-Indexed: (zp),Y
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.TestHal.YRegister = 10;
         jit.AddMethod(0x1234, [instruction]);
 
@@ -694,7 +694,7 @@ public class CopyInstructionTests
             new Ir6502.Register(Ir6502.RegisterName.Accumulator),
             new Ir6502.IndirectMemory(0x20, true, false)); // Indexed-Indirect: (zp,X)
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.TestHal.XRegister = 5;
         jit.TestHal.ARegister = 0x42;
         jit.AddMethod(0x1234, [instruction]);
@@ -715,7 +715,7 @@ public class CopyInstructionTests
             new Ir6502.Register(Ir6502.RegisterName.Accumulator),
             new Ir6502.IndirectMemory(0x30, false, true)); // Indirect-Indexed: (zp),Y
 
-        var jit = new TestJitCompiler();
+        var jit = TestJitCompiler.Create();
         jit.TestHal.YRegister = 10;
         jit.TestHal.ARegister = 0x84;
         jit.AddMethod(0x1234, [instruction]);
