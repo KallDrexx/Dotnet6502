@@ -36,6 +36,13 @@ public static class Ir6502
     public record ConvertVariableToByte(Variable Variable) : Instruction;
 
     /// <summary>
+    /// Performs a poll for interrupt, and redirects to the correct interrupt implementation if
+    /// told to. Is automatically inserted and should not be manually inserted in normal circumstances.
+    /// </summary>
+    /// <param name="ContinuationAddress"></param>
+    public record PollForInterrupt(ushort ContinuationAddress) : Instruction;
+
+    /// <summary>
     /// Adds the specified text into a location that's visible while debugging
     /// </summary>
     public record StoreDebugString(string Text) : Instruction;

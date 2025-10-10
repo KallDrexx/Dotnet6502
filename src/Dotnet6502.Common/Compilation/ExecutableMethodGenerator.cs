@@ -12,9 +12,14 @@ public static class ExecutableMethodGenerator
     public static ExecutableMethod Generate(
         string name,
         IReadOnlyList<ConvertedInstruction> instructions,
-        IReadOnlyDictionary<Type, MsilGenerator.CustomIlGenerator>? customIlGenerators = null)
+        IReadOnlyDictionary<Type, MsilGenerator.CustomIlGenerator>? customIlGenerators = null,
+        bool generateDll = false)
     {
-        // GenerateDebuggableDll(name, instructions, customIlGenerators);
+        if (generateDll)
+        {
+            GenerateDebuggableDll(name, instructions, customIlGenerators);
+        }
+
         return GenerateViaAssemblies(name, instructions, customIlGenerators);
     }
 
@@ -80,8 +85,6 @@ public static class ExecutableMethodGenerator
         var msilGenerator = new MsilGenerator(ilLabels, customIlGenerators);
         foreach (var instruction in instructions)
         {
-            var debugInstruction = new Ir6502.StoreDebugString(instruction.OriginalInstruction.ToString());
-            msilGenerator.Generate(debugInstruction, ilGenerator);
             foreach (var irInstruction in instruction.Ir6502Instructions)
             {
                 msilGenerator.Generate(irInstruction, ilGenerator);

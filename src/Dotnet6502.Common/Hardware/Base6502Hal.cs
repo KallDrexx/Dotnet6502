@@ -93,6 +93,15 @@ public class Base6502Hal
         throw new NotImplementedException();
     }
 
+    /// <summary>
+    /// Polls for a waiting interrupt. If an interrupt is pending, the address of the interrupt pointer
+    /// is returned. If no interrupt is pending, then Zero is returned.
+    /// </summary>
+    public virtual ushort PollForInterrupt()
+    {
+        return 0;
+    }
+
     public virtual void DebugHook(string info)
     {
     }

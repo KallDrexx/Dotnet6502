@@ -113,6 +113,10 @@ public class MsilGenerator
                 GenerateDebugValue(debugValue, ilGenerator);
                 break;
 
+            case Ir6502.PollForInterrupt poll:
+                GeneratePollForInterrupts(poll, ilGenerator);
+                break;
+
             default:
                 throw new NotSupportedException(instruction.GetType().FullName);
         }
@@ -404,6 +408,65 @@ public class MsilGenerator
 
         // Should have a string on the stack, now call the hook
         ilGenerator.Emit(OpCodes.Callvirt, debugHookMethod);
+    }
+
+    private static void GeneratePollForInterrupts(Ir6502.PollForInterrupt poll, ILGenerator ilGenerator)
+    {
+        const int fullPollAddressIndex = 0;
+        const int highByteIndex = 1;
+        const int lowByteIndex = 2;
+        var continueExecution = ilGenerator.DefineLabel();
+        var pollMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.PollForInterrupt))!;
+        var readMemoryMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.ReadMemory))!;
+
+        ilGenerator.Emit(JitCompiler.LoadHalArg);
+        ilGenerator.Emit(OpCodes.Callvirt, pollMethod);
+        SaveStackToTempLocal(ilGenerator, fullPollAddressIndex);
+
+        // If we received an address of zero, then no interrupt is pending and continue execution
+        LoadTempLocalToStack(ilGenerator, fullPollAddressIndex);
+        ilGenerator.Emit(OpCodes.Brfalse, continueExecution);
+
+        // If we got a non-zero address, we need to push the current instruction address on the stack
+        // and call the function pointed to at the provided address
+        var addressLowByte = new Ir6502.Constant((byte)(poll.ContinuationAddress & 0x00FF));
+        var addressHighByte = new Ir6502.Constant((byte)((poll.ContinuationAddress & 0xFF00) >> 8));
+        GeneratePushStackValue(new Ir6502.PushStackValue(addressHighByte), ilGenerator);
+        GeneratePushStackValue(new Ir6502.PushStackValue(addressLowByte), ilGenerator);
+        GeneratePushStackValue(new Ir6502.PushStackValue(new Ir6502.AllFlags()), ilGenerator);
+
+        // Set the interrupt disable flag to true
+        var setFlagMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.SetFlag))!;
+        ilGenerator.Emit(JitCompiler.LoadHalArg);
+        ilGenerator.Emit(OpCodes.Ldc_I4, (int)ConvertFlagName(Ir6502.FlagName.InterruptDisable));
+        ilGenerator.Emit(OpCodes.Ldc_I4_1);
+        ilGenerator.Emit(OpCodes.Callvirt, setFlagMethod);
+
+        // Read the high and low byte from the provided memory locations
+        ilGenerator.Emit(JitCompiler.LoadHalArg);
+        LoadTempLocalToStack(ilGenerator, fullPollAddressIndex);
+        ilGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
+        SaveStackToTempLocal(ilGenerator, lowByteIndex);
+
+        ilGenerator.Emit(JitCompiler.LoadHalArg);
+        LoadTempLocalToStack(ilGenerator, fullPollAddressIndex);
+        ilGenerator.Emit(OpCodes.Ldc_I4_1);
+        ilGenerator.Emit(OpCodes.Add);
+        ilGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
+        SaveStackToTempLocal(ilGenerator, highByteIndex);
+
+        // Combine the bytes together and return them
+        LoadTempLocalToStack(ilGenerator, highByteIndex);
+        ilGenerator.Emit(OpCodes.Ldc_I4_8);
+        ilGenerator.Emit(OpCodes.Shl);
+        LoadTempLocalToStack(ilGenerator, lowByteIndex);
+        ilGenerator.Emit(OpCodes.Add);
+        ilGenerator.Emit(OpCodes.Conv_U2);
+        ilGenerator.Emit(OpCodes.Ret);
+
+        // Continue execution if we got this far
+        ilGenerator.MarkLabel(continueExecution);
+        ilGenerator.Emit(OpCodes.Nop); // Just in case a bug means we have no trailing instruction
     }
 
     private static void LoadValueToStack(Ir6502.Value value, ILGenerator ilGenerator)
@@ -701,6 +764,14 @@ public class MsilGenerator
 
     private static void SaveStackToTempLocal(ILGenerator ilGenerator, int index = 0)
     {
+        if (index >= InstructionDebugStringLocalIndex)
+        {
+            var message = $"Requested saving stack value to invalid local index {index}, but there are only " +
+                          $"{InstructionDebugStringLocalIndex} locals available";
+
+            throw new InvalidOperationException(message);
+        }
+
         ilGenerator.Emit(OpCodes.Stloc, index);
     }
 

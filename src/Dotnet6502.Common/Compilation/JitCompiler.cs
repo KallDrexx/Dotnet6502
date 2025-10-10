@@ -15,7 +15,7 @@ public class JitCompiler
 
     private readonly Decompiler _decompiler;
     private readonly Base6502Hal _hal;
-    private readonly IJitCustomizer? _jitCustomizer;
+    private readonly IReadOnlyList<IJitCustomizer> _jitCustomizers;
     private readonly IMemoryMap _memoryMap;
     protected Dictionary<ushort, ExecutableMethod> CompiledMethods { get; } = new();
 
@@ -23,7 +23,10 @@ public class JitCompiler
     {
         _hal = hal;
         _decompiler = decompiler;
-        _jitCustomizer = jitCustomizer;
+        _jitCustomizers = jitCustomizer != null
+            ? [new StandardJitCustomizer(), jitCustomizer]
+            : [new StandardJitCustomizer()];
+
         _memoryMap = memoryMap;
     }
 
@@ -38,7 +41,9 @@ public class JitCompiler
             if (!CompiledMethods.TryGetValue((ushort)nextAddress, out var method))
             {
                 var instructions = GetIrInstructions((ushort)nextAddress);
-                var customGenerators = _jitCustomizer?.GetCustomIlGenerators();
+                var customGenerators = _jitCustomizers.SelectMany(x => x.GetCustomIlGenerators())
+                    .ToDictionary(x => x.Key, x => x.Value);
+
                 method = ExecutableMethodGenerator.Generate($"func_{(ushort)nextAddress:X4}", instructions, customGenerators);
                 CompiledMethods.Add((ushort)nextAddress, method);
             }
@@ -99,9 +104,9 @@ public class JitCompiler
             .ToArray();
 
         // Mutate the instructions based on the JIT customizations being requested
-        if (_jitCustomizer != null)
+        foreach (var jitCustomizer in _jitCustomizers)
         {
-            convertedInstructions = _jitCustomizer.MutateInstructions(convertedInstructions);
+            convertedInstructions = jitCustomizer.MutateInstructions(convertedInstructions);
         }
 
         if (convertedInstructions.Count == 0)

@@ -3,12 +3,10 @@ namespace Dotnet6502.Nes;
 public class DebugWriter : IDisposable
 {
     private readonly StreamWriter _writer;
-    private readonly DebugLogSections _sections;
     private readonly Ppu _ppu;
 
-    public DebugWriter(FileInfo outputLog, DebugLogSections sections, Ppu ppu)
+    public DebugWriter(FileInfo outputLog, Ppu ppu)
     {
-        _sections = sections;
         _ppu = ppu;
 
         try
@@ -26,16 +24,8 @@ public class DebugWriter : IDisposable
         Console.WriteLine($"Writing debug log to: {outputLog.FullName}");
     }
 
-    public void Log(bool isInNmi, NesHal hal, string info, bool includeState)
+    public void Log(NesHal hal, string info, bool includeState)
     {
-        var shouldLog = (isInNmi && _sections != DebugLogSections.OnlyNonNmi) ||
-                        (!isInNmi && _sections != DebugLogSections.OnlyNmi);
-
-        if (!shouldLog)
-        {
-            return;
-        }
-
         _writer.Write($"{info}");
         if (includeState)
         {

@@ -40,7 +40,7 @@ var ppu = new Ppu(chrRomData, app);
 var memory = new NesMemory(ppu, programRomData, app);
 
 var debugWriter = commandLineValues.DebugLogFile != null
-    ? new DebugWriter(commandLineValues.DebugLogFile, commandLineValues.Sections ?? DebugLogSections.All, ppu)
+    ? new DebugWriter(commandLineValues.DebugLogFile, ppu)
     : null;
 
 var hal = new NesHal(memory, ppu, debugWriter, cancellationTokenSource.Token);

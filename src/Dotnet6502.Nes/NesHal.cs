@@ -1,4 +1,3 @@
-using Dotnet6502.Common;
 using Dotnet6502.Common.Hardware;
 
 namespace Dotnet6502.Nes;
@@ -8,7 +7,7 @@ public class NesHal : Base6502Hal
     private readonly Ppu _ppu;
     private readonly CancellationToken _cancellationToken;
     private readonly DebugWriter? _debugWriter;
-    private bool _isInNmi;
+    private bool _nmiTriggered;
 
     public Action? NmiHandler { get; set; }
 
@@ -20,6 +19,9 @@ public class NesHal : Base6502Hal
         _debugWriter = debugWriter;
     }
 
+    /// <summary>
+    /// Increments the CPU cycle count in preparation for an instruction.
+    /// </summary>
     public void IncrementCpuCycleCount(int count)
     {
         if (_cancellationToken.IsCancellationRequested)
@@ -27,27 +29,13 @@ public class NesHal : Base6502Hal
             throw new TaskCanceledException("Cancellation requested");
         }
 
-        var nmiTriggered = _ppu.RunNextStep(count);
-        if (nmiTriggered)
-        {
-            if (NmiHandler != null)
-            {
-                PushToStack(ProcessorStatus);
-                _isInNmi = true;
-                NmiHandler();
-                _isInNmi = true;
-            }
-            else
-            {
-                throw new InvalidOperationException("NMI triggered but no NMI handler defined");
-            }
-        }
+        _nmiTriggered = _ppu.RunNextStep(count);
     }
 
     public override byte PopFromStack()
     {
         var value = base.PopFromStack();
-        _debugWriter?.Log(_isInNmi, this, $"Popped 0x{value:X2} from stack", true);
+        _debugWriter?.Log(this, $"Popped 0x{value:X2} from stack", true);
 
         return value;
     }
@@ -55,11 +43,23 @@ public class NesHal : Base6502Hal
     public override void PushToStack(byte value)
     {
         base.PushToStack(value);
-        _debugWriter?.Log(_isInNmi, this, $"Pushed 0x{value:X2} to stack", true);
+        _debugWriter?.Log(this, $"Pushed 0x{value:X2} to stack", true);
     }
 
     public override void DebugHook(string info)
     {
-        _debugWriter?.Log(_isInNmi, this, info, true);
+        _debugWriter?.Log(this, info, true);
+    }
+
+    public override ushort PollForInterrupt()
+    {
+        if (_nmiTriggered)
+        {
+            _nmiTriggered = false;
+            return 0xFFFA;
+        }
+
+        // No interrupt
+        return 0;
     }
 }

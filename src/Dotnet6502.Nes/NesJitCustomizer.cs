@@ -57,25 +57,23 @@ public class NesJitCustomizer : IJitCustomizer
     {
         return (instruction, ilGenerator) =>
         {
-            if (instruction is IncrementCycleCount incrementCycleCount)
-            {
-                // Load the hardware field
-                ilGenerator.Emit(JitCompiler.LoadHalArg);
-
-                // Cast from I6502Hal interface to NesHal concrete type
-                ilGenerator.Emit(OpCodes.Castclass, typeof(NesHal));
-
-                // Load the cycle count as a constant
-                ilGenerator.Emit(OpCodes.Ldc_I4, incrementCycleCount.Cycles);
-
-                // Call NesHal.IncrementCpuCycleCount(int count)
-                var incrementMethod = typeof(NesHal).GetMethod(nameof(NesHal.IncrementCpuCycleCount))!;
-                ilGenerator.Emit(OpCodes.Callvirt, incrementMethod);
-            }
-            else
+            if (instruction is not IncrementCycleCount incrementCycleCount)
             {
                 throw new NotSupportedException(instruction.GetType().FullName);
             }
+
+            // Load the hardware field
+            ilGenerator.Emit(JitCompiler.LoadHalArg);
+
+            // Cast from I6502Hal interface to NesHal concrete type
+            ilGenerator.Emit(OpCodes.Castclass, typeof(NesHal));
+
+            // Load the cycle count as a constant
+            ilGenerator.Emit(OpCodes.Ldc_I4, incrementCycleCount.Cycles);
+
+            // Call NesHal.IncrementCpuCycleCount(int count)
+            var incrementMethod = typeof(NesHal).GetMethod(nameof(NesHal.IncrementCpuCycleCount))!;
+            ilGenerator.Emit(OpCodes.Callvirt, incrementMethod);
         };
     }
 

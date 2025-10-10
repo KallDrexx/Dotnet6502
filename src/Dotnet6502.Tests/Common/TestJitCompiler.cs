@@ -12,7 +12,7 @@ public class TestJitCompiler : JitCompiler
     public Dictionary<Type, MsilGenerator.CustomIlGenerator>? CustomGenerators { get; set; }
 
     public TestMemoryMap MemoryMap { get; }
-    public Base6502Hal TestHal { get; }
+    public TestHal TestHal { get; }
 
     private TestJitCompiler(Decompiler decompiler, TestHal testHal, TestMemoryMap memoryMap)
         : base(decompiler, testHal, null, memoryMap)
@@ -30,7 +30,7 @@ public class TestJitCompiler : JitCompiler
         return new TestJitCompiler(decompiler, hal, memoryMap);
     }
 
-    public void AddMethod(ushort address, IReadOnlyList<Ir6502.Instruction> instructions)
+    public void AddMethod(ushort address, IReadOnlyList<Ir6502.Instruction> instructions, bool generateDll = false)
     {
         var nop = new DisassembledInstruction
         {
@@ -40,7 +40,12 @@ public class TestJitCompiler : JitCompiler
         };
 
         var convertedInstructions = new ConvertedInstruction(nop, instructions);
-        var method = ExecutableMethodGenerator.Generate($"test_0x{address:X4}", [convertedInstructions], CustomGenerators);
+        var method = ExecutableMethodGenerator.Generate(
+            $"test_0x{address:X4}",
+            [convertedInstructions],
+            CustomGenerators,
+            generateDll);
+
         CompiledMethods.Add(address, method);
     }
 
