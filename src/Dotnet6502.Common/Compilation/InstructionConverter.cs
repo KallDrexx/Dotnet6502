@@ -988,7 +988,6 @@ public static class InstructionConverter
         var lowAddress = new Ir6502.Variable(0);
         var fullAddress = new Ir6502.Variable(1);
 
-        var popFlags = new Ir6502.PopStackValue(new Ir6502.AllFlags());
         var popLow = new Ir6502.PopStackValue(lowAddress);
         var popHigh = new Ir6502.PopStackValue(fullAddress);
         var shiftHigh = new Ir6502.Binary(
@@ -1012,7 +1011,7 @@ public static class InstructionConverter
 
         var ret = new Ir6502.Return(fullAddress);
 
-        return [popFlags, popLow, popHigh, shiftHigh, addLow, addOne, ret];
+        return [popLow, popHigh, shiftHigh, addLow, addOne, ret];
     }
 
     /// <summary>
