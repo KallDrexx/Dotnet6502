@@ -358,7 +358,7 @@ public static class InstructionConverter
             new Ir6502.Constant(1),
             new Ir6502.Flag(Ir6502.FlagName.InterruptDisable));
 
-        var triggerInterrupt = new Ir6502.CallFunction(new Ir6502.FunctionAddress(0xFFFE, false));
+        var triggerInterrupt = new Ir6502.CallFunction(new Ir6502.FunctionAddress(0xFFFE, true));
 
         return [pushHighAddress, pushLowAddress, copyFlags, setBFlag, pushFlags, setInterruptDisable, triggerInterrupt];
     }
