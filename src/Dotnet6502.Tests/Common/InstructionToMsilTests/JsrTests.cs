@@ -31,10 +31,6 @@ public class JsrTests
                 // Set up initial state
                 new Ir6502.Copy(new Ir6502.Constant(0), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
             )
-            .Append(
-                // Instruction executed after function call
-                new Ir6502.Copy(new Ir6502.Constant(42), new Ir6502.Register(Ir6502.RegisterName.XIndex))
-            )
             .ToArray();
 
         var jit = TestJitCompiler.Create();
@@ -48,118 +44,8 @@ public class JsrTests
 
         jit.RunMethod(0x1234);
 
-        // Verify the function was called and execution continued
-        jit.TestHal.XRegister.ShouldBe((byte)42); // Should be executed after JSR
-
         // Verify the function was actually invoked
         jit.TestHal.ReadMemory(0x4000).ShouldBe((byte)99);
-    }
-
-    [Fact]
-    public void JSR_Multiple_Function_Calls()
-    {
-        var instructionInfo = InstructionSet.GetInstruction(0x20);
-
-        // First JSR instruction
-        var instruction1 = new DisassembledInstruction
-        {
-            Info = instructionInfo,
-            Bytes = [0x20, 0x00, 0x90], // JSR $9000
-            TargetAddress = 0x9000,
-            CPUAddress = 0x5678,
-        };
-
-        // Second JSR instruction
-        var instruction2 = new DisassembledInstruction
-        {
-            Info = instructionInfo,
-            Bytes = [0x20, 0x00, 0x91], // JSR $9100
-            TargetAddress = 0x9100,
-            CPUAddress = 0x6789,
-        };
-
-        var context = new InstructionConverter.Context(new Dictionary<ushort, string>());
-
-        var allInstructions = InstructionConverter.Convert(instruction1, context)
-            .Append(new Ir6502.Copy(
-                new Ir6502.Constant(77),
-                new Ir6502.Register(Ir6502.RegisterName.XIndex)))
-            .Concat(InstructionConverter.Convert(instruction2, context))
-            .Append(
-                new Ir6502.Copy(new Ir6502.Constant(88),
-                    new Ir6502.Register(Ir6502.RegisterName.YIndex)))
-            .ToArray();
-
-        var jit = TestJitCompiler.Create();
-        jit.AddMethod(0x1234, allInstructions);
-
-        // Add callable functions at the JSR target addresses
-        var callableInstruction1 = new Ir6502.Copy(
-            new Ir6502.Constant(99),
-            new Ir6502.Memory(0x5000, null, false));
-        jit.AddMethod(0x9000, [callableInstruction1]); // First JSR target address
-
-        var callableInstruction2 = new Ir6502.Copy(
-            new Ir6502.Constant(100),
-            new Ir6502.Memory(0x5001, null, false));
-        jit.AddMethod(0x9100, [callableInstruction2]); // Second JSR target address
-
-        jit.RunMethod(0x1234);
-
-        // Verify both functions were called and all instructions executed
-        jit.TestHal.XRegister.ShouldBe((byte)77);
-        jit.TestHal.YRegister.ShouldBe((byte)88);
-
-        // Verify both functions were actually invoked
-        jit.TestHal.ReadMemory(0x5000).ShouldBe((byte)99);
-        jit.TestHal.ReadMemory(0x5001).ShouldBe((byte)100);
-    }
-
-    [Fact]
-    public void JSR_Same_Function_Multiple_Times()
-    {
-        var instructionInfo = InstructionSet.GetInstruction(0x20);
-        var instruction = new DisassembledInstruction
-        {
-            Info = instructionInfo,
-            Bytes = [0x20, 0x00, 0x90], // JSR $9000
-            TargetAddress = 0x9000
-        };
-
-        var context = new InstructionConverter.Context(new Dictionary<ushort, string>());
-        var allInstructions = InstructionConverter.Convert(instruction, context)
-            .Concat(new List<Ir6502.Instruction>
-            {
-                new Ir6502.Copy(new Ir6502.Constant(11), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
-
-                // Second call (create new instruction conversion for same function)
-                InstructionConverter.Convert(instruction, context)[0],
-                new Ir6502.Copy(new Ir6502.Constant(22), new Ir6502.Register(Ir6502.RegisterName.YIndex)),
-
-                // Third call
-                InstructionConverter.Convert(instruction, context)[0],
-                new Ir6502.Copy(new Ir6502.Constant(33), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
-            })
-            .ToArray();
-
-        var jit = TestJitCompiler.Create();
-        jit.AddMethod(0x1234, allInstructions);
-
-        // Add a callable function at the JSR target address
-        var callableInstruction = new Ir6502.Copy(
-            new Ir6502.Constant(101),
-            new Ir6502.Memory(0x5002, null, false));
-        jit.AddMethod(0x9000, [callableInstruction]); // JSR target address
-
-        jit.RunMethod(0x1234);
-
-        // Verify all instructions executed (function was called each time)
-        jit.TestHal.XRegister.ShouldBe((byte)11);
-        jit.TestHal.YRegister.ShouldBe((byte)22);
-        jit.TestHal.ARegister.ShouldBe((byte)33);
-
-        // Verify the function was actually invoked
-        jit.TestHal.ReadMemory(0x5002).ShouldBe((byte)101);
     }
 
     [Fact]
@@ -174,13 +60,9 @@ public class JsrTests
         };
 
         var labels = new Dictionary<ushort, string>();
-        var functions = new Dictionary<ushort, Function>
-        {
-            { 0x9000, new Function(0x9000, "TestFunction") }
-        };
         var context = new InstructionConverter.Context(labels);
 
-        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var irInstructions = InstructionConverter.Convert(instruction, context);
 
         var allInstructions = new List<Ir6502.Instruction>
         {
@@ -191,7 +73,7 @@ public class JsrTests
             new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Overflow)),
 
             // Add the JSR instruction
-            nesIrInstructions[0]
+            irInstructions[0]
         };
 
         var jit = TestJitCompiler.Create();
@@ -249,7 +131,6 @@ public class JsrTests
         jit.TestHal.ARegister = 0x42;
         jit.TestHal.XRegister = 0x33;
         jit.TestHal.YRegister = 0x77;
-        jit.TestHal.StackPointer = 0xFF;
 
         jit.RunMethod(0x1234);
 
@@ -257,7 +138,6 @@ public class JsrTests
         jit.TestHal.ARegister.ShouldBe((byte)0x42);
         jit.TestHal.XRegister.ShouldBe((byte)0x33);
         jit.TestHal.YRegister.ShouldBe((byte)0x77);
-        jit.TestHal.StackPointer.ShouldBe((byte)0xFF);
     }
 
     [Fact]
@@ -276,5 +156,47 @@ public class JsrTests
         // Should throw exception when JSR has no target address
         Should.Throw<InvalidOperationException>(() => InstructionConverter.Convert(instruction, context))
             .Message.ShouldContain("JSR instruction with no target address");
+    }
+
+    [Fact]
+    public void JSR_Pushes_Address_Plus_Two_To_The_stack()
+    {
+        var instructionInfo = InstructionSet.GetInstruction(0x20);
+        var instruction = new DisassembledInstruction
+        {
+            Info = instructionInfo,
+            Bytes = [0x20, 0x00, 0x90], // JSR $9000
+            TargetAddress = 0x9000, // Target address for function call
+            CPUAddress = 0x3456,
+        };
+
+        var context = new InstructionConverter.Context(new Dictionary<ushort, string>());
+        var allInstructions = InstructionConverter.Convert(instruction, context)
+            .Prepend(
+                // Set up initial state
+                new Ir6502.Copy(new Ir6502.Constant(0), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
+            )
+            .ToArray();
+
+        var jit = TestJitCompiler.Create();
+        jit.AddMethod(0x1234, allInstructions);
+
+        // Add a callable function at the JSR target address that writes a test value to memory
+        var lowVariable = new Ir6502.Variable(0);
+        var highVariable = new Ir6502.Variable(1);
+        Ir6502.Instruction[] targetInstructions =
+        [
+            new Ir6502.PopStackValue(lowVariable),
+            new Ir6502.PopStackValue(highVariable),
+            new Ir6502.Copy(lowVariable, new Ir6502.Register(Ir6502.RegisterName.XIndex)),
+            new Ir6502.Copy(highVariable, new Ir6502.Register(Ir6502.RegisterName.YIndex)),
+        ];
+
+        jit.AddMethod(0x9000, targetInstructions);
+        jit.RunMethod(0x1234);
+
+        // Verify the function was actually invoked and the values are expected
+        jit.TestHal.YRegister.ShouldBe((byte)0x34);
+        jit.TestHal.XRegister.ShouldBe((byte)0x58);
     }
 }

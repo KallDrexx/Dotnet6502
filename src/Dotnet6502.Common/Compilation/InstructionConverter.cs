@@ -32,7 +32,7 @@ public static class InstructionConverter
             case "BMI": results.AddRange(ConvertBmi(instruction, context)); break;
             case "BNE": results.AddRange(ConvertBne(instruction, context)); break;
             case "BPL": results.AddRange(ConvertBpl(instruction, context)); break;
-            case "BRK": results.AddRange(ConvertBrk()); break;
+            case "BRK": results.AddRange(ConvertBrk(instruction)); break;
             case "BVC": results.AddRange(ConvertBvc(instruction, context)); break;
             case "BVS": results.AddRange(ConvertBvs(instruction, context)); break;
             case "CLC": results.AddRange(ConvertClc()); break;
@@ -338,20 +338,29 @@ public static class InstructionConverter
     /// <summary>
     /// Break (software IRQ)
     /// </summary>
-    private static Ir6502.Instruction[] ConvertBrk()
+    private static Ir6502.Instruction[] ConvertBrk(DisassembledInstruction instruction)
     {
-        var pushFlags = new Ir6502.PushStackValue(new Ir6502.AllFlags());
+        var updatedAddress = instruction.CPUAddress + 2; // BRK pushes PC + 2 to the stack
+        var flagsVariable = new Ir6502.Variable(0);
+
+        var pushHighAddress = new Ir6502.PushStackValue(new Ir6502.Constant((byte)((updatedAddress & 0xFF00) >> 8)));
+        var pushLowAddress = new Ir6502.PushStackValue(new Ir6502.Constant((byte)(updatedAddress & 0x00FF)));
+
+        var copyFlags = new Ir6502.Copy(new Ir6502.AllFlags(), flagsVariable);
+        var setBFlag = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Or,
+            flagsVariable,
+            new Ir6502.Constant(0b00010000),
+            flagsVariable);
+
+        var pushFlags = new Ir6502.PushStackValue(flagsVariable);
         var setInterruptDisable = new Ir6502.Copy(
             new Ir6502.Constant(1),
             new Ir6502.Flag(Ir6502.FlagName.InterruptDisable));
 
-        var setBFlag = new Ir6502.Copy(
-            new Ir6502.Constant(1),
-            new Ir6502.Flag(Ir6502.FlagName.BFlag));
+        var triggerInterrupt = new Ir6502.CallFunction(new Ir6502.FunctionAddress(0xFFFE, false));
 
-        var triggerInterrupt = new Ir6502.CallFunction(new Ir6502.FunctionAddress(0xFFFE, true));
-
-        return [pushFlags, setInterruptDisable, setBFlag, triggerInterrupt];
+        return [pushHighAddress, pushLowAddress, copyFlags, setBFlag, pushFlags, setInterruptDisable, triggerInterrupt];
     }
 
     /// <summary>

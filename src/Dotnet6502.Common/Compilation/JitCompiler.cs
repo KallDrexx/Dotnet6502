@@ -35,13 +35,12 @@ public class JitCompiler
         int nextAddress = address;
         while (nextAddress >= 0 )
         {
-            address = (ushort)nextAddress;
-            if (!CompiledMethods.TryGetValue(address, out var method))
+            if (!CompiledMethods.TryGetValue((ushort)nextAddress, out var method))
             {
-                var instructions = GetIrInstructions(address);
+                var instructions = GetIrInstructions((ushort)nextAddress);
                 var customGenerators = _jitCustomizer?.GetCustomIlGenerators();
-                method = ExecutableMethodGenerator.Generate($"func_{address:X4}", instructions, customGenerators);
-                CompiledMethods.Add(address, method);
+                method = ExecutableMethodGenerator.Generate($"func_{(ushort)nextAddress:X4}", instructions, customGenerators);
+                CompiledMethods.Add((ushort)nextAddress, method);
             }
 
             _hal.DebugHook($"Entering function 0x{address:X4}");
