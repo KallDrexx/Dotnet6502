@@ -55,6 +55,7 @@ public class NesHal : Base6502Hal
     {
         if (_nmiTriggered)
         {
+            _debugWriter?.Log(this, "NMI Triggered", true);
             _nmiTriggered = false;
             return 0xFFFA;
         }

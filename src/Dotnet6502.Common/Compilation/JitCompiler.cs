@@ -48,9 +48,10 @@ public class JitCompiler
                 CompiledMethods.Add((ushort)nextAddress, method);
             }
 
-            _hal.DebugHook($"Entering function 0x{address:X4}");
+            _hal.DebugHook($"Entering function 0x{nextAddress:X4}");
+            var currentAddress = nextAddress;
             nextAddress = method(this, _hal);
-            _hal.DebugHook($"Exiting function 0x{address:X4}");
+            _hal.DebugHook($"Exiting function 0x{currentAddress:X4}");
         }
     }
 
