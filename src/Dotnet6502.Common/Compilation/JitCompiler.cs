@@ -13,16 +13,14 @@ public class JitCompiler
 {
     public static readonly OpCode LoadHalArg = OpCodes.Ldarg_1;
 
-    private readonly Decompiler _decompiler;
     private readonly Base6502Hal _hal;
     private readonly IReadOnlyList<IJitCustomizer> _jitCustomizers;
     private readonly IMemoryMap _memoryMap;
     protected Dictionary<ushort, ExecutableMethod> CompiledMethods { get; } = new();
 
-    public JitCompiler(Decompiler decompiler, Base6502Hal hal, IJitCustomizer? jitCustomizer, IMemoryMap memoryMap)
+    public JitCompiler(Base6502Hal hal, IJitCustomizer? jitCustomizer, IMemoryMap memoryMap)
     {
         _hal = hal;
-        _decompiler = decompiler;
         _jitCustomizers = jitCustomizer != null
             ? [new StandardJitCustomizer(), jitCustomizer]
             : [new StandardJitCustomizer()];
@@ -57,50 +55,18 @@ public class JitCompiler
 
     protected virtual IReadOnlyList<ConvertedInstruction> GetIrInstructions(ushort address)
     {
-        var region = _memoryMap.GetCodeRegions()
-            .Where(x => x.BaseAddress <= address)
-            .Where(x => x.BaseAddress + x.Bytes.Length > address)
-            .FirstOrDefault();
+        var function = FunctionDecompiler.Decompile(address, _memoryMap.GetCodeRegions());
 
-        if (region == null)
-        {
-            var message = $"No known code region contains the address 0x{address:X4}";
-            throw new InvalidOperationException(message);
-        }
-
-        var disassembler = new Disassembler(region.BaseAddress, region.Bytes);
-        disassembler.AddEntyPoint(address);
-        disassembler.Disassemble();
-
-        // Rom info only needed for string functions, which we don't use
-        var decompiler = new Decompiler(_decompiler.ROMInfo, disassembler);
-        decompiler.Decompile();
-
-        if (!decompiler.Functions.TryGetValue(address, out var function))
-        {
-            var message = $"Address 0x{address:X4} did not contain a decompilable function";
-            throw new InvalidOperationException(message);
-        }
-
-        if (function.Instructions.Count == 0)
+        if (function.OrderedInstructions.Count == 0)
         {
             var message = $"Function at address 0x{address:X4} contained no instructions";
             throw new InvalidOperationException(message);
         }
 
-        var disassembledInstructions = disassembler.Instructions
-            .Where(x => function.Instructions.Contains(x.CPUAddress))
-            .OrderBy(x => x.CPUAddress)
-            .ToArray();
-
-        var preInstructions = disassembledInstructions.Where(x => x.CPUAddress < address);
-        var postInstructions = disassembledInstructions.Where(x => x.CPUAddress >= address);
-        var orderedInstructions = postInstructions.Concat(preInstructions).ToArray();
-
-        var instructionConverterContext = new InstructionConverter.Context(disassembler.Labels);
+        var instructionConverterContext = new InstructionConverter.Context(function.JumpTargets);
 
         // Convert each 6502 instruction into one or more IR instructions
-        IReadOnlyList<ConvertedInstruction> convertedInstructions = orderedInstructions
+        IReadOnlyList<ConvertedInstruction> convertedInstructions = function.OrderedInstructions
             .Select(x => new ConvertedInstruction(x, InstructionConverter.Convert(x, instructionConverterContext)))
             .ToArray();
 

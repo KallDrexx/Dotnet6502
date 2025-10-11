@@ -9,8 +9,6 @@ public class NesHal : Base6502Hal
     private readonly DebugWriter? _debugWriter;
     private bool _nmiTriggered;
 
-    public Action? NmiHandler { get; set; }
-
     public NesHal(NesMemory memory, Ppu ppu, DebugWriter? debugWriter, CancellationToken cancellationToken)
         : base(memory)
     {

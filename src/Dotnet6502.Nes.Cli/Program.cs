@@ -2,9 +2,6 @@
 using NESDecompiler.Core.Decompilation;
 using NESDecompiler.Core.Disassembly;
 using NESDecompiler.Core.ROM;
-using System.Reflection;
-using System.Runtime.Loader;
-using Dotnet6502.Common;
 using Dotnet6502.Common.Compilation;
 using Dotnet6502.Nes;
 
@@ -24,14 +21,6 @@ var programRomData = loader.GetPRGROMData();
 var chrRomData = loader.GetCHRROMData();
 Console.WriteLine(romInfo.ToString());
 
-Console.WriteLine("Disassembling ROM...");
-var disassembler = new Disassembler(romInfo, programRomData);
-disassembler.Disassemble();
-
-Console.WriteLine("Decompiling ROM...");
-var decompiler = new Decompiler(romInfo, disassembler);
-decompiler.Decompile();
-
 Console.WriteLine("Setting up HAL and JIT compiler...");
 
 var app = new MonogameApp();
@@ -46,15 +35,7 @@ var debugWriter = commandLineValues.DebugLogFile != null
 var hal = new NesHal(memory, ppu, debugWriter, cancellationTokenSource.Token);
 
 var jitCustomizer = new NesJitCustomizer();
-var jitCompiler = new JitCompiler(decompiler, hal, jitCustomizer, memory);
-
-var nmiAddress = romInfo.NmiVector;
-if (nmiAddress == 0)
-{
-    throw new InvalidOperationException("Rom has no known NMI vector");
-}
-
-hal.NmiHandler = () => jitCompiler.RunMethod(nmiAddress);
+var jitCompiler = new JitCompiler(hal, jitCustomizer, memory);
 
 Console.WriteLine($"Starting at reset vector: {romInfo.ResetVector:X4}");
 var nesTask = Task.Run(() =>

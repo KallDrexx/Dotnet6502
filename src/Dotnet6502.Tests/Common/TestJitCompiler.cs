@@ -14,8 +14,8 @@ public class TestJitCompiler : JitCompiler
     public TestMemoryMap MemoryMap { get; }
     public TestHal TestHal { get; }
 
-    private TestJitCompiler(Decompiler decompiler, TestHal testHal, TestMemoryMap memoryMap)
-        : base(decompiler, testHal, null, memoryMap)
+    private TestJitCompiler(TestHal testHal, TestMemoryMap memoryMap)
+        : base(testHal, null, memoryMap)
     {
         MemoryMap = memoryMap;
         TestHal = testHal;
@@ -25,9 +25,8 @@ public class TestJitCompiler : JitCompiler
     {
         var memoryMap = new TestMemoryMap();
         var hal = new TestHal(memoryMap);
-        var decompiler = new Decompiler(new ROMInfo(), new Disassembler(0, Array.Empty<byte>()));
 
-        return new TestJitCompiler(decompiler, hal, memoryMap);
+        return new TestJitCompiler(hal, memoryMap);
     }
 
     public void AddMethod(ushort address, IReadOnlyList<Ir6502.Instruction> instructions, bool generateDll = false)

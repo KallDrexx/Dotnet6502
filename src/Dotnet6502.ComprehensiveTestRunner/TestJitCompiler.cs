@@ -9,13 +9,11 @@ namespace Dotnet6502.ComprehensiveTestRunner;
 
 public class TestJitCompiler : JitCompiler
 {
-    public Dictionary<Type, MsilGenerator.CustomIlGenerator>? CustomGenerators { get; set; }
-
     public TestMemoryMap MemoryMap { get; }
     public Base6502Hal TestHal { get; }
 
-    private TestJitCompiler(Decompiler decompiler, Base6502Hal testHal, TestMemoryMap memoryMap)
-        : base(decompiler, testHal, null, memoryMap)
+    private TestJitCompiler(Base6502Hal testHal, TestMemoryMap memoryMap)
+        : base(testHal, null, memoryMap)
     {
         MemoryMap = memoryMap;
         TestHal = testHal;
@@ -25,9 +23,8 @@ public class TestJitCompiler : JitCompiler
     {
         var memoryMap = new TestMemoryMap();
         var hal = new Base6502Hal(memoryMap);
-        var decompiler = new Decompiler(new ROMInfo(), new Disassembler(0, Array.Empty<byte>()));
 
-        return new TestJitCompiler(decompiler, hal, memoryMap);
+        return new TestJitCompiler(hal, memoryMap);
     }
 
     public void AddMethod(ushort address, IReadOnlyList<Ir6502.Instruction> instructions)
@@ -40,7 +37,11 @@ public class TestJitCompiler : JitCompiler
         };
 
         var convertedInstructions = new ConvertedInstruction(nop, instructions);
-        var method = ExecutableMethodGenerator.Generate($"test_0x{address:X4}", [convertedInstructions], CustomGenerators);
+        var method = ExecutableMethodGenerator.Generate(
+            $"test_0x{address:X4}",
+            [convertedInstructions],
+            new Dictionary<Type, MsilGenerator.CustomIlGenerator>());
+
         CompiledMethods.Add(address, method);
     }
 

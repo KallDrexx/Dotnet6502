@@ -1,3 +1,5 @@
+using NESDecompiler.Core.Decompilation;
+
 namespace Dotnet6502.Common.Hardware;
 
 public interface IMemoryMap
