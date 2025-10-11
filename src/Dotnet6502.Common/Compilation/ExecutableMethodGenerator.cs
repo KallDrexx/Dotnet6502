@@ -43,7 +43,7 @@ public static class ExecutableMethodGenerator
             MethodAttributes.Public | MethodAttributes.Static,
             CallingConventions.Standard,
             typeof(int),
-            [typeof(JitCompiler), typeof(Base6502Hal)]);
+            [typeof(Base6502Hal)]);
 
         var ilGenerator = methodBuilder.GetILGenerator();
         GenerateMsil(ilGenerator, instructions, customIlGenerators);
@@ -139,7 +139,7 @@ public static class ExecutableMethodGenerator
             MethodAttributes.Public | MethodAttributes.Static,
             CallingConventions.Standard,
             typeof(ushort?),
-            [typeof(JitCompiler), typeof(Base6502Hal)]);
+            [typeof(Base6502Hal)]);
 
         var ilGenerator = methodBuilder.GetILGenerator();
         GenerateMsil(ilGenerator, instructions, customIlGenerators);

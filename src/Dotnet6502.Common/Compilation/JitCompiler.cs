@@ -11,7 +11,7 @@ namespace Dotnet6502.Common.Compilation;
 /// </summary>
 public class JitCompiler
 {
-    public static readonly OpCode LoadHalArg = OpCodes.Ldarg_1;
+    public static readonly OpCode LoadHalArg = OpCodes.Ldarg_0;
 
     private readonly Base6502Hal _hal;
     private readonly IReadOnlyList<IJitCustomizer> _jitCustomizers;
@@ -48,7 +48,7 @@ public class JitCompiler
 
             _hal.DebugHook($"Entering function 0x{nextAddress:X4}");
             var currentAddress = nextAddress;
-            nextAddress = method(this, _hal);
+            nextAddress = method(_hal);
             _hal.DebugHook($"Exiting function 0x{currentAddress:X4}");
         }
     }
