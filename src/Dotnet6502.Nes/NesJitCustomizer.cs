@@ -29,8 +29,8 @@ public class NesJitCustomizer : IJitCustomizer
                 updatedInstructions.Add(instruction.Ir6502Instructions[0]);
             }
 
-            updatedInstructions.Add(new CallDebugHook(instruction.OriginalInstruction.ToString()));
             updatedInstructions.Add(new IncrementCycleCount(instruction.OriginalInstruction.Info.Cycles));
+            updatedInstructions.Add(new CallDebugHook(instruction.OriginalInstruction.ToString()));
             updatedInstructions.AddRange(instruction.Ir6502Instructions.Skip(skipCount));
 
             var updatedInstruction = instruction with
@@ -90,8 +90,8 @@ public class NesJitCustomizer : IJitCustomizer
             ilGenerator.Emit(OpCodes.Castclass, typeof(NesHal));
             ilGenerator.Emit(OpCodes.Ldstr, debugInstruction.Info);
 
-            var incrementMethod = typeof(NesHal).GetMethod(nameof(NesHal.DebugHook))!;
-            ilGenerator.Emit(OpCodes.Callvirt, incrementMethod);
+            var debugHook = typeof(NesHal).GetMethod(nameof(NesHal.DebugHook))!;
+            ilGenerator.Emit(OpCodes.Callvirt, debugHook);
         };
     }
 }
