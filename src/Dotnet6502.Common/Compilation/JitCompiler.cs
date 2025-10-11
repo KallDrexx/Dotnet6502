@@ -16,6 +16,7 @@ public class JitCompiler
     private readonly Base6502Hal _hal;
     private readonly IReadOnlyList<IJitCustomizer> _jitCustomizers;
     private readonly IMemoryMap _memoryMap;
+    private readonly Queue<ushort> _ranMethods = new();
     protected Dictionary<ushort, ExecutableMethod> CompiledMethods { get; } = new();
 
     public JitCompiler(Base6502Hal hal, IJitCustomizer? jitCustomizer, IMemoryMap memoryMap)
@@ -46,10 +47,28 @@ public class JitCompiler
                 CompiledMethods.Add((ushort)nextAddress, method);
             }
 
+            _ranMethods.Enqueue((ushort)nextAddress);
+            while (_ranMethods.Count > 1000)
+            {
+                _ranMethods.Dequeue();
+            }
+
             _hal.DebugHook($"Entering function 0x{nextAddress:X4}");
             var currentAddress = nextAddress;
             nextAddress = method(_hal);
             _hal.DebugHook($"Exiting function 0x{currentAddress:X4}");
+        }
+
+        if (_ranMethods.Count == 0)
+        {
+            _hal.DebugHook($"No functions executed");
+        }
+        else
+        {
+            var path = _ranMethods.Select(x => x.ToString("X4"))
+                .Aggregate((x, y) => $"{x} -> {y}");
+
+            _hal.DebugHook($"Function path: {path}");
         }
     }
 
