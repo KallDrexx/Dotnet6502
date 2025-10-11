@@ -1,4 +1,3 @@
-using Dotnet6502.Common;
 using Dotnet6502.Common.Compilation;
 using Dotnet6502.Common.Hardware;
 using NESDecompiler.Core.CPU;
@@ -31,10 +30,9 @@ public class BeqTests
         };
 
         var labels = new Dictionary<ushort, string> { { 0x8007, "branch_target" } };
-        var context = new InstructionConverter.Context(
-            labels);
+        var context = new InstructionConverter.Context(labels);
 
-        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var irInstructions = InstructionConverter.Convert(instruction, context);
 
         // Add setup and target instructions around the branch
         var allInstructions = new List<Ir6502.Instruction>
@@ -43,7 +41,7 @@ public class BeqTests
             new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Zero)),
 
             // Add the BEQ instruction
-            nesIrInstructions[0],
+            irInstructions[0],
 
             // Instruction that should be skipped if branch is taken
             new Ir6502.Copy(new Ir6502.Constant(99), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
@@ -57,7 +55,6 @@ public class BeqTests
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
-        jit.TestHal.SetFlag(CpuStatusFlags.Zero, true); // Zero flag set
         jit.RunMethod(0x1234);
 
         // Branch should be taken, skipping X register assignment
