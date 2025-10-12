@@ -25,7 +25,7 @@ Console.WriteLine("Setting up HAL and JIT compiler...");
 
 var app = new MonogameApp();
 var cancellationTokenSource = new CancellationTokenSource();
-var ppu = new Ppu(chrRomData, app);
+var ppu = new Ppu(chrRomData, romInfo.MirroringType, app);
 var memory = new NesMemory(ppu, programRomData, app);
 
 var debugWriter = commandLineValues.DebugLogFile != null

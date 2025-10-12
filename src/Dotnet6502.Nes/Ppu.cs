@@ -1,3 +1,5 @@
+using NESDecompiler.Core.ROM;
+
 namespace Dotnet6502.Nes;
 
 /// <summary>
@@ -5,6 +7,8 @@ namespace Dotnet6502.Nes;
 /// </summary>
 public class Ppu
 {
+    private readonly record struct Rectangle(int X1, int Y1, int X2, int Y2);
+
     private enum CurrentDotLocation
     {
         InDisplayableArea, InHBlank, InPostRender, StartsNewDisplayableScanline, StartsPostRender, StartsVBlank,
@@ -65,6 +69,7 @@ public class Ppu
     private byte _tRegister;
     private byte _xRegister;
     private byte _readBuffer;
+    private readonly MirroringType _mirroringType;
 
     private readonly INesDisplay _nesDisplay;
     private readonly RgbColor[] _framebuffer = new RgbColor[DisplayableWidth * DisplayableScanLines];
@@ -75,12 +80,13 @@ public class Ppu
     private int _currentScanLine; // zero based index of what scan line we are currently at
     private bool _hasNmiTriggered; // Has NMI been marked as to be triggered this frame
 
-    public Ppu(byte[] chrRomData, INesDisplay nesDisplay)
+    public Ppu(byte[] chrRomData, MirroringType mirroringType, INesDisplay nesDisplay)
     {
         _nesDisplay = nesDisplay;
         PpuCtrl = new PpuCtrl();
         PpuStatus = new PpuStatus();
         PpuMask = new PpuMask();
+        _mirroringType = mirroringType;
 
         if (chrRomData.Length > 0)
         {
@@ -296,7 +302,7 @@ public class Ppu
         {
             case CurrentDotLocation.InDisplayableArea:
                 _pixelIndex++;
-                DrawNextPixel();
+                HandleDisplayablePixelLogic();
                 break;
 
             case CurrentDotLocation.InVBlank:
@@ -309,7 +315,7 @@ public class Ppu
                 _currentScanLineCycle = 0;
                 _currentScanLine++;
                 _pixelIndex++;
-                DrawNextPixel();
+                HandleDisplayablePixelLogic();
                 break;
 
             case CurrentDotLocation.StartsNewScanlineInVBlank:
@@ -329,13 +335,14 @@ public class Ppu
                 _currentScanLine = 0;
                 _hasNmiTriggered = false;
                 _pixelIndex = 0;
-                DrawNextPixel();
+                HandleDisplayablePixelLogic();
                 break;
 
             case CurrentDotLocation.StartsVBlank:
                 _currentScanLineCycle = 0;
                 _currentScanLine++;
                 PpuStatus.VBlankFlag = true;
+                PpuStatus.Sprite0HitFlag = false;
                 RenderFrame();
                 break;
 
@@ -344,6 +351,23 @@ public class Ppu
         }
 
         ResetOamData();
+    }
+
+    private void HandleDisplayablePixelLogic()
+    {
+        var x = _oamMemory[3];
+        var y = _oamMemory[0];
+
+        var isSprite0Hit = y == _currentScanLine &&
+                           x <= _currentScanLineCycle &&
+                           PpuMask.ShowSpritesInLeftmost8PixelsOfScreen;
+
+        if (isSprite0Hit)
+        {
+            PpuStatus.Sprite0HitFlag = true;
+        }
+
+        DrawNextPixel();
     }
 
     private void DrawNextPixel()
@@ -355,7 +379,6 @@ public class Ppu
     {
         RenderFullBackground();
         RenderSprites();
-        // RenderPatternTableToFrameBuffer();
 
         _nesDisplay.RenderFrame(_framebuffer);
 
@@ -430,6 +453,51 @@ public class Ppu
             _ => throw new NotSupportedException(PpuCtrl.BaseNameTableAddress.ToString()),
         };
 
+        ushort mainNameTable, secondNameTable;
+        if (_mirroringType == MirroringType.FourScreen)
+        {
+            throw new NotSupportedException(_mirroringType.ToString());
+        }
+
+        if ((_mirroringType == MirroringType.Horizontal && nameTableAddress is 0x2000 or 0x2400) ||
+            (_mirroringType == MirroringType.Vertical && nameTableAddress is 0x2000 or 0x2800))
+        {
+            mainNameTable = 0x2000;
+            secondNameTable = 0x2400;
+        }
+        else
+        {
+            mainNameTable = 0x2400;
+            secondNameTable = 0x2000;
+        }
+
+        RenderNameTable(mainNameTable,
+            new Rectangle(_xScrollRegister, _yScrollRegister, 256, 240),
+            -_xScrollRegister,
+            -_yScrollRegister);
+
+        if (_xScrollRegister > 0)
+        {
+            RenderNameTable(secondNameTable,
+                new Rectangle(0, 0, _xScrollRegister, 240),
+                (256 - _xScrollRegister),
+                0);
+        }
+        else if (_yScrollRegister > 0)
+        {
+            RenderNameTable(secondNameTable,
+                new Rectangle(0, 0, 256, _yScrollRegister),
+                0,
+                (240 - _yScrollRegister));
+        }
+    }
+
+    private void RenderNameTable(
+        ushort nameTableAddress,
+        Rectangle viewPort,
+        int shiftX,
+        int shiftY)
+    {
         ushort backgroundTableAddress = PpuCtrl.BackgroundPatternTableAddress switch
         {
             PpuCtrl.BackgroundPatternTableAddressEnum.Hex0000 => 0x0000,
@@ -470,7 +538,16 @@ public class Ppu
 
                     var finalX = tileX * 8 + x;
                     var finalY = tileY * 8 + y;
-                    SetPixel(finalX, finalY, color);
+
+                    var isInFrame = finalX >= viewPort.X1 &&
+                                    finalX < viewPort.X2 &&
+                                    finalY >= viewPort.Y1 &&
+                                    finalY < viewPort.Y2;
+
+                    if (isInFrame)
+                    {
+                        SetPixel(finalX + shiftX, finalY + shiftY, color);
+                    }
                 }
             }
         }
