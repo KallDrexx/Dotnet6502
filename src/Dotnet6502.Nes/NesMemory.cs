@@ -170,7 +170,7 @@ public class NesMemory : IMemoryMap
         var address = (ushort)(page << 8);
         for (var x = 0; x <= 0xFF; x++)
         {
-            var value = Read(address);
+            var value = Read((ushort)(address | x));
             _ppu.ProcessMemoryWrite(0x2004, value);
         }
 

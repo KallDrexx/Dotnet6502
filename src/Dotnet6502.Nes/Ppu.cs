@@ -354,7 +354,7 @@ public class Ppu
     private void RenderFrame()
     {
         RenderFullBackground();
-        // RenderSprites();
+        RenderSprites();
         // RenderPatternTableToFrameBuffer();
 
         _nesDisplay.RenderFrame(_framebuffer);
@@ -385,7 +385,37 @@ public class Ppu
                 _ => throw new NotSupportedException(PpuCtrl.SpritePatternTableAddressFor8X8.ToString()),
             };
 
-            ShowTile((ushort)bank, tileIndex, tileX, tileY, palette, flipHorizontal, flipVertical, true);
+            var tileStart = bank + tileIndex * 16;
+            var tileData = _memory.AsSpan(tileStart, 16);
+
+            for (var y = 0; y < 8; y++)
+            {
+                var upper = tileData[y];
+                var lower = tileData[y + 8];
+                for (var x = 7; x >= 0; x--)
+                {
+                    var value = (1 & lower) << 1 | (1 & upper);
+                    upper = (byte)(upper >> 1);
+                    lower = (byte)(lower >> 1);
+
+                    if (value == 0)
+                    {
+                        continue; // Skip the pixel, acts as transparent
+                    }
+
+                    var color = value switch
+                    {
+                        1 => _systemPalette[palette[1]],
+                        2 => _systemPalette[palette[2]],
+                        3 => _systemPalette[palette[3]],
+                        _ => throw new NotSupportedException(value.ToString()),
+                    };
+
+                    var renderX = flipHorizontal ? tileX + 7 - x : tileX + x;
+                    var renderY = flipVertical ? tileY + 7 - y : tileY + y;
+                    SetPixel(renderX, renderY, color);
+                }
+            }
         }
     }
 
@@ -411,82 +441,37 @@ public class Ppu
         for (var i = 0; i < nameTableBytes.Length; i++)
         {
             var tileIndex = nameTableBytes[i];
-            var tilex = i % 32;
-            var tiley = i / 32;
-            var palette = GetBackgroundPaletteIndexes(tilex, tiley);
-            // var palette = new byte[] { 0x01, 0x23, 0x27, 0x30 };
-            ShowTile(backgroundTableAddress, tileIndex, tilex * 8, tiley * 8, palette, false, false, false);
-        }
-    }
+            var tileX = i % 32;
+            var tileY = i / 32;
+            var palette = GetBackgroundPaletteIndexes(tileX, tileY);
+            var tileStart = backgroundTableAddress + tileIndex * 16;
+            var tileEnd = tileStart + 16;
+            var tileData = _memory[tileStart..tileEnd];
 
-    private void RenderPatternTableToFrameBuffer()
-    {
-        ushort backgroundTableAddress = PpuCtrl.BackgroundPatternTableAddress switch
-        {
-            PpuCtrl.BackgroundPatternTableAddressEnum.Hex0000 => 0x0000,
-            PpuCtrl.BackgroundPatternTableAddressEnum.Hex1000 => 0x1000,
-            _ => throw new NotSupportedException(PpuCtrl.BackgroundPatternTableAddress.ToString()),
-        };
-
-        var tileX = 2;
-        var tileY = 2;
-        for (ushort tileNum = 0; tileNum < 255; tileNum++)
-        {
-            if (tileNum != 0 && tileNum % 16 == 0)
+            for (var y = 0; y < 8; y++)
             {
-                tileY += 10;
-                tileX = 2;
-            }
+                var upper = tileData[y];
+                var lower = tileData[y + 8];
 
-            var palette = new byte[] { 0x01, 0x23, 0x27, 0x30 };
-            ShowTile(backgroundTableAddress, tileNum, tileX, tileY, palette, false, false, false);
-
-            tileX += 10;
-        }
-    }
-
-    private void ShowTile(
-        ushort bankAddress,
-        ushort tileNumber,
-        int startX,
-        int startY,
-        byte[] palette,
-        bool flipHorizontal,
-        bool flipVertical,
-        bool skipPaletteZero)
-    {
-        var tileStart = bankAddress + tileNumber * 16;
-        var tileEnd = bankAddress + tileNumber * 16 + 16;
-        var tileData = _memory[tileStart..tileEnd];
-
-        for (var y = 0; y < 8; y++)
-        {
-            var upper = tileData[y];
-            var lower = tileData[y + 8];
-
-            for (var x = 7; x >= 0; x--)
-            {
-                var value = ((1 & lower) << 1) | (1 & upper);
-                upper = (byte)(upper >> 1);
-                lower = (byte)(lower >> 1);
-
-                if (value == 0 && skipPaletteZero)
+                for (var x = 7; x >= 0; x--)
                 {
-                    continue;
+                    var value = ((1 & lower) << 1) | (1 & upper);
+                    upper = (byte)(upper >> 1);
+                    lower = (byte)(lower >> 1);
+
+                    var color = value switch
+                    {
+                        0 => _systemPalette[palette[0]],
+                        1 => _systemPalette[palette[1]],
+                        2 => _systemPalette[palette[2]],
+                        3 => _systemPalette[palette[3]],
+                        _ => throw new NotSupportedException(value.ToString()),
+                    };
+
+                    var finalX = tileX * 8 + x;
+                    var finalY = tileY * 8 + y;
+                    SetPixel(finalX, finalY, color);
                 }
-
-                var color = value switch
-                {
-                    0 => _systemPalette[palette[0]],
-                    1 => _systemPalette[palette[1]],
-                    2 => _systemPalette[palette[2]],
-                    3 => _systemPalette[palette[3]],
-                    _ => throw new NotSupportedException(value.ToString()),
-                };
-
-                var finalX = flipHorizontal ? startX + 7 - x : startX + x;
-                var finalY = flipVertical ? startY + y - y : startY + y;
-                SetPixel(finalX, finalY, color);
             }
         }
     }
