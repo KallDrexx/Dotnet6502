@@ -367,30 +367,25 @@ public class Ppu
 
     private void HandleDisplayablePixelLogic()
     {
-        var x = _oamMemory[3];
-        var y = _oamMemory[0];
-
-        var isSprite0Hit = y == _currentScanLine &&
-                           x <= _currentScanLineCycle &&
-                           PpuMask.ShowSpritesInLeftmost8PixelsOfScreen;
-
-        if (isSprite0Hit)
-        {
-            PpuStatus.Sprite0HitFlag = true;
-        }
-
         DrawNextPixel();
     }
 
     private void DrawNextPixel()
     {
-        var color = DrawBackgroundPixel();
+        var bgColor = DrawBackgroundPixel();
+        var spriteColor = DrawSpritePixel(bgColor);
 
-        _framebuffer[_pixelIndex] = color;
+        _framebuffer[_pixelIndex] = spriteColor ?? bgColor ?? new RgbColor(0, 0, 0);
     }
 
-    private RgbColor DrawBackgroundPixel()
+    private RgbColor? DrawBackgroundPixel()
     {
+        if (!PpuMask.EnableBackgroundRendering ||
+            (_currentScanLineCycle < 8 && !PpuMask.ShowBackgroundInLeftmost8PixelsOfScreen))
+        {
+            return null;
+        }
+
         const int tileSize = 16; // Each tile is 16 bytes
 
         // Find the scrolled position within the 2x2 name tables
@@ -427,6 +422,7 @@ public class Ppu
         var plane1 = tileData[tileY + 8] >> (7 - tileX);
         var value = ((1 & plane1) << 1) | (1 & plane0);
         var color = _systemPalette[palette[value]];
+
         return color;
     }
 
@@ -479,24 +475,9 @@ public class Ppu
         return nameTableAddress;
     }
 
-    private byte GetTileIndex(int offset)
-    {
-        ushort nameTableAddress = PpuCtrl.BaseNameTableAddress switch
-        {
-            PpuCtrl.BaseNameTableAddressValue.Hex2000 => 0x2000,
-            PpuCtrl.BaseNameTableAddressValue.Hex2400 => 0x2400,
-            PpuCtrl.BaseNameTableAddressValue.Hex2800 => 0x2800,
-            PpuCtrl.BaseNameTableAddressValue.Hex2C00 => 0x2C00,
-            _ => throw new NotSupportedException(PpuCtrl.BaseNameTableAddress.ToString()),
-        };
-
-        return _memory[nameTableAddress + offset];
-    }
-
     private void RenderFrame()
     {
-        // RenderFullBackground();
-        RenderSprites();
+        // RenderSprites();
 
         _nesDisplay.RenderFrame(_framebuffer);
 
@@ -504,6 +485,84 @@ public class Ppu
         {
             _framebuffer[x] = new RgbColor(0, 0, 0);
         }
+    }
+
+    private RgbColor? DrawSpritePixel(RgbColor? bgColor)
+    {
+        var targetX = _currentScanLineCycle;
+        var targetY = _currentScanLine;
+
+        if (!PpuMask.EnableSpriteRendering || (targetX < 8 && PpuMask.ShowSpritesInLeftmost8PixelsOfScreen))
+        {
+            return null;
+        }
+
+        RgbColor? color = null;
+        for (var index = 0; index < 256; index += 4)
+        {
+            var tileIndex = _oamMemory[index + 1];
+            var tileX = _oamMemory[index + 3];
+            var tileY = _oamMemory[index];
+
+            // Early exit: check if this sprite could possibly contain the target pixel
+            if (targetX < tileX || targetX >= tileX + 8 ||
+                targetY < tileY || targetY >= tileY + 8)
+            {
+                continue;
+            }
+
+            var flipVertical = ((_oamMemory[index + 2] >> 7) & 1) == 1;
+            var flipHorizontal = ((_oamMemory[index + 2] >> 6) & 1) == 1;
+            var paletteIndex = _oamMemory[index + 2] & 0b11;
+            var palette = GetSpritePaletteIndexes(paletteIndex);
+
+            var bank = PpuCtrl.SpritePatternTableAddressFor8X8 switch
+            {
+                PpuCtrl.SpritePatternTableAddressFor8X8Enum.Hex0000 => 0x0000,
+                PpuCtrl.SpritePatternTableAddressFor8X8Enum.Hex1000 => 0x1000,
+                _ => throw new NotSupportedException(PpuCtrl.SpritePatternTableAddressFor8X8.ToString()),
+            };
+
+            var tileStart = bank + tileIndex * 16;
+            var tileData = _memory.AsSpan(tileStart, 16);
+
+            // Calculate which pixel within the tile we need
+            var pixelX = targetX - tileX;
+            var pixelY = targetY - tileY;
+
+            // Account for flipping
+            var tilePixelX = flipHorizontal ? 7 - pixelX : pixelX;
+            var tilePixelY = flipVertical ? 7 - pixelY : pixelY;
+
+            // Read the specific pixel from the tile data
+            var upper = tileData[tilePixelY];
+            var lower = tileData[tilePixelY + 8];
+
+            // Extract the bit at position tilePixelX (where 7 is leftmost, 0 is rightmost)
+            var bitPosition = 7 - tilePixelX;
+            var value = (((lower >> bitPosition) & 1) << 1) | ((upper >> bitPosition) & 1);
+
+            if (value == 0)
+            {
+                continue; // Transparent pixel, check next sprite
+            }
+
+            color = value switch
+            {
+                1 => _systemPalette[palette[1]],
+                2 => _systemPalette[palette[2]],
+                3 => _systemPalette[palette[3]],
+                _ => throw new NotSupportedException(value.ToString()),
+            };
+
+            // Set sprite 0 hit flag
+            if (index == 0 && bgColor != null)
+            {
+                PpuStatus.Sprite0HitFlag = true;
+            }
+        }
+
+        return color;
     }
 
     private void RenderSprites()
@@ -560,117 +619,6 @@ public class Ppu
         }
     }
 
-    private void RenderFullBackground()
-    {
-        ushort nameTableAddress = PpuCtrl.BaseNameTableAddress switch
-        {
-            PpuCtrl.BaseNameTableAddressValue.Hex2000 => 0x2000,
-            PpuCtrl.BaseNameTableAddressValue.Hex2400 => 0x2400,
-            PpuCtrl.BaseNameTableAddressValue.Hex2800 => 0x2800,
-            PpuCtrl.BaseNameTableAddressValue.Hex2C00 => 0x2C00,
-            _ => throw new NotSupportedException(PpuCtrl.BaseNameTableAddress.ToString()),
-        };
-
-        ushort mainNameTable, secondNameTable;
-        if (_mirroringType == MirroringType.FourScreen)
-        {
-            throw new NotSupportedException(_mirroringType.ToString());
-        }
-
-        if ((_mirroringType == MirroringType.Horizontal && nameTableAddress is 0x2000 or 0x2400) ||
-            (_mirroringType == MirroringType.Vertical && nameTableAddress is 0x2000 or 0x2800))
-        {
-            mainNameTable = 0x2000;
-            secondNameTable = 0x2400;
-        }
-        else
-        {
-            mainNameTable = 0x2400;
-            secondNameTable = 0x2000;
-        }
-
-        RenderNameTable(mainNameTable,
-            new Rectangle(_xScrollRegister, _yScrollRegister, 256, 240),
-            -_xScrollRegister,
-            -_yScrollRegister);
-
-        if (_xScrollRegister > 0)
-        {
-            RenderNameTable(secondNameTable,
-                new Rectangle(0, 0, _xScrollRegister, 240),
-                (256 - _xScrollRegister),
-                0);
-        }
-        else if (_yScrollRegister > 0)
-        {
-            RenderNameTable(secondNameTable,
-                new Rectangle(0, 0, 256, _yScrollRegister),
-                0,
-                (240 - _yScrollRegister));
-        }
-    }
-
-    private void RenderNameTable(
-        ushort nameTableAddress,
-        Rectangle viewPort,
-        int shiftX,
-        int shiftY)
-    {
-        ushort backgroundTableAddress = PpuCtrl.BackgroundPatternTableAddress switch
-        {
-            PpuCtrl.BackgroundPatternTableAddressEnum.Hex0000 => 0x0000,
-            PpuCtrl.BackgroundPatternTableAddressEnum.Hex1000 => 0x1000,
-            _ => throw new NotSupportedException(PpuCtrl.BackgroundPatternTableAddress.ToString()),
-        };
-
-        var nameTableBytes = _memory.AsSpan().Slice(nameTableAddress, 960);
-        for (var i = 0; i < nameTableBytes.Length; i++)
-        {
-            var tileIndex = nameTableBytes[i];
-            var tileX = i % 32;
-            var tileY = i / 32;
-            var palette = GetBackgroundPaletteIndexes(tileX, tileY);
-            var tileStart = backgroundTableAddress + tileIndex * 16;
-            var tileEnd = tileStart + 16;
-            var tileData = _memory[tileStart..tileEnd];
-
-            for (var y = 0; y < 8; y++)
-            {
-                var upper = tileData[y];
-                var lower = tileData[y + 8];
-
-                for (var x = 7; x >= 0; x--)
-                {
-                    var value = ((1 & lower) << 1) | (1 & upper);
-                    upper = (byte)(upper >> 1);
-                    lower = (byte)(lower >> 1);
-
-                    var color = value switch
-                    {
-                        0 => _systemPalette[palette[0]],
-                        1 => _systemPalette[palette[1]],
-                        2 => _systemPalette[palette[2]],
-                        3 => _systemPalette[palette[3]],
-                        _ => throw new NotSupportedException(value.ToString()),
-                    };
-
-                    var finalX = tileX * 8 + x;
-                    var finalY = tileY * 8 + y;
-
-                    var isInFrame = finalX >= viewPort.X1 &&
-                                    finalX < viewPort.X2 &&
-                                    finalY >= viewPort.Y1 &&
-                                    finalY < viewPort.Y2;
-
-                    if (isInFrame)
-                    {
-                        SetPixel(finalX + shiftX, finalY + shiftY, color);
-                    }
-                }
-            }
-        }
-    }
-
     private byte[] GetBackgroundPaletteIndexes(int tileColumn, int tileRow)
     {
         ushort nameTableAddress = PpuCtrl.BaseNameTableAddress switch
@@ -696,11 +644,6 @@ public class Ppu
         };
 
         var paletteStart = 1 + palletIndex * 4;
-        if (paletteStart >= 0x20)
-        {
-            paletteStart -= 0x20;
-        }
-
         var paletteTable = _memory.AsSpan()[0x3F00..];
         return
         [
@@ -714,11 +657,6 @@ public class Ppu
     private byte[] GetSpritePaletteIndexes(int paletteIndex)
     {
         var start = 0x11 + (paletteIndex * 4);
-        if (start > 0x20)
-        {
-            start -= 0x20;
-        }
-
         var paletteTable = _memory.AsSpan()[0x3F00..];
         return
         [
