@@ -190,7 +190,19 @@ public class Ppu
                 if (PpuAddr >= 0x3F00)
                 {
                     var mirroredAddress = GetPaletteMemoryLocation(PpuAddr);
-                    _memory[mirroredAddress] = value;
+
+                    // Entry 0 of each palette is mirrored between sprite and background
+                    if ((mirroredAddress & 0x000F) is 0x0 or 0x4 or 0x8 or 0xC)
+                    {
+                        var bgAddress = mirroredAddress & 0xFF0F;
+                        var spriteAddress = mirroredAddress & 0xFF1F;
+                        _memory[bgAddress] = value;
+                        _memory[spriteAddress] = value;
+                    }
+                    else
+                    {
+                        _memory[mirroredAddress] = value;
+                    }
                 }
                 else
                 {
@@ -684,6 +696,11 @@ public class Ppu
         };
 
         var paletteStart = 1 + palletIndex * 4;
+        if (paletteStart >= 0x20)
+        {
+            paletteStart -= 0x20;
+        }
+
         var paletteTable = _memory.AsSpan()[0x3F00..];
         return
         [
@@ -697,6 +714,11 @@ public class Ppu
     private byte[] GetSpritePaletteIndexes(int paletteIndex)
     {
         var start = 0x11 + (paletteIndex * 4);
+        if (start > 0x20)
+        {
+            start -= 0x20;
+        }
+
         var paletteTable = _memory.AsSpan()[0x3F00..];
         return
         [
