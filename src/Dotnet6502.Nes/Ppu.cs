@@ -7,8 +7,6 @@ namespace Dotnet6502.Nes;
 /// </summary>
 public class Ppu
 {
-    private readonly record struct Rectangle(int X1, int Y1, int X2, int Y2);
-
     private enum CurrentDotLocation
     {
         InDisplayableArea, InHBlank, InPostRender, StartsNewDisplayableScanline, StartsPostRender, StartsVBlank,
@@ -407,7 +405,7 @@ public class Ppu
             _ => throw new NotSupportedException(PpuCtrl.BackgroundPatternTableAddress.ToString()),
         };
 
-        var palette = GetBackgroundPaletteIndexes(tileColumn, tileRow);
+        var palette = GetBackgroundPaletteIndexes(tileColumn, tileRow, nameTableAddress);
         var tileIndex = _memory[nameTableAddress + tileByteOffset];
         var tileStart = backgroundTableAddress + tileIndex * tileSize;
         var tileData = _memory[tileStart..(tileStart + tileSize)];
@@ -619,17 +617,8 @@ public class Ppu
         }
     }
 
-    private byte[] GetBackgroundPaletteIndexes(int tileColumn, int tileRow)
+    private byte[] GetBackgroundPaletteIndexes(int tileColumn, int tileRow, ushort nameTableAddress)
     {
-        ushort nameTableAddress = PpuCtrl.BaseNameTableAddress switch
-        {
-            PpuCtrl.BaseNameTableAddressValue.Hex2000 => 0x2000,
-            PpuCtrl.BaseNameTableAddressValue.Hex2400 => 0x2400,
-            PpuCtrl.BaseNameTableAddressValue.Hex2800 => 0x2800,
-            PpuCtrl.BaseNameTableAddressValue.Hex2C00 => 0x2C00,
-            _ => throw new NotSupportedException(PpuCtrl.BaseNameTableAddress.ToString()),
-        };
-
         var attributeTableIndex = tileRow / 4 * 8 + tileColumn / 4;
         var attributeTableLocation = nameTableAddress + NameTableSize;
         var attributeByteLocation = attributeTableLocation + attributeTableIndex;
