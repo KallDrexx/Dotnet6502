@@ -372,11 +372,25 @@ public class Ppu
 
     private void DrawNextPixel()
     {
+        var color = DrawBackgroundPixel();
+
+        _framebuffer[_pixelIndex] = color;
+    }
+
+    private RgbColor DrawBackgroundPixel()
+    {
         const int tileSize = 16; // Each tile is 16 bytes
 
+        // Find the scrolled position within the 2x2 name tables
+        var scrolledX = (_currentScanLineCycle + _xScrollRegister) % 512;
+        var scrolledY = (_currentScanLine + _yScrollRegister) % 480;
+        var nameTableAddress = GetNameTable(scrolledX, scrolledY);
+
         // Calculate the name table byte that's relevant to the current pixel
-        var tileColumn = _currentScanLineCycle / 8;
-        var tileRow = _currentScanLine / 8;
+        var pixelXInNameTable = scrolledX % 256;
+        var pixelYInNameTable = scrolledY % 240;
+        var tileColumn = pixelXInNameTable / 8;
+        var tileRow = pixelYInNameTable / 8;
         var tileByteOffset = tileRow * 32 + tileColumn;
 
         ushort backgroundTableAddress = PpuCtrl.BackgroundPatternTableAddress switch
@@ -387,22 +401,70 @@ public class Ppu
         };
 
         var palette = GetBackgroundPaletteIndexes(tileColumn, tileRow);
-        var tileIndex = GetTileIndex(tileByteOffset);
+        var tileIndex = _memory[nameTableAddress + tileByteOffset];
         var tileStart = backgroundTableAddress + tileIndex * tileSize;
         var tileData = _memory[tileStart..(tileStart + tileSize)];
 
         // Each tile is 8x8 pixels with 2 bits per pixel, but you have one bit in the first
         // set of 8 bytes and the second bit in the second set of 8 bytes. So we need to isolate out the
         // correct upper and lower bit values
-        var tileX = _currentScanLineCycle % 8;
-        var tileY = _currentScanLine % 8;
+        var tileX = pixelXInNameTable % 8;
+        var tileY = pixelYInNameTable % 8;
 
         var plane0 = tileData[tileY] >> (7 - tileX); // MSB is left most pixel
         var plane1 = tileData[tileY + 8] >> (7 - tileX);
         var value = ((1 & plane1) << 1) | (1 & plane0);
         var color = _systemPalette[palette[value]];
+        return color;
+    }
 
-        _framebuffer[_pixelIndex] = color;
+    private ushort GetNameTable(int scrolledX, int scrolledY)
+    {
+        ushort nameTableAddress = PpuCtrl.BaseNameTableAddress switch
+        {
+            PpuCtrl.BaseNameTableAddressValue.Hex2000 => 0x2000,
+            PpuCtrl.BaseNameTableAddressValue.Hex2400 => 0x2400,
+            PpuCtrl.BaseNameTableAddressValue.Hex2800 => 0x2800,
+            PpuCtrl.BaseNameTableAddressValue.Hex2C00 => 0x2C00,
+            _ => throw new NotSupportedException(PpuCtrl.BaseNameTableAddress.ToString()),
+        };
+
+        // Adjust to the correct name table based on the passed in scroll adjustments
+        var leftNameTable = scrolledX / 256 == 0;
+        var topNameTable = scrolledY / 240 == 0;
+
+        if (!leftNameTable)
+        {
+            nameTableAddress += 0x400;
+        }
+
+        if (!topNameTable)
+        {
+            nameTableAddress += 0x800;
+        }
+
+        if (nameTableAddress >= 0x3000)
+        {
+            nameTableAddress -= 0x1000;
+        }
+
+        // Next account for mirroring
+        if (_mirroringType == MirroringType.Horizontal)
+        {
+            if (nameTableAddress is 0x2400 or 0x2C00)
+            {
+                nameTableAddress -= 0x400;
+            }
+        }
+        else if (_mirroringType == MirroringType.Vertical)
+        {
+            if (nameTableAddress >= 0x2800)
+            {
+                nameTableAddress -= 0x800;
+            }
+        }
+
+        return nameTableAddress;
     }
 
     private byte GetTileIndex(int offset)
