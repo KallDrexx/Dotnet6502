@@ -372,12 +372,56 @@ public class Ppu
 
     private void DrawNextPixel()
     {
-        // TODO: Only full render at the end of the frame supported atm
+        const int tileSize = 16; // Each tile is 16 bytes
+
+        // Calculate the name table byte that's relevant to the current pixel
+        var tileColumn = _currentScanLineCycle / 8;
+        var tileRow = _currentScanLine / 8;
+        var tileByteOffset = tileRow * 32 + tileColumn;
+
+        ushort backgroundTableAddress = PpuCtrl.BackgroundPatternTableAddress switch
+        {
+            PpuCtrl.BackgroundPatternTableAddressEnum.Hex0000 => 0x0000,
+            PpuCtrl.BackgroundPatternTableAddressEnum.Hex1000 => 0x1000,
+            _ => throw new NotSupportedException(PpuCtrl.BackgroundPatternTableAddress.ToString()),
+        };
+
+        var palette = GetBackgroundPaletteIndexes(tileColumn, tileRow);
+        var tileIndex = GetTileIndex(tileByteOffset);
+        var tileStart = backgroundTableAddress + tileIndex * tileSize;
+        var tileData = _memory[tileStart..(tileStart + tileSize)];
+
+        // Each tile is 8x8 pixels with 2 bits per pixel, but you have one bit in the first
+        // set of 8 bytes and the second bit in the second set of 8 bytes. So we need to isolate out the
+        // correct upper and lower bit values
+        var tileX = _currentScanLineCycle % 8;
+        var tileY = _currentScanLine % 8;
+
+        var plane0 = tileData[tileY] >> (7 - tileX); // MSB is left most pixel
+        var plane1 = tileData[tileY + 8] >> (7 - tileX);
+        var value = ((1 & plane1) << 1) | (1 & plane0);
+        var color = _systemPalette[palette[value]];
+
+        _framebuffer[_pixelIndex] = color;
+    }
+
+    private byte GetTileIndex(int offset)
+    {
+        ushort nameTableAddress = PpuCtrl.BaseNameTableAddress switch
+        {
+            PpuCtrl.BaseNameTableAddressValue.Hex2000 => 0x2000,
+            PpuCtrl.BaseNameTableAddressValue.Hex2400 => 0x2400,
+            PpuCtrl.BaseNameTableAddressValue.Hex2800 => 0x2800,
+            PpuCtrl.BaseNameTableAddressValue.Hex2C00 => 0x2C00,
+            _ => throw new NotSupportedException(PpuCtrl.BaseNameTableAddress.ToString()),
+        };
+
+        return _memory[nameTableAddress + offset];
     }
 
     private void RenderFrame()
     {
-        RenderFullBackground();
+        // RenderFullBackground();
         RenderSprites();
 
         _nesDisplay.RenderFrame(_framebuffer);
