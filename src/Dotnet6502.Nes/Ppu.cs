@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices.Swift;
 using NESDecompiler.Core.ROM;
 
 namespace Dotnet6502.Nes;
@@ -73,6 +74,7 @@ public class Ppu
     private readonly RgbColor[] _framebuffer = new RgbColor[DisplayableWidth * DisplayableScanLines];
     private readonly byte[] _memory = new byte[0x4000];
     private readonly byte[] _oamMemory = new byte[0x100];
+    private readonly ScanLineRenderInfo _scanLineRenderInfo = new();
     private int _pixelIndex;
     private int _currentScanLineCycle;
     private int _currentScanLine; // zero based index of what scan line we are currently at
@@ -312,6 +314,7 @@ public class Ppu
         {
             case CurrentDotLocation.InDisplayableArea:
                 _pixelIndex++;
+                _scanLineRenderInfo.IncrementPixel();
                 HandleDisplayablePixelLogic();
                 break;
 
@@ -325,6 +328,7 @@ public class Ppu
                 _currentScanLineCycle = 0;
                 _currentScanLine++;
                 _pixelIndex++;
+                RebuildScanLineRenderInfo();
                 HandleDisplayablePixelLogic();
                 break;
 
@@ -345,6 +349,7 @@ public class Ppu
                 _currentScanLine = 0;
                 _hasNmiTriggered = false;
                 _pixelIndex = 0;
+                RebuildScanLineRenderInfo();
                 HandleDisplayablePixelLogic();
                 break;
 
@@ -370,10 +375,42 @@ public class Ppu
 
     private void DrawNextPixel()
     {
-        var bgColor = DrawBackgroundPixel();
+        var bgColor = DrawBackgroundPixel2();
         var spriteColor = DrawSpritePixel(bgColor);
 
         _framebuffer[_pixelIndex] = spriteColor ?? bgColor ?? new RgbColor(0, 0, 0);
+    }
+
+    private RgbColor? DrawBackgroundPixel2()
+    {
+        if (!PpuMask.EnableBackgroundRendering ||
+            (_currentScanLineCycle < 8 && !PpuMask.ShowBackgroundInLeftmost8PixelsOfScreen))
+        {
+            return null;
+        }
+
+        // Each tile is 8x8 pixels with 2 bits per pixel, but you have one bit in the first
+        // set of 8 bytes and the second bit in the second set of 8 bytes. So we need to isolate out the
+        // correct upper and lower bit values
+        var tileX = _scanLineRenderInfo.ColumnInTile;
+        var tileY = _scanLineRenderInfo.RowInTile;
+        var tileData = _scanLineRenderInfo.TileData[_scanLineRenderInfo.CurrentTileIndex];
+        var plane0 = tileData.Span[tileY] >> (7 - tileX); // MSB is left most pixel
+        var plane1 = tileData.Span[tileY + 8] >> (7 - tileX);
+        var value = ((1 & plane1) << 1) | (1 & plane0);
+
+        var paletteStart = 1 + _scanLineRenderInfo.PaletteIndices[_scanLineRenderInfo.CurrentTileIndex] * 4;
+        var paletteTable = _memory.AsSpan()[0x3F00..];
+
+        var palette = value switch
+        {
+            0 => paletteTable[0],
+            1 => paletteTable[paletteStart],
+            2 => paletteTable[paletteStart + 1],
+            3 => paletteTable[paletteStart + 3],
+        };
+
+        return _systemPalette[palette];
     }
 
     private RgbColor? DrawBackgroundPixel()
@@ -743,5 +780,103 @@ public class Ppu
         }
 
         return CurrentDotLocation.InHBlank;
+    }
+
+    private void RebuildScanLineRenderInfo()
+    {
+        const int tileSizeInBytes = 16;
+        const int tileWidthInPixels = 8;
+        const int columnsPerNameTable = 32;
+
+        var scrolledX = _xScrollRegister % 512;
+        var scrolledY = (_currentScanLine + _yScrollRegister) % 480;
+        var nameTableAddress = GetNameTable(scrolledX, scrolledY);
+
+        var pixelXInNameTable = scrolledX % DisplayableWidth;
+        var pixelYInNameTable = scrolledY % DisplayableScanLines;
+        var tileColumn = pixelXInNameTable / 8;
+        var tileRow = pixelYInNameTable / 8;
+        var tileByteOffset = tileRow * 32 + tileColumn;
+
+        // Each tile is 8x8 pixels with 2 bits per pixel, but you have one bit in the first
+        // set of 8 bytes and the second bit in the second set of 8 bytes. So we need to isolate out the
+        // correct upper and lower bit values
+        var pixelXInTile = pixelXInNameTable % 8;
+        var pixelYInTile = pixelYInNameTable % 8;
+
+        ushort backgroundTableAddress = PpuCtrl.BackgroundPatternTableAddress switch
+        {
+            PpuCtrl.BackgroundPatternTableAddressEnum.Hex0000 => 0x0000,
+            PpuCtrl.BackgroundPatternTableAddressEnum.Hex1000 => 0x1000,
+            _ => throw new NotSupportedException(PpuCtrl.BackgroundPatternTableAddress.ToString()),
+        };
+
+        // Initial setup
+        _scanLineRenderInfo.TileData.Clear();
+        _scanLineRenderInfo.PaletteIndices.Clear();
+        _scanLineRenderInfo.ColumnInTile = pixelXInTile;
+        _scanLineRenderInfo.RowInTile = pixelYInTile;
+        _scanLineRenderInfo.CurrentTileIndex = 0;
+
+        for (var x = 0; x < DisplayableWidth + tileWidthInPixels; x += tileWidthInPixels)
+        {
+            if (x != 0)
+            {
+                scrolledX += tileWidthInPixels;
+                tileColumn++;
+                tileByteOffset++;
+
+                if (tileColumn == columnsPerNameTable)
+                {
+                    // Got to the end of the name table
+                    nameTableAddress = GetNameTable(scrolledX, scrolledY);
+                    tileColumn = 0;
+                    tileByteOffset = tileRow * columnsPerNameTable;
+                }
+            }
+
+            var tileIndex = _memory[nameTableAddress + tileByteOffset];
+            var tileStart = backgroundTableAddress + tileIndex * tileSizeInBytes;
+            var tileEnd = tileStart + tileSizeInBytes;
+            _scanLineRenderInfo.TileData.Add(_memory.AsMemory(tileStart..tileEnd));
+
+            var paletteIndex = GetPaletteIndex(tileColumn, tileRow, nameTableAddress);
+            _scanLineRenderInfo.PaletteIndices.Add(paletteIndex);
+        }
+    }
+
+    private byte GetPaletteIndex(int tileColumn, int tileRow, ushort nameTableAddress)
+    {
+        var attributeTableIndex = tileRow / 4 * 8 + tileColumn / 4;
+        var attributeTableLocation = nameTableAddress + NameTableSize;
+        var attributeByteLocation = attributeTableLocation + attributeTableIndex;
+        var attributeByte = _memory[attributeByteLocation];
+        return (tileColumn % 4 / 2, tileRow % 4 / 2) switch
+        {
+            (0, 0) => (byte)(attributeByte & 0b11),
+            (1, 0) => (byte)((attributeByte >> 2) & 0b11),
+            (0, 1) => (byte)((attributeByte >> 4) & 0b11),
+            (1, 1) => (byte)((attributeByte >> 6) & 0b11),
+            _ => throw new NotSupportedException(),
+        };
+    }
+
+    private class ScanLineRenderInfo
+    {
+        public List<Memory<byte>> TileData { get; } = new(33);
+        public List<byte> PaletteIndices { get; } = new(33);
+        public int CurrentTileIndex { get; set; }
+        public int ColumnInTile { get; set; }
+        public int RowInTile { get; set; }
+
+        public void IncrementPixel()
+        {
+            ColumnInTile++;
+            if (ColumnInTile == 8)
+            {
+                ColumnInTile = 0;
+                CurrentTileIndex++;
+            }
+        }
     }
 }
