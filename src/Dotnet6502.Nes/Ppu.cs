@@ -67,10 +67,11 @@ public class Ppu
     private byte _tRegister;
     private byte _xRegister;
     private byte _readBuffer;
-    private readonly MirroringType _mirroringType;
 
     private readonly INesDisplay _nesDisplay;
     private readonly RgbColor[] _framebuffer = new RgbColor[DisplayableWidth * DisplayableScanLines];
+    private readonly MirroringType _mirroringType;
+    private readonly PpuRenderState _renderState = new();
     private readonly byte[] _memory = new byte[0x4000];
     private readonly byte[] _oamMemory = new byte[0x100];
     private int _pixelIndex;
@@ -743,5 +744,41 @@ public class Ppu
         }
 
         return CurrentDotLocation.InHBlank;
+    }
+
+    private void ResetRenderState()
+    {
+        const int tileSize = 16; // Each tile is 16 bytes
+
+        // Find the scrolled position within the 2x2 name tables
+        var scrolledX = (_currentScanLineCycle + _xScrollRegister) % (DisplayableWidth * 2);
+        var scrolledY = (_currentScanLine + _yScrollRegister) % (DisplayableScanLines * 2);
+        _renderState.CurrentNameTableAddress = GetNameTable(scrolledX, scrolledY);
+
+        // Calculate the name table byte that's relevant to the current pixel
+        _renderState.PixelXInNameTable = scrolledX % DisplayableWidth;
+        _renderState.PixelYInNameTable = scrolledY % DisplayableScanLines;
+
+        _renderState.TileColumn = _renderState.PixelXInNameTable / 8;
+        _renderState.TileRow = _renderState.PixelYInNameTable / 8;
+        _renderState.TileByteOffset = _renderState.TileRow * 32 + _renderState.TileColumn;
+
+        // Each attribute record is one byte for a 4x4 quadrant
+        _renderState.AttributeByteOffset = _renderState.TileRow / 4 * 8 + _renderState.TileColumn / 4;
+        _renderState.AttributeQuadrant = (_renderState.TileColumn % 4 / 2, _renderState.TileColumn % 4 / 2) switch
+        {
+            (0, 0) => PpuRenderState.Quadrant.TopLeft,
+            (1, 0) => PpuRenderState.Quadrant.TopRight,
+            (0, 1) => PpuRenderState.Quadrant.BottomLeft,
+            (1, 1) => PpuRenderState.Quadrant.BottomRight,
+        };
+
+        // Each tile is 8x8 pixels with 2 bits per pixel, but you have one bit in the first
+        // set of 8 bytes and the second bit in the second set of 8 bytes. So we need to isolate out the
+        // correct upper and lower bit values
+        _renderState.PixelXInTile = _renderState.PixelXInNameTable % 8;
+        _renderState.PixelYInTile = _renderState.PixelYInNameTable % 8;
+
+
     }
 }
