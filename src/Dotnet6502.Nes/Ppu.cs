@@ -395,7 +395,7 @@ public class Ppu
         var tileX = _scanLineRenderInfo.ColumnInTile;
         var tileY = _scanLineRenderInfo.RowInTile;
         var tileData = _scanLineRenderInfo.TileData[_scanLineRenderInfo.CurrentTileIndex];
-        var plane0 = tileData.Span[tileX] >> (7 - tileY); // MSB is left most pixel
+        var plane0 = tileData.Span[tileY] >> (7 - tileX); // MSB is left most pixel
         var plane1 = tileData.Span[tileY + 8] >> (7 - tileX);
         var value = ((1 & plane1) << 1) | (1 & plane0);
 
@@ -786,7 +786,7 @@ public class Ppu
     {
         const int tileSizeInBytes = 16;
         const int tileWidthInPixels = 8;
-        const int columnsPerNameTable = 30;
+        const int columnsPerNameTable = 32;
 
         var scrolledX = _xScrollRegister % 512;
         var scrolledY = (_currentScanLine + _yScrollRegister) % 480;
@@ -818,7 +818,7 @@ public class Ppu
         _scanLineRenderInfo.RowInTile = pixelYInTile;
         _scanLineRenderInfo.CurrentTileIndex = 0;
 
-        for (var x = 0; x < DisplayableWidth; x += tileWidthInPixels)
+        for (var x = 0; x < DisplayableWidth + tileWidthInPixels; x += tileWidthInPixels)
         {
             if (x != 0)
             {
@@ -831,12 +831,12 @@ public class Ppu
                     // Got to the end of the name table
                     nameTableAddress = GetNameTable(scrolledX, scrolledY);
                     tileColumn = 0;
-                    tileByteOffset = tileRow * 32;
+                    tileByteOffset = tileRow * columnsPerNameTable;
                 }
             }
 
             var tileIndex = _memory[nameTableAddress + tileByteOffset];
-            var tileStart = backgroundTableAddress + tileIndex + tileSizeInBytes;
+            var tileStart = backgroundTableAddress + tileIndex * tileSizeInBytes;
             var tileEnd = tileStart + tileSizeInBytes;
             _scanLineRenderInfo.TileData.Add(_memory.AsMemory(tileStart..tileEnd));
 
@@ -863,8 +863,8 @@ public class Ppu
 
     private class ScanLineRenderInfo
     {
-        public List<Memory<byte>> TileData { get; } = new(31);
-        public List<byte> PaletteIndices { get; } = new(31);
+        public List<Memory<byte>> TileData { get; } = new(33);
+        public List<byte> PaletteIndices { get; } = new(33);
         public int CurrentTileIndex { get; set; }
         public int ColumnInTile { get; set; }
         public int RowInTile { get; set; }
