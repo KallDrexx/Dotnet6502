@@ -7,6 +7,7 @@ public class NesHal : Base6502Hal
     private readonly Ppu _ppu;
     private readonly CancellationToken _cancellationToken;
     private readonly DebugWriter? _debugWriter;
+    private readonly Queue<string> _lastInstructions = new();
     private bool _nmiTriggered;
 
     public NesHal(NesMemory memory, Ppu ppu, DebugWriter? debugWriter, CancellationToken cancellationToken)
@@ -47,6 +48,12 @@ public class NesHal : Base6502Hal
     public override void DebugHook(string info)
     {
         _debugWriter?.Log(this, info, true);
+
+        _lastInstructions.Enqueue(info);
+        while (_lastInstructions.Count > 100)
+        {
+            _lastInstructions.Dequeue();
+        }
     }
 
     public override ushort PollForInterrupt()
