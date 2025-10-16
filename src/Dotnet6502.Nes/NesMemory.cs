@@ -175,6 +175,6 @@ public class NesMemory : IMemoryMap
         }
 
         // In real hardware this would have taken 513 CPU cycles, so increment the PPU by that much
-        _ppu.RunNextStep(513 / 3); // 3 PPU cycles = 1 CPU cycle
+        _ppu.RunNextStep(513); // 3 PPU cycles = 1 CPU cycle
     }
 }

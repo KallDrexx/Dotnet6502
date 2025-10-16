@@ -2,7 +2,7 @@ namespace Dotnet6502.Nes.Cli;
 
 public static class CommandLineHandler
 {
-    public record Values(FileInfo RomFile, FileInfo? DebugLogFile, DebugLogSections? Sections);
+    public record Values(FileInfo RomFile, FileInfo? DebugLogFile, bool IsDebugMode);
 
     public static Values? Parse(string[] args)
     {
@@ -14,7 +14,7 @@ public static class CommandLineHandler
 
         FileInfo? romFile = null;
         FileInfo? debugLogFile = null;
-        DebugLogSections? debugLogSections = null;
+        bool isDebugMode = false;
 
         for (int i = 0; i < args.Length; i++)
         {
@@ -33,8 +33,13 @@ public static class CommandLineHandler
                     }
                     break;
 
-                case "--debug":
-                case "-d":
+                case "--enable-debug":
+                case "--d":
+                    isDebugMode = true;
+                    break;
+
+                case "--debug-file":
+                case "-f":
                     if (i + 1 < args.Length)
                     {
                         debugLogFile = new FileInfo(args[++i]);
@@ -42,38 +47,6 @@ public static class CommandLineHandler
                     else
                     {
                         Console.Error.WriteLine("Error: --debug requires a file path");
-                        return null;
-                    }
-                    break;
-
-                case "--debugSection":
-                case "-s":
-                    if (i + 1 < args.Length)
-                    {
-                        var sectionName = args[++i];
-                        switch (sectionName.ToLower())
-                        {
-                            case "all":
-                                debugLogSections = DebugLogSections.All;
-                                break;
-
-                            case "onlynmi":
-                                debugLogSections = DebugLogSections.OnlyNmi;
-                                break;
-
-                            case "notnmi":
-                                debugLogSections = DebugLogSections.OnlyNonNmi;
-                                break;
-
-                            default:
-                                Console.Error.WriteLine($"Error: Invalid debug section of '{sectionName}'. " +
-                                                        $"Valid values are: all, OnlyNmi, NotNmi");
-                                return null;
-                        }
-                    }
-                    else
-                    {
-                        Console.Error.WriteLine("Error: --rom requires a file path");
                         return null;
                     }
                     break;
@@ -104,7 +77,7 @@ public static class CommandLineHandler
             return null;
         }
 
-        return new Values(romFile, debugLogFile, debugLogSections);
+        return new Values(romFile, debugLogFile, isDebugMode);
     }
 
     private static void ShowHelp()
@@ -115,7 +88,9 @@ public static class CommandLineHandler
         Console.WriteLine("  Dotnet6502.Nes.Cli --rom <file> [options]");
         Console.WriteLine();
         Console.WriteLine("Required:");
-        Console.WriteLine("  --rom, -r <file>        The NES ROM file to process");
+        Console.WriteLine("  --rom,          -r <file>        The NES ROM file to process");
+        Console.WriteLine("  --enable-debug, -d <file>        If enabled, logs debug info for visibility in breakpoints");
+        Console.WriteLine("  --debug-file,   -f <file>        File to write instruction level debugging info to");
         Console.WriteLine();
         Console.WriteLine("Options:");
         Console.WriteLine("  --help, -h              Show this help message");
