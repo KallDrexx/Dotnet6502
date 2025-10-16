@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices.Swift;
 using NESDecompiler.Core.ROM;
 
 namespace Dotnet6502.Nes;
@@ -8,6 +7,8 @@ namespace Dotnet6502.Nes;
 /// </summary>
 public class Ppu
 {
+    private readonly record struct Sprite(byte PatternLow, byte PatternHigh, byte Attributes, byte XCounter);
+
     private enum CurrentDotLocation
     {
         InDisplayableArea, InHBlank, InPostRender, StartsNewDisplayableScanline, StartsPostRender, StartsVBlank,
@@ -60,12 +61,8 @@ public class Ppu
     internal PpuCtrl PpuCtrl { get; }
     internal PpuStatus PpuStatus { get; }
     internal PpuMask PpuMask { get; }
-    internal ushort PpuAddr { get; private set; }
     private byte _oamAddrRegister;
     private byte _xScrollRegister, _yScrollRegister;
-    private bool _wRegister;
-    private ushort _vRegister;
-    private byte _tRegister;
     private byte _xRegister;
     private byte _readBuffer;
     private readonly MirroringType _mirroringType;
@@ -76,11 +73,65 @@ public class Ppu
     private readonly byte[] _oamMemory = new byte[0x100];
     private readonly ScanLineRenderInfo _scanLineRenderInfo = new();
     private int _pixelIndex;
-    private int _currentScanLineCycle;
-    private int _currentScanLine; // zero based index of what scan line we are currently at
+    private int _cycle;
+    private int _scanline;
+    private bool _isOddFrame;
     private bool _hasNmiTriggered; // Has NMI been marSked as to be triggered this frame
 
-    public int CurrentScanLine => _currentScanLine;
+    internal ushort PpuAddr => _vRegister.RawValue;
+
+    /// <summary>
+    /// First or second write toggle
+    /// </summary>
+    private bool _wRegister;
+
+    /// <summary>
+    /// Current vram address (15 bits)
+    /// </summary>
+    private VramRegister _vRegister;
+
+    /// <summary>
+    /// Temporary vram address (15 bits)
+    /// </summary>
+    private VramRegister _tRegister;
+
+    /// <summary>
+    /// Fine X scroll (3 bits)
+    /// </summary>
+    private byte _fineX; // Fine X scroll (3 bits)
+
+    /// <summary>
+    /// Low bitplane shift register
+    /// </summary>
+    private ushort _bgPatternShiftLow;
+
+    /// <summary>
+    /// High bitplane shift register
+    /// </summary>
+    private ushort _bgPatternShiftHigh;
+
+    /// <summary>
+    /// Low attribute shift register
+    /// </summary>
+    private ushort _bgAttributeShiftLow;
+
+    /// <summary>
+    /// High attribute shift register
+    /// </summary>
+    private ushort _bgAttributeShiftHigh;
+
+    private byte _nextTileIdLatch;
+    private byte _nextTileAttributeLatch;
+    private byte _nextTileLowLatch;
+    private byte _nextTileHighLatch;
+
+    /// <summary>
+    /// The first 8 sprites on the current scan line
+    /// </summary>
+    private readonly Sprite[] _sprites = new Sprite[8];
+
+
+    internal int Scanline => _scanline;
 
     public Ppu(byte[] chrRomData, MirroringType mirroringType, INesDisplay nesDisplay)
     {
@@ -135,8 +186,12 @@ public class Ppu
         var byteNumber = address % 8;
         switch (byteNumber)
         {
+            // PPUCTRL
             case 0:
                 PpuCtrl.UpdateFromByte(value);
+
+                var nameTableSelect = (byte)(value & 0b11);
+                _tRegister.NameTableSelect = nameTableSelect;
                 break;
 
             case 1:
@@ -156,33 +211,36 @@ public class Ppu
 
                 break;
 
+            // PPUSCROLL
             case 5:
                 if (_wRegister)
                 {
-                    _yScrollRegister = value;
+                    _tRegister.CoarseXScroll = (byte)((value & 0b11111000) >> 3);
+                    _fineX = (byte)(value & 0b111);
+                    _wRegister = false;
                 }
                 else
                 {
-                    _xScrollRegister = value;
+                    _tRegister.FineYScroll = (byte)(value & 0b111);;
+                    _tRegister.CoarseYScroll = (byte)((value & 0b11111000) >> 3);
+                    _wRegister = true;
                 }
-
-                _wRegister = !_wRegister;
                 break;
 
+            // PPUADDR
             case 6:
                 if (_wRegister)
                 {
-                    PpuAddr = (ushort)((PpuAddr & 0xFF00) | value);
+                    var data = value & 0xFF;
+                    _tRegister.RawValue = (ushort)((_tRegister.RawValue & 0xFF00) | data);
+                    _wRegister = false;
                 }
                 else
                 {
-                    // PPUADDR is only 14 bits, so clear out the two high bits
-                    var maskedValue = value & 0x3F;
-                    PpuAddr = (ushort)((PpuAddr & 0x00FF) | (maskedValue << 8));
+                    var data = value & 0b0011111;
+                    _tRegister.RawValue = (ushort)((_tRegister.RawValue & 0x00FF) | (data << 8));
+                    _wRegister = true;
                 }
-
-                _wRegister = !_wRegister;
-                _vRegister = PpuAddr;
 
                 // Prime the read buffer
                 _readBuffer = _memory[PpuAddr];
@@ -307,9 +365,57 @@ public class Ppu
         return address;
     }
 
+    private void RunSingleCycle()
+    {
+        // Visible and pre-render scan lines. While nothing gets rendered on a pre-render scan line
+        // memory access and shift register operations are still performed.
+        if (_scanline >= -1 && _scanline < 240)
+        {
+            // Background rendering
+            if (_cycle >= 1 && _cycle <= DisplayableWidth)
+            {
+                ShiftBackgroundRegisters();
+
+                // Each of visible scanlines we fetch one piece of data. Each fetch takes 2 cycles
+                switch (_cycle % 8)
+                {
+                    case 1:
+                        FetchNameTableByte();
+                        break;
+
+                    case 3:
+                        FetchAttributeByte();
+                        break;
+
+                    case 5:
+                        FetchPatternTileLow();
+                        break;
+
+                    case 7:
+                        FetchPatternTileHigh();
+                        break;
+                }
+            }
+        }
+    }
+
+    private void FetchNameTableByte()
+    {
+        // V holds the current VRAM address
+    }
+
+    private void ShiftBackgroundRegisters()
+    {
+        _bgPatternShiftLow <<= 1;
+        _bgPatternShiftHigh <<= 1;
+        _bgAttributeShiftLow <<= 1;
+        _bgAttributeShiftHigh <<= 1;
+    }
+
+
     private void RunSinglePpuCycle()
     {
-        _currentScanLineCycle++;
+        _cycle++;
 
         var currentLocation = GetCurrentDotLocation();
         switch (currentLocation)
@@ -327,8 +433,8 @@ public class Ppu
                 break; // Nothing to do
 
             case CurrentDotLocation.StartsNewDisplayableScanline:
-                _currentScanLineCycle = 0;
-                _currentScanLine++;
+                _cycle = 0;
+                _scanline++;
                 _pixelIndex++;
                 RebuildScanLineRenderInfo();
                 HandleDisplayablePixelLogic();
@@ -336,19 +442,19 @@ public class Ppu
 
             case CurrentDotLocation.StartsNewScanlineInVBlank:
             case CurrentDotLocation.StartsPostRender:
-                _currentScanLineCycle = 0;
-                _currentScanLine++;
+                _cycle = 0;
+                _scanline++;
                 break;
 
             case CurrentDotLocation.StartsPreRender:
-                _currentScanLineCycle = 0;
-                _currentScanLine++;
+                _cycle = 0;
+                _scanline++;
                 PpuStatus.VBlankFlag = false;
                 break;
 
             case CurrentDotLocation.StartsFirstDisplayableScanLine:
-                _currentScanLineCycle = 0;
-                _currentScanLine = 0;
+                _cycle = 0;
+                _scanline = 0;
                 _hasNmiTriggered = false;
                 _pixelIndex = 0;
                 RebuildScanLineRenderInfo();
@@ -356,8 +462,8 @@ public class Ppu
                 break;
 
             case CurrentDotLocation.StartsVBlank:
-                _currentScanLineCycle = 0;
-                _currentScanLine++;
+                _cycle = 0;
+                _scanline++;
                 PpuStatus.VBlankFlag = true;
                 PpuStatus.Sprite0HitFlag = false;
                 RenderFrame();
@@ -385,7 +491,7 @@ public class Ppu
     private RgbColor? DrawBackgroundPixel2()
     {
         if (!PpuMask.EnableBackgroundRendering ||
-            (_currentScanLineCycle < 8 && !PpuMask.ShowBackgroundInLeftmost8PixelsOfScreen))
+            (_cycle < 8 && !PpuMask.ShowBackgroundInLeftmost8PixelsOfScreen))
         {
             return null;
         }
@@ -418,8 +524,8 @@ public class Ppu
         // is transparent) and thus it locks up.
         if (/*value != 0 && */ !PpuStatus.Sprite0HitFlag)
         {
-            var targetX = _currentScanLineCycle;
-            var targetY = _currentScanLine;
+            var targetX = _cycle;
+            var targetY = _scanline;
 
             // check if this is a sprite 0 hit
             var spriteX = _oamMemory[3];
@@ -559,7 +665,7 @@ public class Ppu
     private RgbColor? DrawBackgroundPixel()
     {
         if (!PpuMask.EnableBackgroundRendering ||
-            (_currentScanLineCycle < 8 && !PpuMask.ShowBackgroundInLeftmost8PixelsOfScreen))
+            (_cycle < 8 && !PpuMask.ShowBackgroundInLeftmost8PixelsOfScreen))
         {
             return null;
         }
@@ -567,8 +673,8 @@ public class Ppu
         const int tileSize = 16; // Each tile is 16 bytes
 
         // Find the scrolled position within the 2x2 name tables
-        var scrolledX = (_currentScanLineCycle + _xScrollRegister) % 512;
-        var scrolledY = (_currentScanLine + _yScrollRegister) % 480;
+        var scrolledX = (_cycle + _xScrollRegister) % 512;
+        var scrolledY = (_scanline + _yScrollRegister) % 480;
         var nameTableAddress = GetNameTable(scrolledX, scrolledY);
 
         // Calculate the name table byte that's relevant to the current pixel
@@ -667,8 +773,8 @@ public class Ppu
 
     private RgbColor? DrawSpritePixel(RgbColor? bgColor)
     {
-        var targetX = _currentScanLineCycle;
-        var targetY = _currentScanLine;
+        var targetX = _cycle;
+        var targetY = _scanline;
 
         if (!PpuMask.EnableSpriteRendering || (targetX < 8 && PpuMask.ShowSpritesInLeftmost8PixelsOfScreen))
         {
@@ -817,9 +923,9 @@ public class Ppu
     {
         // OAMADDR is set to 0 during each of ticks 257–320 (the sprite tile loading interval)
         // of the pre-render and visible scanlines.
-        var isInPreRender = _currentScanLine == TotalScanLines - 1;
-        var isInVisibleRegion = _currentScanLine < DisplayableScanLines;
-        var isWithinCycleBounds = _currentScanLineCycle is >= 257 and <= 320;
+        var isInPreRender = _scanline == TotalScanLines - 1;
+        var isInVisibleRegion = _scanline < DisplayableScanLines;
+        var isWithinCycleBounds = _cycle is >= 257 and <= 320;
 
         if ((isInPreRender || isInVisibleRegion) && isWithinCycleBounds)
         {
@@ -830,36 +936,36 @@ public class Ppu
     private CurrentDotLocation GetCurrentDotLocation()
     {
         // NOTE: Assumes cycle count has already been incremented by one, but nothing else has been incremented
-        if (_currentScanLineCycle > PpuCyclesPerScanline)
+        if (_cycle > PpuCyclesPerScanline)
         {
-            var message = $"Expected cycle count to never get past {PpuCyclesPerScanline}, but it was {_currentScanLineCycle}";
+            var message = $"Expected cycle count to never get past {PpuCyclesPerScanline}, but it was {_cycle}";
             throw new InvalidOperationException(message);
         }
 
-        if (_currentScanLineCycle == PpuCyclesPerScanline)
+        if (_cycle == PpuCyclesPerScanline)
         {
             // Starting a new scanline. Scan line count hasn't been incremented yet
-            if (_currentScanLine < DisplayableScanLines - 1)
+            if (_scanline < DisplayableScanLines - 1)
             {
                 return CurrentDotLocation.StartsNewDisplayableScanline;
             }
 
-            if (_currentScanLine == DisplayableScanLines - 1)
+            if (_scanline == DisplayableScanLines - 1)
             {
                 return CurrentDotLocation.StartsPostRender;
             }
 
-            if (_currentScanLine == DisplayableScanLines + PostRenderBlankingLines - 1)
+            if (_scanline == DisplayableScanLines + PostRenderBlankingLines - 1)
             {
                 return CurrentDotLocation.StartsVBlank;
             }
 
-            if (_currentScanLine == TotalScanLines - PreRenderBlankingLines - 1)
+            if (_scanline == TotalScanLines - PreRenderBlankingLines - 1)
             {
                 return CurrentDotLocation.StartsPreRender;
             }
 
-            if (_currentScanLine == TotalScanLines - 1)
+            if (_scanline == TotalScanLines - 1)
             {
                 return CurrentDotLocation.StartsFirstDisplayableScanLine;
             }
@@ -868,22 +974,22 @@ public class Ppu
         }
 
         // Within a scanline
-        if (_currentScanLine == DisplayableScanLines)
+        if (_scanline == DisplayableScanLines)
         {
             return CurrentDotLocation.InPostRender;
         }
 
-        if (_currentScanLine == TotalScanLines - PreRenderBlankingLines - 1)
+        if (_scanline == TotalScanLines - PreRenderBlankingLines - 1)
         {
             return CurrentDotLocation.InPreRender;
         }
 
-        if (_currentScanLine > DisplayableScanLines)
+        if (_scanline > DisplayableScanLines)
         {
             return CurrentDotLocation.InVBlank;
         }
 
-        if (_currentScanLineCycle < DisplayableWidth)
+        if (_cycle < DisplayableWidth)
         {
             return CurrentDotLocation.InDisplayableArea;
         }
@@ -898,7 +1004,7 @@ public class Ppu
         const int columnsPerNameTable = 32;
 
         var scrolledX = _xScrollRegister % 512;
-        var scrolledY = (_currentScanLine + _yScrollRegister) % 480;
+        var scrolledY = (_scanline + _yScrollRegister) % 480;
         var nameTableAddress = GetNameTable(scrolledX, scrolledY);
 
         var pixelXInNameTable = scrolledX % DisplayableWidth;
@@ -994,5 +1100,46 @@ public class Ppu
                 CurrentTileIndex++;
             }
         }
+    }
+
+    private class VramRegister
+    {
+        private const int FineYMask = 0b0_111_00_00000_00000;
+        private const int NameTableMask = 0b0_000_11_00000_00000;
+        private const int CoarseYMask = 0b0_000_00_11111_00000;
+        private const int CoarseXMask = 0b0_000_00_00000_11111;
+
+        private const int FineYShift = 12;
+        private const int NameTableShift = 10;
+        private const int CoarseYShift = 5;
+        private const int CoarseXShift = 0;
+
+        public ushort RawValue;
+
+        public byte CoarseXScroll
+        {
+            get => (byte)((RawValue & CoarseXMask) >> CoarseXShift);
+            set => RawValue = (ushort)((RawValue & ~CoarseXMask ) | (value << CoarseXShift));
+        }
+
+        public byte CoarseYScroll
+        {
+            get => (byte)((RawValue & CoarseYMask) >> CoarseYShift);
+            set => RawValue = (ushort)((RawValue & ~CoarseYMask) | (value << CoarseYShift));
+        }
+
+        public byte NameTableSelect
+        {
+            get => (byte)((RawValue & NameTableMask) >> NameTableShift);
+            set => RawValue = (ushort)((RawValue & ~NameTableMask) | (value << NameTableShift));
+        }
+
+        public byte FineYScroll
+        {
+            get => (byte)((RawValue & FineYMask) >> FineYShift);
+            set => RawValue = (ushort)((RawValue & ~FineYMask) | (value << FineYShift));
+        }
+
+
     }
 }

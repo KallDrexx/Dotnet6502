@@ -57,7 +57,7 @@ public class NesHal : Base6502Hal
     {
         if (_debugModeEnabled)
         {
-            _currentFrameWrittenMemory.Enqueue(new MemWriteValue(address, value, _ppu.CurrentScanLine));
+            _currentFrameWrittenMemory.Enqueue(new MemWriteValue(address, value, _ppu.Scanline));
         }
 
         base.WriteMemory(address, value);
