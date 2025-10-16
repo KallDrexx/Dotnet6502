@@ -80,6 +80,8 @@ public class Ppu
     private int _currentScanLine; // zero based index of what scan line we are currently at
     private bool _hasNmiTriggered; // Has NMI been marSked as to be triggered this frame
 
+    public int CurrentScanLine => _currentScanLine;
+
     public Ppu(byte[] chrRomData, MirroringType mirroringType, INesDisplay nesDisplay)
     {
         _nesDisplay = nesDisplay;
@@ -135,10 +137,6 @@ public class Ppu
         {
             case 0:
                 PpuCtrl.UpdateFromByte(value);
-                if (PpuCtrl.BaseNameTableAddress == PpuCtrl.BaseNameTableAddressValue.Hex2400)
-                {
-                    Console.WriteLine($"Name table set to 0x2400 on scanline {_currentScanLine}");
-                }
                 break;
 
             case 1:
@@ -165,7 +163,6 @@ public class Ppu
                 }
                 else
                 {
-                    Console.WriteLine($"X scroll set to {_xScrollRegister}");
                     _xScrollRegister = value;
                 }
 

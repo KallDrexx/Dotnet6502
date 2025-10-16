@@ -59,12 +59,12 @@ public class Base6502Hal
         return _flags[flag];
     }
 
-    public byte ReadMemory(ushort address)
+    public virtual byte ReadMemory(ushort address)
     {
         return _memoryMap.Read(address);
     }
 
-    public void WriteMemory(ushort address, byte value)
+    public virtual void WriteMemory(ushort address, byte value)
     {
         _memoryMap.Write(address, value);
     }

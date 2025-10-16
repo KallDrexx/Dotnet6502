@@ -22,7 +22,7 @@ public class DebugWriter : IDisposable
         }
 
         _writer = File.CreateText(outputLog.FullName);
-        _writer.AutoFlush = true;
+        _writer.AutoFlush = false;
 
         Console.WriteLine($"Writing debug log to: {outputLog.FullName}");
     }
@@ -40,6 +40,7 @@ public class DebugWriter : IDisposable
         }
 
         _writer.WriteLine();
+        _writer.Flush();
     }
 
     public void Dispose()
@@ -74,18 +75,6 @@ public class DebugWriter : IDisposable
         else
         {
             _writer.Write($"*{current:X2}*");
-        }
-    }
-
-    private void WriteUshort(ushort current, ushort? previous)
-    {
-        if (previous == null || current == previous)
-        {
-            _writer.Write(current.ToString("X4"));
-        }
-        else
-        {
-            _writer.Write($"*{current:X4}*");
         }
     }
 

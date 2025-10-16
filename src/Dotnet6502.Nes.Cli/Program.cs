@@ -1,6 +1,4 @@
 ﻿using Dotnet6502.Nes.Cli;
-using NESDecompiler.Core.Decompilation;
-using NESDecompiler.Core.Disassembly;
 using NESDecompiler.Core.ROM;
 using Dotnet6502.Common.Compilation;
 using Dotnet6502.Nes;
@@ -32,7 +30,7 @@ var debugWriter = commandLineValues.DebugLogFile != null
     ? new DebugWriter(commandLineValues.DebugLogFile, ppu)
     : null;
 
-var hal = new NesHal(memory, ppu, debugWriter, cancellationTokenSource.Token);
+var hal = new NesHal(memory, ppu, debugWriter, commandLineValues.IsDebugMode, cancellationTokenSource.Token);
 
 var jitCustomizer = new NesJitCustomizer();
 var jitCompiler = new JitCompiler(hal, jitCustomizer, memory);
