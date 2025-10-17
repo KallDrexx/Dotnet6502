@@ -376,12 +376,12 @@ public class Ppu
 
     private void DrawNextPixel()
     {
-        var bgColor = DrawBackgroundPixel2();
+        var bgColor = DrawBackgroundPixel();
 
         _framebuffer[_pixelIndex] = bgColor ?? new RgbColor(0, 0, 0);
     }
 
-    private RgbColor? DrawBackgroundPixel2()
+    private RgbColor? DrawBackgroundPixel()
     {
         if (!PpuMask.EnableBackgroundRendering ||
             (_currentScanLineCycle < 8 && !PpuMask.ShowBackgroundInLeftmost8PixelsOfScreen))
@@ -407,7 +407,7 @@ public class Ppu
             0 => paletteTable[0],
             1 => paletteTable[paletteStart],
             2 => paletteTable[paletteStart + 1],
-            3 => paletteTable[paletteStart + 3],
+            3 => paletteTable[paletteStart + 2],
             _ => throw new ArgumentOutOfRangeException(value.ToString())
         };
 
