@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices.Swift;
 using NESDecompiler.Core.ROM;
 
 namespace Dotnet6502.Nes;
@@ -416,6 +415,9 @@ public class Ppu
         // in SMB where after 2 screens worth of space the name table flips back and forth incorrectly
         // between 2000 and 2400, which causes sprite 0 hit flag to never be set (because the background there
         // is transparent) and thus it locks up.
+        //
+        // This ultimately seems to be caused due to this PPU implementation being a 'Logical" reproduction
+        // and not emulating the actual hardware shift registers.
         if (/*value != 0 && */ !PpuStatus.Sprite0HitFlag)
         {
             var targetX = _currentScanLineCycle;
@@ -449,6 +451,7 @@ public class Ppu
         var flipHorizontal = ((_oamMemory[spriteIndex + 2] >> 6) & 1) == 1;
         var paletteIndex = _oamMemory[spriteIndex + 2] & 0b11;
         var paletteStartOffset = 0x11 + paletteIndex * 4;
+        var priority = ((_oamMemory[spriteIndex + 2] >> 5) & 1) == 1; // 0 in front, 1 behind background
 
         var bank = PpuCtrl.SpritePatternTableAddressFor8X8 switch
         {
@@ -460,7 +463,7 @@ public class Ppu
         var tileStart = bank + tileIndex * 16;
         var tileData = _memory.AsMemory(tileStart, 16);
 
-        return new SpriteAttributes(spriteIndex, flipVertical, flipHorizontal, tileData, paletteStartOffset);
+        return new SpriteAttributes(flipVertical, flipHorizontal, tileData, paletteStartOffset, priority);
     }
 
     private RgbColor? GetSpriteColor(SpriteAttributes attributes, int spritePixelX, int spritePixelY)
@@ -490,118 +493,6 @@ public class Ppu
 
         var palette = _memory.AsSpan(0x3F00 + attributes.PaletteStartOffset);
         return _systemPalette[palette[value - 1]];
-    }
-    //
-    // private RgbColor? DrawSpritePixel2(RgbColor? bgColor)
-    // {
-    //     var targetX = _currentScanLineCycle;
-    //     var targetY = _currentScanLine;
-    //
-    //     var bank = PpuCtrl.SpritePatternTableAddressFor8X8 switch
-    //     {
-    //         PpuCtrl.SpritePatternTableAddressFor8X8Enum.Hex0000 => 0x0000,
-    //         PpuCtrl.SpritePatternTableAddressFor8X8Enum.Hex1000 => 0x1000,
-    //         _ => throw new NotSupportedException(PpuCtrl.SpritePatternTableAddressFor8X8.ToString()),
-    //     };
-    //
-    //     if (!PpuMask.EnableSpriteRendering || (targetX < 8 && PpuMask.ShowSpritesInLeftmost8PixelsOfScreen))
-    //     {
-    //         return null;
-    //     }
-    //
-    //     var paletteTable = _memory.AsSpan()[0x3F00..];
-    //     RgbColor? color = null;
-    //     foreach (var sprite in _orderedSprites)
-    //     {
-    //         if (targetX < sprite.StartX || targetX >= sprite.StartX + 8 ||
-    //             targetY < sprite.StartY || targetY >= sprite.StartY + 8)
-    //         {
-    //             continue;
-    //         }
-    //
-    //         var tileIndex = _oamMemory[sprite.Index + 1];
-    //         var tileOffset = bank + tileIndex * 16;
-    //         var tileData = _memory.AsSpan(tileOffset, 16);
-    //
-    //         // Calculate which pixel within the tile we need
-    //         var pixelX = targetX - sprite.StartX;
-    //         var pixelY = targetY - sprite.StartY;
-    //
-    //         // Account for flipping
-    //         var tilePixelX = sprite.FlipHorizontal ? 7 - pixelX : pixelX;
-    //         var tilePixelY = sprite.FlipVertical ? 7 - pixelY : pixelY;
-    //
-    //         // Read the specific pixel from the tile data
-    //         var upper = tileData[tilePixelY];
-    //         var lower = tileData[tilePixelY + 8];
-    //
-    //         // Extract the bit at position tilePixelX (where 7 is leftmost, 0 is rightmost)
-    //         var bitPosition = 7 - tilePixelX;
-    //         var value = (((lower >> bitPosition) & 1) << 1) | ((upper >> bitPosition) & 1);
-    //
-    //         if (value == 0)
-    //         {
-    //             continue; // Transparent pixel, check next sprite
-    //         }
-    //
-    //         color = _systemPalette[paletteTable[sprite.PaletteStartOffset + value - 1]];
-    //
-    //         // Set sprite 0 hit flag
-    //         if (sprite.Index == 0 && bgColor != null)
-    //         {
-    //             PpuStatus.Sprite0HitFlag = true;
-    //         }
-    //     }
-    //
-    //     return color;
-    // }
-
-    private RgbColor? DrawBackgroundPixel()
-    {
-        if (!PpuMask.EnableBackgroundRendering ||
-            (_currentScanLineCycle < 8 && !PpuMask.ShowBackgroundInLeftmost8PixelsOfScreen))
-        {
-            return null;
-        }
-
-        const int tileSize = 16; // Each tile is 16 bytes
-
-        // Find the scrolled position within the 2x2 name tables
-        var scrolledX = (_currentScanLineCycle + _xScrollRegister) % 512;
-        var scrolledY = (_currentScanLine + _yScrollRegister) % 480;
-        var nameTableAddress = GetNameTable(scrolledX, scrolledY);
-
-        // Calculate the name table byte that's relevant to the current pixel
-        var pixelXInNameTable = scrolledX % 256;
-        var pixelYInNameTable = scrolledY % 240;
-        var tileColumn = pixelXInNameTable / 8;
-        var tileRow = pixelYInNameTable / 8;
-        var tileByteOffset = tileRow * 32 + tileColumn;
-
-        ushort backgroundTableAddress = PpuCtrl.BackgroundPatternTableAddress switch
-        {
-            PpuCtrl.BackgroundPatternTableAddressEnum.Hex0000 => 0x0000,
-            PpuCtrl.BackgroundPatternTableAddressEnum.Hex1000 => 0x1000,
-            _ => throw new NotSupportedException(PpuCtrl.BackgroundPatternTableAddress.ToString()),
-        };
-
-        var palette = GetBackgroundPaletteIndexes(tileColumn, tileRow, nameTableAddress);
-        var tileIndex = _memory[nameTableAddress + tileByteOffset];
-        var tileStart = backgroundTableAddress + tileIndex * tileSize;
-        var tileData = _memory[tileStart..(tileStart + tileSize)];
-
-        // Each tile is 8x8 pixels with 2 bits per pixel, but you have one bit in the first
-        // set of 8 bytes and the second bit in the second set of 8 bytes. So we need to isolate out the
-        // correct upper and lower bit values
-        var tileX = pixelXInNameTable % 8;
-        var tileY = pixelYInNameTable % 8;
-
-        var plane0 = tileData[tileY] >> (7 - tileX); // MSB is left most pixel
-        var plane1 = tileData[tileY + 8] >> (7 - tileX);
-        var value = ((1 & plane1) << 1) | (1 & plane0);
-        var color = _systemPalette[palette[value]];
-
-        return color;
     }
 
     private ushort GetNameTable(int scrolledX, int scrolledY)
@@ -665,87 +556,10 @@ public class Ppu
         }
     }
 
-    private RgbColor? DrawSpritePixel(RgbColor? bgColor)
-    {
-        var targetX = _currentScanLineCycle;
-        var targetY = _currentScanLine;
-
-        if (!PpuMask.EnableSpriteRendering || (targetX < 8 && PpuMask.ShowSpritesInLeftmost8PixelsOfScreen))
-        {
-            return null;
-        }
-
-        RgbColor? color = null;
-        for (var index = 0; index < 256; index += 4)
-        {
-            var tileIndex = _oamMemory[index + 1];
-            var tileX = _oamMemory[index + 3];
-            var tileY = _oamMemory[index];
-
-            // Early exit: check if this sprite could possibly contain the target pixel
-            if (targetX < tileX || targetX >= tileX + 8 ||
-                targetY < tileY || targetY >= tileY + 8)
-            {
-                continue;
-            }
-
-            var flipVertical = ((_oamMemory[index + 2] >> 7) & 1) == 1;
-            var flipHorizontal = ((_oamMemory[index + 2] >> 6) & 1) == 1;
-            var paletteIndex = _oamMemory[index + 2] & 0b11;
-            var palette = GetSpritePaletteIndexes(paletteIndex);
-
-            var bank = PpuCtrl.SpritePatternTableAddressFor8X8 switch
-            {
-                PpuCtrl.SpritePatternTableAddressFor8X8Enum.Hex0000 => 0x0000,
-                PpuCtrl.SpritePatternTableAddressFor8X8Enum.Hex1000 => 0x1000,
-                _ => throw new NotSupportedException(PpuCtrl.SpritePatternTableAddressFor8X8.ToString()),
-            };
-
-            var tileStart = bank + tileIndex * 16;
-            var tileData = _memory.AsSpan(tileStart, 16);
-
-            // Calculate which pixel within the tile we need
-            var pixelX = targetX - tileX;
-            var pixelY = targetY - tileY;
-
-            // Account for flipping
-            var tilePixelX = flipHorizontal ? 7 - pixelX : pixelX;
-            var tilePixelY = flipVertical ? 7 - pixelY : pixelY;
-
-            // Read the specific pixel from the tile data
-            var upper = tileData[tilePixelY];
-            var lower = tileData[tilePixelY + 8];
-
-            // Extract the bit at position tilePixelX (where 7 is leftmost, 0 is rightmost)
-            var bitPosition = 7 - tilePixelX;
-            var value = (((lower >> bitPosition) & 1) << 1) | ((upper >> bitPosition) & 1);
-
-            if (value == 0)
-            {
-                continue; // Transparent pixel, check next sprite
-            }
-
-            color = value switch
-            {
-                1 => _systemPalette[palette[1]],
-                2 => _systemPalette[palette[2]],
-                3 => _systemPalette[palette[3]],
-                _ => throw new NotSupportedException(value.ToString()),
-            };
-
-            // Set sprite 0 hit flag
-            if (index == 0 && bgColor != null)
-            {
-                PpuStatus.Sprite0HitFlag = true;
-            }
-        }
-
-        return color;
-    }
-
     private void DrawSprites()
     {
-        for (var index = 0; index < 256; index += 4)
+        // Draw sprites in reverse order to ensure lower-indexed sprites are drawn on top
+        for (var index = 256 - 4; index >= 0; index -= 4)
         {
             var attributes = GetSpriteAttribute(index);
             var tileX = _oamMemory[index + 3];
@@ -757,49 +571,18 @@ public class Ppu
                 var color = GetSpriteColor(attributes, x, y);
                 if (color != null)
                 {
-                    SetPixel(tileX + x, tileY + y, color.Value);
+                    var screenX = tileX + x;
+                    var screenY = tileY + y;
+                    if (screenX >= DisplayableWidth || screenY >= DisplayableScanLines)
+                    {
+                        continue;
+                    }
+
+                    // Sprite always has priority as foreground and lower index
+                    SetPixel(screenX, screenY, color.Value);
                 }
             }
         }
-    }
-
-    private byte[] GetBackgroundPaletteIndexes(int tileColumn, int tileRow, ushort nameTableAddress)
-    {
-        var attributeTableIndex = tileRow / 4 * 8 + tileColumn / 4;
-        var attributeTableLocation = nameTableAddress + NameTableSize;
-        var attributeByteLocation = attributeTableLocation + attributeTableIndex;
-        var attributeByte = _memory[attributeByteLocation];
-        var palletIndex = (tileColumn % 4 / 2, tileRow % 4 / 2) switch
-        {
-            (0, 0) => attributeByte & 0b11,
-            (1, 0) => (attributeByte >> 2) & 0b11,
-            (0, 1) => (attributeByte >> 4) & 0b11,
-            (1, 1) => (attributeByte >> 6) & 0b11,
-            _ => throw new NotSupportedException(),
-        };
-
-        var paletteStart = 1 + palletIndex * 4;
-        var paletteTable = _memory.AsSpan()[0x3F00..];
-        return
-        [
-            paletteTable[0],
-            paletteTable[paletteStart],
-            paletteTable[paletteStart + 1],
-            paletteTable[paletteStart + 2],
-        ];
-    }
-
-    private byte[] GetSpritePaletteIndexes(int paletteIndex)
-    {
-        var start = 0x11 + (paletteIndex * 4);
-        var paletteTable = _memory.AsSpan()[0x3F00..];
-        return
-        [
-            0,
-            paletteTable[start],
-            paletteTable[start + 1],
-            paletteTable[start + 2],
-        ];
     }
 
     private void SetPixel(int x, int y, RgbColor color)
@@ -971,11 +754,11 @@ public class Ppu
     }
 
     private record SpriteAttributes(
-        int Index,
         bool FlipVertical,
         bool FlipHorizontal,
         Memory<byte> TileData,
-        int PaletteStartOffset);
+        int PaletteStartOffset,
+        bool IsBehindBackground);
 
     private class ScanLineRenderInfo
     {
