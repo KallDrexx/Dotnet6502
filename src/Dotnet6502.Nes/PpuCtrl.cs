@@ -2,6 +2,7 @@ namespace Dotnet6502.Nes;
 
 internal class PpuCtrl
 {
+    private byte _rawByte;
     public NmiEnableValue NmiEnable { get; set; }
     public MasterSlaveSelectValue MasterSlaveSelect { get; set; }
     public SpriteSizeValue SpriteSize { get; set; }
@@ -9,6 +10,12 @@ internal class PpuCtrl
     public SpritePatternTableAddressFor8X8Enum SpritePatternTableAddressFor8X8 { get; set; }
     public VRamAddressIncrementValue VRamAddressIncrement { get; set; }
     public BaseNameTableAddressValue BaseNameTableAddress { get; set; }
+
+    public byte RawByte
+    {
+        get => _rawByte;
+        set => UpdateFromByte(value);
+    }
 
     public void UpdateFromByte(byte value)
     {
@@ -19,6 +26,8 @@ internal class PpuCtrl
         SpritePatternTableAddressFor8X8 = (SpritePatternTableAddressFor8X8Enum)((value & 0x08) >> 3);
         VRamAddressIncrement = (VRamAddressIncrementValue)((value & 0x04) >> 2);
         BaseNameTableAddress = (BaseNameTableAddressValue)(value & 0x03);
+
+        _rawByte = value;
     }
 
     internal byte ToByte()

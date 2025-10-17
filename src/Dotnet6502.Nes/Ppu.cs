@@ -233,6 +233,7 @@ public class Ppu
                 {
                     var data = value & 0xFF;
                     _tRegister.RawValue = (ushort)((_tRegister.RawValue & 0xFF00) | data);
+                    _vRegister.RawValue = _tRegister.RawValue;
                     _wRegister = false;
                 }
                 else
@@ -271,14 +272,12 @@ public class Ppu
 
                 if (PpuCtrl.VRamAddressIncrement == PpuCtrl.VRamAddressIncrementValue.Add1Across)
                 {
-                    PpuAddr += 1;
+                    _vRegister.IncrementX();
                 }
                 else
                 {
-                    PpuAddr += 32;
+                    _vRegister.IncrementY();
                 }
-
-                _vRegister = PpuAddr;
 
                 break;
 
@@ -340,11 +339,11 @@ public class Ppu
 
                 if (PpuCtrl.VRamAddressIncrement == PpuCtrl.VRamAddressIncrementValue.Add1Across)
                 {
-                    PpuAddr += 1;
+                    _vRegister.IncrementX();
                 }
                 else
                 {
-                    PpuAddr += 32;
+                    _vRegister.IncrementY();
                 }
 
                 return value;
@@ -396,12 +395,49 @@ public class Ppu
                         break;
                 }
             }
+
+            // Sprite fetches for next scanline
+            if (_cycle >= 257 && _cycle <= 320)
+            {
+                if (_cycle == 257)
+                {
+                    _vRegister.IncrementY();
+                }
+
+                FetchSpriteData();
+            }
         }
     }
 
     private void FetchNameTableByte()
     {
-        // V holds the current VRAM address
+        var address = (ushort)(0x2000 | (_vRegister.RawValue & 0x0FFF));
+        _nextTileIdLatch = _memory[address];
+    }
+
+    private void FetchAttributeByte()
+    {
+        var address = (ushort)(0x23C0 | (_vRegister.RawValue & 0x0C00) |
+                               ((_vRegister.RawValue >> 4) & 0x38) |
+                               ((_vRegister.RawValue >> 2) & 0x07));
+
+        _nextTileAttributeLatch = _memory[address];
+    }
+
+    private void FetchPatternTileLow()
+    {
+        var patternTableAddress = (PpuCtrl.RawByte & 0x10) << 8;
+        var fineY = _vRegister.FineYScroll & 0x07;
+        var address = patternTableAddress + (_nextTileIdLatch * 16) + fineY;
+        _nextTileLowLatch = _memory[address];
+    }
+
+    private void FetchPatternTileHigh()
+    {
+        var patternTableAddress = (PpuCtrl.RawByte & 0x10) << 8;
+        var fineY = _vRegister.FineYScroll & 0x07;
+        var address = patternTableAddress + (_nextTileIdLatch * 16) + fineY + 8;
+        _nextTileHighLatch = _memory[address];
     }
 
     private void ShiftBackgroundRegisters()
@@ -412,6 +448,10 @@ public class Ppu
         _bgAttributeShiftHigh <<= 1;
     }
 
+    private void FetchSpriteData()
+    {
+        throw new NotImplementedException();
+    }
 
     private void RunSinglePpuCycle()
     {
@@ -1140,6 +1180,52 @@ public class Ppu
             set => RawValue = (ushort)((RawValue & ~FineYMask) | (value << FineYShift));
         }
 
+        public void IncrementX()
+        {
+            // The coarse X component of v needs to be incremented when the next tile is reached. Bits 0-4
+            // are incremented, with overflow toggling bit 10. This means that bits 0-4 count from 0 to 31
+            // across a single nametable, and bit 10 selects the current nametable horizontally.
+            if ((RawValue & 0x001F) == 31)
+            {
+                RawValue &= 0xFFE0;
+                RawValue ^= 0x0400; // switch horizontal name table
+            }
+            else
+            {
+                RawValue += 1;
+            }
+        }
 
+        public void IncrementY()
+        {
+            // If rendering is enabled, fine Y is incremented at dot 256 of each scanline, overflowing to
+            // coarse Y, and finally adjusted to wrap among the nametables vertically. Bits 12-14 are fine Y.
+            // Bits 5-9 are coarse Y. Bit 11 selects the vertical nametable.
+
+            if ((RawValue & 0x7000) != 0x7000) // If fine Y < 7
+            {
+                RawValue += 0x1000;
+            }
+            else
+            {
+                RawValue &= 0x8FFF; // Fine y = 0;
+                var y = (RawValue & 0x03E0) >> 5; // coarse y value
+                if (y == 29) // If last row of tiles in a nametable
+                {
+                    y = 0;
+                    RawValue ^= 0x0800; // Switch vertical nametable
+                }
+                else if (y == 31)
+                {
+                    y = 0; // coarse y = 0, nametable not switched
+                }
+                else
+                {
+                    y += 1; // increment coarse y
+                }
+
+                RawValue = (ushort)((RawValue & 0xFC1F) | (y << 5));
+            }
+        }
     }
 }
