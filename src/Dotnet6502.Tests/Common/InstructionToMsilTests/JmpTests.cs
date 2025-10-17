@@ -85,8 +85,8 @@ public class JmpTests
         jit.AddMethod(0x1234, allInstructions);
 
         // Set up method that will be jumped to
-        jit.MemoryMap.MemoryBlock[0x8020] = 0x78;
-        jit.MemoryMap.MemoryBlock[0x8021] = 0x56;
+        jit.Memory.MemoryBlock[0x8020] = 0x78;
+        jit.Memory.MemoryBlock[0x8021] = 0x56;
         jit.AddMethod(0x5678, [
             new Ir6502.Copy(new Ir6502.Constant(77), new Ir6502.Register(Ir6502.RegisterName.Accumulator)),
         ]);
@@ -189,8 +189,8 @@ public class JmpTests
         jit.AddMethod(0x1234, allInstructions);
 
         // Set up method that will be jumped to
-        jit.MemoryMap.MemoryBlock[0x8500] = 0x78;
-        jit.MemoryMap.MemoryBlock[0x8501] = 0x56;
+        jit.Memory.MemoryBlock[0x8500] = 0x78;
+        jit.Memory.MemoryBlock[0x8501] = 0x56;
         jit.AddMethod(0x5678, [
             new Ir6502.Copy(new Ir6502.Constant(77), new Ir6502.Register(Ir6502.RegisterName.Accumulator)),
         ]);
@@ -288,8 +288,8 @@ public class JmpTests
         jit.AddMethod(0x1234, allInstructions);
 
         // Set up method that will be jumped to
-        jit.MemoryMap.MemoryBlock[0x8600] = 0x78;
-        jit.MemoryMap.MemoryBlock[0x8601] = 0x56;
+        jit.Memory.MemoryBlock[0x8600] = 0x78;
+        jit.Memory.MemoryBlock[0x8601] = 0x56;
         jit.AddMethod(0x5678, []);
 
         // Set initial register values

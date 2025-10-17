@@ -1,3 +1,4 @@
+using Dotnet6502.Common.Hardware;
 using NESDecompiler.Core.ROM;
 
 namespace Dotnet6502.Nes;
@@ -5,7 +6,7 @@ namespace Dotnet6502.Nes;
 /// <summary>
 /// Implementation of the NES PPU
 /// </summary>
-public class Ppu
+public class Ppu : IMemoryDevice
 {
     private enum CurrentDotLocation
     {
@@ -81,6 +82,13 @@ public class Ppu
 
     public int CurrentScanLine => _currentScanLine;
 
+    uint IMemoryDevice.Size => 8;
+
+    /// <summary>
+    /// Not a continuous block of ram
+    /// </summary>
+    public ReadOnlyMemory<byte>? RawBlockFromZero => null;
+
     public Ppu(byte[] chrRomData, MirroringType mirroringType, INesDisplay nesDisplay)
     {
         _nesDisplay = nesDisplay;
@@ -129,7 +137,7 @@ public class Ppu
     /// <summary>
     /// Process a request from the CPU to write to a PPU owned memory address
     /// </summary>
-    public void ProcessMemoryWrite(ushort address, byte value)
+    public void Write(ushort address, byte value)
     {
         var byteNumber = address % 8;
         switch (byteNumber)
@@ -231,7 +239,7 @@ public class Ppu
     /// <summary>
     /// Process a request from the CPU to read from a PPU owned memory address
     /// </summary>
-    public byte ProcessMemoryRead(ushort address)
+    public byte Read(ushort address)
     {
         if (address == 0x4014)
         {

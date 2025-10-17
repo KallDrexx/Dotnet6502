@@ -12,19 +12,22 @@ public class TestJitCompiler : JitCompiler
     public TestMemoryMap MemoryMap { get; }
     public Base6502Hal TestHal { get; }
 
-    private TestJitCompiler(Base6502Hal testHal, TestMemoryMap memoryMap)
-        : base(testHal, null, memoryMap)
+    private TestJitCompiler(Base6502Hal testHal, TestMemoryMap testMemoryMap, MemoryBus memoryBus)
+        : base(testHal, null, memoryBus)
     {
-        MemoryMap = memoryMap;
+        MemoryMap = testMemoryMap;
         TestHal = testHal;
     }
 
     public static TestJitCompiler Create()
     {
         var memoryMap = new TestMemoryMap();
-        var hal = new Base6502Hal(memoryMap);
+        var memoryBus = new MemoryBus();
+        memoryBus.Attach(memoryMap, 0);
 
-        return new TestJitCompiler(hal, memoryMap);
+        var hal = new Base6502Hal(memoryBus);
+
+        return new TestJitCompiler(hal, memoryMap, memoryBus);
     }
 
     public void AddMethod(ushort address, IReadOnlyList<Ir6502.Instruction> instructions)

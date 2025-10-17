@@ -142,7 +142,7 @@ public class CpxTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x7F;
-        jit.MemoryMap.MemoryBlock[0x10] = 0x7F;
+        jit.Memory.MemoryBlock[0x10] = 0x7F;
         jit.RunMethod(0x1234);
 
         jit.TestHal.XRegister.ShouldBe((byte)0x7F);
@@ -168,7 +168,7 @@ public class CpxTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x90;
-        jit.MemoryMap.MemoryBlock[0x20] = 0x80;
+        jit.Memory.MemoryBlock[0x20] = 0x80;
         jit.RunMethod(0x1234);
 
         jit.TestHal.XRegister.ShouldBe((byte)0x90);
@@ -194,7 +194,7 @@ public class CpxTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x10;
-        jit.MemoryMap.MemoryBlock[0x30] = 0x20;
+        jit.Memory.MemoryBlock[0x30] = 0x20;
         jit.RunMethod(0x1234);
 
         jit.TestHal.XRegister.ShouldBe((byte)0x10);
@@ -220,7 +220,7 @@ public class CpxTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0xAA;
-        jit.MemoryMap.MemoryBlock[0x3000] = 0xAA;
+        jit.Memory.MemoryBlock[0x3000] = 0xAA;
         jit.RunMethod(0x1234);
 
         jit.TestHal.XRegister.ShouldBe((byte)0xAA);
@@ -246,7 +246,7 @@ public class CpxTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0xFF;
-        jit.MemoryMap.MemoryBlock[0x1234] = 0x01;
+        jit.Memory.MemoryBlock[0x1234] = 0x01;
         jit.RunMethod(0x1234);
 
         jit.TestHal.XRegister.ShouldBe((byte)0xFF);
@@ -272,7 +272,7 @@ public class CpxTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x00;
-        jit.MemoryMap.MemoryBlock[0x4FFF] = 0xFF;
+        jit.Memory.MemoryBlock[0x4FFF] = 0xFF;
         jit.RunMethod(0x1234);
 
         jit.TestHal.XRegister.ShouldBe((byte)0x00);

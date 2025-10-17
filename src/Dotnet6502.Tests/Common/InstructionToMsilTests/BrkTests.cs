@@ -22,8 +22,8 @@ public class BrkTests
         var allInstructions = InstructionConverter.Convert(instruction, context);
 
         var jit = TestJitCompiler.Create();
-        jit.MemoryMap.MemoryBlock[0xFFFE] = 0x56;
-        jit.MemoryMap.MemoryBlock[0xFFFF] = 0x34;
+        jit.Memory.MemoryBlock[0xFFFE] = 0x56;
+        jit.Memory.MemoryBlock[0xFFFF] = 0x34;
         jit.AddMethod(0x1234, allInstructions);
 
         // Add a callable function at the irq address
@@ -53,8 +53,8 @@ public class BrkTests
         var allInstructions = InstructionConverter.Convert(instruction, context);
 
         var jit = TestJitCompiler.Create();
-        jit.MemoryMap.MemoryBlock[0xFFFE] = 0x56;
-        jit.MemoryMap.MemoryBlock[0xFFFF] = 0x34;
+        jit.Memory.MemoryBlock[0xFFFE] = 0x56;
+        jit.Memory.MemoryBlock[0xFFFF] = 0x34;
         jit.TestHal.ProcessorStatus = 0b11001111;
         jit.AddMethod(0x1234, allInstructions);
 
@@ -85,8 +85,8 @@ public class BrkTests
         var allInstructions = InstructionConverter.Convert(instruction, context);
 
         var jit = TestJitCompiler.Create();
-        jit.MemoryMap.MemoryBlock[0xFFFE] = 0x56;
-        jit.MemoryMap.MemoryBlock[0xFFFF] = 0x34;
+        jit.Memory.MemoryBlock[0xFFFE] = 0x56;
+        jit.Memory.MemoryBlock[0xFFFF] = 0x34;
         jit.TestHal.ProcessorStatus = 0;
         jit.AddMethod(0x1234, allInstructions);
 
@@ -115,8 +115,8 @@ public class BrkTests
         var allInstructions = InstructionConverter.Convert(instruction, context);
 
         var jit = TestJitCompiler.Create();
-        jit.MemoryMap.MemoryBlock[0xFFFE] = 0x56;
-        jit.MemoryMap.MemoryBlock[0xFFFF] = 0x34;
+        jit.Memory.MemoryBlock[0xFFFE] = 0x56;
+        jit.Memory.MemoryBlock[0xFFFF] = 0x34;
         jit.TestHal.ProcessorStatus = 0;
         jit.AddMethod(0x1234, allInstructions);
 

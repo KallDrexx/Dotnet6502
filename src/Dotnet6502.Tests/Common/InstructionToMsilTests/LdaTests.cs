@@ -138,7 +138,7 @@ public class LdaTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
-        jit.MemoryMap.MemoryBlock[0x10] = 0x33;
+        jit.Memory.MemoryBlock[0x10] = 0x33;
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)0x33);
@@ -165,7 +165,7 @@ public class LdaTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0xFF;
-        jit.MemoryMap.MemoryBlock[0x20] = 0x00;
+        jit.Memory.MemoryBlock[0x20] = 0x00;
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)0x00);
@@ -193,7 +193,7 @@ public class LdaTests
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.TestHal.XRegister = 0x05;
-        jit.MemoryMap.MemoryBlock[0x35] = 0x55; // 0x30 + 0x05
+        jit.Memory.MemoryBlock[0x35] = 0x55; // 0x30 + 0x05
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)0x55);
@@ -221,8 +221,8 @@ public class LdaTests
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.TestHal.XRegister = 0x02;
-        jit.MemoryMap.MemoryBlock[0x01] = 0x77; // (0xFF + 0x02) & 0xFF = 0x01
-        jit.MemoryMap.MemoryBlock[0x101] = 0x88; // Should NOT be accessed
+        jit.Memory.MemoryBlock[0x01] = 0x77; // (0xFF + 0x02) & 0xFF = 0x01
+        jit.Memory.MemoryBlock[0x101] = 0x88; // Should NOT be accessed
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)0x77);
@@ -249,7 +249,7 @@ public class LdaTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
-        jit.MemoryMap.MemoryBlock[0x3000] = 0x99;
+        jit.Memory.MemoryBlock[0x3000] = 0x99;
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)0x99);
@@ -277,7 +277,7 @@ public class LdaTests
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.TestHal.XRegister = 0x0F;
-        jit.MemoryMap.MemoryBlock[0x200F] = 0x11;
+        jit.Memory.MemoryBlock[0x200F] = 0x11;
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)0x11);
@@ -305,7 +305,7 @@ public class LdaTests
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.TestHal.YRegister = 0x10;
-        jit.MemoryMap.MemoryBlock[0x4010] = 0x22;
+        jit.Memory.MemoryBlock[0x4010] = 0x22;
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)0x22);
@@ -335,11 +335,11 @@ public class LdaTests
         jit.TestHal.XRegister = 0x05;
 
         // Set up the address lookup: ($20 + X) = $25 contains the target address $3000
-        jit.MemoryMap.MemoryBlock[0x25] = 0x00; // Low byte of target address
-        jit.MemoryMap.MemoryBlock[0x26] = 0x30; // High byte of target address
+        jit.Memory.MemoryBlock[0x25] = 0x00; // Low byte of target address
+        jit.Memory.MemoryBlock[0x26] = 0x30; // High byte of target address
 
         // Set the value at the target address
-        jit.MemoryMap.MemoryBlock[0x3000] = 0x42;
+        jit.Memory.MemoryBlock[0x3000] = 0x42;
 
         jit.RunMethod(0x1234);
 
@@ -369,9 +369,9 @@ public class LdaTests
         jit.TestHal.ARegister = 0x00;
         jit.TestHal.XRegister = 0x05;
 
-        jit.MemoryMap.MemoryBlock[0xFF] = 0x00; // Low byte of target address
-        jit.MemoryMap.MemoryBlock[0x00] = 0x30; // High byte of target address
-        jit.MemoryMap.MemoryBlock[0x3000] = 0x42;
+        jit.Memory.MemoryBlock[0xFF] = 0x00; // Low byte of target address
+        jit.Memory.MemoryBlock[0x00] = 0x30; // High byte of target address
+        jit.Memory.MemoryBlock[0x3000] = 0x42;
 
         jit.RunMethod(0x1234);
 
@@ -402,11 +402,11 @@ public class LdaTests
         jit.TestHal.XRegister = 0x03;
 
         // Set up the address lookup: ($10 + X) = $13 contains the target address $2500
-        jit.MemoryMap.MemoryBlock[0x13] = 0x00; // Low byte of target address
-        jit.MemoryMap.MemoryBlock[0x14] = 0x25; // High byte of target address
+        jit.Memory.MemoryBlock[0x13] = 0x00; // Low byte of target address
+        jit.Memory.MemoryBlock[0x14] = 0x25; // High byte of target address
 
         // Set the value at the target address to 0 to test zero flag
-        jit.MemoryMap.MemoryBlock[0x2500] = 0x00;
+        jit.Memory.MemoryBlock[0x2500] = 0x00;
 
         jit.RunMethod(0x1234);
 
@@ -437,11 +437,11 @@ public class LdaTests
         jit.TestHal.XRegister = 0x08;
 
         // Set up the address lookup: ($30 + X) = $38 contains the target address $4000
-        jit.MemoryMap.MemoryBlock[0x38] = 0x00; // Low byte of target address
-        jit.MemoryMap.MemoryBlock[0x39] = 0x40; // High byte of target address
+        jit.Memory.MemoryBlock[0x38] = 0x00; // Low byte of target address
+        jit.Memory.MemoryBlock[0x39] = 0x40; // High byte of target address
 
         // Set the value at the target address to 0x90 to test negative flag
-        jit.MemoryMap.MemoryBlock[0x4000] = 0x90;
+        jit.Memory.MemoryBlock[0x4000] = 0x90;
 
         jit.RunMethod(0x1234);
 
@@ -472,11 +472,11 @@ public class LdaTests
         jit.TestHal.XRegister = 0x02;
 
         // Test zero page wraparound: ($FF + 0x02) wraps to $01,$02 (not $101,$102)
-        jit.MemoryMap.MemoryBlock[0x01] = 0x50; // Low byte of target address
-        jit.MemoryMap.MemoryBlock[0x02] = 0x15; // High byte of target address
+        jit.Memory.MemoryBlock[0x01] = 0x50; // Low byte of target address
+        jit.Memory.MemoryBlock[0x02] = 0x15; // High byte of target address
 
         // Set the value at the target address
-        jit.MemoryMap.MemoryBlock[0x1550] = 0x77;
+        jit.Memory.MemoryBlock[0x1550] = 0x77;
 
         jit.RunMethod(0x1234);
 
@@ -507,11 +507,11 @@ public class LdaTests
         jit.TestHal.YRegister = 0x10;
 
         // Set up the base address: $30 contains the base address $2000
-        jit.MemoryMap.MemoryBlock[0x30] = 0x00; // Low byte of base address
-        jit.MemoryMap.MemoryBlock[0x31] = 0x20; // High byte of base address
+        jit.Memory.MemoryBlock[0x30] = 0x00; // Low byte of base address
+        jit.Memory.MemoryBlock[0x31] = 0x20; // High byte of base address
 
         // Set the value at the final address ($2000 + Y) = $2010
-        jit.MemoryMap.MemoryBlock[0x2010] = 0x84;
+        jit.Memory.MemoryBlock[0x2010] = 0x84;
 
         jit.RunMethod(0x1234);
 
@@ -542,11 +542,11 @@ public class LdaTests
         jit.TestHal.YRegister = 0x10;
 
         // Set up the base address: $30 contains the base address $2000
-        jit.MemoryMap.MemoryBlock[0xFF] = 0x00; // Low byte of base address
-        jit.MemoryMap.MemoryBlock[0x00] = 0x20; // High byte of base address
+        jit.Memory.MemoryBlock[0xFF] = 0x00; // Low byte of base address
+        jit.Memory.MemoryBlock[0x00] = 0x20; // High byte of base address
 
         // Set the value at the final address ($2000 + Y) = $2010
-        jit.MemoryMap.MemoryBlock[0x2010] = 0x84;
+        jit.Memory.MemoryBlock[0x2010] = 0x84;
 
         jit.RunMethod(0x1234);
 
@@ -577,11 +577,11 @@ public class LdaTests
         jit.TestHal.YRegister = 0x05;
 
         // Set up the base address: $40 contains the base address $3000
-        jit.MemoryMap.MemoryBlock[0x40] = 0x00; // Low byte of base address
-        jit.MemoryMap.MemoryBlock[0x41] = 0x30; // High byte of base address
+        jit.Memory.MemoryBlock[0x40] = 0x00; // Low byte of base address
+        jit.Memory.MemoryBlock[0x41] = 0x30; // High byte of base address
 
         // Set the value at the final address ($3000 + Y) = $3005 to 0
-        jit.MemoryMap.MemoryBlock[0x3005] = 0x00;
+        jit.Memory.MemoryBlock[0x3005] = 0x00;
 
         jit.RunMethod(0x1234);
 
@@ -612,11 +612,11 @@ public class LdaTests
         jit.TestHal.YRegister = 0x20;
 
         // Set up the base address: $50 contains the base address $4000
-        jit.MemoryMap.MemoryBlock[0x50] = 0x00; // Low byte of base address
-        jit.MemoryMap.MemoryBlock[0x51] = 0x40; // High byte of base address
+        jit.Memory.MemoryBlock[0x50] = 0x00; // Low byte of base address
+        jit.Memory.MemoryBlock[0x51] = 0x40; // High byte of base address
 
         // Set the value at the final address ($4000 + Y) = $4020 to 0xFF
-        jit.MemoryMap.MemoryBlock[0x4020] = 0xFF;
+        jit.Memory.MemoryBlock[0x4020] = 0xFF;
 
         jit.RunMethod(0x1234);
 
@@ -647,11 +647,11 @@ public class LdaTests
         jit.TestHal.YRegister = 0xFF;
 
         // Set up the base address: $60 contains the base address $20FF
-        jit.MemoryMap.MemoryBlock[0x60] = 0xFF; // Low byte of base address
-        jit.MemoryMap.MemoryBlock[0x61] = 0x20; // High byte of base address
+        jit.Memory.MemoryBlock[0x60] = 0xFF; // Low byte of base address
+        jit.Memory.MemoryBlock[0x61] = 0x20; // High byte of base address
 
         // Final address ($20FF + Y) = $21FE crosses page boundary
-        jit.MemoryMap.MemoryBlock[0x21FE] = 0x33;
+        jit.Memory.MemoryBlock[0x21FE] = 0x33;
 
         jit.RunMethod(0x1234);
 

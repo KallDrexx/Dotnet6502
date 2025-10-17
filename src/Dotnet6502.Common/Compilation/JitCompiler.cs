@@ -15,18 +15,18 @@ public class JitCompiler
 
     private readonly Base6502Hal _hal;
     private readonly IReadOnlyList<IJitCustomizer> _jitCustomizers;
-    private readonly IMemoryMap _memoryMap;
+    private readonly MemoryBus _memoryBus;
     private readonly Queue<ushort> _ranMethods = new();
     protected Dictionary<ushort, ExecutableMethod> CompiledMethods { get; } = new();
 
-    public JitCompiler(Base6502Hal hal, IJitCustomizer? jitCustomizer, IMemoryMap memoryMap)
+    public JitCompiler(Base6502Hal hal, IJitCustomizer? jitCustomizer, MemoryBus memoryBus)
     {
         _hal = hal;
         _jitCustomizers = jitCustomizer != null
             ? [new StandardJitCustomizer(), jitCustomizer]
             : [new StandardJitCustomizer()];
 
-        _memoryMap = memoryMap;
+        _memoryBus = memoryBus;
     }
 
     /// <summary>
@@ -74,7 +74,7 @@ public class JitCompiler
 
     protected virtual IReadOnlyList<ConvertedInstruction> GetIrInstructions(ushort address)
     {
-        var function = FunctionDecompiler.Decompile(address, _memoryMap.GetCodeRegions());
+        var function = FunctionDecompiler.Decompile(address, _memoryBus.GetAllCodeRegions());
 
         if (function.OrderedInstructions.Count == 0)
         {

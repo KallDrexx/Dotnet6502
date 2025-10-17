@@ -140,7 +140,7 @@ public class CmpTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x7F;
-        jit.MemoryMap.MemoryBlock[0x10] = 0x7F;
+        jit.Memory.MemoryBlock[0x10] = 0x7F;
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)0x7F);
@@ -167,7 +167,7 @@ public class CmpTests
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x10;
         jit.TestHal.XRegister = 0x05;
-        jit.MemoryMap.MemoryBlock[0x35] = 0x20;
+        jit.Memory.MemoryBlock[0x35] = 0x20;
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)0x10);
@@ -194,7 +194,7 @@ public class CmpTests
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x80;
         jit.TestHal.XRegister = 0x02;
-        jit.MemoryMap.MemoryBlock[0x01] = 0x70;
+        jit.Memory.MemoryBlock[0x01] = 0x70;
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)0x80);
@@ -220,7 +220,7 @@ public class CmpTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0xFF;
-        jit.MemoryMap.MemoryBlock[0x3000] = 0x01;
+        jit.Memory.MemoryBlock[0x3000] = 0x01;
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)0xFF);
@@ -247,7 +247,7 @@ public class CmpTests
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x42;
         jit.TestHal.XRegister = 0x0F;
-        jit.MemoryMap.MemoryBlock[0x200F] = 0x42;
+        jit.Memory.MemoryBlock[0x200F] = 0x42;
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)0x42);
@@ -274,7 +274,7 @@ public class CmpTests
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.TestHal.YRegister = 0x01;
-        jit.MemoryMap.MemoryBlock[0x5000] = 0xFF;
+        jit.Memory.MemoryBlock[0x5000] = 0xFF;
         jit.RunMethod(0x1234);
 
         jit.TestHal.ARegister.ShouldBe((byte)0x00);

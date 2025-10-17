@@ -138,7 +138,7 @@ public class LdyTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x00;
-        jit.MemoryMap.MemoryBlock[0x10] = 0x33;
+        jit.Memory.MemoryBlock[0x10] = 0x33;
         jit.RunMethod(0x1234);
 
         jit.TestHal.YRegister.ShouldBe((byte)0x33);
@@ -165,7 +165,7 @@ public class LdyTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0xFF;
-        jit.MemoryMap.MemoryBlock[0x20] = 0x00;
+        jit.Memory.MemoryBlock[0x20] = 0x00;
         jit.RunMethod(0x1234);
 
         jit.TestHal.YRegister.ShouldBe((byte)0x00);
@@ -193,7 +193,7 @@ public class LdyTests
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x00;
         jit.TestHal.XRegister = 0x05;
-        jit.MemoryMap.MemoryBlock[0x35] = 0x55; // 0x30 + 0x05
+        jit.Memory.MemoryBlock[0x35] = 0x55; // 0x30 + 0x05
         jit.RunMethod(0x1234);
 
         jit.TestHal.YRegister.ShouldBe((byte)0x55);
@@ -221,8 +221,8 @@ public class LdyTests
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x00;
         jit.TestHal.XRegister = 0x02;
-        jit.MemoryMap.MemoryBlock[0x01] = 0x77; // (0xFF + 0x02) & 0xFF = 0x01
-        jit.MemoryMap.MemoryBlock[0x101] = 0x88; // Should NOT be accessed
+        jit.Memory.MemoryBlock[0x01] = 0x77; // (0xFF + 0x02) & 0xFF = 0x01
+        jit.Memory.MemoryBlock[0x101] = 0x88; // Should NOT be accessed
         jit.RunMethod(0x1234);
 
         jit.TestHal.YRegister.ShouldBe((byte)0x77);
@@ -249,7 +249,7 @@ public class LdyTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x00;
-        jit.MemoryMap.MemoryBlock[0x3000] = 0x99;
+        jit.Memory.MemoryBlock[0x3000] = 0x99;
         jit.RunMethod(0x1234);
 
         jit.TestHal.YRegister.ShouldBe((byte)0x99);
@@ -277,7 +277,7 @@ public class LdyTests
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x00;
         jit.TestHal.XRegister = 0x10;
-        jit.MemoryMap.MemoryBlock[0x4010] = 0x22;
+        jit.Memory.MemoryBlock[0x4010] = 0x22;
         jit.RunMethod(0x1234);
 
         jit.TestHal.YRegister.ShouldBe((byte)0x22);
@@ -305,7 +305,7 @@ public class LdyTests
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x00;
         jit.TestHal.XRegister = 0x02;
-        jit.MemoryMap.MemoryBlock[0x2101] = 0x88; // 0x20FF + 0x02 = 0x2101
+        jit.Memory.MemoryBlock[0x2101] = 0x88; // 0x20FF + 0x02 = 0x2101
         jit.RunMethod(0x1234);
 
         jit.TestHal.YRegister.ShouldBe((byte)0x88);
@@ -400,7 +400,7 @@ public class LdyTests
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x00;
         jit.TestHal.XRegister = 0x08;
-        jit.MemoryMap.MemoryBlock[0x48] = 0xC0; // 0x40 + 0x08, negative value
+        jit.Memory.MemoryBlock[0x48] = 0xC0; // 0x40 + 0x08, negative value
         jit.RunMethod(0x1234);
 
         jit.TestHal.YRegister.ShouldBe((byte)0xC0);
@@ -427,7 +427,7 @@ public class LdyTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0xFF;
-        jit.MemoryMap.MemoryBlock[0x1234] = 0x00;
+        jit.Memory.MemoryBlock[0x1234] = 0x00;
         jit.RunMethod(0x1234);
 
         jit.TestHal.YRegister.ShouldBe((byte)0x00);
@@ -455,7 +455,7 @@ public class LdyTests
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x00;
         jit.TestHal.XRegister = 0x00; // No offset
-        jit.MemoryMap.MemoryBlock[0x3050] = 0x66; // 0x3050 + 0x00
+        jit.Memory.MemoryBlock[0x3050] = 0x66; // 0x3050 + 0x00
         jit.RunMethod(0x1234);
 
         jit.TestHal.YRegister.ShouldBe((byte)0x66);

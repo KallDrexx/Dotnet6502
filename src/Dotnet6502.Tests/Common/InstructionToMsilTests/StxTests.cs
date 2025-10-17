@@ -33,10 +33,10 @@ public class StxTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x42;
-        jit.MemoryMap.MemoryBlock[0x10] = 0x00; // Initial value
+        jit.Memory.MemoryBlock[0x10] = 0x00; // Initial value
         jit.RunMethod(0x1234);
 
-        jit.MemoryMap.MemoryBlock[0x10].ShouldBe((byte)0x42);
+        jit.Memory.MemoryBlock[0x10].ShouldBe((byte)0x42);
         jit.TestHal.XRegister.ShouldBe((byte)0x42); // X register unchanged
 
         // No flags should be affected
@@ -63,10 +63,10 @@ public class StxTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x00;
-        jit.MemoryMap.MemoryBlock[0x20] = 0xFF; // Initial value
+        jit.Memory.MemoryBlock[0x20] = 0xFF; // Initial value
         jit.RunMethod(0x1234);
 
-        jit.MemoryMap.MemoryBlock[0x20].ShouldBe((byte)0x00);
+        jit.Memory.MemoryBlock[0x20].ShouldBe((byte)0x00);
         jit.TestHal.XRegister.ShouldBe((byte)0x00);
 
         // No flags should be affected even when storing zero
@@ -93,10 +93,10 @@ public class StxTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x80; // Negative value
-        jit.MemoryMap.MemoryBlock[0x30] = 0x00; // Initial value
+        jit.Memory.MemoryBlock[0x30] = 0x00; // Initial value
         jit.RunMethod(0x1234);
 
-        jit.MemoryMap.MemoryBlock[0x30].ShouldBe((byte)0x80);
+        jit.Memory.MemoryBlock[0x30].ShouldBe((byte)0x80);
         jit.TestHal.XRegister.ShouldBe((byte)0x80);
 
         // No flags should be affected even when storing negative value
@@ -124,10 +124,10 @@ public class StxTests
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x55;
         jit.TestHal.YRegister = 0x05;
-        jit.MemoryMap.MemoryBlock[0x45] = 0x00; // 0x40 + 0x05 = 0x45
+        jit.Memory.MemoryBlock[0x45] = 0x00; // 0x40 + 0x05 = 0x45
         jit.RunMethod(0x1234);
 
-        jit.MemoryMap.MemoryBlock[0x45].ShouldBe((byte)0x55);
+        jit.Memory.MemoryBlock[0x45].ShouldBe((byte)0x55);
         jit.TestHal.XRegister.ShouldBe((byte)0x55);
 
         // No flags should be affected
@@ -155,12 +155,12 @@ public class StxTests
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x77;
         jit.TestHal.YRegister = 0x02;
-        jit.MemoryMap.MemoryBlock[0x01] = 0x00; // (0xFF + 0x02) & 0xFF = 0x01
-        jit.MemoryMap.MemoryBlock[0x101] = 0x00; // Should NOT be written to
+        jit.Memory.MemoryBlock[0x01] = 0x00; // (0xFF + 0x02) & 0xFF = 0x01
+        jit.Memory.MemoryBlock[0x101] = 0x00; // Should NOT be written to
         jit.RunMethod(0x1234);
 
-        jit.MemoryMap.MemoryBlock[0x01].ShouldBe((byte)0x77);
-        jit.MemoryMap.MemoryBlock[0x101].ShouldBe((byte)0x00); // Should remain unchanged
+        jit.Memory.MemoryBlock[0x01].ShouldBe((byte)0x77);
+        jit.Memory.MemoryBlock[0x101].ShouldBe((byte)0x00); // Should remain unchanged
         jit.TestHal.XRegister.ShouldBe((byte)0x77);
 
         // No flags should be affected
@@ -187,10 +187,10 @@ public class StxTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x99;
-        jit.MemoryMap.MemoryBlock[0x3000] = 0x00; // Initial value
+        jit.Memory.MemoryBlock[0x3000] = 0x00; // Initial value
         jit.RunMethod(0x1234);
 
-        jit.MemoryMap.MemoryBlock[0x3000].ShouldBe((byte)0x99);
+        jit.Memory.MemoryBlock[0x3000].ShouldBe((byte)0x99);
         jit.TestHal.XRegister.ShouldBe((byte)0x99);
 
         // No flags should be affected
@@ -217,10 +217,10 @@ public class StxTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0xAB;
-        jit.MemoryMap.MemoryBlock[0x1234] = 0x00; // Initial value
+        jit.Memory.MemoryBlock[0x1234] = 0x00; // Initial value
         jit.RunMethod(0x1234);
 
-        jit.MemoryMap.MemoryBlock[0x1234].ShouldBe((byte)0xAB);
+        jit.Memory.MemoryBlock[0x1234].ShouldBe((byte)0xAB);
         jit.TestHal.XRegister.ShouldBe((byte)0xAB);
 
         // No flags should be affected
@@ -257,7 +257,7 @@ public class StxTests
 
         jit.RunMethod(0x1234);
 
-        jit.MemoryMap.MemoryBlock[0x50].ShouldBe((byte)0xFF);
+        jit.Memory.MemoryBlock[0x50].ShouldBe((byte)0xFF);
         jit.TestHal.XRegister.ShouldBe((byte)0xFF);
 
         // All flags should remain exactly as they were
@@ -286,10 +286,10 @@ public class StxTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0xAA;
-        jit.MemoryMap.MemoryBlock[0x60] = 0x55; // Existing value to be overwritten
+        jit.Memory.MemoryBlock[0x60] = 0x55; // Existing value to be overwritten
         jit.RunMethod(0x1234);
 
-        jit.MemoryMap.MemoryBlock[0x60].ShouldBe((byte)0xAA);
+        jit.Memory.MemoryBlock[0x60].ShouldBe((byte)0xAA);
         jit.TestHal.XRegister.ShouldBe((byte)0xAA);
 
         // No flags should be affected
@@ -318,10 +318,10 @@ public class StxTests
         jit.TestHal.ARegister = 0x11;
         jit.TestHal.XRegister = 0x22;
         jit.TestHal.YRegister = 0x33;
-        jit.MemoryMap.MemoryBlock[0x70] = 0x00;
+        jit.Memory.MemoryBlock[0x70] = 0x00;
         jit.RunMethod(0x1234);
 
-        jit.MemoryMap.MemoryBlock[0x70].ShouldBe((byte)0x22);
+        jit.Memory.MemoryBlock[0x70].ShouldBe((byte)0x22);
         jit.TestHal.ARegister.ShouldBe((byte)0x11); // Should remain unchanged
         jit.TestHal.XRegister.ShouldBe((byte)0x22); // Should remain unchanged
         jit.TestHal.YRegister.ShouldBe((byte)0x33); // Should remain unchanged
@@ -351,10 +351,10 @@ public class StxTests
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0xCC;
         jit.TestHal.YRegister = 0xFF;
-        jit.MemoryMap.MemoryBlock[0xFF] = 0x00; // 0x00 + 0xFF = 0xFF
+        jit.Memory.MemoryBlock[0xFF] = 0x00; // 0x00 + 0xFF = 0xFF
         jit.RunMethod(0x1234);
 
-        jit.MemoryMap.MemoryBlock[0xFF].ShouldBe((byte)0xCC);
+        jit.Memory.MemoryBlock[0xFF].ShouldBe((byte)0xCC);
         jit.TestHal.XRegister.ShouldBe((byte)0xCC);
 
         // No flags should be affected
@@ -381,10 +381,10 @@ public class StxTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0xFF; // Maximum value
-        jit.MemoryMap.MemoryBlock[0x80] = 0x00; // Initial value
+        jit.Memory.MemoryBlock[0x80] = 0x00; // Initial value
         jit.RunMethod(0x1234);
 
-        jit.MemoryMap.MemoryBlock[0x80].ShouldBe((byte)0xFF);
+        jit.Memory.MemoryBlock[0x80].ShouldBe((byte)0xFF);
         jit.TestHal.XRegister.ShouldBe((byte)0xFF);
 
         // No flags should be affected even when storing maximum value

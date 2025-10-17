@@ -11,22 +11,25 @@ public class TestJitCompiler : JitCompiler
 {
     public Dictionary<Type, MsilGenerator.CustomIlGenerator>? CustomGenerators { get; set; }
 
-    public TestMemoryMap MemoryMap { get; }
+    public TestMemoryMap Memory { get; }
     public TestHal TestHal { get; }
 
-    private TestJitCompiler(TestHal testHal, TestMemoryMap memoryMap)
-        : base(testHal, null, memoryMap)
+    private TestJitCompiler(TestHal testHal, TestMemoryMap memory, MemoryBus memoryBus)
+        : base(testHal, null, memoryBus)
     {
-        MemoryMap = memoryMap;
+        Memory = memory;
         TestHal = testHal;
     }
 
     public static TestJitCompiler Create()
     {
+        var memoryBus = new MemoryBus();
         var memoryMap = new TestMemoryMap();
-        var hal = new TestHal(memoryMap);
+        memoryBus.Attach(memoryMap, 0);
 
-        return new TestJitCompiler(hal, memoryMap);
+        var hal = new TestHal(memoryBus);
+
+        return new TestJitCompiler(hal, memoryMap, memoryBus);
     }
 
     public void AddMethod(ushort address, IReadOnlyList<Ir6502.Instruction> instructions, bool generateDll = false)

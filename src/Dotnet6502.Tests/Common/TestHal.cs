@@ -7,7 +7,7 @@ public class TestHal : Base6502Hal
     public List<string> RaisedHooks { get; } = [];
     public ushort NextInterruptLocation { get; set; }
 
-    public TestHal(IMemoryMap memoryMap) : base(memoryMap)
+    public TestHal(MemoryBus memoryBus) : base(memoryBus)
     {
     }
 

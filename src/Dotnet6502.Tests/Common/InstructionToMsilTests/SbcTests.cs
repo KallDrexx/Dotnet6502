@@ -313,7 +313,7 @@ public class SbcTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x20;
-        jit.MemoryMap.MemoryBlock[0x10] = 0x08;
+        jit.Memory.MemoryBlock[0x10] = 0x08;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
         jit.RunMethod(0x1234);
 
@@ -341,7 +341,7 @@ public class SbcTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x05;
-        jit.MemoryMap.MemoryBlock[0x20] = 0x10;
+        jit.Memory.MemoryBlock[0x20] = 0x10;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
         jit.RunMethod(0x1234);
 
@@ -371,7 +371,7 @@ public class SbcTests
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x50;
         jit.TestHal.XRegister = 0x05;
-        jit.MemoryMap.MemoryBlock[0x35] = 0x25; // 0x30 + 0x05
+        jit.Memory.MemoryBlock[0x35] = 0x25; // 0x30 + 0x05
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
         jit.RunMethod(0x1234);
 
@@ -400,8 +400,8 @@ public class SbcTests
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x10;
         jit.TestHal.XRegister = 0x02;
-        jit.MemoryMap.MemoryBlock[0x01] = 0x05; // (0xFF + 0x02) & 0xFF = 0x01
-        jit.MemoryMap.MemoryBlock[0x101] = 0x05; // In case implementation doesn't wrap
+        jit.Memory.MemoryBlock[0x01] = 0x05; // (0xFF + 0x02) & 0xFF = 0x01
+        jit.Memory.MemoryBlock[0x101] = 0x05; // In case implementation doesn't wrap
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
         jit.RunMethod(0x1234);
 
@@ -430,7 +430,7 @@ public class SbcTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x40;
-        jit.MemoryMap.MemoryBlock[0x3000] = 0x20;
+        jit.Memory.MemoryBlock[0x3000] = 0x20;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
         jit.RunMethod(0x1234);
 
@@ -458,7 +458,7 @@ public class SbcTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x80; // -128 in signed
-        jit.MemoryMap.MemoryBlock[0x1234] = 0x7F; // +127 in signed
+        jit.Memory.MemoryBlock[0x1234] = 0x7F; // +127 in signed
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
         jit.RunMethod(0x1234);
 
@@ -488,7 +488,7 @@ public class SbcTests
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x30;
         jit.TestHal.XRegister = 0x0F;
-        jit.MemoryMap.MemoryBlock[0x200F] = 0x18;
+        jit.Memory.MemoryBlock[0x200F] = 0x18;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
         jit.RunMethod(0x1234);
 
@@ -518,7 +518,7 @@ public class SbcTests
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x25;
         jit.TestHal.YRegister = 0x10;
-        jit.MemoryMap.MemoryBlock[0x4010] = 0x12;
+        jit.Memory.MemoryBlock[0x4010] = 0x12;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
         jit.RunMethod(0x1234);
 
@@ -547,7 +547,7 @@ public class SbcTests
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x01;
         jit.TestHal.YRegister = 0x01;
-        jit.MemoryMap.MemoryBlock[0x5000] = 0x01;
+        jit.Memory.MemoryBlock[0x5000] = 0x01;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false); // Previous borrow
         jit.RunMethod(0x1234);
 

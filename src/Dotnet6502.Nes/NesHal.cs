@@ -17,7 +17,7 @@ public class NesHal : Base6502Hal
     private readonly bool _debugModeEnabled;
     private bool _nmiTriggered;
 
-    public NesHal(NesMemory memory, Ppu ppu, DebugWriter? debugWriter, bool debugModeEnabled, CancellationToken cancellationToken)
+    public NesHal(MemoryBus memory, Ppu ppu, DebugWriter? debugWriter, bool debugModeEnabled, CancellationToken cancellationToken)
         : base(memory)
     {
         _ppu = ppu;

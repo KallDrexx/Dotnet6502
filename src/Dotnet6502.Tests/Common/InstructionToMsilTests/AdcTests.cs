@@ -256,7 +256,7 @@ public class AdcTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x05;
-        jit.MemoryMap.MemoryBlock[0x10] = 0x03;
+        jit.Memory.MemoryBlock[0x10] = 0x03;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
         jit.RunMethod(0x1234);
 
@@ -284,7 +284,7 @@ public class AdcTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0xFF;
-        jit.MemoryMap.MemoryBlock[0x20] = 0x02;
+        jit.Memory.MemoryBlock[0x20] = 0x02;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
         jit.RunMethod(0x1234);
 
@@ -313,7 +313,7 @@ public class AdcTests
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x10;
         jit.TestHal.XRegister = 0x05;
-        jit.MemoryMap.MemoryBlock[0x35] = 0x15; // 0x30 + 0x05
+        jit.Memory.MemoryBlock[0x35] = 0x15; // 0x30 + 0x05
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
         jit.RunMethod(0x1234);
 
@@ -341,8 +341,8 @@ public class AdcTests
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x01;
         jit.TestHal.XRegister = 0x02;
-        jit.MemoryMap.MemoryBlock[0x01] = 0x07; // (0xFF + 0x02) & 0xFF = 0x01
-        jit.MemoryMap.MemoryBlock[0x101] = 0x07; // In case implementation doesn't wrap
+        jit.Memory.MemoryBlock[0x01] = 0x07; // (0xFF + 0x02) & 0xFF = 0x01
+        jit.Memory.MemoryBlock[0x101] = 0x07; // In case implementation doesn't wrap
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
         jit.RunMethod(0x1234);
 
@@ -370,7 +370,7 @@ public class AdcTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x42;
-        jit.MemoryMap.MemoryBlock[0x3000] = 0x33;
+        jit.Memory.MemoryBlock[0x3000] = 0x33;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
         jit.RunMethod(0x1234);
 
@@ -397,7 +397,7 @@ public class AdcTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x7F;
-        jit.MemoryMap.MemoryBlock[0x1234] = 0x01;
+        jit.Memory.MemoryBlock[0x1234] = 0x01;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
         jit.RunMethod(0x1234);
 
@@ -426,7 +426,7 @@ public class AdcTests
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x11;
         jit.TestHal.XRegister = 0x0F;
-        jit.MemoryMap.MemoryBlock[0x200F] = 0x22;
+        jit.Memory.MemoryBlock[0x200F] = 0x22;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
         jit.RunMethod(0x1234);
 
@@ -455,7 +455,7 @@ public class AdcTests
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x08;
         jit.TestHal.YRegister = 0x10;
-        jit.MemoryMap.MemoryBlock[0x4010] = 0x0F;
+        jit.Memory.MemoryBlock[0x4010] = 0x0F;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
         jit.RunMethod(0x1234);
 
@@ -483,7 +483,7 @@ public class AdcTests
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x01;
         jit.TestHal.YRegister = 0x01;
-        jit.MemoryMap.MemoryBlock[0x5000] = 0xFE;
+        jit.Memory.MemoryBlock[0x5000] = 0xFE;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
         jit.RunMethod(0x1234);
 

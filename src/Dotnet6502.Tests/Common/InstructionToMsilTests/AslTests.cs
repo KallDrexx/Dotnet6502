@@ -39,11 +39,11 @@ public class AslTests
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
-        jit.MemoryMap.MemoryBlock[0x10] = 0x20;
+        jit.Memory.MemoryBlock[0x10] = 0x20;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
         jit.RunMethod(0x1234);
 
-        jit.MemoryMap.MemoryBlock[0x10].ShouldBe((byte)0x40);
+        jit.Memory.MemoryBlock[0x10].ShouldBe((byte)0x40);
         jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeFalse();
         jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
@@ -65,11 +65,11 @@ public class AslTests
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
-        jit.MemoryMap.MemoryBlock[0x20] = 0xC0;
+        jit.Memory.MemoryBlock[0x20] = 0xC0;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
         jit.RunMethod(0x1234);
 
-        jit.MemoryMap.MemoryBlock[0x20].ShouldBe((byte)0x80);
+        jit.Memory.MemoryBlock[0x20].ShouldBe((byte)0x80);
         jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
         jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
@@ -92,11 +92,11 @@ public class AslTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x05;
-        jit.MemoryMap.MemoryBlock[0x35] = 0x15;
+        jit.Memory.MemoryBlock[0x35] = 0x15;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
         jit.RunMethod(0x1234);
 
-        jit.MemoryMap.MemoryBlock[0x35].ShouldBe((byte)0x2A);
+        jit.Memory.MemoryBlock[0x35].ShouldBe((byte)0x2A);
         jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeFalse();
         jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
@@ -119,11 +119,11 @@ public class AslTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x02;
-        jit.MemoryMap.MemoryBlock[0x01] = 0x33;
+        jit.Memory.MemoryBlock[0x01] = 0x33;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
         jit.RunMethod(0x1234);
 
-        jit.MemoryMap.MemoryBlock[0x01].ShouldBe((byte)0x66);
+        jit.Memory.MemoryBlock[0x01].ShouldBe((byte)0x66);
         jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeFalse();
         jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
@@ -145,11 +145,11 @@ public class AslTests
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
-        jit.MemoryMap.MemoryBlock[0x3000] = 0x42;
+        jit.Memory.MemoryBlock[0x3000] = 0x42;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
         jit.RunMethod(0x1234);
 
-        jit.MemoryMap.MemoryBlock[0x3000].ShouldBe((byte)0x84);
+        jit.Memory.MemoryBlock[0x3000].ShouldBe((byte)0x84);
         jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeFalse();
         jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
@@ -172,11 +172,11 @@ public class AslTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x0F;
-        jit.MemoryMap.MemoryBlock[0x200F] = 0x7F;
+        jit.Memory.MemoryBlock[0x200F] = 0x7F;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
         jit.RunMethod(0x1234);
 
-        jit.MemoryMap.MemoryBlock[0x200F].ShouldBe((byte)0xFE);
+        jit.Memory.MemoryBlock[0x200F].ShouldBe((byte)0xFE);
         jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeFalse();
         jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
@@ -199,11 +199,11 @@ public class AslTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x01;
-        jit.MemoryMap.MemoryBlock[0x5000] = 0x80;
+        jit.Memory.MemoryBlock[0x5000] = 0x80;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
         jit.RunMethod(0x1234);
 
-        jit.MemoryMap.MemoryBlock[0x5000].ShouldBe((byte)0x00);
+        jit.Memory.MemoryBlock[0x5000].ShouldBe((byte)0x00);
         jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
         jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeTrue();
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();

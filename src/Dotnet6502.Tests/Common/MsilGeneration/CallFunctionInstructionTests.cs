@@ -46,8 +46,8 @@ public class CallFunctionInstructionTests
         jit.AddMethod(0x1234, [instruction]);
 
         // Add a callable function that writes a test value to memory, and point some memory to that address
-        jit.MemoryMap.MemoryBlock[0x20AB] = 0x45;
-        jit.MemoryMap.MemoryBlock[0x20AC] = 0x23;
+        jit.Memory.MemoryBlock[0x20AB] = 0x45;
+        jit.Memory.MemoryBlock[0x20AC] = 0x23;
 
         var callableInstruction = new Ir6502.Copy(
             new Ir6502.Constant(42),
@@ -68,8 +68,8 @@ public class CallFunctionInstructionTests
 
         // Add a callable function that writes a test value to memory, and point some memory to that address.
         // 6502 has a bug that an indirect jump across page boundaries doesn't increment the page number.
-        jit.MemoryMap.MemoryBlock[0x20FF] = 0x45;
-        jit.MemoryMap.MemoryBlock[0x2000] = 0x23;
+        jit.Memory.MemoryBlock[0x20FF] = 0x45;
+        jit.Memory.MemoryBlock[0x2000] = 0x23;
 
         var callableInstruction = new Ir6502.Copy(
             new Ir6502.Constant(42),

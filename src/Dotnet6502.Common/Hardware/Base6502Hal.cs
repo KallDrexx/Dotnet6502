@@ -2,7 +2,7 @@ namespace Dotnet6502.Common.Hardware;
 
 public class Base6502Hal
 {
-    private readonly IMemoryMap _memoryMap;
+    private readonly MemoryBus _memoryBus;
     private readonly Dictionary<CpuStatusFlags, bool> _flags  = new()
     {
         { CpuStatusFlags.Unused, false },
@@ -44,9 +44,9 @@ public class Base6502Hal
 
     private ushort StackAddress => (ushort)(0x0100 | StackPointer);
 
-    public Base6502Hal(IMemoryMap memoryMap)
+    public Base6502Hal(MemoryBus memoryBus)
     {
-        _memoryMap = memoryMap;
+        _memoryBus = memoryBus;
     }
 
     public void SetFlag(CpuStatusFlags flag, bool value)
@@ -61,17 +61,17 @@ public class Base6502Hal
 
     public virtual byte ReadMemory(ushort address)
     {
-        return _memoryMap.Read(address);
+        return _memoryBus.Read(address);
     }
 
     public virtual void WriteMemory(ushort address, byte value)
     {
-        _memoryMap.Write(address, value);
+        _memoryBus.Write(address, value);
     }
 
     public virtual void PushToStack(byte value)
     {
-        _memoryMap.Write(StackAddress, value);
+        _memoryBus.Write(StackAddress, value);
         StackPointer--;
     }
 
@@ -83,7 +83,7 @@ public class Base6502Hal
         }
 
         StackPointer++;
-        var value = _memoryMap.Read(StackAddress);
+        var value = _memoryBus.Read(StackAddress);
 
         return value;
     }
