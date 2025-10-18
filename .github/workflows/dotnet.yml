@@ -1,0 +1,28 @@
+name: .NET Build and Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Restore dependencies
+        run: dotnet restore src/Dotnet6502.sln
+
+      - name: Build
+        run: dotnet build src/ --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test src/ --no-build --configuration Release --verbosity normal
