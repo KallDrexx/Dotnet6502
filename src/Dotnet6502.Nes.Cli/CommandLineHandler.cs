@@ -34,7 +34,7 @@ public static class CommandLineHandler
                     break;
 
                 case "--enable-debug":
-                case "--d":
+                case "-d":
                     isDebugMode = true;
                     break;
 
@@ -89,7 +89,7 @@ public static class CommandLineHandler
         Console.WriteLine();
         Console.WriteLine("Required:");
         Console.WriteLine("  --rom,          -r <file>        The NES ROM file to process");
-        Console.WriteLine("  --enable-debug, -d <file>        If enabled, logs debug info for visibility in breakpoints");
+        Console.WriteLine("  --enable-debug, -d               If enabled, logs debug info for visibility in breakpoints");
         Console.WriteLine("  --debug-file,   -f <file>        File to write instruction level debugging info to");
         Console.WriteLine();
         Console.WriteLine("Options:");

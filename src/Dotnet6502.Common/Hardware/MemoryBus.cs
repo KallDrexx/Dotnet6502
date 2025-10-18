@@ -26,9 +26,8 @@ public class MemoryBus
 
         // Make sure this doesn't overlap with an existing device
         var newDeviceEnd = baseAddress + device.Size;
-        for (var x = 0; x < _devices.Count; x++)
+        foreach (var (existingStart, memoryDevice) in _devices)
         {
-            var (existingStart, memoryDevice) = _devices[x];
             var existingEnd = existingStart + memoryDevice.Size;
 
             if (existingEnd > baseAddress && existingStart < newDeviceEnd)
@@ -45,7 +44,7 @@ public class MemoryBus
         // If we got here we can attach it
         _devices.Add(new AttachedDevice(baseAddress, device));
 
-        var index = (byte)_devices.Count; // index is incremented so that 0 represents unmapped memory
+        var index = (ushort)_devices.Count; // index is incremented so that 0 represents unmapped memory
         for (var x = 0; x < device.Size; x++)
         {
             _deviceIndexMap[baseAddress + x] = index;
