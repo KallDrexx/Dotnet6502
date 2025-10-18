@@ -1,6 +1,4 @@
-using Dotnet6502.Common.Compilation;
-
-namespace Dotnet6502.Common;
+namespace Dotnet6502.Common.Compilation;
 
 /// <summary>
 /// Adds standard debugging string and polling detection instructions to all instruction paths
