@@ -12,6 +12,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Checkout NESDecompiler
         run: git submodule update --init NESDecompiler
 
       - name: Setup .NET
