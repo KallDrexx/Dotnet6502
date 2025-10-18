@@ -88,11 +88,6 @@ public class Base6502Hal
         return value;
     }
 
-    public void TriggerSoftwareInterrupt()
-    {
-        throw new NotImplementedException();
-    }
-
     /// <summary>
     /// Polls for a waiting interrupt. If an interrupt is pending, the address of the interrupt pointer
     /// is returned. If no interrupt is pending, then Zero is returned.
