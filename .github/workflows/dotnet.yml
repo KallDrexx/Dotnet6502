@@ -12,8 +12,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: "recursive"
+        run: git submodule update --init NESDecompiler
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
