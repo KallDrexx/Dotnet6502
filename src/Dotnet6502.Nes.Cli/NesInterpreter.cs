@@ -1,4 +1,3 @@
-using System.Dynamic;
 using Dotnet6502.Common.Hardware;
 using NESDecompiler.Core.CPU;
 using NESDecompiler.Core.Decompilation;
@@ -13,6 +12,7 @@ public class NesInterpreter
 {
     private record FunctionInfo(DecompiledFunction Function, IReadOnlyDictionary<ushort, int> AddressInstructionIndexes);
 
+    private readonly IReadOnlyDictionary<string, Func<DisassembledInstruction, ushort?>> _executionMethods;
     private readonly NesHal _hal;
     private readonly MemoryBus _memoryBus;
     private readonly Dictionary<ushort, FunctionInfo> _functionCache = new();
@@ -21,6 +21,65 @@ public class NesInterpreter
     {
         _hal = hal;
         _memoryBus = memoryBus;
+        _executionMethods = new Dictionary<string, Func<DisassembledInstruction, ushort?>>
+        {
+            { "ADC", ExecuteAdc },
+            { "AND", ExecuteAnd },
+            { "ASL", ExecuteAsl },
+            { "BCC", ExecuteBcc },
+            { "BCS", ExecuteBcs },
+            { "BEQ", ExecuteBeq },
+            { "BIT", ExecuteBit },
+            { "BMI", ExecuteBmi },
+            { "BNE", ExecuteBne },
+            { "BPL", ExecuteBpl },
+            { "BRK", ExecuteBrk },
+            { "BVC", ExecuteBvc },
+            { "BVS", ExecuteBvs },
+            { "CLC", ExecuteClc },
+            { "CLD", ExecuteCld },
+            { "CLI", ExecuteCli },
+            { "CLV", ExecuteClv },
+            { "CMP", ExecuteCmp },
+            { "CPX", ExecuteCpx },
+            { "CPY", ExecuteCpy },
+            { "DEC", ExecuteDec },
+            { "DEX", ExecuteDex },
+            { "DEY", ExecuteDey },
+            { "EOR", ExecuteEor },
+            { "INC", ExecuteInc },
+            { "INX", ExecuteInx },
+            { "INY", ExecuteIny },
+            { "JMP", ExecuteJmp },
+            { "JSR", ExecuteJsr },
+            { "LDA", ExecuteLda },
+            { "LDX", ExecuteLdx },
+            { "LDY", ExecuteLdy },
+            { "LSR", ExecuteLsr },
+            { "NOP", ExecuteNop },
+            { "ORA", ExecuteOra },
+            { "PHA", ExecutePha },
+            { "PHP", ExecutePhp },
+            { "PLA", ExecutePla },
+            { "PLP", ExecutePlp },
+            { "ROL", ExecuteRol },
+            { "ROR", ExecuteRor },
+            { "RTI", ExecuteRti },
+            { "RTS", ExecuteRts },
+            { "SBC", ExecuteSbc },
+            { "SEC", ExecuteSec },
+            { "SED", ExecuteSed },
+            { "SEI", ExecuteSei },
+            { "STA", ExecuteSta },
+            { "STX", ExecuteStx },
+            { "STY", ExecuteSty },
+            { "TAX", ExecuteTax },
+            { "TAY", ExecuteTay },
+            { "TSX", ExecuteTsx },
+            { "TXA", ExecuteTxa },
+            { "TXS", ExecuteTxs },
+            { "TYA", ExecuteTya },
+        };
     }
 
     public void RunFunction(ushort address)
@@ -74,67 +133,14 @@ public class NesInterpreter
 
             _hal.DebugHook(instruction.ToString());
             _hal.IncrementCpuCycleCount(instruction.Info.Cycles);
-            var nextAddress = instruction.Info.Mnemonic switch
-            {
-                "ADC" => ExecuteAdc(instruction),
-                "AND" => ExecuteAnd(instruction),
-                "ASL" => ExecuteAsl(instruction),
-                "BCC" => ExecuteBcc(instruction),
-                "BCS" => ExecuteBcs(instruction),
-                "BEQ" => ExecuteBeq(instruction),
-                "BIT" => ExecuteBit(instruction),
-                "BMI" => ExecuteBmi(instruction),
-                "BNE" => ExecuteBne(instruction),
-                "BPL" => ExecuteBpl(instruction),
-                "BRK" => ExecuteBrk(instruction),
-                "BVC" => ExecuteBvc(instruction),
-                "BVS" => ExecuteBvs(instruction),
-                "CLC" => ExecuteClc(instruction),
-                "CLD" => ExecuteCld(instruction),
-                "CLI" => ExecuteCli(instruction),
-                "CLV" => ExecuteClv(instruction),
-                "CMP" => ExecuteCmp(instruction),
-                "CPX" => ExecuteCpx(instruction),
-                "CPY" => ExecuteCpy(instruction),
-                "DEC" => ExecuteDec(instruction),
-                "DEX" => ExecuteDex(instruction),
-                "DEY" => ExecuteDey(instruction),
-                "EOR" => ExecuteEor(instruction),
-                "INC" => ExecuteInc(instruction),
-                "INX" => ExecuteInx(instruction),
-                "INY" => ExecuteIny(instruction),
-                "JMP" => ExecuteJmp(instruction),
-                "JSR" => ExecuteJsr(instruction),
-                "LDA" => ExecuteLda(instruction),
-                "LDX" => ExecuteLdx(instruction),
-                "LDY" => ExecuteLdy(instruction),
-                "LSR" => ExecuteLsr(instruction),
-                "NOP" => ExecuteNop(instruction),
-                "ORA" => ExecuteOra(instruction),
-                "PHA" => ExecutePha(instruction),
-                "PHP" => ExecutePhp(instruction),
-                "PLA" => ExecutePla(instruction),
-                "PLP" => ExecutePlp(instruction),
-                "ROL" => ExecuteRol(instruction),
-                "ROR" => ExecuteRor(instruction),
-                "RTI" => ExecuteRti(),
-                "RTS" => ExecuteRts(),
-                "SBC" => ExecuteSbc(instruction),
-                "SEC" => ExecuteSec(instruction),
-                "SED" => ExecuteSed(instruction),
-                "SEI" => ExecuteSei(instruction),
-                "STA" => ExecuteSta(instruction),
-                "STX" => ExecuteStx(instruction),
-                "STY" => ExecuteSty(instruction),
-                "TAX" => ExecuteTax(instruction),
-                "TAY" => ExecuteTay(instruction),
-                "TSX" => ExecuteTsx(instruction),
-                "TXA" => ExecuteTxa(instruction),
-                "TXS" => ExecuteTxs(instruction),
-                "TYA" => ExecuteTya(instruction),
-                _ => throw new NotSupportedException(instruction.Info.Mnemonic),
-            };
 
+            if (!_executionMethods.TryGetValue(instruction.Info.Mnemonic, out var method))
+            {
+                var message = $"No execution method for mnemonic {instruction.Info.Mnemonic}";
+                throw new InvalidOperationException(message);
+            }
+
+            var nextAddress = method(instruction);
             if (nextAddress != null)
             {
                 if (!functionInfo.AddressInstructionIndexes.TryGetValue(nextAddress.Value, out index))
@@ -577,7 +583,7 @@ public class NesInterpreter
         return null;
     }
 
-    private ushort? ExecuteRti()
+    private ushort? ExecuteRti(DisassembledInstruction instruction)
     {
         _hal.ProcessorStatus = _hal.PopFromStack();
         var addressLow = _hal.PopFromStack();
@@ -586,7 +592,7 @@ public class NesInterpreter
         return (ushort)((addressHigh << 8) | addressLow);
     }
 
-    private ushort? ExecuteRts()
+    private ushort? ExecuteRts(DisassembledInstruction instruction)
     {
         var addressLow = _hal.PopFromStack();
         var addressHigh = _hal.PopFromStack();

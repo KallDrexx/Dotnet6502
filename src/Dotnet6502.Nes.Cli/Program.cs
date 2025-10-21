@@ -50,7 +50,7 @@ static (MonogameApp, CancellationTokenSource, MemoryBus, NesHal) SetupHardware(
 {
     Console.WriteLine("Setting up HAL and JIT compiler...");
 
-    var monogameApp = new MonogameApp(false);
+    var monogameApp = new MonogameApp(true);
     var cancellationTokenSource = new CancellationTokenSource();
     var ppu = new Ppu(chrRomData, romInfo2.MirroringType, monogameApp);
 
@@ -81,14 +81,14 @@ static MemoryBus SetupMemoryBus(Ppu ppu, MonogameApp monogameApp, byte[] bytes)
         memoryBus.Attach(ppu, (ushort)x);
     }
 
-    memoryBus1.Attach(new NullMemoryDevice(0x13), 0x4000); // APU not implemented
-    memoryBus1.Attach(new NullMemoryDevice(1), 0x4013); // sound channel not implemented
-    memoryBus1.Attach(new OamDmaDevice(ppu, memoryBus1), 0x4014);
-    memoryBus1.Attach(new NullMemoryDevice(1), 0x4015); // sound channel not implemented
-    memoryBus1.Attach(new Joystick1(monogameApp), 0x4016);
-    memoryBus1.Attach(new NullMemoryDevice(1), 0x4017); // gamepad 2 not implemented yet
-    memoryBus1.Attach(new NullMemoryDevice(8), 0x4018); // disabled apu/i/o functionality
-    memoryBus1.Attach(cartridgeSpace, 0x4020);
+    memoryBus.Attach(new NullMemoryDevice(0x13), 0x4000); // APU not implemented
+    memoryBus.Attach(new NullMemoryDevice(1), 0x4013); // sound channel not implemented
+    memoryBus.Attach(new OamDmaDevice(ppu, memoryBus), 0x4014);
+    memoryBus.Attach(new NullMemoryDevice(1), 0x4015); // sound channel not implemented
+    memoryBus.Attach(new Joystick1(monogameApp), 0x4016);
+    memoryBus.Attach(new NullMemoryDevice(1), 0x4017); // gamepad 2 not implemented yet
+    memoryBus.Attach(new NullMemoryDevice(8), 0x4018); // disabled apu/i/o functionality
+    memoryBus.Attach(cartridgeSpace, 0x4020);
 
     // Map the cartridge data to the end of the cartridge space
     if (bytes.Length % 0x4000 != 0)
