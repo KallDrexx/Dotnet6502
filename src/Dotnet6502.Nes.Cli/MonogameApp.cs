@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -16,19 +17,25 @@ public class MonogameApp : Game, INesDisplay, INesInput
     private readonly ControllerState _controllerState = new();
     private readonly object _synchronizationLock = new();
     private readonly Color[] _pixelColors = new Color[Width * Height];
+    private readonly bool _trackTime;
     private SpriteBatch _spriteBatch = null!;
     private Texture2D _texture = null!;
     private bool _readyToContinue;
     private bool _displayQuit; // Tells the PPU that the display quit, and thus Monitor will never be pulsed
+    private Stopwatch _timer = new();
+    private TimeSpan _totalTime;
+    private int _frameCountSinceLastTimer;
 
     public Task? NesCodeTask { get; set; }
 
-    public MonogameApp()
+    public MonogameApp(bool trackTime)
     {
         _graphicsDeviceManager = new GraphicsDeviceManager(this);
 
         IsMouseVisible = true;
         Window.AllowUserResizing = true;
+
+        _trackTime = trackTime;
     }
 
     public void RenderFrame(RgbColor[] pixels)
@@ -37,6 +44,22 @@ public class MonogameApp : Game, INesDisplay, INesInput
         {
             var message = "Frame buffer from NES has different pixel count than texture pixel array length";
             throw new InvalidOperationException(message);
+        }
+
+        if (_trackTime)
+        {
+            _timer.Stop();
+            _totalTime += _timer.Elapsed;
+            _frameCountSinceLastTimer++;
+
+            if (_frameCountSinceLastTimer == 120)
+            {
+                var averageTime = _totalTime / _frameCountSinceLastTimer;
+                Console.WriteLine($"Average NES time: {averageTime.TotalMilliseconds}ms");
+
+                _totalTime = TimeSpan.Zero;
+                _frameCountSinceLastTimer = 0;
+            }
         }
 
         lock (_synchronizationLock)
@@ -50,6 +73,11 @@ public class MonogameApp : Game, INesDisplay, INesInput
             while (!_readyToContinue && !_displayQuit)
             {
                 Monitor.Wait(_synchronizationLock);
+            }
+
+            if (_trackTime)
+            {
+                _timer.Restart();
             }
 
             _readyToContinue = false;

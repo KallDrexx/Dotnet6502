@@ -49,7 +49,7 @@ static (MonogameApp, CancellationTokenSource, MemoryBus, NesHal) SetupHardware(
 {
     Console.WriteLine("Setting up HAL and JIT compiler...");
 
-    var monogameApp = new MonogameApp();
+    var monogameApp = new MonogameApp(false);
     var cancellationTokenSource = new CancellationTokenSource();
     var ppu = new Ppu(chrRomData, romInfo2.MirroringType, monogameApp);
 
