@@ -20,8 +20,9 @@ var (app, nesCodeCancellationTokenSource, memoryBus, hal) = SetupHardware(
 
 var jitCustomizer = new NesJitCustomizer();
 var jitCompiler = new JitCompiler(hal, jitCustomizer, memoryBus);
+var interpreter = new NesInterpreter(hal, memoryBus);
 
-await RunRom(romInfo, jitCompiler, app, nesCodeCancellationTokenSource);
+await RunRom(romInfo, jitCompiler, interpreter, app, nesCodeCancellationTokenSource);
 
 Console.WriteLine("Done");
 return 0;
@@ -80,13 +81,14 @@ static MemoryBus SetupMemoryBus(Ppu ppu, MonogameApp monogameApp, byte[] bytes)
         memoryBus.Attach(ppu, (ushort)x);
     }
 
-    memoryBus.Attach(new NullMemoryDevice(0x13), 0x4000); // APU not implemented
-    memoryBus.Attach(new OamDmaDevice(ppu, memoryBus), 0x4014);
-    memoryBus.Attach(new NullMemoryDevice(1), 0x4015); // sound channel not implemented
-    memoryBus.Attach(new Joystick1(monogameApp), 0x4016);
-    memoryBus.Attach(new NullMemoryDevice(1), 0x4017); // gamepad 2 not implemented yet
-    memoryBus.Attach(new NullMemoryDevice(8), 0x4018); // disabled apu/i/o functionality
-    memoryBus.Attach(cartridgeSpace, 0x4020);
+    memoryBus1.Attach(new NullMemoryDevice(0x13), 0x4000); // APU not implemented
+    memoryBus1.Attach(new NullMemoryDevice(1), 0x4013); // sound channel not implemented
+    memoryBus1.Attach(new OamDmaDevice(ppu, memoryBus1), 0x4014);
+    memoryBus1.Attach(new NullMemoryDevice(1), 0x4015); // sound channel not implemented
+    memoryBus1.Attach(new Joystick1(monogameApp), 0x4016);
+    memoryBus1.Attach(new NullMemoryDevice(1), 0x4017); // gamepad 2 not implemented yet
+    memoryBus1.Attach(new NullMemoryDevice(8), 0x4018); // disabled apu/i/o functionality
+    memoryBus1.Attach(cartridgeSpace, 0x4020);
 
     // Map the cartridge data to the end of the cartridge space
     if (bytes.Length % 0x4000 != 0)
@@ -107,14 +109,16 @@ static MemoryBus SetupMemoryBus(Ppu ppu, MonogameApp monogameApp, byte[] bytes)
 
 static async Task RunRom(
     ROMInfo romInfo, 
-    JitCompiler jitCompiler, 
+    JitCompiler jitCompiler,
+    NesInterpreter interpreter,
     MonogameApp app,
     CancellationTokenSource cancellationTokenSource)
 {
     Console.WriteLine($"Starting at reset vector: {romInfo.ResetVector:X4}");
     var nesTask = Task.Run(() =>
     {
-        jitCompiler.RunMethod(romInfo.ResetVector);
+        // jitCompiler.RunMethod(romInfo.ResetVector);
+        interpreter.RunFunction(romInfo.ResetVector);
     });
 
     app.NesCodeTask = nesTask;

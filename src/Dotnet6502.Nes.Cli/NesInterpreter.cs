@@ -1,3 +1,4 @@
+using System.Dynamic;
 using Dotnet6502.Common.Hardware;
 using NESDecompiler.Core.CPU;
 using NESDecompiler.Core.Decompilation;
@@ -27,16 +28,17 @@ public class NesInterpreter
         int nextAddress = address;
         while (nextAddress >= 0)
         {
-            if (!_functionCache.TryGetValue(address, out var functionInfo))
+            if (!_functionCache.TryGetValue((ushort)nextAddress, out var functionInfo))
             {
                 var regions = _memoryBus.GetAllCodeRegions();
-                var function = FunctionDecompiler.Decompile(address, regions);
+                var function = FunctionDecompiler.Decompile((ushort)nextAddress, regions);
                 var addressIndexMap = function.OrderedInstructions
                     .Select((instruction, index) => new { Instruction = instruction, Index = index })
-                    .ToDictionary(x => x.Instruction.CPUAddress, x => x.Index);
+                    .GroupBy(x => x.Instruction.CPUAddress)
+                    .ToDictionary(x => x.Key, x => x.Select(x => x.Index).First());
 
                 functionInfo = new FunctionInfo(function, addressIndexMap);
-                _functionCache.Add(address, functionInfo);
+                _functionCache.Add((ushort)nextAddress, functionInfo);
             }
 
             // Run the function until we get an address
@@ -47,25 +49,107 @@ public class NesInterpreter
     private int ExecuteFunction(FunctionInfo functionInfo)
     {
         var function = functionInfo.Function;
-        var currentAddress = function.OrderedInstructions[0].CPUAddress;
+        if (function.OrderedInstructions.Count == 0)
+        {
+            var message = $"Function 0x{function.Address:X4} has no instructions";
+            throw new InvalidOperationException(message);
+        }
+
+        var index = 0;
         while (true)
         {
-            if (!functionInfo.AddressInstructionIndexes.TryGetValue(currentAddress, out var index))
+            var instruction = function.OrderedInstructions[index];
+            var pollResult = _hal.PollForInterrupt();
+            if (pollResult > 0)
             {
-                // Address is not in this function
-                return currentAddress;
+                _hal.PushToStack((byte)(instruction.CPUAddress >> 8));
+                _hal.PushToStack((byte)(instruction.CPUAddress & 0xFF));
+                var flags = _hal.ProcessorStatus & 0b00110000;
+                _hal.PushToStack((byte)(flags));
+
+                var intLow = _hal.ReadMemory(pollResult);
+                int intHigh = _hal.ReadMemory((ushort)(pollResult + 1));
+                return (ushort)((intHigh << 8) | intLow);
             }
 
-            var instruction = function.OrderedInstructions[index];
-            currentAddress = instruction.Info.Mnemonic switch
+            _hal.DebugHook(instruction.ToString());
+            _hal.IncrementCpuCycleCount(instruction.Info.Cycles);
+            var nextAddress = instruction.Info.Mnemonic switch
             {
                 "ADC" => ExecuteAdc(instruction),
+                "AND" => ExecuteAnd(instruction),
+                "ASL" => ExecuteAsl(instruction),
+                "BCC" => ExecuteBcc(instruction),
+                "BCS" => ExecuteBcs(instruction),
+                "BEQ" => ExecuteBeq(instruction),
+                "BIT" => ExecuteBit(instruction),
+                "BMI" => ExecuteBmi(instruction),
+                "BNE" => ExecuteBne(instruction),
+                "BPL" => ExecuteBpl(instruction),
+                "BRK" => ExecuteBrk(instruction),
+                "BVC" => ExecuteBvc(instruction),
+                "BVS" => ExecuteBvs(instruction),
+                "CLC" => ExecuteClc(instruction),
+                "CLD" => ExecuteCld(instruction),
+                "CLI" => ExecuteCli(instruction),
+                "CLV" => ExecuteClv(instruction),
+                "CMP" => ExecuteCmp(instruction),
+                "CPX" => ExecuteCpx(instruction),
+                "CPY" => ExecuteCpy(instruction),
+                "DEC" => ExecuteDec(instruction),
+                "DEX" => ExecuteDex(instruction),
+                "DEY" => ExecuteDey(instruction),
+                "EOR" => ExecuteEor(instruction),
+                "INC" => ExecuteInc(instruction),
+                "INX" => ExecuteInx(instruction),
+                "INY" => ExecuteIny(instruction),
+                "JMP" => ExecuteJmp(instruction),
+                "JSR" => ExecuteJsr(instruction),
+                "LDA" => ExecuteLda(instruction),
+                "LDX" => ExecuteLdx(instruction),
+                "LDY" => ExecuteLdy(instruction),
+                "LSR" => ExecuteLsr(instruction),
+                "NOP" => ExecuteNop(instruction),
+                "ORA" => ExecuteOra(instruction),
+                "PHA" => ExecutePha(instruction),
+                "PHP" => ExecutePhp(instruction),
+                "PLA" => ExecutePla(instruction),
+                "PLP" => ExecutePlp(instruction),
+                "ROL" => ExecuteRol(instruction),
+                "ROR" => ExecuteRor(instruction),
+                "RTI" => ExecuteRti(),
+                "RTS" => ExecuteRts(),
+                "SBC" => ExecuteSbc(instruction),
+                "SEC" => ExecuteSec(instruction),
+                "SED" => ExecuteSed(instruction),
+                "SEI" => ExecuteSei(instruction),
+                "STA" => ExecuteSta(instruction),
+                "STX" => ExecuteStx(instruction),
+                "STY" => ExecuteSty(instruction),
+                "TAX" => ExecuteTax(instruction),
+                "TAY" => ExecuteTay(instruction),
+                "TSX" => ExecuteTsx(instruction),
+                "TXA" => ExecuteTxa(instruction),
+                "TXS" => ExecuteTxs(instruction),
+                "TYA" => ExecuteTya(instruction),
                 _ => throw new NotSupportedException(instruction.Info.Mnemonic),
             };
+
+            if (nextAddress != null)
+            {
+                if (!functionInfo.AddressInstructionIndexes.TryGetValue(nextAddress.Value, out index))
+                {
+                    return nextAddress.Value;
+                }
+            }
+            else
+            {
+                index++;
+            }
         }
     }
 
-    private ushort ExecuteAdc(DisassembledInstruction instruction)
+    private ushort? ExecuteAdc(DisassembledInstruction instruction)
     {
         var memoryValue = GetValueFromAddressingMode(instruction);
         var result = _hal.ARegister + memoryValue + (_hal.GetFlag(CpuStatusFlags.Carry) ? 1 : 0);
@@ -76,10 +160,10 @@ public class NesInterpreter
         _hal.SetFlag(CpuStatusFlags.Negative, (result & 0x80) > 0);
         _hal.ARegister = (byte)result;
 
-        return NextInstructionAddress(instruction);
+        return null;
     }
 
-    private ushort ExecuteAnd(DisassembledInstruction instruction)
+    private ushort? ExecuteAnd(DisassembledInstruction instruction)
     {
         var memoryValue = GetValueFromAddressingMode(instruction);
         var result = _hal.ARegister & memoryValue;
@@ -88,10 +172,10 @@ public class NesInterpreter
         _hal.SetFlag(CpuStatusFlags.Negative, (result & 0x80) > 0);
         _hal.ARegister = (byte) result;
 
-        return NextInstructionAddress(instruction);
+        return null;
     }
 
-    private ushort ExecuteAsl(DisassembledInstruction instruction)
+    private ushort? ExecuteAsl(DisassembledInstruction instruction)
     {
         int newValue;
         if (instruction.Info.AddressingMode == AddressingMode.Accumulator)
@@ -111,31 +195,31 @@ public class NesInterpreter
         _hal.SetFlag(CpuStatusFlags.Zero, (newValue & 0xFF) == 0);
         _hal.SetFlag(CpuStatusFlags.Negative, (newValue & 0x80) > 0);
 
-        return NextInstructionAddress(instruction);
+        return null;
     }
 
-    private ushort ExecuteBcc(DisassembledInstruction instruction)
+    private ushort? ExecuteBcc(DisassembledInstruction instruction)
     {
         return _hal.GetFlag(CpuStatusFlags.Carry)
-            ? NextInstructionAddress(instruction)
+            ? null
             : instruction.TargetAddress!.Value;
     }
 
-    private ushort ExecuteBcs(DisassembledInstruction instruction)
+    private ushort? ExecuteBcs(DisassembledInstruction instruction)
     {
         return _hal.GetFlag(CpuStatusFlags.Carry)
             ? instruction.TargetAddress!.Value
-            : NextInstructionAddress(instruction);
+            : null;
     }
 
-    private ushort ExecuteBeq(DisassembledInstruction instruction)
+    private ushort? ExecuteBeq(DisassembledInstruction instruction)
     {
         return _hal.GetFlag(CpuStatusFlags.Zero)
             ? instruction.TargetAddress!.Value
-            : NextInstructionAddress(instruction);
+            : null;
     }
 
-    private ushort ExecuteBit(DisassembledInstruction instruction)
+    private ushort? ExecuteBit(DisassembledInstruction instruction)
     {
         var memoryValue = GetValueFromAddressingMode(instruction);
         var result = (byte)(_hal.ARegister & memoryValue);
@@ -144,31 +228,31 @@ public class NesInterpreter
         _hal.SetFlag(CpuStatusFlags.Overflow, (result & 0x40) > 0);
         _hal.SetFlag(CpuStatusFlags.Negative, (result & 0x80) > 0);
 
-        return NextInstructionAddress(instruction);
+        return null;
     }
 
-    private ushort ExecuteBmi(DisassembledInstruction instruction)
+    private ushort? ExecuteBmi(DisassembledInstruction instruction)
     {
         return _hal.GetFlag(CpuStatusFlags.Negative)
             ? instruction.TargetAddress!.Value
-            : NextInstructionAddress(instruction);
+            : null;
     }
 
-    private ushort ExecuteBne(DisassembledInstruction instruction)
+    private ushort? ExecuteBne(DisassembledInstruction instruction)
     {
         return _hal.GetFlag(CpuStatusFlags.Zero)
-            ? NextInstructionAddress(instruction)
+            ? null
             : instruction.TargetAddress!.Value;
     }
 
-    private ushort ExecuteBpl(DisassembledInstruction instruction)
+    private ushort? ExecuteBpl(DisassembledInstruction instruction)
     {
         return _hal.GetFlag(CpuStatusFlags.Negative)
-            ? NextInstructionAddress(instruction)
+            ? null
             : instruction.TargetAddress!.Value;
     }
 
-    private ushort ExecuteBrk(DisassembledInstruction instruction)
+    private ushort? ExecuteBrk(DisassembledInstruction instruction)
     {
         var nextAddress = (ushort)(instruction.CPUAddress + 2);
         _hal.PushToStack((byte)(nextAddress >> 8));
@@ -183,49 +267,49 @@ public class NesInterpreter
         return (ushort)((interruptHigh << 8) | interruptLow);
     }
 
-    private ushort ExecuteBvc(DisassembledInstruction instruction)
+    private ushort? ExecuteBvc(DisassembledInstruction instruction)
     {
         return _hal.GetFlag(CpuStatusFlags.Carry)
-            ? NextInstructionAddress(instruction)
+            ? null
             : instruction.TargetAddress!.Value;
     }
 
-    private ushort ExecuteBvs(DisassembledInstruction instruction)
+    private ushort? ExecuteBvs(DisassembledInstruction instruction)
     {
         return _hal.GetFlag(CpuStatusFlags.Overflow)
             ? instruction.TargetAddress!.Value
-            : NextInstructionAddress(instruction);
+            : null;
     }
 
-    private ushort ExecuteClc(DisassembledInstruction instruction)
+    private ushort? ExecuteClc(DisassembledInstruction instruction)
     {
         _hal.SetFlag(CpuStatusFlags.Carry, false);
 
-        return NextInstructionAddress(instruction);
+        return null;
     }
 
-    private ushort ExecuteCld(DisassembledInstruction instruction)
+    private ushort? ExecuteCld(DisassembledInstruction instruction)
     {
         _hal.SetFlag(CpuStatusFlags.Decimal, false);
 
-        return NextInstructionAddress(instruction);
+        return null;
     }
 
-    private ushort ExecuteCli(DisassembledInstruction instruction)
+    private ushort? ExecuteCli(DisassembledInstruction instruction)
     {
         _hal.SetFlag(CpuStatusFlags.InterruptDisable, false);
 
-        return NextInstructionAddress(instruction);
+        return null;
     }
 
-    private ushort ExecuteClv(DisassembledInstruction instruction)
+    private ushort? ExecuteClv(DisassembledInstruction instruction)
     {
         _hal.SetFlag(CpuStatusFlags.Overflow, false);
 
-        return NextInstructionAddress(instruction);
+        return null;
     }
 
-    private ushort ExecuteCmp(DisassembledInstruction instruction)
+    private ushort? ExecuteCmp(DisassembledInstruction instruction)
     {
         var memoryValue = GetValueFromAddressingMode(instruction);
         var result = _hal.ARegister - memoryValue;
@@ -234,10 +318,10 @@ public class NesInterpreter
         _hal.SetFlag(CpuStatusFlags.Zero, result == 0);
         _hal.SetFlag(CpuStatusFlags.Negative, (result & 0x80) > 0);
 
-        return NextInstructionAddress(instruction);
+        return null;
     }
 
-    private ushort ExecuteCpx(DisassembledInstruction instruction)
+    private ushort? ExecuteCpx(DisassembledInstruction instruction)
     {
         var memoryValue = GetValueFromAddressingMode(instruction);
         var result = _hal.XRegister - memoryValue;
@@ -246,10 +330,10 @@ public class NesInterpreter
         _hal.SetFlag(CpuStatusFlags.Zero, result == 0);
         _hal.SetFlag(CpuStatusFlags.Negative, (result & 0x80) > 0);
 
-        return NextInstructionAddress(instruction);
+        return null;
     }
 
-    private ushort ExecuteCpy(DisassembledInstruction instruction)
+    private ushort? ExecuteCpy(DisassembledInstruction instruction)
     {
         var memoryValue = GetValueFromAddressingMode(instruction);
         var result = _hal.YRegister - memoryValue;
@@ -258,10 +342,10 @@ public class NesInterpreter
         _hal.SetFlag(CpuStatusFlags.Zero, result == 0);
         _hal.SetFlag(CpuStatusFlags.Negative, (result & 0x80) > 0);
 
-        return NextInstructionAddress(instruction);
+        return null;
     }
 
-    private ushort ExecuteDec(DisassembledInstruction instruction)
+    private ushort? ExecuteDec(DisassembledInstruction instruction)
     {
         var memoryValue = GetValueFromAddressingMode(instruction);
         var value = memoryValue - 1;
@@ -270,10 +354,10 @@ public class NesInterpreter
         _hal.SetFlag(CpuStatusFlags.Zero, value == 0);
         _hal.SetFlag(CpuStatusFlags.Negative, (value & 0x80) > 0);
 
-        return NextInstructionAddress(instruction);
+        return null;
     }
 
-    private ushort ExecuteDex(DisassembledInstruction instruction)
+    private ushort? ExecuteDex(DisassembledInstruction instruction)
     {
         var value = _hal.XRegister - 1;
         _hal.XRegister = (byte)value;
@@ -281,10 +365,10 @@ public class NesInterpreter
         _hal.SetFlag(CpuStatusFlags.Zero, value == 0);
         _hal.SetFlag(CpuStatusFlags.Negative, (value & 0x80) > 0);
 
-        return NextInstructionAddress(instruction);
+        return null;
     }
 
-    private ushort ExecuteDey(DisassembledInstruction instruction)
+    private ushort? ExecuteDey(DisassembledInstruction instruction)
     {
         var value = _hal.YRegister - 1;
         _hal.YRegister = (byte)value;
@@ -292,10 +376,10 @@ public class NesInterpreter
         _hal.SetFlag(CpuStatusFlags.Zero, value == 0);
         _hal.SetFlag(CpuStatusFlags.Negative, (value & 0x80) > 0);
 
-        return NextInstructionAddress(instruction);
+        return null;
     }
 
-    private ushort ExecuteEor(DisassembledInstruction instruction)
+    private ushort? ExecuteEor(DisassembledInstruction instruction)
     {
         var memoryValue = GetValueFromAddressingMode(instruction);
         var result = (byte)(_hal.ARegister ^ memoryValue);
@@ -304,10 +388,10 @@ public class NesInterpreter
         _hal.SetFlag(CpuStatusFlags.Zero, result == 0);
         _hal.SetFlag(CpuStatusFlags.Negative, (result & 0x80) > 0);
 
-        return NextInstructionAddress(instruction);
+        return null;
     }
 
-    private ushort ExecuteInc(DisassembledInstruction instruction)
+    private ushort? ExecuteInc(DisassembledInstruction instruction)
     {
         var memoryValue = GetValueFromAddressingMode(instruction);
         var value = memoryValue + 1;
@@ -316,10 +400,10 @@ public class NesInterpreter
         _hal.SetFlag(CpuStatusFlags.Zero, (byte)(value) == 0);
         _hal.SetFlag(CpuStatusFlags.Negative, (value & 0x80) > 0);
 
-        return NextInstructionAddress(instruction);
+        return null;
     }
 
-    private ushort ExecuteInx(DisassembledInstruction instruction)
+    private ushort? ExecuteInx(DisassembledInstruction instruction)
     {
         var value = _hal.XRegister + 1;
         _hal.XRegister = (byte)value;
@@ -327,10 +411,10 @@ public class NesInterpreter
         _hal.SetFlag(CpuStatusFlags.Zero, (byte)(value) == 0);
         _hal.SetFlag(CpuStatusFlags.Negative, (value & 0x80) > 0);
 
-        return NextInstructionAddress(instruction);
+        return null;
     }
 
-    private ushort ExecuteIny(DisassembledInstruction instruction)
+    private ushort? ExecuteIny(DisassembledInstruction instruction)
     {
         var value = _hal.YRegister + 1;
         _hal.YRegister = (byte)value;
@@ -338,10 +422,10 @@ public class NesInterpreter
         _hal.SetFlag(CpuStatusFlags.Zero, (byte)value == 0);
         _hal.SetFlag(CpuStatusFlags.Negative, (value & 0x80) > 0);
 
-        return NextInstructionAddress(instruction);
+        return null;
     }
 
-    private ushort ExecuteJmp(DisassembledInstruction instruction)
+    private ushort? ExecuteJmp(DisassembledInstruction instruction)
     {
         if (instruction.Info.AddressingMode == AddressingMode.Absolute)
         {
@@ -363,7 +447,7 @@ public class NesInterpreter
         return (ushort)((jumpHigh << 8) | jumpLow);
     }
 
-    private ushort ExecuteJsr(DisassembledInstruction instruction)
+    private ushort? ExecuteJsr(DisassembledInstruction instruction)
     {
         var nextAddress = (ushort)(instruction.CPUAddress + 2);
         _hal.PushToStack((byte)(nextAddress >> 8));
@@ -372,37 +456,37 @@ public class NesInterpreter
         return instruction.TargetAddress!.Value;
     }
 
-    private ushort ExecuteLda(DisassembledInstruction instruction)
+    private ushort? ExecuteLda(DisassembledInstruction instruction)
     {
         var memoryValue = GetValueFromAddressingMode(instruction);
         _hal.ARegister = memoryValue;
         _hal.SetFlag(CpuStatusFlags.Zero, memoryValue == 0);
         _hal.SetFlag(CpuStatusFlags.Negative, (memoryValue & 0x80) > 0);
 
-        return NextInstructionAddress(instruction);
+        return null;
     }
 
-    private ushort ExecuteLdx(DisassembledInstruction instruction)
+    private ushort? ExecuteLdx(DisassembledInstruction instruction)
     {
         var memoryValue = GetValueFromAddressingMode(instruction);
         _hal.XRegister = memoryValue;
         _hal.SetFlag(CpuStatusFlags.Zero, memoryValue == 0);
         _hal.SetFlag(CpuStatusFlags.Negative, (memoryValue & 0x80) > 0);
 
-        return NextInstructionAddress(instruction);
+        return null;
     }
 
-    private ushort ExecuteLdy(DisassembledInstruction instruction)
+    private ushort? ExecuteLdy(DisassembledInstruction instruction)
     {
         var memoryValue = GetValueFromAddressingMode(instruction);
         _hal.YRegister = memoryValue;
         _hal.SetFlag(CpuStatusFlags.Zero, memoryValue == 0);
         _hal.SetFlag(CpuStatusFlags.Negative, (memoryValue & 0x80) > 0);
 
-        return NextInstructionAddress(instruction);
+        return null;
     }
 
-    private ushort ExecuteLsr(DisassembledInstruction instruction)
+    private ushort? ExecuteLsr(DisassembledInstruction instruction)
     {
         var value = GetValueFromAddressingMode(instruction);
         var shifted = (byte)(value >> 1);
@@ -412,15 +496,15 @@ public class NesInterpreter
         _hal.SetFlag(CpuStatusFlags.Zero, shifted == 0);
         _hal.SetFlag(CpuStatusFlags.Negative, false);
 
-        return NextInstructionAddress(instruction);
+        return null;
     }
 
-    private ushort ExecuteNop(DisassembledInstruction instruction)
+    private ushort? ExecuteNop(DisassembledInstruction instruction)
     {
-        return NextInstructionAddress(instruction);
+        return null;
     }
 
-    private ushort ExecuteOra(DisassembledInstruction instruction)
+    private ushort? ExecuteOra(DisassembledInstruction instruction)
     {
         var memoryValue = GetValueFromAddressingMode(instruction);
         var result = (byte)(_hal.ARegister | memoryValue);
@@ -429,40 +513,200 @@ public class NesInterpreter
         _hal.SetFlag(CpuStatusFlags.Zero, result == 0);
         _hal.SetFlag(CpuStatusFlags.Negative, (result & 0x80) > 0);
 
-        return NextInstructionAddress(instruction);
+        return null;
     }
 
-    private ushort ExecutePha(DisassembledInstruction instruction)
+    private ushort? ExecutePha(DisassembledInstruction instruction)
     {
         _hal.PushToStack(_hal.ARegister);
 
-        return NextInstructionAddress(instruction);
+        return null;
     }
 
-    private ushort ExecutePhp(DisassembledInstruction instruction)
+    private ushort? ExecutePhp(DisassembledInstruction instruction)
     {
         var flag = _hal.ProcessorStatus | 0b00110000;
         _hal.PushToStack((byte)flag);
 
-        return NextInstructionAddress(instruction);
+        return null;
     }
 
-    private ushort ExecutePla(DisassembledInstruction instruction)
+    private ushort? ExecutePla(DisassembledInstruction instruction)
     {
         var value = _hal.PopFromStack();
         _hal.ARegister = value;
         _hal.SetFlag(CpuStatusFlags.Zero, value == 0);
         _hal.SetFlag(CpuStatusFlags.Negative, (value & 0x80) > 0);
 
-        return NextInstructionAddress(instruction);
+        return null;
     }
 
-    private ushort ExecutePlp(DisassembledInstruction instruction)
+    private ushort? ExecutePlp(DisassembledInstruction instruction)
     {
         var value = _hal.PopFromStack();
         _hal.ProcessorStatus = value;
 
-        return NextInstructionAddress(instruction);
+        return null;
+    }
+
+    private ushort? ExecuteRol(DisassembledInstruction instruction)
+    {
+        var value = GetValueFromAddressingMode(instruction);
+        var carry = _hal.GetFlag(CpuStatusFlags.Carry) ? 1 : 0;
+        var rotated = (byte)((value << 1) | carry);
+
+        SetValueFromAddressingMode(instruction, rotated);
+        _hal.SetFlag(CpuStatusFlags.Carry, (value & 0x80) > 0);
+        _hal.SetFlag(CpuStatusFlags.Zero, rotated == 0);
+        _hal.SetFlag(CpuStatusFlags.Negative, (rotated & 0x80) > 0);
+
+        return null;
+    }
+
+    private ushort? ExecuteRor(DisassembledInstruction instruction)
+    {
+        var value = GetValueFromAddressingMode(instruction);
+        var carry = _hal.GetFlag(CpuStatusFlags.Carry) ? 0x80 : 0;
+        var rotated = (byte)((value >> 1) | carry);
+
+        SetValueFromAddressingMode(instruction, rotated);
+        _hal.SetFlag(CpuStatusFlags.Carry, (value & 0x01) > 0);
+        _hal.SetFlag(CpuStatusFlags.Zero, rotated == 0);
+        _hal.SetFlag(CpuStatusFlags.Negative, (rotated & 0x80) > 0);
+
+        return null;
+    }
+
+    private ushort? ExecuteRti()
+    {
+        _hal.ProcessorStatus = _hal.PopFromStack();
+        var addressLow = _hal.PopFromStack();
+        var addressHigh = _hal.PopFromStack();
+
+        return (ushort)((addressHigh << 8) | addressLow);
+    }
+
+    private ushort? ExecuteRts()
+    {
+        var addressLow = _hal.PopFromStack();
+        var addressHigh = _hal.PopFromStack();
+        var addressFull = (ushort)((addressHigh << 8) | addressLow);
+
+        return (ushort)(addressFull + 1);
+    }
+
+    private ushort? ExecuteSbc(DisassembledInstruction instruction)
+    {
+        var memoryValue = GetValueFromAddressingMode(instruction);
+        var result = _hal.ARegister - memoryValue - ~(_hal.GetFlag(CpuStatusFlags.Carry) ? 1 : 0);
+        var aValue = _hal.ARegister;
+
+        _hal.SetFlag(CpuStatusFlags.Carry, result < 0);
+        _hal.SetFlag(CpuStatusFlags.Zero, result == 0);
+        _hal.SetFlag(CpuStatusFlags.Overflow, ((result ^ aValue) & (result ^ ~memoryValue) & 0x80) > 0);
+        _hal.SetFlag(CpuStatusFlags.Negative, (result & 0x80) > 0);
+        _hal.ARegister = (byte)result;
+
+        return null;
+    }
+
+    private ushort? ExecuteSec(DisassembledInstruction instruction)
+    {
+        _hal.SetFlag(CpuStatusFlags.Carry, true);
+
+        return null;
+    }
+
+    private ushort? ExecuteSed(DisassembledInstruction instruction)
+    {
+        _hal.SetFlag(CpuStatusFlags.Decimal, true);
+
+        return null;
+    }
+
+    private ushort? ExecuteSei(DisassembledInstruction instruction)
+    {
+        _hal.SetFlag(CpuStatusFlags.InterruptDisable, true);
+
+        return null;
+    }
+
+    private ushort? ExecuteSta(DisassembledInstruction instruction)
+    {
+        SetValueFromAddressingMode(instruction, _hal.ARegister);
+
+        return null;
+    }
+
+    private ushort? ExecuteStx(DisassembledInstruction instruction)
+    {
+        SetValueFromAddressingMode(instruction, _hal.XRegister);
+
+        return null;
+    }
+
+    private ushort? ExecuteSty(DisassembledInstruction instruction)
+    {
+        SetValueFromAddressingMode(instruction, _hal.YRegister);
+
+        return null;
+    }
+
+    private ushort? ExecuteTax(DisassembledInstruction instruction)
+    {
+        _hal.XRegister = _hal.ARegister;
+
+        _hal.SetFlag(CpuStatusFlags.Zero, _hal.XRegister == 0);
+        _hal.SetFlag(CpuStatusFlags.Negative, (_hal.XRegister & 0x80) > 0);
+
+        return null;
+    }
+
+    private ushort? ExecuteTay(DisassembledInstruction instruction)
+    {
+        _hal.YRegister = _hal.ARegister;
+
+        _hal.SetFlag(CpuStatusFlags.Zero, _hal.YRegister == 0);
+        _hal.SetFlag(CpuStatusFlags.Negative, (_hal.YRegister & 0x80) > 0);
+
+        return null;
+    }
+
+    private ushort? ExecuteTsx(DisassembledInstruction instruction)
+    {
+        _hal.XRegister = _hal.StackPointer;
+
+        _hal.SetFlag(CpuStatusFlags.Zero, _hal.XRegister == 0);
+        _hal.SetFlag(CpuStatusFlags.Negative, (_hal.XRegister & 0x80) > 0);
+
+        return null;
+    }
+
+    private ushort? ExecuteTxa(DisassembledInstruction instruction)
+    {
+        _hal.ARegister = _hal.XRegister;
+        _hal.SetFlag(CpuStatusFlags.Zero, _hal.ARegister == 0);
+        _hal.SetFlag(CpuStatusFlags.Negative, (_hal.ARegister & 0x80) > 0);
+
+        return null;
+    }
+
+    private ushort? ExecuteTxs(DisassembledInstruction instruction)
+    {
+        _hal.StackPointer = _hal.XRegister;
+        _hal.SetFlag(CpuStatusFlags.Zero, _hal.StackPointer == 0);
+        _hal.SetFlag(CpuStatusFlags.Negative, (_hal.StackPointer & 0x80) > 0);
+
+        return null;
+    }
+
+    private ushort? ExecuteTya(DisassembledInstruction instruction)
+    {
+        _hal.ARegister = _hal.YRegister;
+        _hal.SetFlag(CpuStatusFlags.Zero, _hal.ARegister == 0);
+        _hal.SetFlag(CpuStatusFlags.Negative, (_hal.ARegister & 0x80) > 0);
+
+        return null;
     }
 
     private byte GetValueFromAddressingMode(DisassembledInstruction instruction)
@@ -542,58 +786,57 @@ public class NesInterpreter
 
     private void SetValueFromAddressingMode(DisassembledInstruction instruction, byte value)
     {
-        if (instruction.Bytes == null)
-        {
-            throw new NullReferenceException(nameof(instruction.Bytes));
-        }
-
         switch (instruction.Info.AddressingMode)
         {
+            case AddressingMode.Accumulator:
+                _hal.ARegister = value;
+                break;
+
             case AddressingMode.ZeroPage:
             {
-                var address = instruction.Bytes[1];
+                var address = instruction.Bytes![1];
                 _hal.WriteMemory(address, value);
                 break;
             }
 
             case AddressingMode.ZeroPageX:
             {
-                var address = (byte)(instruction.Bytes[1] + _hal.XRegister);
+                var address = (byte)(instruction.Bytes![1] + _hal.XRegister);
                 _hal.WriteMemory(address, value);
                 break;
             }
 
             case AddressingMode.ZeroPageY:
             {
-                var address = (byte)(instruction.Bytes[1] + _hal.YRegister);
+                var address = (byte)(instruction.Bytes![1] + _hal.YRegister);
                 _hal.WriteMemory(address, value);
                 break;
             }
 
             case AddressingMode.Absolute:
             {
-                var address = ((instruction.Bytes[2] << 8) | instruction.Bytes[1]);
+                var address = ((instruction.Bytes![2] << 8) | instruction.Bytes[1]);
                 _hal.WriteMemory((ushort) address, value);
                 break;
             }
 
             case AddressingMode.AbsoluteX:
             {
-                var address = ((instruction.Bytes[2] << 8) | instruction.Bytes[1]) + _hal.XRegister;
+                var address = ((instruction.Bytes![2] << 8) | instruction.Bytes[1]) + _hal.XRegister;
                 _hal.WriteMemory((ushort) address, value);
                 break;
             }
 
             case AddressingMode.AbsoluteY:
             {
-                var address = ((instruction.Bytes[2] << 8) | instruction.Bytes[1]) + _hal.YRegister;
+                var address = ((instruction.Bytes![2] << 8) | instruction.Bytes[1]) + _hal.YRegister;
                 _hal.WriteMemory((ushort) address, value);
                 break;
             }
 
             case AddressingMode.IndexedIndirect:
             {
-                var lowByteAddress = (byte)(instruction.Bytes[1] + _hal.XRegister);
+                var lowByteAddress = (byte)(instruction.Bytes![1] + _hal.XRegister);
                 var highByteAddress = (byte)(lowByteAddress + 1);
 
                 var lowByte = _hal.ReadMemory(lowByteAddress);
@@ -606,7 +849,7 @@ public class NesInterpreter
 
             case AddressingMode.IndirectIndexed:
             {
-                var lowByteAddress = (byte)(instruction.Bytes[1]);
+                var lowByteAddress = instruction.Bytes![1];
                 var highByteAddress = (byte)(lowByteAddress + 1);
 
                 var lowByte = _hal.ReadMemory(lowByteAddress);
@@ -621,7 +864,4 @@ public class NesInterpreter
                 throw new NotSupportedException(instruction.Info.AddressingMode.ToString());
         }
     }
-
-    private static ushort NextInstructionAddress(DisassembledInstruction instruction) =>
-        (ushort)(instruction.CPUAddress + instruction.Info.Cycles);
 }
