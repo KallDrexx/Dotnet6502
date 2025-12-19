@@ -65,8 +65,8 @@ public class Ppu : IMemoryDevice
     private byte _xScrollRegister, _yScrollRegister;
     private bool _wRegister;
     private ushort _vRegister;
-    private byte _tRegister;
-    private byte _xRegister;
+    // private byte _tRegister;
+    // private byte _xRegister;
     private byte _readBuffer;
     private readonly MirroringType _mirroringType;
 
