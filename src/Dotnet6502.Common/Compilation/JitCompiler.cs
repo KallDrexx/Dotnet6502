@@ -17,7 +17,7 @@ public class JitCompiler
     private readonly IReadOnlyList<IJitCustomizer> _jitCustomizers;
     private readonly MemoryBus _memoryBus;
     private readonly Queue<ushort> _ranMethods = new();
-    protected Dictionary<ushort, ExecutableMethod> CompiledMethods { get; } = new();
+    protected readonly ExecutableMethodCache _executableMethodCache = new();
 
     public JitCompiler(Base6502Hal hal, IJitCustomizer? jitCustomizer, MemoryBus memoryBus)
     {
@@ -37,14 +37,16 @@ public class JitCompiler
         int nextAddress = address;
         while (nextAddress >= 0 )
         {
-            if (!CompiledMethods.TryGetValue((ushort)nextAddress, out var method))
+            var method = _executableMethodCache.GetMethodForAddress((ushort)nextAddress);
+            if (method == null)
             {
-                var instructions = GetIrInstructions((ushort)nextAddress);
+                var function = DecompileFunction((ushort)nextAddress);
+                var instructions = GetIrInstructions(function);
                 var customGenerators = _jitCustomizers.SelectMany(x => x.GetCustomIlGenerators())
                     .ToDictionary(x => x.Key, x => x.Value);
 
-                method = ExecutableMethodGenerator.Generate($"func_{(ushort)nextAddress:X4}", instructions, customGenerators);
-                CompiledMethods.Add((ushort)nextAddress, method);
+                method = ExecutableMethodGenerator.Generate($"func_{function.Address:X4}", instructions, customGenerators);
+                _executableMethodCache.AddExecutableMethod(method, function);
             }
 
             _ranMethods.Enqueue((ushort)nextAddress);
@@ -72,16 +74,20 @@ public class JitCompiler
         }
     }
 
-    protected virtual IReadOnlyList<ConvertedInstruction> GetIrInstructions(ushort address)
+    protected virtual DecompiledFunction DecompileFunction(ushort address)
     {
         var function = FunctionDecompiler.Decompile(address, _memoryBus.GetAllCodeRegions());
-
         if (function.OrderedInstructions.Count == 0)
         {
             var message = $"Function at address 0x{address:X4} contained no instructions";
             throw new InvalidOperationException(message);
         }
 
+        return function;
+    }
+
+    protected virtual IReadOnlyList<ConvertedInstruction> GetIrInstructions(DecompiledFunction function)
+    {
         var instructionConverterContext = new InstructionConverter.Context(function.JumpTargets);
 
         // Convert each 6502 instruction into one or more IR instructions
@@ -97,7 +103,7 @@ public class JitCompiler
 
         if (convertedInstructions.Count == 0)
         {
-            var message = $"Function at address 0x{address:X4} has no instructions";
+            var message = $"Function at address 0x{function.Address:X4} has no instructions";
             throw new InvalidOperationException(message);
         }
 

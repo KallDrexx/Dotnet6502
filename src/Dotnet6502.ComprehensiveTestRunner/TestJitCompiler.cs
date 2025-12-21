@@ -39,18 +39,19 @@ public class TestJitCompiler : JitCompiler
             Bytes = [0xEA]
         };
 
+        var function = new DecompiledFunction(address, [nop], new HashSet<ushort>());
         var convertedInstructions = new ConvertedInstruction(nop, instructions);
         var method = ExecutableMethodGenerator.Generate(
             $"test_0x{address:X4}",
             [convertedInstructions],
             new Dictionary<Type, MsilGenerator.CustomIlGenerator>());
 
-        CompiledMethods.Add(address, method);
+        _executableMethodCache.AddExecutableMethod(method, function);
     }
 
-    protected override IReadOnlyList<ConvertedInstruction> GetIrInstructions(ushort address)
+    protected override IReadOnlyList<ConvertedInstruction> GetIrInstructions(DecompiledFunction function)
     {
-        var message = $"Function address 0x{address:X4} called but that address has not been configured";
+        var message = $"Function address 0x{function.Address:X4} called but that address has not been configured";
         throw new InvalidOperationException(message);
     }
 }
