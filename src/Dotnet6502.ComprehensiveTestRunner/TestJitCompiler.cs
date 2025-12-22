@@ -46,7 +46,7 @@ public class TestJitCompiler : JitCompiler
             [convertedInstructions],
             new Dictionary<Type, MsilGenerator.CustomIlGenerator>());
 
-        _executableMethodCache.AddExecutableMethod(method, function);
+        ExecutableMethodCache.AddExecutableMethod(method, function);
     }
 
     protected override IReadOnlyList<ConvertedInstruction> GetIrInstructions(DecompiledFunction function)

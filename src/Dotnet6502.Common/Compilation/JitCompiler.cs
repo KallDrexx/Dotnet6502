@@ -17,11 +17,12 @@ public class JitCompiler
     private readonly IReadOnlyList<IJitCustomizer> _jitCustomizers;
     private readonly MemoryBus _memoryBus;
     private readonly Queue<ushort> _ranMethods = new();
-    protected readonly ExecutableMethodCache _executableMethodCache = new();
+    protected readonly ExecutableMethodCache ExecutableMethodCache = new();
 
     public JitCompiler(Base6502Hal hal, IJitCustomizer? jitCustomizer, MemoryBus memoryBus)
     {
         _hal = hal;
+        _hal.OnMemoryWritten = address => ExecutableMethodCache.MemoryChanged(address);
         _jitCustomizers = jitCustomizer != null
             ? [new StandardJitCustomizer(), jitCustomizer]
             : [new StandardJitCustomizer()];
@@ -37,7 +38,7 @@ public class JitCompiler
         int nextAddress = address;
         while (nextAddress >= 0 )
         {
-            var method = _executableMethodCache.GetMethodForAddress((ushort)nextAddress);
+            var method = ExecutableMethodCache.GetMethodForAddress((ushort)nextAddress);
             if (method == null)
             {
                 var function = DecompileFunction((ushort)nextAddress);
@@ -46,7 +47,7 @@ public class JitCompiler
                     .ToDictionary(x => x.Key, x => x.Value);
 
                 method = ExecutableMethodGenerator.Generate($"func_{function.Address:X4}", instructions, customGenerators);
-                _executableMethodCache.AddExecutableMethod(method, function);
+                ExecutableMethodCache.AddExecutableMethod(method, function);
             }
 
             _ranMethods.Enqueue((ushort)nextAddress);
