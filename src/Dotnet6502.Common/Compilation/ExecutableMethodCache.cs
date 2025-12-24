@@ -4,10 +4,13 @@ namespace Dotnet6502.Common.Compilation;
 
 public class ExecutableMethodCache
 {
+    public const int MaxCachedMethodCount = 100;
+
     private record MethodInfo(
         ExecutableMethod Method,
         DecompiledFunction DecompiledFunction,
-        HashSet<byte> RelevantPages)
+        HashSet<byte> RelevantPages,
+        LinkedListNode<ushort> LruEntry)
     {
         public bool IsInvalidated { get; set; }
     }
@@ -19,14 +22,21 @@ public class ExecutableMethodCache
     /// </summary>
     private readonly Dictionary<byte, HashSet<ushort>> _pageToRelevantFunctionAddressMap = new();
 
+    /// <summary>
+    /// Contains a list of all cached function addresses, ordered by the most recently requested
+    /// methods at the end.
+    /// </summary>
+    private readonly LinkedList<ushort> _lruCache = [];
+
     public void AddExecutableMethod(ExecutableMethod method, DecompiledFunction decompiledFunction)
     {
         var relevantPages = decompiledFunction.OrderedInstructions
             .Select(x => GetPageNumber(x.CPUAddress))
             .ToHashSet();
 
-        var info = new MethodInfo(method, decompiledFunction, relevantPages);
+        var info = new MethodInfo(method, decompiledFunction, relevantPages, new LinkedListNode<ushort>(decompiledFunction.Address));
         _executableMethods[decompiledFunction.Address] = info;
+        _lruCache.AddLast(info.LruEntry);
 
         foreach (var page in relevantPages)
         {
@@ -37,6 +47,12 @@ public class ExecutableMethodCache
             }
 
             list.Add(decompiledFunction.Address);
+        }
+
+        while (_lruCache.Count > MaxCachedMethodCount)
+        {
+            var entry = _lruCache.First!; // Count guarantees we have at least one item
+            RemoveCachedMethod(entry.Value);
         }
     }
 
@@ -54,6 +70,10 @@ public class ExecutableMethodCache
 
             return null;
         }
+
+        // Refresh the lru cache
+        _lruCache.Remove(info.LruEntry);
+        _lruCache.AddLast(info.LruEntry);
 
         return info.Method;
     }
@@ -97,5 +117,7 @@ public class ExecutableMethodCache
             var addresses = _pageToRelevantFunctionAddressMap[page]; // guaranteed to exist, might be empty
             addresses.Remove(address);
         }
+
+        _lruCache.Remove(info.LruEntry);
     }
 }
