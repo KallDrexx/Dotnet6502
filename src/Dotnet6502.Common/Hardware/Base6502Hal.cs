@@ -2,6 +2,8 @@ namespace Dotnet6502.Common.Hardware;
 
 public class Base6502Hal
 {
+    public delegate void MemoryWriteEvent(ushort address);
+
     private readonly MemoryBus _memoryBus;
     private readonly Dictionary<CpuStatusFlags, bool> _flags  = new()
     {
@@ -19,6 +21,7 @@ public class Base6502Hal
     public byte XRegister { get; set; }
     public byte YRegister { get; set; }
     public byte StackPointer { get; set; } = 0xFF;
+    public MemoryWriteEvent? OnMemoryWritten;
 
     public byte ProcessorStatus
     {
@@ -67,6 +70,7 @@ public class Base6502Hal
     public virtual void WriteMemory(ushort address, byte value)
     {
         _memoryBus.Write(address, value);
+        OnMemoryWritten?.Invoke(address);
     }
 
     public virtual void PushToStack(byte value)

@@ -4,13 +4,9 @@ namespace Dotnet6502.Common.Compilation;
 
 public class ExecutableMethodCache
 {
-    public const int MaxCachedMethodCount = 100;
+    public const int MaxCachedMethodCount = 1000;
 
-    private record MethodInfo(
-        ExecutableMethod Method,
-        DecompiledFunction DecompiledFunction,
-        HashSet<byte> RelevantPages,
-        LinkedListNode<ushort> LruEntry)
+    private record MethodInfo(ExecutableMethod Method, HashSet<byte> RelevantPages, LinkedListNode<ushort> LruEntry)
     {
         public bool IsInvalidated { get; set; }
     }
@@ -34,7 +30,7 @@ public class ExecutableMethodCache
             .Select(x => GetPageNumber(x.CPUAddress))
             .ToHashSet();
 
-        var info = new MethodInfo(method, decompiledFunction, relevantPages, new LinkedListNode<ushort>(decompiledFunction.Address));
+        var info = new MethodInfo(method, relevantPages, new LinkedListNode<ushort>(decompiledFunction.Address));
         _executableMethods[decompiledFunction.Address] = info;
         _lruCache.AddLast(info.LruEntry);
 

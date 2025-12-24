@@ -49,7 +49,7 @@ public class TestJitCompiler : JitCompiler
             CustomGenerators,
             generateDll);
 
-        _executableMethodCache.AddExecutableMethod(method, function);
+        ExecutableMethodCache.AddExecutableMethod(method, function);
     }
 
     protected override IReadOnlyList<ConvertedInstruction> GetIrInstructions(DecompiledFunction function)
