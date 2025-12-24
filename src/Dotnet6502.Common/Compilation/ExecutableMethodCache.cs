@@ -4,7 +4,9 @@ namespace Dotnet6502.Common.Compilation;
 
 public class ExecutableMethodCache
 {
-    public const int MaxCachedMethodCount = 1000;
+    // Rough guess at a value that can keep a full program worth of functions in memory without constant
+    // eviction every frame.
+    public const int MaxCachedMethodCount = 2000;
 
     private record MethodInfo(ExecutableMethod Method, HashSet<byte> RelevantPages, LinkedListNode<ushort> LruEntry)
     {
