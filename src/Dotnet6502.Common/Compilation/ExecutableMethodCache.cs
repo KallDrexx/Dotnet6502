@@ -4,73 +4,98 @@ namespace Dotnet6502.Common.Compilation;
 
 public class ExecutableMethodCache
 {
-    private record MethodInfo(ExecutableMethod Method, DecompiledFunction DecompiledFunction);
+    private record MethodInfo(
+        ExecutableMethod Method,
+        DecompiledFunction DecompiledFunction,
+        HashSet<byte> RelevantPages)
+    {
+        public bool IsInvalidated { get; set; }
+    }
 
     private readonly Dictionary<ushort, MethodInfo> _executableMethods = new();
 
     /// <summary>
-    /// Stores each cached function which contains instructions for each memory address. This allows
-    /// for fast lookups for cache invalidation due to a memory address being updated (and thus the instruction
-    /// may have changed).
-    ///
-    /// Should provide fast lookups with reasonable memory tradeoffs, since we can only have 65k total values.
+    /// Tracks what cached function addresses have instructions in each page
     /// </summary>
-    private readonly SortedList<ushort, List<ushort>> _memoryAddressesToFunctionMap = new();
+    private readonly Dictionary<byte, HashSet<ushort>> _pageToRelevantFunctionAddressMap = new();
 
     public void AddExecutableMethod(ExecutableMethod method, DecompiledFunction decompiledFunction)
     {
-        var info = new MethodInfo(method, decompiledFunction);
+        var relevantPages = decompiledFunction.OrderedInstructions
+            .Select(x => GetPageNumber(x.CPUAddress))
+            .ToHashSet();
+
+        var info = new MethodInfo(method, decompiledFunction, relevantPages);
         _executableMethods[decompiledFunction.Address] = info;
 
-        foreach (var instruction in decompiledFunction.OrderedInstructions)
+        foreach (var page in relevantPages)
         {
-            for (var x = 0; x < instruction.Info.Size; x++)
+            if (!_pageToRelevantFunctionAddressMap.TryGetValue(page, out var list))
             {
-                var address = (ushort)(instruction.CPUAddress + x);
-                if (!_memoryAddressesToFunctionMap.TryGetValue(address, out var list))
-                {
-                    list = [];
-                    _memoryAddressesToFunctionMap.Add(address, list);
-                }
-
-                list.Add(decompiledFunction.Address);
+                list = [];
+                _pageToRelevantFunctionAddressMap.Add(page, list);
             }
+
+            list.Add(decompiledFunction.Address);
         }
     }
 
     public ExecutableMethod? GetMethodForAddress(ushort functionStartAddress)
     {
-        return _executableMethods.GetValueOrDefault(functionStartAddress)?.Method;
+        if (!_executableMethods.TryGetValue(functionStartAddress, out var info))
+        {
+            return null;
+        }
+
+        if (info.IsInvalidated)
+        {
+            // Method marked as invalidated, so remove references to it
+            RemoveCachedMethod(functionStartAddress);
+
+            return null;
+        }
+
+        return info.Method;
     }
 
     public void MemoryChanged(ushort address)
     {
-        // This should be a quick lookup for irrelevant memory addresses.
-        if (!_memoryAddressesToFunctionMap.TryGetValue(address, out var relevantFunctionAddresses))
+        // To keep things simple and fast, invalidate all functions relevant to that page. This saves us
+        // from having to track each specific memory address individually. This means that every memory change
+        // up to 128 "other" instructions could be invalidated. However, that seems worth it to me as memory
+        // updates will usually happen in consecutive addresses, and thus we don't want to have to repeat the
+        // full invalidation process for each one individually. It may be necessary to sub-page this later but
+        // we'll see.
+
+        var page = GetPageNumber(address);
+        if (_pageToRelevantFunctionAddressMap.TryGetValue(page, out var addresses))
         {
-            // Memory not marked as relevant to a cached method
+            foreach (var functionAddress in addresses)
+            {
+                _executableMethods[functionAddress].IsInvalidated = true;
+            }
+
+            // Remove them so we don't iterate the list next time.
+            addresses.Clear();
+        }
+    }
+
+    private static byte GetPageNumber(ushort address)
+    {
+        return (byte)(address >> 8);
+    }
+
+    private void RemoveCachedMethod(ushort address)
+    {
+        if (!_executableMethods.Remove(address, out var info))
+        {
             return;
         }
 
-        // We have to perform the invalidations at some point, so might as well do it here. It's possible
-        // we could speed the process up by just marking the function as invalidated and remove it
-        // some other time, but at some point we do need to iterate through all the addresses and remove it. Not
-        // sure any spot is better than any others atm.
-        foreach (var relevantFunctionAddress in relevantFunctionAddresses)
+        foreach (var page in info.RelevantPages)
         {
-            if (!_executableMethods.Remove(relevantFunctionAddress, out var info))
-            {
-                continue;
-            }
-
-            foreach (var instruction in info.DecompiledFunction.OrderedInstructions)
-            {
-                for (var x = 0; x < instruction.Info.Size; x++)
-                {
-                    var address = (ushort)(instruction.CPUAddress + instruction.Info.Size);
-
-                }
-            }
+            var addresses = _pageToRelevantFunctionAddressMap[page]; // guaranteed to exist, might be empty
+            addresses.Remove(address);
         }
     }
 }
