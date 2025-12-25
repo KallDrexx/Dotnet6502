@@ -8,10 +8,7 @@ public class ExecutableMethodCache
     // eviction every frame.
     public const int MaxCachedMethodCount = 2000;
 
-    private record MethodInfo(ExecutableMethod Method, HashSet<byte> RelevantPages, LinkedListNode<ushort> LruEntry)
-    {
-        public bool IsInvalidated { get; set; }
-    }
+    private record MethodInfo(ExecutableMethod Method, HashSet<byte> RelevantPages, LinkedListNode<ushort> LruEntry);
 
     private readonly Dictionary<ushort, MethodInfo> _executableMethods = new();
 
@@ -25,6 +22,12 @@ public class ExecutableMethodCache
     /// methods at the end.
     /// </summary>
     private readonly LinkedList<ushort> _lruCache = [];
+
+    /// <summary>
+    /// Memory pages that have been written to and any functions that have instructions in that page should
+    /// have their caches removed at the next opportunity.
+    /// </summary>
+    private readonly HashSet<byte> _pendingPageInvalidations = [];
 
     public void AddExecutableMethod(ExecutableMethod method, DecompiledFunction decompiledFunction)
     {
@@ -56,16 +59,17 @@ public class ExecutableMethodCache
 
     public ExecutableMethod? GetMethodForAddress(ushort functionStartAddress)
     {
-        if (!_executableMethods.TryGetValue(functionStartAddress, out var info))
+        // Process pending memory page invalidations. Do this here instead of on memory changed notifications
+        // As this should be much less frequent.
+        foreach (var page in _pendingPageInvalidations)
         {
-            return null;
+            InvalidateFunctionsAtPage(page);
         }
 
-        if (info.IsInvalidated)
-        {
-            // Method marked as invalidated, so remove references to it
-            RemoveCachedMethod(functionStartAddress);
+        _pendingPageInvalidations.Clear();
 
+        if (!_executableMethods.TryGetValue(functionStartAddress, out var info))
+        {
             return null;
         }
 
@@ -78,29 +82,26 @@ public class ExecutableMethodCache
 
     public void MemoryChanged(ushort address)
     {
-        // To keep things simple and fast, invalidate all functions relevant to that page. This saves us
-        // from having to track each specific memory address individually. This means that every memory change
-        // up to 128 "other" instructions could be invalidated. However, that seems worth it to me as memory
-        // updates will usually happen in consecutive addresses, and thus we don't want to have to repeat the
-        // full invalidation process for each one individually. It may be necessary to sub-page this later but
-        // we'll see.
-
         var page = GetPageNumber(address);
-        if (_pageToRelevantFunctionAddressMap.TryGetValue(page, out var addresses))
-        {
-            foreach (var functionAddress in addresses)
-            {
-                _executableMethods[functionAddress].IsInvalidated = true;
-            }
-
-            // Remove them so we don't iterate the list next time.
-            addresses.Clear();
-        }
+        _pendingPageInvalidations.Add(page);
     }
 
     private static byte GetPageNumber(ushort address)
     {
         return (byte)(address >> 8);
+    }
+
+    private void InvalidateFunctionsAtPage(byte page)
+    {
+        if (_pageToRelevantFunctionAddressMap.TryGetValue(page, out var addresses))
+        {
+            foreach (var functionAddress in addresses)
+            {
+                RemoveCachedMethod(functionAddress);
+            }
+
+            addresses.Clear();
+        }
     }
 
     private void RemoveCachedMethod(ushort address)
