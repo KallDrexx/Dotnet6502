@@ -12,6 +12,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dotnet6502.Nes", "Dotnet650
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dotnet6502.ComprehensiveTestRunner", "Dotnet6502.ComprehensiveTestRunner\Dotnet6502.ComprehensiveTestRunner.csproj", "{29E009E1-BE2A-4A05-A30D-7015DBC780E0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dotnet6502.C64", "Dotnet6502.C64\Dotnet6502.C64.csproj", "{081295C7-75C9-4B85-BB3F-6E97A26429E7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,5 +44,9 @@ Global
 		{29E009E1-BE2A-4A05-A30D-7015DBC780E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{29E009E1-BE2A-4A05-A30D-7015DBC780E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{29E009E1-BE2A-4A05-A30D-7015DBC780E0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{081295C7-75C9-4B85-BB3F-6E97A26429E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{081295C7-75C9-4B85-BB3F-6E97A26429E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{081295C7-75C9-4B85-BB3F-6E97A26429E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{081295C7-75C9-4B85-BB3F-6E97A26429E7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
