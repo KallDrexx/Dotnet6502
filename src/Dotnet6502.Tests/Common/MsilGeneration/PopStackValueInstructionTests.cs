@@ -189,7 +189,7 @@ public class PopStackValueInstructionTests
         jit.TestHal.PushToStack(0x85);
         jit.RunMethod(0x1234);
 
-        jit.TestHal.ProcessorStatus.ShouldBe((byte)0x85);
+        jit.TestHal.ProcessorStatus.ShouldBe((byte)0xA5);
     }
 
     [Fact]

@@ -469,7 +469,7 @@ public class BinaryInstructionTests
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
 
-        jit.TestHal.YRegister.ShouldBe((byte)0x85);
+        jit.TestHal.YRegister.ShouldBe((byte)0xA5);
     }
 
     [Fact]

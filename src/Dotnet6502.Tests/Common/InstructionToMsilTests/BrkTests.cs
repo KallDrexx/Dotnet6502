@@ -65,7 +65,7 @@ public class BrkTests
         jit.AddMethod(0x3456, [callableInstruction]); // IRQ address
 
         jit.RunMethod(0x1234);
-        jit.TestHal.PopFromStack().ShouldBe((byte)0b11011111);
+        jit.TestHal.PopFromStack().ShouldBe((byte)0b11111111);
         jit.TestHal.PopFromStack().ShouldBe((byte)0x47); // low address byte
         jit.TestHal.PopFromStack().ShouldBe((byte)0x23); // high address byte
     }
@@ -127,6 +127,6 @@ public class BrkTests
         jit.AddMethod(0x3456, [callableInstruction]); // IRQ address
 
         jit.RunMethod(0x1234);
-        jit.TestHal.PopFromStack().ShouldBe((byte)0b00010000);
+        jit.TestHal.PopFromStack().ShouldBe((byte)0b00110000);
     }
 }

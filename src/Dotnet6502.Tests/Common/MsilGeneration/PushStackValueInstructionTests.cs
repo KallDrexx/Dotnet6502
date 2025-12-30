@@ -174,7 +174,7 @@ public class PushStackValueInstructionTests
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
 
-        jit.TestHal.PopFromStack().ShouldBe((byte)0x85);
+        jit.TestHal.PopFromStack().ShouldBe((byte)0xA5);
     }
 
     [Fact]

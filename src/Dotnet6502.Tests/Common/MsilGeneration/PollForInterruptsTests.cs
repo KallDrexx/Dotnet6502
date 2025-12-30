@@ -54,7 +54,7 @@ public class PollForInterruptsTests
         jit.AddMethod(0x9078, []);
 
         jit.RunMethod(0x1234);
-        jit.TestHal.PopFromStack().ShouldBe((byte)0b11001111);
+        jit.TestHal.PopFromStack().ShouldBe((byte)0b11101111);
         jit.TestHal.PopFromStack().ShouldBe((byte)0x56);
         jit.TestHal.PopFromStack().ShouldBe((byte)0x34);
     }

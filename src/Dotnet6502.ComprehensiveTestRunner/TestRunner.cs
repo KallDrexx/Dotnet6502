@@ -15,7 +15,7 @@ public static class TestRunner
 
         // Find all opcodes that match this mnemonic
         var matchingOpcodes = new List<byte>();
-        for (byte opcode = 0; opcode <= 0xFF; opcode++)
+        for (byte opcode = 0;; opcode++)
         {
             var instructionInfo = InstructionSet.GetInstruction(opcode);
             if (instructionInfo.Mnemonic.Equals(mnemonic, StringComparison.OrdinalIgnoreCase))

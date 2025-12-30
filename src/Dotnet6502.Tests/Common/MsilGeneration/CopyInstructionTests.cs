@@ -533,7 +533,7 @@ public class CopyInstructionTests
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
 
-        jit.TestHal.ARegister.ShouldBe((byte)0x85);
+        jit.TestHal.ARegister.ShouldBe((byte)0xA5);
     }
 
     [Fact]
@@ -548,7 +548,7 @@ public class CopyInstructionTests
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
 
-        jit.TestHal.ProcessorStatus.ShouldBe((byte)0x85);
+        jit.TestHal.ProcessorStatus.ShouldBe((byte)0xA5);
     }
 
     [Fact]
@@ -563,7 +563,7 @@ public class CopyInstructionTests
         jit.AddMethod(0x1234, [instruction]);
         jit.RunMethod(0x1234);
 
-        jit.TestHal.ReadMemory(0xB000).ShouldBe((byte)0x85);
+        jit.TestHal.ReadMemory(0xB000).ShouldBe((byte)0xA5);
     }
 
     [Fact]
@@ -578,7 +578,7 @@ public class CopyInstructionTests
         jit.TestHal.WriteMemory(0xC000, 0x85);
         jit.RunMethod(0x1234);
 
-        jit.TestHal.ProcessorStatus.ShouldBe((byte)0x85);
+        jit.TestHal.ProcessorStatus.ShouldBe((byte)0xA5);
     }
 
     [Fact]

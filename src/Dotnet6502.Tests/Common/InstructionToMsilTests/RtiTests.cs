@@ -35,7 +35,7 @@ public class RtiTests
         jit.AddMethod(0x2345, [callableInstruction]);
 
         jit.RunMethod(0x1234);
-        jit.TestHal.ProcessorStatus.ShouldBe((byte)0b11001111);
+        jit.TestHal.ProcessorStatus.ShouldBe((byte)0b11101111);
         jit.TestHal.ReadMemory(0x4000).ShouldBe((byte)99); // Verify return address was called
     }
 }

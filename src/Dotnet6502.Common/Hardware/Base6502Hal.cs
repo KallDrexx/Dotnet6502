@@ -7,7 +7,7 @@ public class Base6502Hal
     private readonly MemoryBus _memoryBus;
     private readonly Dictionary<CpuStatusFlags, bool> _flags  = new()
     {
-        { CpuStatusFlags.Unused, false },
+        { CpuStatusFlags.Unused, true },
         { CpuStatusFlags.BFlag, false },
         { CpuStatusFlags.Carry, false },
         { CpuStatusFlags.Decimal, false },

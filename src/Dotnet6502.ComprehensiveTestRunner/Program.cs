@@ -36,11 +36,15 @@ try
         Console.WriteLine($"Failures written to: {absoluteOutputPath}");
         return 1;
     }
-    else
+
+    if (totalTests == 0)
     {
-        Console.WriteLine("All tests passed!");
-        return 0;
+        Console.WriteLine("No test cases found!");
+        return 1;
     }
+
+    Console.WriteLine("All tests passed!");
+    return 0;
 }
 catch (Exception ex)
 {
