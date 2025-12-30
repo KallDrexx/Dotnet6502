@@ -80,10 +80,28 @@ public class ExecutableMethodCache
         return info.Method;
     }
 
+    /// <summary>
+    /// Notifies the cache that the value located at the specified memory address has changed, and if any
+    /// functions are cached at those relevant sections then they should be invalidated.
+    /// </summary>
     public void MemoryChanged(ushort address)
     {
         var page = GetPageNumber(address);
         _pendingPageInvalidations.Add(page);
+    }
+
+    /// <summary>
+    /// Notifies the cache that the values located at the specified memory address range has changed, and if any
+    /// functions are cached at those relevant sections then they should be invalidated.
+    /// </summary>
+    public void BulkMemoryChanged(ushort startAddress, ushort lastAddress)
+    {
+        var firstPage = GetPageNumber(startAddress);
+        var lastPage = GetPageNumber(lastAddress);
+        foreach (byte page in Enumerable.Range(firstPage, lastPage - firstPage + 1))
+        {
+            _pendingPageInvalidations.Add(page);
+        }
     }
 
     private static byte GetPageNumber(ushort address)

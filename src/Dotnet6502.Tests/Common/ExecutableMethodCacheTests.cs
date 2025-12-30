@@ -104,6 +104,35 @@ public class ExecutableMethodCacheTests
         cache.GetMethodForAddress(0x1234).ShouldNotBeNull();
     }
 
+    [Fact]
+    public void Cached_Methods_Evicted_When_Inside_Page_Covered_By_Range()
+    {
+        var function = CreateTestFunction(0x1234);
+        var method = CreateTestMethod();
+        var cache = new ExecutableMethodCache();
+
+        cache.AddExecutableMethod(method, function);
+        cache.BulkMemoryChanged(0x1155, 0x1201);
+        var result = cache.GetMethodForAddress(0x1234);
+
+        result.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Cached_Methods_Not_Evicted_When_Outside_Page_Covered_By_Range()
+    {
+        var function = CreateTestFunction(0x1234);
+        var method = CreateTestMethod();
+        var cache = new ExecutableMethodCache();
+
+        cache.AddExecutableMethod(method, function);
+        cache.BulkMemoryChanged(0x1055, 0x1101);
+        var result = cache.GetMethodForAddress(0x1234);
+
+        result.ShouldNotBeNull();
+        result.ShouldBe(method);
+    }
+
     private static DecompiledFunction CreateTestFunction(params ushort[] instructionAddresses)
     {
         if (instructionAddresses.Length == 0)
