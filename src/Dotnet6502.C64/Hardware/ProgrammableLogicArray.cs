@@ -9,31 +9,31 @@ namespace Dotnet6502.C64.Hardware;
 public class ProgrammableLogicArray : IMemoryDevice
 {
     private readonly byte[] _cpuIoPort = [0b00101111, 0b00110111];
-    private BankableMemoryDevice _a000ToBfffDevice;
-    private BankableMemoryDevice _d000ToDfffDevice;
-    private BankableMemoryDevice _e000ToFfffDevice;
+    private readonly SwappableMemoryDevice _a000ToBfffDevice;
+    private readonly SwappableMemoryDevice _d000ToDfffDevice;
+    private readonly SwappableMemoryDevice _e000ToFfffDevice;
 
-    private readonly BasicRamMemoryDevice _basicRom;
-    private readonly BasicRamMemoryDevice _kernelRom;
+    public BasicRamMemoryDevice BasicRom { get; }
+    public BasicRamMemoryDevice KernelRom { get; }
+    public BasicRamMemoryDevice CharacterRom { get; }
     private readonly BasicRamMemoryDevice _ramA000ToBfff;
     private readonly BasicRamMemoryDevice _ramD000ToDfff;
     private readonly BasicRamMemoryDevice _ramE000ToFfff;
-    private readonly BasicRamMemoryDevice _characterRom;
     private readonly IoMemoryArea _ioMemoryArea;
 
     public ProgrammableLogicArray()
     {
-        _basicRom = new BasicRamMemoryDevice(0xBFFF - 0xA000 + 1);
-        _kernelRom = new BasicRamMemoryDevice(0xFFFF - 0xE000 + 1);
+        BasicRom = new BasicRamMemoryDevice(0xBFFF - 0xA000 + 1);
+        KernelRom = new BasicRamMemoryDevice(0xFFFF - 0xE000 + 1);
         _ramA000ToBfff = new BasicRamMemoryDevice(0xBFFF - 0xA000 + 1);
         _ramD000ToDfff = new BasicRamMemoryDevice(0xDFFF - 0xD000 + 1);
         _ramE000ToFfff = new BasicRamMemoryDevice(0xFFFF - 0xE000 + 1);
-        _characterRom = new BasicRamMemoryDevice(0xDFFF - 0xD000 + 1);
+        CharacterRom = new BasicRamMemoryDevice(0xDFFF - 0xD000 + 1);
         _ioMemoryArea = new IoMemoryArea();
 
-        _a000ToBfffDevice = new BankableMemoryDevice(_ramA000ToBfff);
-        _d000ToDfffDevice = new BankableMemoryDevice(_ramD000ToDfff);
-        _e000ToFfffDevice = new BankableMemoryDevice(_ramE000ToFfff);
+        _a000ToBfffDevice = new SwappableMemoryDevice(_ramA000ToBfff);
+        _d000ToDfffDevice = new SwappableMemoryDevice(_ramD000ToDfff);
+        _e000ToFfffDevice = new SwappableMemoryDevice(_ramE000ToFfff);
 
         UpdateDevices();
     }
@@ -51,24 +51,20 @@ public class ProgrammableLogicArray : IMemoryDevice
         if ((section & 0b11) == 0)
         {
             // RAM visible in all 3 sections
-            _a000ToBfffDevice.SwapTo(_ramA000ToBfff);
-            _d000ToDfffDevice.SwapTo(_ramD000ToDfff);
-            _e000ToFfffDevice.SwapTo(_ramE000ToFfff);
+            _a000ToBfffDevice.MakeVisible(_ramA000ToBfff, SwappableMemoryDevice.Mode.Write);
+            _d000ToDfffDevice.MakeVisible(_ramD000ToDfff, SwappableMemoryDevice.Mode.Write);
+            _e000ToFfffDevice.MakeVisible(_ramA000ToBfff, SwappableMemoryDevice.Mode.Write);
 
             return;
         }
 
-        _d000ToDfffDevice.SwapTo((section & 0b100) > 0
-            ? _ioMemoryArea
-            : _characterRom);
+        IMemoryDevice a0Device = (section & 0b011) == 0b11 ? BasicRom : _ramA000ToBfff;
+        IMemoryDevice d0Device = (section & 0b100) > 0 ? _ioMemoryArea : CharacterRom;
+        IMemoryDevice e0Device = (section & 0b011) == 0b01 ? _ramE000ToFfff : KernelRom;
 
-        _e000ToFfffDevice.SwapTo((section & 0b011) == 0b01
-            ? _ramE000ToFfff
-            : _kernelRom);
-
-        _a000ToBfffDevice.SwapTo((section & 0b011) == 0b11
-            ? _basicRom
-            : _ramA000ToBfff);
+        _a000ToBfffDevice.MakeVisible(a0Device, SwappableMemoryDevice.Mode.Write);
+        _d000ToDfffDevice.MakeVisible(d0Device, SwappableMemoryDevice.Mode.Write);
+        _e000ToFfffDevice.MakeVisible(e0Device, SwappableMemoryDevice.Mode.Write);
     }
 
     public uint Size => (uint) _cpuIoPort.Length;

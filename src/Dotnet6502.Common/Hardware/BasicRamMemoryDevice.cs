@@ -22,6 +22,23 @@ public class BasicRamMemoryDevice : IMemoryDevice
         _bytes = new byte[size];
     }
 
+    public void SetContent(Memory<byte> content)
+    {
+        if (content.Length != _bytes.Length)
+        {
+            var message = $"Content has size {content.Length} which doesn't match the memory device's size " +
+                          $"of {_bytes.Length}";
+
+            throw new ArgumentException(message);
+        }
+
+        var span = content.Span;
+        for (var x = 0; x < span.Length; x++)
+        {
+            _bytes[x] = span[x];
+        }
+    }
+
     public void Write(ushort offset, byte value)
     {
         _bytes[offset] = value;
