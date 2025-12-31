@@ -210,6 +210,12 @@ public static class InstructionConverter
 
         var setAcc = new Ir6502.Copy(result, accumulator);
 
+        var setZeroFlag = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Equals,
+            result,
+            new Ir6502.Constant(0),
+            new Ir6502.Flag(Ir6502.FlagName.Zero));
+
         // Algorithm will add the low nibbles together (plus carry). If the result is greater than 9
         // then we need to get the correct hex digit by adding 6 to it, wiping out the high bits, and carrying
         // a 1 to the next step. Then repeat the process for the high nibble.
@@ -224,8 +230,7 @@ public static class InstructionConverter
             setCarry, highNibbleNoCarryJump, addSix, clearHighBitsResult, highNibbleNoCarryLabel, resultShiftLeft,
 
             // Combine results
-            addLowResult,
-            setAcc
+            addLowResult, setAcc, setZeroFlag
         ];
     }
 
