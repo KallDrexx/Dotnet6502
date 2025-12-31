@@ -49,6 +49,8 @@ public static class Ir6502
 
     public record DebugValue(Value ValueToLog) : Instruction;
 
+    public record NoOp : Instruction;
+
     public abstract record Value;
 
     public record Constant(byte Number) : Value;

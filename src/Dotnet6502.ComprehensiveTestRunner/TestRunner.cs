@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Dotnet6502.Common;
 using Dotnet6502.Common.Compilation;
 using NESDecompiler.Core.CPU;
 using NESDecompiler.Core.Disassembly;
@@ -44,7 +43,7 @@ public static class TestRunner
         {
             var jsonFile = $"{opcode:x2}.json";
             var assemblyDirectory = Path.GetDirectoryName(typeof(TestRunner).Assembly.Location);
-            var jsonFilePath = Path.Combine(assemblyDirectory!, "nes6502", "v1", jsonFile);
+            var jsonFilePath = Path.Combine(assemblyDirectory!, "6502", "v1", jsonFile);
 
             if (!File.Exists(jsonFilePath))
             {

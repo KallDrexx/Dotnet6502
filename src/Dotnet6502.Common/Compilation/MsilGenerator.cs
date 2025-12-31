@@ -89,6 +89,10 @@ public class MsilGenerator
                 GenerateLabel(label, ilGenerator);
                 break;
 
+            case Ir6502.NoOp:
+                GenerateNoOp(ilGenerator);
+                break;
+
             case Ir6502.PopStackValue pop:
                 GeneratePopStackValue(pop, ilGenerator);
                 break;
@@ -368,6 +372,11 @@ public class MsilGenerator
         ilGenerator.Emit(OpCodes.Conv_U1);
         SaveStackToTempLocal(ilGenerator);
         WriteTempLocalToValue(convertVariableToByte.Variable, ilGenerator);
+    }
+
+    private static void GenerateNoOp(ILGenerator ilGenerator)
+    {
+        ilGenerator.Emit(OpCodes.Nop);
     }
 
     private void GenerateDebugString(Ir6502.StoreDebugString debugString, ILGenerator ilGenerator)

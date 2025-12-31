@@ -91,20 +91,158 @@ public static class InstructionConverter
     /// </summary>
     private static Ir6502.Instruction[] ConvertAdc(DisassembledInstruction instruction)
     {
-        // NOTE: This does not support decimal flag logic
-        var accumulator = new Ir6502.Register(Ir6502.RegisterName.Accumulator);
+        var variables = Enumerable.Range(0, 7)
+            .Select(x => new Ir6502.Variable(x))
+            .ToArray();
+
         var operand = ParseAddress(instruction);
-        var isNegative = new Ir6502.Variable(0);
-        var operandVariable = new Ir6502.Variable(6);
+
+        var withBcdLabel = new Ir6502.Label(new Ir6502.Identifier("withBcd"));
+        var doneLabel = new Ir6502.Label(new Ir6502.Identifier("Done"));
+        var jumpIfBcd = new Ir6502.JumpIfNotZero(new Ir6502.Flag(Ir6502.FlagName.Decimal), withBcdLabel.Name);
+        var jumpPastBcd = new Ir6502.Jump(doneLabel.Name);
+        var nonBcdInstructions = ConvertAdcNonBcd(variables, operand);
+        var withBcdInstructions = ConvertAdcWithBcd(variables, operand);
+        var noOp = new Ir6502.NoOp(); // We need a guaranteed instruction to jump to.
+
+        return new[] { jumpIfBcd }
+            .Concat(nonBcdInstructions)
+            .Append(jumpPastBcd)
+            .Append(withBcdLabel)
+            .Concat(withBcdInstructions)
+            .Append(doneLabel)
+            .Append(noOp)
+            .ToArray();
+    }
+
+    private static Ir6502.Instruction[] ConvertAdcWithBcd(Ir6502.Variable[] variables, Ir6502.Value operand)
+    {
+        var accumulator = new Ir6502.Register(Ir6502.RegisterName.Accumulator);
+        var operandNibble = variables[0];
+        var accumulatorNibble = variables[1];
+        var result = variables[2];
+        var lowResult = variables[3];
+
+        var zeroHighBitsOperand = new Ir6502.Binary(
+            Ir6502.BinaryOperator.And,
+            operand,
+            new Ir6502.Constant(0x0F),
+            operandNibble);
+
+        var zeroHighBitsAcc = new Ir6502.Binary(
+            Ir6502.BinaryOperator.And,
+            accumulator,
+            new Ir6502.Constant(0x0F),
+            accumulatorNibble);
+
+        var addNibbles = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Add,
+            operandNibble,
+            accumulatorNibble,
+            result);
+
+        var addCarry = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Add,
+            result,
+            new Ir6502.Flag(Ir6502.FlagName.Carry),
+            result);
+
+        var storeLowResult = new Ir6502.Copy(result, lowResult);
+
+        var setCarry = new Ir6502.Binary(
+            Ir6502.BinaryOperator.GreaterThan,
+            result,
+            new Ir6502.Constant(9),
+            new Ir6502.Flag(Ir6502.FlagName.Carry));
+
+        var lowNibbleNoCarryLabel = new Ir6502.Label(new Ir6502.Identifier("LowNibbleNoCarry"));
+        var lowNibbleNoCarryJump = new Ir6502.JumpIfZero(
+            new Ir6502.Flag(Ir6502.FlagName.Carry),
+            lowNibbleNoCarryLabel.Name);
+
+        var addSix = new Ir6502.Binary(Ir6502.BinaryOperator.Add, result, new Ir6502.Constant(6), result);
+        var clearHighBitsResult = new Ir6502.Binary(Ir6502.BinaryOperator.And,
+            result,
+            new Ir6502.Constant(0x0F),
+            result);
+
+        // High bit flow can re-use some of the previous instructions
+        var zeroLowBitsOperand = new Ir6502.Binary(
+            Ir6502.BinaryOperator.And,
+            operand,
+            new Ir6502.Constant(0xF0),
+            operandNibble);
+
+        var shiftOperandNibbleRight = new Ir6502.Binary(
+            Ir6502.BinaryOperator.ShiftRight,
+            operandNibble,
+            new Ir6502.Constant(4),
+            operandNibble);
+
+        var zeroLowBitsAcc = new Ir6502.Binary(
+            Ir6502.BinaryOperator.And,
+            accumulator,
+            new Ir6502.Constant(0xF0),
+            accumulatorNibble);
+
+        var shiftAccNibbleRight = new Ir6502.Binary(
+            Ir6502.BinaryOperator.ShiftRight,
+            accumulatorNibble,
+            new Ir6502.Constant(4),
+            accumulatorNibble);
+
+        var highNibbleNoCarryLabel = new Ir6502.Label(new Ir6502.Identifier("HighNibbleNoCarry"));
+        var highNibbleNoCarryJump = new Ir6502.JumpIfZero(
+            new Ir6502.Flag(Ir6502.FlagName.Carry),
+            highNibbleNoCarryLabel.Name);
+
+        var resultShiftLeft = new Ir6502.Binary(
+            Ir6502.BinaryOperator.ShiftLeft,
+            result,
+            new Ir6502.Constant(4),
+            result);
+
+        var addLowResult = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Add,
+            result,
+            lowResult,
+            result);
+
+        var setAcc = new Ir6502.Copy(result, accumulator);
+
+        // Algorithm will add the low nibbles together (plus carry). If the result is greater than 9
+        // then we need to get the correct hex digit by adding 6 to it, wiping out the high bits, and carrying
+        // a 1 to the next step. Then repeat the process for the high nibble.
+        return
+        [
+            // Low nibble
+            zeroHighBitsOperand, zeroHighBitsAcc, addNibbles, addCarry, setCarry,
+            lowNibbleNoCarryJump, addSix, clearHighBitsResult, lowNibbleNoCarryLabel, storeLowResult,
+
+            // High nibble
+            zeroLowBitsOperand, shiftOperandNibbleRight, zeroLowBitsAcc, shiftAccNibbleRight, addNibbles, addCarry,
+            setCarry, highNibbleNoCarryJump, addSix, clearHighBitsResult, highNibbleNoCarryLabel, resultShiftLeft,
+
+            // Combine results
+            addLowResult,
+            setAcc
+        ];
+    }
+
+    private static Ir6502.Instruction[] ConvertAdcNonBcd(Ir6502.Variable[] variables, Ir6502.Value operand)
+    {
+        var accumulator = new Ir6502.Register(Ir6502.RegisterName.Accumulator);
+        var isNegative = variables[0];
+        var operandVariable = variables[6];
 
         // Don't store the value in the accumulator so we don't lose track of if it overflowed due to byte precision
-        var addVariable = new Ir6502.Variable(1);
+        var addVariable = variables[1];
 
         // Variables for 6502 overflow calculation: (A^result) & (M^result) & 0x80
-        var originalAccumulator = new Ir6502.Variable(2);
-        var aXorResult = new Ir6502.Variable(3);
-        var mXorResult = new Ir6502.Variable(4);
-        var overflowTemp = new Ir6502.Variable(5);
+        var originalAccumulator = variables[2];
+        var aXorResult = variables[3];
+        var mXorResult = variables[4];
+        var overflowTemp = variables[5];
 
         // Preserve original accumulator value for overflow calculation
         var preserveAccumulator = new Ir6502.Copy(accumulator, originalAccumulator);

@@ -1,4 +1,3 @@
-using Dotnet6502.Common;
 using Dotnet6502.Common.Compilation;
 using Dotnet6502.Common.Hardware;
 using NESDecompiler.Core.CPU;
@@ -7,19 +6,6 @@ using Shouldly;
 
 namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 
-/// <summary>
-/// Tests for 6502 ADC (Add with Carry) instruction
-///
-/// IMPORTANT: These tests expect CORRECT 6502 overflow flag behavior.
-/// Correct 6502 behavior: Overflow = (A^result) & (M^result) & 0x80 != 0
-///
-/// 6502 Overflow Rules:
-/// - Overflow occurs when adding two same-sign numbers produces an opposite-sign result
-/// - Positive + Positive = Negative → Overflow
-/// - Negative + Negative = Positive → Overflow
-/// - Positive + Negative → Never overflow (different signs)
-/// - Negative + Positive → Never overflow (different signs)
-/// </summary>
 public class AdcTests
 {
     [Fact]
@@ -72,7 +58,8 @@ public class AdcTests
         jit.TestHal.ARegister.ShouldBe((byte)0x01);
         jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
         jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
-        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse(); // 6502: positive + negative = positive, no signed overflow
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow)
+            .ShouldBeFalse(); // 6502: positive + negative = positive, no signed overflow
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
@@ -99,7 +86,8 @@ public class AdcTests
         jit.TestHal.ARegister.ShouldBe((byte)0x00);
         jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
         jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeTrue();
-        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse(); // 6502: positive + negative = positive, no signed overflow
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow)
+            .ShouldBeFalse(); // 6502: positive + negative = positive, no signed overflow
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
@@ -126,7 +114,8 @@ public class AdcTests
         jit.TestHal.ARegister.ShouldBe((byte)0xA0);
         jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeFalse();
         jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
-        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeTrue(); // 6502: positive + positive = negative, signed overflow!
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow)
+            .ShouldBeTrue(); // 6502: positive + positive = negative, signed overflow!
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
@@ -153,7 +142,8 @@ public class AdcTests
         jit.TestHal.ARegister.ShouldBe((byte)0x00);
         jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
         jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeTrue();
-        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeTrue(); // 6502: negative + negative = positive, signed overflow!
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow)
+            .ShouldBeTrue(); // 6502: negative + negative = positive, signed overflow!
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
@@ -207,7 +197,8 @@ public class AdcTests
         jit.TestHal.ARegister.ShouldBe((byte)0xFF); // -1 in signed
         jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeFalse();
         jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
-        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse(); // 6502: positive + negative = negative, no signed overflow
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow)
+            .ShouldBeFalse(); // 6502: positive + negative = negative, no signed overflow
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
@@ -234,7 +225,8 @@ public class AdcTests
         jit.TestHal.ARegister.ShouldBe((byte)0x81); // -127 in signed
         jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
         jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
-        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse(); // 6502: negative + negative = negative, no signed overflow
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow)
+            .ShouldBeFalse(); // 6502: negative + negative = negative, no signed overflow
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
@@ -291,13 +283,15 @@ public class AdcTests
         jit.TestHal.ARegister.ShouldBe((byte)0x01);
         jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
         jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
-        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse(); // 6502: negative + positive = positive, no signed overflow
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow)
+            .ShouldBeFalse(); // 6502: negative + positive = positive, no signed overflow
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
     // ZeroPageX addressing mode tests
     [Fact]
-    public void ADC_ZeroPageX_Basic()    {
+    public void ADC_ZeroPageX_Basic()
+    {
         var instructionInfo = InstructionSet.GetInstruction(0x75);
         var instruction = new DisassembledInstruction
         {
@@ -325,7 +319,8 @@ public class AdcTests
     }
 
     [Fact]
-    public void ADC_ZeroPageX_Wraparound()    {
+    public void ADC_ZeroPageX_Wraparound()
+    {
         var instructionInfo = InstructionSet.GetInstruction(0x75);
         var instruction = new DisassembledInstruction
         {
@@ -355,7 +350,8 @@ public class AdcTests
 
     // Absolute addressing mode tests
     [Fact]
-    public void ADC_Absolute_Basic()    {
+    public void ADC_Absolute_Basic()
+    {
         var instructionInfo = InstructionSet.GetInstruction(0x6D);
         var instruction = new DisassembledInstruction
         {
@@ -382,7 +378,8 @@ public class AdcTests
     }
 
     [Fact]
-    public void ADC_Absolute_Overflow()    {
+    public void ADC_Absolute_Overflow()
+    {
         var instructionInfo = InstructionSet.GetInstruction(0x6D);
         var instruction = new DisassembledInstruction
         {
@@ -404,13 +401,15 @@ public class AdcTests
         jit.TestHal.ARegister.ShouldBe((byte)0x80);
         jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeFalse();
         jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
-        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeTrue(); // 6502: positive + positive = negative, signed overflow!
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow)
+            .ShouldBeTrue(); // 6502: positive + positive = negative, signed overflow!
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
     // AbsoluteX addressing mode tests
     [Fact]
-    public void ADC_AbsoluteX_Basic()    {
+    public void ADC_AbsoluteX_Basic()
+    {
         var instructionInfo = InstructionSet.GetInstruction(0x7D);
         var instruction = new DisassembledInstruction
         {
@@ -439,7 +438,8 @@ public class AdcTests
 
     // AbsoluteY addressing mode tests
     [Fact]
-    public void ADC_AbsoluteY_Basic()    {
+    public void ADC_AbsoluteY_Basic()
+    {
         var instructionInfo = InstructionSet.GetInstruction(0x79);
         var instruction = new DisassembledInstruction
         {
@@ -467,7 +467,8 @@ public class AdcTests
     }
 
     [Fact]
-    public void ADC_AbsoluteY_Zero_And_Carry()    {
+    public void ADC_AbsoluteY_Zero_And_Carry()
+    {
         var instructionInfo = InstructionSet.GetInstruction(0x79);
         var instruction = new DisassembledInstruction
         {
@@ -490,7 +491,56 @@ public class AdcTests
         jit.TestHal.ARegister.ShouldBe((byte)0x00);
         jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
         jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeTrue();
-        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse(); // 6502: positive + negative + carry = positive, no signed overflow
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow)
+            .ShouldBeFalse(); // 6502: positive + negative + carry = positive, no signed overflow
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Adc_Result_With_Cleared_Decimal_Flag_Test()
+    {
+        var instructionInfo = InstructionSet.GetInstruction(0x69);
+        var instruction = new DisassembledInstruction
+        {
+            Info = instructionInfo,
+            Bytes = [0x69, 0x25],
+        };
+
+        var context = new InstructionConverter.Context(
+            new Dictionary<ushort, string>());
+
+        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var jit = TestJitCompiler.Create();
+        jit.AddMethod(0x1234, nesIrInstructions);
+        jit.TestHal.ARegister = 0x47;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Decimal, false);
+        jit.RunMethod(0x1234);
+
+        jit.TestHal.ARegister.ShouldBe((byte)0x6D);
+    }
+
+    [Fact]
+    public void Adc_Result_With_Set_Decimal_Flag_Test()
+    {
+        var instructionInfo = InstructionSet.GetInstruction(0x69);
+        var instruction = new DisassembledInstruction
+        {
+            Info = instructionInfo,
+            Bytes = [0x69, 0x25],
+        };
+
+        var context = new InstructionConverter.Context(
+            new Dictionary<ushort, string>());
+
+        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var jit = TestJitCompiler.Create();
+        jit.AddMethod(0x1234, nesIrInstructions, true);
+        jit.TestHal.ARegister = 0x47;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Decimal, true);
+        jit.RunMethod(0x1234);
+
+        jit.TestHal.ARegister.ShouldBe((byte)0x73);
     }
 }
