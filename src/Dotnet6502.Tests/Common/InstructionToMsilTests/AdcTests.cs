@@ -593,4 +593,54 @@ public class AdcTests
 
         jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeTrue();
     }
+
+    [Fact]
+    public void Negative_Flags_Set_By_Non_Bcd_Logic_When_Bcd_Enabled()
+    {
+        var instructionInfo = InstructionSet.GetInstruction(0x69);
+        var instruction = new DisassembledInstruction
+        {
+            Info = instructionInfo,
+            Bytes = [0x69, 0x99],
+        };
+
+        var context = new InstructionConverter.Context(
+            new Dictionary<ushort, string>());
+
+        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var jit = TestJitCompiler.Create();
+        jit.AddMethod(0x1234, nesIrInstructions, true);
+        jit.TestHal.ARegister = 0x05;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
+        jit.TestHal.SetFlag(CpuStatusFlags.Decimal, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Zero, false);
+        jit.RunMethod(0x1234);
+
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Overflow_Flags_Set_By_Non_Bcd_Logic_When_Bcd_Enabled()
+    {
+        var instructionInfo = InstructionSet.GetInstruction(0x69);
+        var instruction = new DisassembledInstruction
+        {
+            Info = instructionInfo,
+            Bytes = [0x69, 0x99],
+        };
+
+        var context = new InstructionConverter.Context(
+            new Dictionary<ushort, string>());
+
+        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var jit = TestJitCompiler.Create();
+        jit.AddMethod(0x1234, nesIrInstructions, true);
+        jit.TestHal.ARegister = 0x99;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
+        jit.TestHal.SetFlag(CpuStatusFlags.Decimal, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Zero, false);
+        jit.RunMethod(0x1234);
+
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeTrue();
+    }
 }
