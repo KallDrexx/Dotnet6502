@@ -91,35 +91,27 @@ public static class InstructionConverter
     /// </summary>
     private static Ir6502.Instruction[] ConvertAdc(DisassembledInstruction instruction)
     {
-        const int adcVariableCount = 7;
-        var variables = Enumerable.Range(0, adcVariableCount)
+        var variables = Enumerable.Range(0, 7)
             .Select(x => new Ir6502.Variable(x))
             .ToArray();
 
         var operand = ParseAddress(instruction);
 
+        var withBcdLabel = new Ir6502.Label(new Ir6502.Identifier("withBcd"));
         var doneLabel = new Ir6502.Label(new Ir6502.Identifier("Done"));
-        var jumpPastBcd = new Ir6502.JumpIfZero(new Ir6502.Flag(Ir6502.FlagName.Decimal), doneLabel.Name);
+        var jumpIfBcd = new Ir6502.JumpIfNotZero(new Ir6502.Flag(Ir6502.FlagName.Decimal), withBcdLabel.Name);
+        var jumpPastBcd = new Ir6502.Jump(doneLabel.Name);
         var nonBcdInstructions = ConvertAdcNonBcd(variables, operand);
         var withBcdInstructions = ConvertAdcWithBcd(variables, operand);
-        var noOp = new Ir6502.NoOp();
-        var startingCarryVariable = new Ir6502.Variable(adcVariableCount);
-        var startingAccVariable = new Ir6502.Variable(adcVariableCount + 1);
-        var preserveAcc = new Ir6502.Copy(new Ir6502.Register(Ir6502.RegisterName.Accumulator), startingAccVariable);
-        var resetAcc = new Ir6502.Copy(startingAccVariable, new Ir6502.Register(Ir6502.RegisterName.Accumulator));
-        var preserveCarry = new Ir6502.Copy(new Ir6502.Flag(Ir6502.FlagName.Carry), startingCarryVariable);
-        var resetCarry = new Ir6502.Copy(startingCarryVariable, new Ir6502.Flag(Ir6502.FlagName.Carry));
+        var noOp = new Ir6502.NoOp(); // We need a guaranteed instruction to jump to.
 
-        // Negative and overflow flags are always set via binary / non-bcd logic. So always perform
-        // non-BCD logic, then perform BCD logic if the decimal flag is on.
-        return new [] {preserveCarry, preserveAcc}
+        return new[] { jumpIfBcd }
             .Concat(nonBcdInstructions)
             .Append(jumpPastBcd)
-            .Append(resetCarry) // Make sure carry and acc are back to the original value
-            .Append(resetAcc)
+            .Append(withBcdLabel)
             .Concat(withBcdInstructions)
             .Append(doneLabel)
-            .Append(noOp) // We need a guaranteed instruction to jump to
+            .Append(noOp)
             .ToArray();
     }
 
