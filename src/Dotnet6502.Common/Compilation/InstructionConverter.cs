@@ -210,6 +210,9 @@ public static class InstructionConverter
 
         var setAcc = new Ir6502.Copy(result, accumulator);
 
+        // Note: I can't find reliable info on what the zero flag should be in decimal mode. 6502 test suite
+        // claims it should follow non-BCD logic, but other references state it should be zero result from BCD logic.
+        // For now I'm just going to assume it follows a zero result but will probably revisit.
         var setZeroFlag = new Ir6502.Binary(
             Ir6502.BinaryOperator.Equals,
             result,

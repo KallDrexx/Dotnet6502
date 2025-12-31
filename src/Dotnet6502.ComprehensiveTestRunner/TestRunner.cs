@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Dotnet6502.Common.Compilation;
+using Dotnet6502.Common.Hardware;
 using NESDecompiler.Core.CPU;
 using NESDecompiler.Core.Disassembly;
 
@@ -131,10 +132,25 @@ public static class TestRunner
                     errorMessages.Add($"Y: expected {testCase.Final.Y}, actual {jit.TestHal.YRegister}");
                 }
 
-                if (jit.TestHal.ProcessorStatus != testCase.Final.P)
+                // If we are in decimal mode, we need to ignore the negative and overflow flags, as they are
+                // undefined behavior.
+                if (jit.TestHal.GetFlag(CpuStatusFlags.Decimal))
                 {
-                    hasFailure = true;
-                    errorMessages.Add($"P: expected {testCase.Final.P}, actual {jit.TestHal.ProcessorStatus}");
+                    var testValue = jit.TestHal.ProcessorStatus & 0b00111111;
+                    var expectedValue = testCase.Final.P & 0b00111111;
+                    if (testValue != expectedValue)
+                    {
+                        hasFailure = true;
+                        errorMessages.Add($"Decimal mode P: expected {expectedValue}, actual {testValue}");
+                    }
+                }
+                else
+                {
+                    if (jit.TestHal.ProcessorStatus != testCase.Final.P)
+                    {
+                        hasFailure = true;
+                        errorMessages.Add($"P: expected {testCase.Final.P}, actual {jit.TestHal.ProcessorStatus}");
+                    }
                 }
 
                 if (jit.TestHal.StackPointer != testCase.Final.S)
