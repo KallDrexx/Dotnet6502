@@ -91,27 +91,35 @@ public static class InstructionConverter
     /// </summary>
     private static Ir6502.Instruction[] ConvertAdc(DisassembledInstruction instruction)
     {
-        var variables = Enumerable.Range(0, 7)
+        const int adcVariableCount = 7;
+        var variables = Enumerable.Range(0, adcVariableCount)
             .Select(x => new Ir6502.Variable(x))
             .ToArray();
 
         var operand = ParseAddress(instruction);
 
-        var withBcdLabel = new Ir6502.Label(new Ir6502.Identifier("withBcd"));
         var doneLabel = new Ir6502.Label(new Ir6502.Identifier("Done"));
-        var jumpIfBcd = new Ir6502.JumpIfNotZero(new Ir6502.Flag(Ir6502.FlagName.Decimal), withBcdLabel.Name);
-        var jumpPastBcd = new Ir6502.Jump(doneLabel.Name);
+        var jumpPastBcd = new Ir6502.JumpIfZero(new Ir6502.Flag(Ir6502.FlagName.Decimal), doneLabel.Name);
         var nonBcdInstructions = ConvertAdcNonBcd(variables, operand);
         var withBcdInstructions = ConvertAdcWithBcd(variables, operand);
-        var noOp = new Ir6502.NoOp(); // We need a guaranteed instruction to jump to.
+        var noOp = new Ir6502.NoOp();
+        var startingCarryVariable = new Ir6502.Variable(adcVariableCount);
+        var startingAccVariable = new Ir6502.Variable(adcVariableCount + 1);
+        var preserveAcc = new Ir6502.Copy(new Ir6502.Register(Ir6502.RegisterName.Accumulator), startingAccVariable);
+        var resetAcc = new Ir6502.Copy(startingAccVariable, new Ir6502.Register(Ir6502.RegisterName.Accumulator));
+        var preserveCarry = new Ir6502.Copy(new Ir6502.Flag(Ir6502.FlagName.Carry), startingCarryVariable);
+        var resetCarry = new Ir6502.Copy(startingCarryVariable, new Ir6502.Flag(Ir6502.FlagName.Carry));
 
-        return new[] { jumpIfBcd }
+        // Negative overflow, and zero flags are always set via binary / non-bcd logic. So always perform
+        // non-BCD logic, then perform BCD logic if the decimal flag is on.
+        return new [] {preserveCarry, preserveAcc}
             .Concat(nonBcdInstructions)
             .Append(jumpPastBcd)
-            .Append(withBcdLabel)
+            .Append(resetCarry) // Make sure carry and acc are back to the original value
+            .Append(resetAcc)
             .Concat(withBcdInstructions)
             .Append(doneLabel)
-            .Append(noOp)
+            .Append(noOp) // We need a guaranteed instruction to jump to
             .ToArray();
     }
 
@@ -210,15 +218,6 @@ public static class InstructionConverter
 
         var setAcc = new Ir6502.Copy(result, accumulator);
 
-        // Note: I can't find reliable info on what the zero flag should be in decimal mode. 6502 test suite
-        // claims it should follow non-BCD logic, but other references state it should be zero result from BCD logic.
-        // For now I'm just going to assume it follows a zero result but will probably revisit.
-        var setZeroFlag = new Ir6502.Binary(
-            Ir6502.BinaryOperator.Equals,
-            result,
-            new Ir6502.Constant(0),
-            new Ir6502.Flag(Ir6502.FlagName.Zero));
-
         // Algorithm will add the low nibbles together (plus carry). If the result is greater than 9
         // then we need to get the correct hex digit by adding 6 to it, wiping out the high bits, and carrying
         // a 1 to the next step. Then repeat the process for the high nibble.
@@ -233,7 +232,7 @@ public static class InstructionConverter
             setCarry, highNibbleNoCarryJump, addSix, clearHighBitsResult, highNibbleNoCarryLabel, resultShiftLeft,
 
             // Combine results
-            addLowResult, setAcc, setZeroFlag
+            addLowResult, setAcc
         ];
     }
 
@@ -311,12 +310,13 @@ public static class InstructionConverter
         var checkForZero = ZeroFlagInstruction(addVariable);
         var (checkForNegative, setNegative) = NegativeFlagInstructions(addVariable, isNegative);
         var storeAccumulator = new Ir6502.Copy(addVariable, accumulator);
+        var debug = new Ir6502.DebugValue(accumulator);
 
         return
         [
             preserveAccumulator, preserveOperand, firstAdd, carryAdd, setCarry, convertToByte, calcAXorResult,
             calcMXorResult, andXorResults, maskSignBit, setOverflow, checkForZero, checkForNegative, setNegative,
-            storeAccumulator
+            storeAccumulator, debug
         ];
     }
 

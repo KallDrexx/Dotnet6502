@@ -559,7 +559,7 @@ public class AdcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
-        jit.AddMethod(0x1234, nesIrInstructions, true);
+        jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x47;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
         jit.TestHal.SetFlag(CpuStatusFlags.Decimal, true);
@@ -570,7 +570,7 @@ public class AdcTests
     }
 
     [Fact]
-    public void Adc_Decimal_Calculation_With_Zero_Result_Should_Have_Zero_Flag_Set()
+    public void Negative_Flags_Set_By_Non_Bcd_Logic_When_Bcd_Enabled()
     {
         var instructionInfo = InstructionSet.GetInstruction(0x69);
         var instruction = new DisassembledInstruction
@@ -584,13 +584,88 @@ public class AdcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
-        jit.AddMethod(0x1234, nesIrInstructions, true);
-        jit.TestHal.ARegister = 0x01;
+        jit.AddMethod(0x1234, nesIrInstructions);
+        jit.TestHal.ARegister = 0x05;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
+        jit.TestHal.SetFlag(CpuStatusFlags.Decimal, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Zero, false);
+        jit.RunMethod(0x1234);
+
+        jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Overflow_Flags_Set_By_Non_Bcd_Logic_When_Bcd_Enabled()
+    {
+        var instructionInfo = InstructionSet.GetInstruction(0x69);
+        var instruction = new DisassembledInstruction
+        {
+            Info = instructionInfo,
+            Bytes = [0x69, 0x99],
+        };
+
+        var context = new InstructionConverter.Context(
+            new Dictionary<ushort, string>());
+
+        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var jit = TestJitCompiler.Create();
+        jit.AddMethod(0x1234, nesIrInstructions);
+        jit.TestHal.ARegister = 0x99;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
+        jit.TestHal.SetFlag(CpuStatusFlags.Decimal, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Zero, false);
+        jit.RunMethod(0x1234);
+
+        jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Zero_Flags_Set_When_Bcd_Enabled_And_Non_Bcd_Adc_Would_Be_Zero()
+    {
+        var instructionInfo = InstructionSet.GetInstruction(0x69);
+        var instruction = new DisassembledInstruction
+        {
+            Info = instructionInfo,
+            Bytes = [0x69, 0x99],
+        };
+
+        var context = new InstructionConverter.Context(
+            new Dictionary<ushort, string>());
+
+        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var jit = TestJitCompiler.Create();
+        jit.AddMethod(0x1234, nesIrInstructions);
+        jit.TestHal.ARegister = 0x67;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
         jit.TestHal.SetFlag(CpuStatusFlags.Decimal, true);
         jit.TestHal.SetFlag(CpuStatusFlags.Zero, false);
         jit.RunMethod(0x1234);
 
         jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Zero_Flags_Not_Set_When_Bcd_Enabled_And_Non_Bcd_Adc_Would_Not_Be_Zero()
+    {
+        var instructionInfo = InstructionSet.GetInstruction(0x69);
+        var instruction = new DisassembledInstruction
+        {
+            Info = instructionInfo,
+            Bytes = [0x69, 0x99],
+        };
+
+        var context = new InstructionConverter.Context(
+            new Dictionary<ushort, string>());
+
+        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var jit = TestJitCompiler.Create();
+        jit.AddMethod(0x1234, nesIrInstructions);
+        jit.TestHal.ARegister = 0x01;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
+        jit.TestHal.SetFlag(CpuStatusFlags.Decimal, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Zero, true);
+        jit.RunMethod(0x1234);
+
+        jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
     }
 }
