@@ -357,6 +357,11 @@ public class MsilGenerator
                 ilGenerator.Emit(OpCodes.Not);
                 break;
 
+            case Ir6502.UnaryOperator.LogicalNot:
+                ilGenerator.Emit(OpCodes.Ldc_I4_0);
+                ilGenerator.Emit(OpCodes.Ceq);
+                break;
+
             default:
                 throw new NotSupportedException(unary.Operator.ToString());
         }

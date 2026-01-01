@@ -1,4 +1,3 @@
-using Dotnet6502.Common;
 using Dotnet6502.Common.Compilation;
 using Dotnet6502.Common.Hardware;
 using Shouldly;
@@ -204,6 +203,51 @@ public class UnaryInstructionTests
         var instruction = new Ir6502.Unary(
             Ir6502.UnaryOperator.BitwiseNot,
             new Ir6502.Constant(0xFF),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
+
+        var jit = TestJitCompiler.Create();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.RunMethod(0x1234);
+
+        jit.TestHal.ARegister.ShouldBe((byte)0x00);
+    }
+
+    [Fact]
+    public void Can_LogicalNot_On_Zero_Value()
+    {
+        var instruction = new Ir6502.Unary(
+            Ir6502.UnaryOperator.LogicalNot,
+            new Ir6502.Constant(0),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
+
+        var jit = TestJitCompiler.Create();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.RunMethod(0x1234);
+
+        jit.TestHal.ARegister.ShouldBe((byte)0x01);
+    }
+
+    [Fact]
+    public void Can_LogicalNot_On_One_Value()
+    {
+        var instruction = new Ir6502.Unary(
+            Ir6502.UnaryOperator.LogicalNot,
+            new Ir6502.Constant(1),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
+
+        var jit = TestJitCompiler.Create();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.RunMethod(0x1234);
+
+        jit.TestHal.ARegister.ShouldBe((byte)0x00);
+    }
+
+    [Fact]
+    public void Can_LogicalNot_On_Value_That_is_Not_One_Or_Zero()
+    {
+        var instruction = new Ir6502.Unary(
+            Ir6502.UnaryOperator.LogicalNot,
+            new Ir6502.Constant(15),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
         var jit = TestJitCompiler.Create();

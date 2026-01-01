@@ -77,7 +77,7 @@ public static class Ir6502
 
     public enum FlagName { Carry, Zero, InterruptDisable, BFlag, Decimal, Overflow, Negative }
 
-    public enum UnaryOperator { BitwiseNot }
+    public enum UnaryOperator { BitwiseNot, LogicalNot }
 
     public enum BinaryOperator
     {
