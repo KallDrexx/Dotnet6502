@@ -1,4 +1,3 @@
-using Dotnet6502.Common;
 using Dotnet6502.Common.Compilation;
 using Dotnet6502.Common.Hardware;
 using NESDecompiler.Core.CPU;
@@ -7,22 +6,6 @@ using Shouldly;
 
 namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 
-/// <summary>
-/// Tests for 6502 SBC (Subtract with Carry) instruction
-///
-/// IMPORTANT: These tests expect CORRECT 6502 overflow flag behavior.
-/// Correct 6502 behavior: Overflow = (result^A) & (result^~M) & 0x80 != 0
-///
-/// 6502 SBC Formula: A = A - M - (1 - C)
-/// 6502 SBC Rules:
-/// - Carry flag is SET (1) when no borrow occurs (result >= 0)
-/// - Carry flag is CLEARED (0) when borrow occurs (result < 0)
-/// - Overflow occurs when subtracting opposite-sign numbers produces wrong-sign result
-/// - Positive - Negative = Negative → Overflow
-/// - Negative - Positive = Positive → Overflow
-/// - Positive - Positive → Never overflow (same signs)
-/// - Negative - Negative → Never overflow (same signs)
-/// </summary>
 public class SbcTests
 {
     [Fact]
@@ -556,5 +539,28 @@ public class SbcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Decimal_Mode_Subtraction_Without_Underflow()
+    {
+        var instructionInfo = InstructionSet.GetInstruction(0xE9);
+        var instruction = new DisassembledInstruction
+        {
+            Info = instructionInfo,
+            Bytes = [0xE9, 0x05],
+        };
+
+        var context = new InstructionConverter.Context(
+            new Dictionary<ushort, string>());
+
+        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var jit = TestJitCompiler.Create();
+        jit.AddMethod(0x1234, nesIrInstructions);
+        jit.TestHal.ARegister = 0x10;
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
+        jit.RunMethod(0x1234);
+
+        jit.TestHal.ARegister.ShouldBe((byte)0x05);
     }
 }

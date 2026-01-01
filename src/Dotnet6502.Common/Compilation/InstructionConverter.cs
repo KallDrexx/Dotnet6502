@@ -1165,19 +1165,117 @@ public static class InstructionConverter
     /// </summary>
     private static Ir6502.Instruction[] ConvertSbc(DisassembledInstruction instruction)
     {
-        // NOTE: this does not implement the decimal flag logic
-        var accumulator = new Ir6502.Register(Ir6502.RegisterName.Accumulator);
+        const int variableCount = 8;
+        var variables = Enumerable.Range(0, variableCount)
+            .Select(x => new Ir6502.Variable(x))
+            .ToArray();
+
         var operand = ParseAddress(instruction);
-        var subVariable = new Ir6502.Variable(0);
-        var tempVariable = new Ir6502.Variable(1);
-        var operandVariable = new Ir6502.Variable(7);
+
+        return ConvertSbcBinary(variables, operand);
+    }
+
+    private static Ir6502.Instruction[] ConvertSbcDecimalMode(Ir6502.Variable[] variables, Ir6502.Value operand)
+    {
+        var accumulator = new Ir6502.Register(Ir6502.RegisterName.Accumulator);
+        var accNibble = variables[0];
+        var opNibble = variables[1];
+        var result = variables[2];
+        var lowNibbleResult = variables[3];
+        var tempVariable = variables[4];
+        var tempCarry = variables[5];
+
+        var getAccLowNibble = new Ir6502.Binary(
+            Ir6502.BinaryOperator.And,
+            accumulator,
+            new Ir6502.Constant(0x0F),
+            accNibble);
+
+        var getOpLowNibble = new Ir6502.Binary(
+            Ir6502.BinaryOperator.And,
+            accumulator,
+            new Ir6502.Constant(0x0F),
+            opNibble);
+
+        var clearLowAccNibble = new Ir6502.Binary(
+            Ir6502.BinaryOperator.And,
+            accumulator,
+            new Ir6502.Constant(0xF0),
+            accNibble);
+
+        var clearLowOpNibble = new Ir6502.Binary(
+            Ir6502.BinaryOperator.And,
+            operand,
+            new Ir6502.Constant(0xF0),
+            opNibble);
+
+        var shiftAccNibbleRight = new Ir6502.Binary(
+            Ir6502.BinaryOperator.ShiftRight,
+            accNibble,
+            new Ir6502.Constant(4),
+            accNibble);
+
+        var shiftOpNibbleRight = new Ir6502.Binary(
+            Ir6502.BinaryOperator.ShiftRight,
+            opNibble,
+            new Ir6502.Constant(4),
+            opNibble);
+
+        var subtractNibbles = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Subtract,
+            accNibble,
+            opNibble,
+            result);
+
+        var isNotNegative = new Ir6502.Binary(
+            Ir6502.BinaryOperator.GreaterThan,
+            result,
+            new Ir6502.Constant(0),
+            tempVariable);
+
+        var lowNibbleContinueLabel = new Ir6502.Label(new Ir6502.Identifier("lowNibbleContinue"));
+        var highNibbleContinueLabel = new Ir6502.Label(new Ir6502.Identifier("highNibbleContinue"));
+        var bypassLowNibbleAdjustmentIfPositive = new Ir6502.JumpIfNotZero(tempVariable, lowNibbleContinueLabel.Name);
+        var bypassHighNibbleAdjustmentIfPositive = new Ir6502.JumpIfNotZero(tempVariable, highNibbleContinueLabel.Name);
+        var moveToLowNibbleResult = new Ir6502.Copy(result, lowNibbleResult);
+
+        var subtractSix = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Subtract,
+            result,
+            new Ir6502.Constant(6),
+            result);
+
+
+
+
+
+        // Algorithm is to take the low acc nibble and subtract the low operand nibble from it. If the result
+        // is less than zero, subtract 6 and pull out the nibble. Repeat for the high acc and operand nibble.
+        return
+        [
+            getAccLowNibble, getOpLowNibble, subtractNibbles,
+            isNotNegative, bypassLowNibbleAdjustmentIfPositive,
+            lowNibbleContinueLabel, moveToLowNibbleResult,
+
+            clearLowAccNibble, shiftAccNibbleRight, clearLowOpNibble, shiftOpNibbleRight,
+            isNotNegative, bypassHighNibbleAdjustmentIfPositive,
+            highNibbleContinueLabel,
+        ];
+    }
+
+    private static Ir6502.Instruction[] ConvertSbcBinary(Ir6502.Variable[] variables, Ir6502.Value operand)
+    {
+        var accumulator = new Ir6502.Register(Ir6502.RegisterName.Accumulator);
+        var subVariable = variables[0];
+        var tempVariable = variables[1];
+        var operandVariable = variables[7];
 
         // Variables for 6502 SBC overflow calculation: (result^A) & (result^~M) & 0x80
-        var originalAccumulator = new Ir6502.Variable(2);
-        var resultXorA = new Ir6502.Variable(3);
-        var notMemory = new Ir6502.Variable(4);
-        var resultXorNotMemory = new Ir6502.Variable(5);
-        var overflowTemp = new Ir6502.Variable(6);
+        var originalAccumulator = variables[2];
+        var resultXorA = variables[3];
+        var notMemory = variables[4];
+        var resultXorNotMemory = variables[5];
+        var overflowTemp = variables[6];
 
         // Preserve original accumulator value for overflow calculation
         var preserveAccumulator = new Ir6502.Copy(accumulator, originalAccumulator);
