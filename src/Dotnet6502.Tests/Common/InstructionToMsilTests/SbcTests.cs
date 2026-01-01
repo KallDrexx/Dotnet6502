@@ -558,6 +558,7 @@ public class SbcTests
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x10;
+        jit.TestHal.SetFlag(CpuStatusFlags.Decimal, true);
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
         jit.RunMethod(0x1234);
 

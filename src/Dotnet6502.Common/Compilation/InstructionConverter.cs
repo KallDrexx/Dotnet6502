@@ -1,4 +1,5 @@
 using NESDecompiler.Core.CPU;
+using NESDecompiler.Core.Decompilation;
 using NESDecompiler.Core.Disassembly;
 
 namespace Dotnet6502.Common.Compilation;
@@ -1171,8 +1172,31 @@ public static class InstructionConverter
             .ToArray();
 
         var operand = ParseAddress(instruction);
+        var originalAccValue = new Ir6502.Variable(variableCount);
+        var originalCarryValue = new Ir6502.Variable(variableCount + 1);
 
-        return ConvertSbcBinary(variables, operand);
+        var preserveAcc = new Ir6502.Copy(new Ir6502.Register(Ir6502.RegisterName.Accumulator), originalAccValue);
+        var preserveCarry = new Ir6502.Copy(new Ir6502.Flag(Ir6502.FlagName.Carry), originalCarryValue);
+        var restoreAcc = new Ir6502.Copy(originalAccValue, new Ir6502.Register(Ir6502.RegisterName.Accumulator));
+        var restoreCarry = new Ir6502.Copy(originalCarryValue, new Ir6502.Flag(Ir6502.FlagName.Carry));
+        var doneDecimalLabel = new Ir6502.Label(new Ir6502.Identifier("done"));
+        var jumpIfNotDecimalMode = new Ir6502.JumpIfZero(
+            new Ir6502.Flag(Ir6502.FlagName.Decimal),
+            doneDecimalLabel.Name);
+
+        var performBinarySbc = ConvertSbcBinary(variables, operand);
+        var performDecimalSbc = ConvertSbcDecimalMode(variables, operand);
+
+        // Binary sbc required for overflow, negative, and zero flags
+        return new[] { preserveAcc, preserveCarry }
+            .Concat(performBinarySbc)
+            .Append(jumpIfNotDecimalMode)
+            .Append(restoreAcc)
+            .Append(restoreCarry)
+            .Concat(performDecimalSbc)
+            .Append(doneDecimalLabel)
+            .Append(new Ir6502.NoOp()) // Guaranteed instruction to jump to
+            .ToArray();
     }
 
     private static Ir6502.Instruction[] ConvertSbcDecimalMode(Ir6502.Variable[] variables, Ir6502.Value operand)
@@ -1183,7 +1207,7 @@ public static class InstructionConverter
         var result = variables[2];
         var lowNibbleResult = variables[3];
         var tempVariable = variables[4];
-        var tempCarry = variables[5];
+        var borrow = variables[5];
 
         var getAccLowNibble = new Ir6502.Binary(
             Ir6502.BinaryOperator.And,
@@ -1193,7 +1217,7 @@ public static class InstructionConverter
 
         var getOpLowNibble = new Ir6502.Binary(
             Ir6502.BinaryOperator.And,
-            accumulator,
+            operand,
             new Ir6502.Constant(0x0F),
             opNibble);
 
@@ -1227,8 +1251,8 @@ public static class InstructionConverter
             opNibble,
             result);
 
-        var isNotNegative = new Ir6502.Binary(
-            Ir6502.BinaryOperator.GreaterThan,
+        var checkIfPositive = new Ir6502.Binary(
+            Ir6502.BinaryOperator.GreaterThanOrEqualTo,
             result,
             new Ir6502.Constant(0),
             tempVariable);
@@ -1245,21 +1269,66 @@ public static class InstructionConverter
             new Ir6502.Constant(6),
             result);
 
+        var isolateResultLowNibble = new Ir6502.Binary(
+            Ir6502.BinaryOperator.And,
+            result,
+            new Ir6502.Constant(0x0F),
+            result);
 
+        var borrowFromCarry = new Ir6502.Unary(
+            Ir6502.UnaryOperator.LogicalNot,
+            new Ir6502.Flag(Ir6502.FlagName.Carry),
+            borrow);
 
+        var setBorrow = new Ir6502.Copy(new Ir6502.Constant(1), borrow);
+        var clearBorrow = new Ir6502.Copy(new Ir6502.Constant(1), borrow);
+        var subtractBorrow = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Subtract,
+            result,
+            borrow,
+            result);
 
+        var setCarry = new Ir6502.Unary(
+            Ir6502.UnaryOperator.LogicalNot,
+            borrow,
+            new Ir6502.Flag(Ir6502.FlagName.Carry));
+
+        var shiftResultLeft = new Ir6502.Binary(
+            Ir6502.BinaryOperator.ShiftLeft,
+            result,
+            new Ir6502.Constant(4),
+            result);
+
+        var addLowNibbleToResult = new Ir6502.Binary(
+            Ir6502.BinaryOperator.Add,
+            lowNibbleResult,
+            result,
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
+
+        var debugResult = new Ir6502.DebugValue(result);
+        var debugAccNibble = new Ir6502.DebugValue(accNibble);
+        var debugOpNibble = new Ir6502.DebugValue(opNibble);
+        var debugOperand = new Ir6502.DebugValue(operand);
+        var debugTemp = new Ir6502.DebugValue(tempVariable);
 
         // Algorithm is to take the low acc nibble and subtract the low operand nibble from it. If the result
         // is less than zero, subtract 6 and pull out the nibble. Repeat for the high acc and operand nibble.
         return
         [
-            getAccLowNibble, getOpLowNibble, subtractNibbles,
-            isNotNegative, bypassLowNibbleAdjustmentIfPositive,
+            debugOperand, borrowFromCarry,
+            getAccLowNibble, getOpLowNibble, debugAccNibble, debugOpNibble,
+            subtractNibbles, debugResult, subtractBorrow, debugResult, setBorrow, // NOTE: borrow is inverted for subtraction
+            checkIfPositive, bypassLowNibbleAdjustmentIfPositive,
+            subtractSix, isolateResultLowNibble, clearBorrow,
             lowNibbleContinueLabel, moveToLowNibbleResult,
 
             clearLowAccNibble, shiftAccNibbleRight, clearLowOpNibble, shiftOpNibbleRight,
-            isNotNegative, bypassHighNibbleAdjustmentIfPositive,
+            subtractNibbles, debugResult, subtractBorrow, debugResult, setBorrow,
+            checkIfPositive, debugTemp, bypassHighNibbleAdjustmentIfPositive,
+            subtractSix, isolateResultLowNibble, clearBorrow,
             highNibbleContinueLabel,
+
+            shiftResultLeft, addLowNibbleToResult, setCarry,
         ];
     }
 
