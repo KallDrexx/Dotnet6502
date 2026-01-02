@@ -311,13 +311,12 @@ public static class InstructionConverter
         var checkForZero = ZeroFlagInstruction(addVariable);
         var (checkForNegative, setNegative) = NegativeFlagInstructions(addVariable, isNegative);
         var storeAccumulator = new Ir6502.Copy(addVariable, accumulator);
-        var debug = new Ir6502.DebugValue(accumulator);
 
         return
         [
             preserveAccumulator, preserveOperand, firstAdd, carryAdd, setCarry, convertToByte, calcAXorResult,
             calcMXorResult, andXorResults, maskSignBit, setOverflow, checkForZero, checkForNegative, setNegative,
-            storeAccumulator, debug
+            storeAccumulator
         ];
     }
 
@@ -1305,31 +1304,24 @@ public static class InstructionConverter
             result,
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
-        var debugResult = new Ir6502.DebugValue(result);
-        var debugAccNibble = new Ir6502.DebugValue(accNibble);
-        var debugOpNibble = new Ir6502.DebugValue(opNibble);
-        var debugOperand = new Ir6502.DebugValue(operand);
-        var debugTemp = new Ir6502.DebugValue(tempVariable);
-        var debugBorrow = new Ir6502.DebugValue(borrow);
-
         // Algorithm is to take the low acc nibble and subtract the low operand nibble from it. If the result
         // is less than zero, subtract 6 and pull out the nibble. Repeat for the high acc and operand nibble.
         return
         [
-            debugOperand, borrowFromCarry, debugBorrow,
-            getAccLowNibble, getOpLowNibble, debugAccNibble, debugOpNibble,
-            subtractNibbles, debugResult, subtractBorrow, debugResult, clearBorrow, // NOTE: borrow is inverted for subtraction
+            borrowFromCarry,
+            getAccLowNibble, getOpLowNibble,
+            subtractNibbles, subtractBorrow, clearBorrow, // NOTE: borrow is inverted for subtraction
             checkIfPositive, bypassLowNibbleAdjustmentIfPositive,
             subtractSix, isolateResultLowNibble, setBorrow,
             lowNibbleContinueLabel, moveToLowNibbleResult,
 
             clearLowAccNibble, shiftAccNibbleRight, clearLowOpNibble, shiftOpNibbleRight,
-            subtractNibbles, debugResult, subtractBorrow, debugResult, clearBorrow,
-            checkIfPositive, debugTemp, bypassHighNibbleAdjustmentIfPositive,
+            subtractNibbles, subtractBorrow, clearBorrow,
+            checkIfPositive, bypassHighNibbleAdjustmentIfPositive,
             subtractSix, isolateResultLowNibble, setBorrow,
             highNibbleContinueLabel,
 
-            shiftResultLeft, addLowNibbleToResult, setCarryInvertedBorrow, debugBorrow,
+            shiftResultLeft, addLowNibbleToResult, setCarryInvertedBorrow,
         ];
     }
 
