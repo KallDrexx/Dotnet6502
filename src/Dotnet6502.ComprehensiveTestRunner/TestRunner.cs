@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using Dotnet6502.Common.Compilation;
 using Dotnet6502.Common.Hardware;
@@ -15,15 +16,26 @@ public static class TestRunner
 
         // Find all opcodes that match this mnemonic
         var matchingOpcodes = new List<byte>();
-        for (byte opcode = 0;; opcode++)
+        if (byte.TryParse(mnemonic, NumberStyles.HexNumber, null, out var passedInOpCode))
         {
-            var instructionInfo = InstructionSet.GetInstruction(opcode);
-            if (instructionInfo.Mnemonic.Equals(mnemonic, StringComparison.OrdinalIgnoreCase))
+            var instructionInfo = InstructionSet.GetInstruction(passedInOpCode);
+            if (instructionInfo.IsValid)
             {
-                matchingOpcodes.Add(opcode);
+                matchingOpcodes.Add(passedInOpCode);
             }
+        }
+        else
+        {
+            for (byte opcode = 0;; opcode++)
+            {
+                var instructionInfo = InstructionSet.GetInstruction(opcode);
+                if (instructionInfo.Mnemonic.Equals(mnemonic, StringComparison.OrdinalIgnoreCase))
+                {
+                    matchingOpcodes.Add(opcode);
+                }
 
-            if (opcode == 0xFF) break; // Prevent overflow
+                if (opcode == 0xFF) break; // Prevent overflow
+            }
         }
 
         if (matchingOpcodes.Count == 0)

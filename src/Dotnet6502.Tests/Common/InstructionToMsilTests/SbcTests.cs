@@ -542,13 +542,13 @@ public class SbcTests
     }
 
     [Fact]
-    public void Decimal_Mode_Subtraction_Without_Underflow()
+    public void Decimal_Mode_Subtraction_Without_Underflow_No_Carry()
     {
         var instructionInfo = InstructionSet.GetInstruction(0xE9);
         var instruction = new DisassembledInstruction
         {
             Info = instructionInfo,
-            Bytes = [0xE9, 0x05],
+            Bytes = [0xE9, 0x07],
         };
 
         var context = new InstructionConverter.Context(
@@ -557,11 +557,37 @@ public class SbcTests
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, nesIrInstructions);
-        jit.TestHal.ARegister = 0x10;
+        jit.TestHal.ARegister = 0x60;
         jit.TestHal.SetFlag(CpuStatusFlags.Decimal, true);
-        jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
         jit.RunMethod(0x1234);
 
-        jit.TestHal.ARegister.ShouldBe((byte)0x05);
+        jit.TestHal.ARegister.ShouldBe((byte)0x52);
+        jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Decimal_Mode_Correct_Borrow_Logic_For_Each_Step()
+    {
+        // Validates the correct (inverted) borrow logic happens for each step
+        var instructionInfo = InstructionSet.GetInstruction(0xE9);
+        var instruction = new DisassembledInstruction
+        {
+            Info = instructionInfo,
+            Bytes = [0xE9, 0x35],
+        };
+
+        var context = new InstructionConverter.Context(
+            new Dictionary<ushort, string>());
+
+        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var jit = TestJitCompiler.Create();
+        jit.AddMethod(0x1234, nesIrInstructions);
+        jit.TestHal.ARegister = 0x66;
+        jit.TestHal.SetFlag(CpuStatusFlags.Decimal, true);
+        jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
+        jit.RunMethod(0x1234);
+
+        jit.TestHal.ARegister.ShouldBe((byte)0x30);
     }
 }
