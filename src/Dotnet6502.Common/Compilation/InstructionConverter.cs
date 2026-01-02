@@ -99,10 +99,10 @@ public static class InstructionConverter
 
         var operand = ParseAddress(instruction);
 
-        var doneLabel = new Ir6502.Label(new Ir6502.Identifier("Done"));
+        var doneLabel = new Ir6502.Label(new Ir6502.Identifier($"{instruction.CPUAddress:X4}_adc_done"));
         var jumpPastBcd = new Ir6502.JumpIfZero(new Ir6502.Flag(Ir6502.FlagName.Decimal), doneLabel.Name);
         var nonBcdInstructions = ConvertAdcNonBcd(variables, operand);
-        var withBcdInstructions = ConvertAdcWithBcd(variables, operand);
+        var withBcdInstructions = ConvertAdcWithBcd(variables, operand, instruction);
         var noOp = new Ir6502.NoOp();
         var startingCarryVariable = new Ir6502.Variable(adcVariableCount);
         var startingAccVariable = new Ir6502.Variable(adcVariableCount + 1);
@@ -124,7 +124,10 @@ public static class InstructionConverter
             .ToArray();
     }
 
-    private static Ir6502.Instruction[] ConvertAdcWithBcd(Ir6502.Variable[] variables, Ir6502.Value operand)
+    private static Ir6502.Instruction[] ConvertAdcWithBcd(
+        Ir6502.Variable[] variables,
+        Ir6502.Value operand,
+        DisassembledInstruction instruction)
     {
         var accumulator = new Ir6502.Register(Ir6502.RegisterName.Accumulator);
         var operandNibble = variables[0];
@@ -164,7 +167,7 @@ public static class InstructionConverter
             new Ir6502.Constant(9),
             new Ir6502.Flag(Ir6502.FlagName.Carry));
 
-        var lowNibbleNoCarryLabel = new Ir6502.Label(new Ir6502.Identifier("LowNibbleNoCarry"));
+        var lowNibbleNoCarryLabel = new Ir6502.Label(new Ir6502.Identifier($"{instruction.CPUAddress:X4}_LowNibbleNoCarry"));
         var lowNibbleNoCarryJump = new Ir6502.JumpIfZero(
             new Ir6502.Flag(Ir6502.FlagName.Carry),
             lowNibbleNoCarryLabel.Name);
@@ -200,7 +203,7 @@ public static class InstructionConverter
             new Ir6502.Constant(4),
             accumulatorNibble);
 
-        var highNibbleNoCarryLabel = new Ir6502.Label(new Ir6502.Identifier("HighNibbleNoCarry"));
+        var highNibbleNoCarryLabel = new Ir6502.Label(new Ir6502.Identifier($"{instruction.CPUAddress:X4}_HighNibbleNoCarry"));
         var highNibbleNoCarryJump = new Ir6502.JumpIfZero(
             new Ir6502.Flag(Ir6502.FlagName.Carry),
             highNibbleNoCarryLabel.Name);
@@ -1178,13 +1181,13 @@ public static class InstructionConverter
         var preserveCarry = new Ir6502.Copy(new Ir6502.Flag(Ir6502.FlagName.Carry), originalCarryValue);
         var restoreAcc = new Ir6502.Copy(originalAccValue, new Ir6502.Register(Ir6502.RegisterName.Accumulator));
         var restoreCarry = new Ir6502.Copy(originalCarryValue, new Ir6502.Flag(Ir6502.FlagName.Carry));
-        var doneDecimalLabel = new Ir6502.Label(new Ir6502.Identifier("done"));
+        var doneDecimalLabel = new Ir6502.Label(new Ir6502.Identifier($"{instruction.CPUAddress:X4}_done"));
         var jumpIfNotDecimalMode = new Ir6502.JumpIfZero(
             new Ir6502.Flag(Ir6502.FlagName.Decimal),
             doneDecimalLabel.Name);
 
         var performBinarySbc = ConvertSbcBinary(variables, operand);
-        var performDecimalSbc = ConvertSbcDecimalMode(variables, operand);
+        var performDecimalSbc = ConvertSbcDecimalMode(variables, operand, instruction);
 
         // Binary sbc required for overflow, negative, and zero flags
         return new[] { preserveAcc, preserveCarry }
@@ -1198,7 +1201,10 @@ public static class InstructionConverter
             .ToArray();
     }
 
-    private static Ir6502.Instruction[] ConvertSbcDecimalMode(Ir6502.Variable[] variables, Ir6502.Value operand)
+    private static Ir6502.Instruction[] ConvertSbcDecimalMode(
+        Ir6502.Variable[] variables,
+        Ir6502.Value operand,
+        DisassembledInstruction instruction)
     {
         var accumulator = new Ir6502.Register(Ir6502.RegisterName.Accumulator);
         var accNibble = variables[0];
@@ -1256,8 +1262,8 @@ public static class InstructionConverter
             new Ir6502.Constant(0),
             tempVariable);
 
-        var lowNibbleContinueLabel = new Ir6502.Label(new Ir6502.Identifier("lowNibbleContinue"));
-        var highNibbleContinueLabel = new Ir6502.Label(new Ir6502.Identifier("highNibbleContinue"));
+        var lowNibbleContinueLabel = new Ir6502.Label(new Ir6502.Identifier($"{instruction.CPUAddress:X4}_lowNibbleContinue"));
+        var highNibbleContinueLabel = new Ir6502.Label(new Ir6502.Identifier($"{instruction.CPUAddress:X4}_highNibbleContinue"));
         var bypassLowNibbleAdjustmentIfPositive = new Ir6502.JumpIfNotZero(tempVariable, lowNibbleContinueLabel.Name);
         var bypassHighNibbleAdjustmentIfPositive = new Ir6502.JumpIfNotZero(tempVariable, highNibbleContinueLabel.Name);
         var moveToLowNibbleResult = new Ir6502.Copy(result, lowNibbleResult);

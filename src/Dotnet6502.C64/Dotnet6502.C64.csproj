@@ -8,7 +8,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Dotnet6502.Common\Dotnet6502.Common.csproj" />
+        <ProjectReference Include="..\Dotnet6502.Common\Dotnet6502.Common.csproj"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4"/>
+    </ItemGroup>
 </Project>

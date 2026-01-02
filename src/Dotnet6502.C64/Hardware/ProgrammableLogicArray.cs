@@ -51,9 +51,9 @@ public class ProgrammableLogicArray : IMemoryDevice
         if ((section & 0b11) == 0)
         {
             // RAM visible in all 3 sections
-            _a000ToBfffDevice.MakeVisible(_ramA000ToBfff, SwappableMemoryDevice.Mode.Write);
-            _d000ToDfffDevice.MakeVisible(_ramD000ToDfff, SwappableMemoryDevice.Mode.Write);
-            _e000ToFfffDevice.MakeVisible(_ramA000ToBfff, SwappableMemoryDevice.Mode.Write);
+            _a000ToBfffDevice.MakeVisible(_ramA000ToBfff, SwappableMemoryDevice.Mode.Read);
+            _d000ToDfffDevice.MakeVisible(_ramD000ToDfff, SwappableMemoryDevice.Mode.Read);
+            _e000ToFfffDevice.MakeVisible(_ramA000ToBfff, SwappableMemoryDevice.Mode.Read);
 
             return;
         }
@@ -62,9 +62,9 @@ public class ProgrammableLogicArray : IMemoryDevice
         IMemoryDevice d0Device = (section & 0b100) > 0 ? _ioMemoryArea : CharacterRom;
         IMemoryDevice e0Device = (section & 0b011) == 0b01 ? _ramE000ToFfff : KernelRom;
 
-        _a000ToBfffDevice.MakeVisible(a0Device, SwappableMemoryDevice.Mode.Write);
-        _d000ToDfffDevice.MakeVisible(d0Device, SwappableMemoryDevice.Mode.Write);
-        _e000ToFfffDevice.MakeVisible(e0Device, SwappableMemoryDevice.Mode.Write);
+        _a000ToBfffDevice.MakeVisible(a0Device, SwappableMemoryDevice.Mode.Read);
+        _d000ToDfffDevice.MakeVisible(d0Device, SwappableMemoryDevice.Mode.Read);
+        _e000ToFfffDevice.MakeVisible(e0Device, SwappableMemoryDevice.Mode.Read);
     }
 
     public uint Size => (uint) _cpuIoPort.Length;
