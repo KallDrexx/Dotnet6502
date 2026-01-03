@@ -3,26 +3,28 @@ using Dotnet6502.C64.Emulation;
 namespace Dotnet6502.C64.Hardware;
 
 /// <summary>
-/// Emulates the NTSC VIC-II display system
+/// Emulates the NTSC VIC-II display system, based on the 6567R8 NTSC-M
 /// </summary>
 public class Vic2
 {
     // Reference: https://zimmers.net/cbmpics/cbm/c64/vic-ii.txt
     private const int DotsPerCpuCycle = 8;
     private const int DotsPerScanline = 520;
-    private const int VisibleDotsPerScanLine = 464;
+    private const int VisibleDotsPerScanLine = 418;
     private const int TotalScanlines = 263;
-    private const int FirstVisibleScanline = 16;
+    private const int FirstVisibleScanline = 28;
     private const int LastVisibleScanLine = 262;
     private const int FirstDisplayWindowScanLine = 51;
     private const int LastDisplayWindowScanLine = 250;
-    private const int VisibleScanLines = LastVisibleScanLine - FirstVisibleScanline;
+    private const int VisibleScanLines = LastVisibleScanLine - FirstVisibleScanline + 1;
 
     private readonly IC64Display _c64Display;
     private readonly Memory<byte> _vic2Registers;
+    private readonly RgbColor[] _frameBuffer = new RgbColor[VisibleDotsPerScanLine * VisibleScanLines];
+    private readonly RgbColor[] _palette = new RgbColor[16];
     private int _lineCycleCount;
     private int _lineDotCount;
-    private int _currentScanLine;
+    private ushort _currentScanLine;
 
     /// <summary>
     /// AKA VC, 10-bit counter that tracks which character/sprite data to fetch from memory. It acts as the main
@@ -31,12 +33,18 @@ public class Vic2
     private ushort _videoCounter;
 
     /// <summary>
-    /// AKA RC, 3-bit counter that tracks which scan line within a character row is currently being rendered
+    /// AKA VCBASE, 10-bit dta register with reset input that can be loaded with the value from VC
     /// </summary>
-    private byte _rasterCounter;
+    private ushort _videoCounterBase;
 
     /// <summary>
-    /// AKA VMLI, Serves as the base value for teh video counter. Stores the VC value at the beginning of each character row
+    /// AKA RC, 3-bit counter that tracks which scan line within a character row is currently being rendered
+    /// </summary>
+    private byte _rowCounter;
+
+    /// <summary>
+    /// AKA VMLI, 6-bit counter with reset input that keeps track of the position within the internal
+    /// 40x12 bit video matrix/color line where read character pointers are stored.
     /// </summary>
     private ushort _videoMatrixLineIndex;
 
@@ -44,21 +52,42 @@ public class Vic2
     {
         _c64Display = c64Display;
         _vic2Registers = ioMemoryArea.Vic2Registers;
+
+        // Fill in the palette values based on the Colodore Palette
+        _palette[0] = new RgbColor(0, 0, 0);       // Black
+        _palette[1] = new RgbColor(255, 255, 255); // White
+        _palette[2] = new RgbColor(129, 51, 56);   // Red
+        _palette[3] = new RgbColor(117, 206, 200); // Cyan
+        _palette[4] = new RgbColor(142, 60, 151);  // Purple
+        _palette[5] = new RgbColor(86, 172, 77);   // Green
+        _palette[6] = new RgbColor(46, 44, 155);   // Blue
+        _palette[7] = new RgbColor(237, 241, 113); // Yellow
+        _palette[8] = new RgbColor(108, 85, 36);   // Orange
+        _palette[9] = new RgbColor(92, 71, 0);     // Brown
+        _palette[10] = new RgbColor(180, 105, 98); // Light Red
+        _palette[11] = new RgbColor(95, 95, 95);   // Dark Gray
+        _palette[12] = new RgbColor(137, 137, 137); // Gray
+        _palette[13] = new RgbColor(154, 226, 155); // Light Green
+        _palette[14] = new RgbColor(136, 126, 203); // Light Blue
+        _palette[15] = new RgbColor(173, 173, 173); // Light Gray
     }
 
     public void RunSingleCycle()
     {
-        var vic2RegisterSpan = _vic2Registers.Span;
+        var registers = new Vic2RegisterData(_vic2Registers.Span);
 
         _lineCycleCount++;
         _lineDotCount += DotsPerCpuCycle;
         if (_lineDotCount >= DotsPerCpuCycle)
         {
-            AdvanceToNextScanLine(vic2RegisterSpan);
+            AdvanceToNextScanLine(registers);
         }
+
+        RunMemoryAccessPhase(registers);
+        UpdateFramebuffer(registers);
     }
 
-    private void AdvanceToNextScanLine(Span<byte> registers)
+    private void AdvanceToNextScanLine(Vic2RegisterData registers)
     {
         _currentScanLine++;
         _lineCycleCount = 0;
@@ -67,25 +96,25 @@ public class Vic2
         if (_currentScanLine > LastVisibleScanLine)
         {
             // Vblank starts
-            _c64Display.RenderFrame(new RgbColor[VisibleDotsPerScanLine * VisibleScanLines]);
-            _currentScanLine = 0; // vblank period comes before first visible scanlines
+            _c64Display.RenderFrame(_frameBuffer);
+            _currentScanLine = 0; // vblank period is the beginning of the scanlines
+
+            for (var x = 0; x < _frameBuffer.Length; x++)
+            {
+                _frameBuffer[x] = new RgbColor(0, 0, 0);
+            }
         }
 
         // Update the raster counter
-        var scanLineMsbIsSet = (_currentScanLine & 0b1_0000_0000) > 0;
-        registers[Vic2Registers.ControlRegister1] = scanLineMsbIsSet
-            ? (byte)(registers[Vic2Registers.ControlRegister1] & 0b1111_1111)
-            : (byte)(registers[Vic2Registers.ControlRegister1] & 0b0111_1111);
-
-        registers[Vic2Registers.Raster] = (byte)(_currentScanLine & 0xFF);
+        registers.RasterCounter = _currentScanLine;
 
         // Reset internal registers
         _videoCounter = 0;
         _videoMatrixLineIndex = 0;
-        _rasterCounter = 0;
+        _rowCounter = 0;
     }
 
-    private void RunMemoryAccessPhase(Span<byte> registers)
+    private void RunMemoryAccessPhase(Vic2RegisterData registerData)
     {
         if (_lineCycleCount < 10)
         {
@@ -97,13 +126,22 @@ public class Vic2
             // TODO: Idle
         }
 
+        else if (_lineCycleCount == 14)
+        {
+            _videoCounter = _videoCounterBase;
+            _videoMatrixLineIndex = 0;
+
+            if (IsBadline(registerData))
+            {
+                _rowCounter = 0;
+
+                // TODO: trigger badline condition
+            }
+        }
+
         else if (_lineCycleCount < 54)
         {
-            // TOOD: If badline, perform c-access (read screen memory for character codes)
-            if (IsBadline(registers))
-            {
-                // TODO: implement
-            }
+            // Perform C-access read if we are in a badline
         }
 
         else if (_lineCycleCount < 58)
@@ -112,9 +150,51 @@ public class Vic2
             // from c-access
         }
 
+        else if (_lineCycleCount == 58)
+        {
+            if (_rowCounter == 7)
+            {
+
+            }
+        }
+
         else
         {
             // TODO: Refresh cycles, more sprite checks
+        }
+    }
+
+    private void UpdateFramebuffer(Vic2RegisterData registerData)
+    {
+        if (_currentScanLine < FirstVisibleScanline ||
+            _currentScanLine > LastVisibleScanLine || // just to be safe
+            _lineDotCount >= VisibleDotsPerScanLine)
+        {
+            // Not in a visible area
+            return;
+        }
+
+        var csel = registerData.CSel;
+        var rsel = registerData.RSel;
+        var lastBorderLeftDot = csel ? 24 : 31;
+        var firstBorderRightDot = csel ? 344 : 335;
+        var lastBorderTopLine = rsel ? 51 : 55;
+        var firstBorderBottomLine = rsel ? 247 : 251;
+        var borderColor = registerData.BorderColor;
+
+        // Write the next 8 dots
+        for (var x = 0; x < DotsPerCpuCycle; x++)
+        {
+            var dot = _lineDotCount + x;
+            var pixelIndex = (_currentScanLine - FirstVisibleScanline) * VisibleDotsPerScanLine + dot;
+            if (_currentScanLine <= lastBorderTopLine ||
+                _currentScanLine >= firstBorderBottomLine ||
+                dot <= lastBorderLeftDot ||
+                dot >= firstBorderRightDot)
+            {
+                _frameBuffer[pixelIndex] = _palette[borderColor];
+                continue;
+            }
         }
     }
 
@@ -123,13 +203,11 @@ public class Vic2
     /// CPU for 40 cycles in order to pull in new character and graphics data from memory.
     /// </summary>
     /// <returns></returns>
-    private bool IsBadline(Span<byte> registers)
+    private bool IsBadline(Vic2RegisterData registerData)
     {
-        var displayEnable = (registers[Vic2Registers.ControlRegister1] & 0b0001_0000) > 0;
-        var yScroll = registers[Vic2Registers.ControlRegister1] & 0b0000_0111;
-        return displayEnable &&
+        return registerData.DisplayEnable &&
                _currentScanLine >= 48 &&
                _currentScanLine <= 247 &&
-               (_currentScanLine & 0b111) == yScroll;
+               (_currentScanLine & 0b111) == registerData.YScroll;
     }
 }

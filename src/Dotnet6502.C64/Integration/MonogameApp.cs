@@ -9,7 +9,7 @@ namespace Dotnet6502.C64.Integration;
 public class MonogameApp : Game, IC64Display
 {
     private const int Width = 464;
-    private const int Height = 235;
+    private const int Height = 247;
 
     private readonly GraphicsDeviceManager _graphicsDeviceManager;
     private readonly object _synchronizationLock = new();
