@@ -21,7 +21,7 @@ public class ProgrammableLogicArray : IMemoryDevice
     private readonly BasicRamMemoryDevice _ramE000ToFfff;
     private readonly IoMemoryArea _ioMemoryArea;
 
-    public ProgrammableLogicArray()
+    public ProgrammableLogicArray(IoMemoryArea ioMemoryArea)
     {
         BasicRom = new BasicRamMemoryDevice(0xBFFF - 0xA000 + 1);
         KernelRom = new BasicRamMemoryDevice(0xFFFF - 0xE000 + 1);
@@ -29,7 +29,7 @@ public class ProgrammableLogicArray : IMemoryDevice
         _ramD000ToDfff = new BasicRamMemoryDevice(0xDFFF - 0xD000 + 1);
         _ramE000ToFfff = new BasicRamMemoryDevice(0xFFFF - 0xE000 + 1);
         CharacterRom = new BasicRamMemoryDevice(0xDFFF - 0xD000 + 1);
-        _ioMemoryArea = new IoMemoryArea();
+        _ioMemoryArea = ioMemoryArea;
 
         _a000ToBfffDevice = new SwappableMemoryDevice(_ramA000ToBfff);
         _d000ToDfffDevice = new SwappableMemoryDevice(_ramD000ToDfff);

@@ -9,10 +9,11 @@ var cancellationTokenSource = new CancellationTokenSource();
 var cliArgs = CommandLineHandler.Parse(args);
 
 Console.WriteLine("Starting Dotnet6502 Commodore64 emulator");
+var ioMemoryArea = new IoMemoryArea();
 var pla = await SetupPla(cliArgs);
 var memoryBus = SetupMemoryBus();
 var app = new MonogameApp(false);
-var vic2 = new Vic2(app);
+var vic2 = new Vic2(app, ioMemoryArea);
 var hal = new C64Hal(memoryBus, cancellationTokenSource.Token, vic2);
 var jitCustomizer = new C64JitCustomizer();
 var jitCompiler = new JitCompiler(hal, jitCustomizer, memoryBus);
@@ -54,7 +55,7 @@ async Task<ProgrammableLogicArray> SetupPla(CommandLineHandler.Values values)
     var kernelRomContents = await File.ReadAllBytesAsync(values.KernelRom.FullName);
     var charRomContents = await File.ReadAllBytesAsync(values.CharacterRom.FullName);
 
-    var programmableLogicArray = new ProgrammableLogicArray();
+    var programmableLogicArray = new ProgrammableLogicArray(ioMemoryArea);
     programmableLogicArray.BasicRom.SetContent(basicRomContents);
     programmableLogicArray.KernelRom.SetContent(kernelRomContents);
     programmableLogicArray.CharacterRom.SetContent(charRomContents);

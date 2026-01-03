@@ -5,6 +5,7 @@ namespace Dotnet6502.Common.Compilation;
 /// </summary>
 public static class Ir6502
 {
+    // TODO: Should probably refactor this to not create so much garbage
     public abstract record Instruction;
 
     public abstract record JumpTarget;

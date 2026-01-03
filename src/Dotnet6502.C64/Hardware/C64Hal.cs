@@ -1,4 +1,3 @@
-using Dotnet6502.C64.Emulation;
 using Dotnet6502.Common.Hardware;
 
 namespace Dotnet6502.C64.Hardware;
@@ -30,7 +29,7 @@ public class C64Hal : Base6502Hal
 
         for (var x = 0; x < count; x++)
         {
-            _vic2.RunSingleCpuCycle();
+            _vic2.RunSingleCycle();
         }
     }
 }
