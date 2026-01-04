@@ -11,9 +11,9 @@ var cliArgs = CommandLineHandler.Parse(args);
 Console.WriteLine("Starting Dotnet6502 Commodore64 emulator");
 var ioMemoryArea = new IoMemoryArea();
 var pla = await SetupPla(cliArgs);
-var memoryBus = SetupMemoryBus();
+var (memoryBus, screenRam) = SetupMemoryBus();
 var app = new MonogameApp(false);
-var vic2 = new Vic2(app, ioMemoryArea);
+var vic2 = new Vic2(app, ioMemoryArea, screenRam);
 var hal = new C64Hal(memoryBus, cancellationTokenSource.Token, vic2);
 var jitCustomizer = new C64JitCustomizer();
 var jitCompiler = new JitCompiler(hal, jitCustomizer, memoryBus);
@@ -66,19 +66,22 @@ async Task<ProgrammableLogicArray> SetupPla(CommandLineHandler.Values values)
     return programmableLogicArray;
 }
 
-MemoryBus SetupMemoryBus()
+(MemoryBus, ReadOnlyMemory<byte> screenRam) SetupMemoryBus()
 {
-    var memoryBus1 = new MemoryBus();
-    memoryBus1.Attach(pla, 0x0000);
-    pla.AttachToBus(memoryBus1);
+    var bus = new MemoryBus();
+    bus.Attach(pla, 0x0000);
+    pla.AttachToBus(bus);
 
     // fill in the rest with ram
-    memoryBus1.Attach(new BasicRamMemoryDevice(0x7fff - 0x0002 + 1), 0x0002);
-    memoryBus1.Attach(new BasicRamMemoryDevice(0xcfff - 0xc000 + 1), 0xc000);
+    var screenRamArea = new BasicRamMemoryDevice(0x07ff - 0x0400 + 1);
+    bus.Attach(new BasicRamMemoryDevice(0x03ff - 0x0002 + 1), 0x0002);
+    bus.Attach(screenRamArea, 0x0400);
+    bus.Attach(new BasicRamMemoryDevice(0x7fff - 0x0800 + 1), 0x0800);
+    bus.Attach(new BasicRamMemoryDevice(0xcfff - 0xc000 + 1), 0xc000);
 
     // TODO: Add cartridge rom low swapping to this region
-    memoryBus1.Attach(new BasicRamMemoryDevice(0x9fff - 0x8000 + 1), 0x8000);
-    return memoryBus1;
+    bus.Attach(new BasicRamMemoryDevice(0x9fff - 0x8000 + 1), 0x8000);
+    return (bus, screenRamArea.RawBlockFromZero!.Value);
 }
 
 async Task RunSystem()

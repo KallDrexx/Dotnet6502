@@ -8,18 +8,30 @@ namespace Dotnet6502.C64.Hardware;
 public class Vic2
 {
     // Reference: https://zimmers.net/cbmpics/cbm/c64/vic-ii.txt
+    public enum GraphicsMode
+    {
+        StandardTextMode,
+        MulticolorTextMode,
+        StandardBitmapMode,
+        MulticolorBitmapMode,
+        EcmTextMode,
+        Invalid,
+    }
+
     private const int DotsPerCpuCycle = 8;
     private const int DotsPerScanline = 520;
-    private const int VisibleDotsPerScanLine = 418;
+    public const int VisibleDotsPerScanLine = 418;
     private const int TotalScanlines = 263;
     private const int FirstVisibleScanline = 28;
     private const int LastVisibleScanLine = 262;
     private const int FirstDisplayWindowScanLine = 51;
     private const int LastDisplayWindowScanLine = 250;
-    private const int VisibleScanLines = LastVisibleScanLine - FirstVisibleScanline + 1;
+    public const int VisibleScanLines = LastVisibleScanLine - FirstVisibleScanline + 1;
 
     private readonly IC64Display _c64Display;
     private readonly Memory<byte> _vic2Registers;
+    // private readonly Memory<byte> _colorRam;
+    private readonly ReadOnlyMemory<byte> _screenRam;
     private readonly RgbColor[] _frameBuffer = new RgbColor[VisibleDotsPerScanLine * VisibleScanLines];
     private readonly RgbColor[] _palette = new RgbColor[16];
     private int _lineCycleCount;
@@ -48,10 +60,12 @@ public class Vic2
     /// </summary>
     private ushort _videoMatrixLineIndex;
 
-    public Vic2(IC64Display c64Display, IoMemoryArea ioMemoryArea)
+    public Vic2(IC64Display c64Display, IoMemoryArea ioMemoryArea, ReadOnlyMemory<byte> screenRam)
     {
         _c64Display = c64Display;
+        _screenRam = screenRam;
         _vic2Registers = ioMemoryArea.Vic2Registers;
+        // _colorRam = ioMemoryArea.ColorRam;
 
         // Fill in the palette values based on the Colodore Palette
         _palette[0] = new RgbColor(0, 0, 0);       // Black
@@ -182,6 +196,13 @@ public class Vic2
         var firstBorderBottomLine = rsel ? 247 : 251;
         var borderColor = registerData.BorderColor;
 
+        // var colorRam = _colorRam.Span;
+        var screenRam = _screenRam.Span;
+
+        var row = (_currentScanLine - FirstVisibleScanline) / 8;
+        var rowInChar = (_currentScanLine - FirstVisibleScanline) % 8;
+        var column = _lineCycleCount - 17;
+
         // Write the next 8 dots
         for (var x = 0; x < DotsPerCpuCycle; x++)
         {
@@ -195,6 +216,11 @@ public class Vic2
                 _frameBuffer[pixelIndex] = _palette[borderColor];
                 continue;
             }
+
+            // Standard text only mode atm
+            var columnInChar = x;
+            var charCode = screenRam[row * 40 + column];
+            // var color = colorRam[row * 40 + column];
         }
     }
 
@@ -209,5 +235,27 @@ public class Vic2
                _currentScanLine >= 48 &&
                _currentScanLine <= 247 &&
                (_currentScanLine & 0b111) == registerData.YScroll;
+    }
+
+    /// <summary>
+    /// Gets the current graphics mode based on the current register set
+    /// </summary>
+    /// <param name="registerData"></param>
+    /// <returns></returns>
+    private GraphicsMode GetGraphicsMode(Vic2RegisterData registerData)
+    {
+        var ecm = registerData.Ecm;
+        var bmm = registerData.Bmm;
+        var mcm = registerData.Mcm;
+
+        return (ecm, bmm, mcm) switch
+        {
+            (false, false, false) => GraphicsMode.StandardTextMode,
+            (false, false, true) => GraphicsMode.MulticolorTextMode,
+            (false, true, false) => GraphicsMode.StandardBitmapMode,
+            (false, true, true) => GraphicsMode.MulticolorBitmapMode,
+            (true, false, false) => GraphicsMode.EcmTextMode,
+            _ => GraphicsMode.Invalid,
+        };
     }
 }

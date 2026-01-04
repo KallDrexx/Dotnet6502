@@ -49,6 +49,12 @@ public readonly ref struct Vic2RegisterData
     /// </summary>
     public byte CharacterMapPointer => (byte)((_registerBytes[VmCb] & 0xF) >> 1);
 
+    public bool Ecm => (_registerBytes[ControlRegister1] & 0b0100_0000) > 0;
+
+    public bool Bmm => (_registerBytes[ControlRegister1] & 0b0010_0000) > 0;
+
+    public bool Mcm => (_registerBytes[ControlRegister2] & 0b00010000) > 0;
+
     /// <summary>
     /// - 7   = Raster bit 8
     /// - 6   = ECM

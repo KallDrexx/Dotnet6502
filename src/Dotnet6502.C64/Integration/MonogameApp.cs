@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Dotnet6502.C64.Emulation;
+using Dotnet6502.C64.Hardware;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -8,8 +9,8 @@ namespace Dotnet6502.C64.Integration;
 
 public class MonogameApp : Game, IC64Display
 {
-    private const int Width = 464;
-    private const int Height = 247;
+    private const int Width = Vic2.VisibleDotsPerScanLine;
+    private const int Height = Vic2.VisibleScanLines;
 
     private readonly GraphicsDeviceManager _graphicsDeviceManager;
     private readonly object _synchronizationLock = new();
