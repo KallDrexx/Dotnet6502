@@ -1,7 +1,7 @@
+using System.Diagnostics;
 using System.Reflection.Emit;
 using Dotnet6502.Common.Hardware;
 using NESDecompiler.Core.Decompilation;
-using NESDecompiler.Core.Disassembly;
 
 namespace Dotnet6502.Common.Compilation;
 

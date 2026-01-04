@@ -9,12 +9,19 @@ var cancellationTokenSource = new CancellationTokenSource();
 var cliArgs = CommandLineHandler.Parse(args);
 
 Console.WriteLine("Starting Dotnet6502 Commodore64 emulator");
+
+DebugWriter? logWriter = null;
+if (cliArgs.LogFile != null)
+{
+    logWriter = new DebugWriter(cliArgs.LogFile);
+}
+
 var ioMemoryArea = new IoMemoryArea();
 var pla = await SetupPla(cliArgs);
 var (memoryBus, screenRam) = SetupMemoryBus();
 var app = new MonogameApp(false);
 var vic2 = new Vic2(app, ioMemoryArea, screenRam);
-var hal = new C64Hal(memoryBus, cancellationTokenSource.Token, vic2);
+var hal = new C64Hal(memoryBus, cancellationTokenSource.Token, vic2, logWriter, cliArgs.InDebugMode);
 var jitCustomizer = new C64JitCustomizer();
 var jitCompiler = new JitCompiler(hal, jitCustomizer, memoryBus);
 await RunSystem();

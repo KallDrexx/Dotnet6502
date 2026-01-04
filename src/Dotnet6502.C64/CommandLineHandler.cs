@@ -2,11 +2,17 @@ namespace Dotnet6502.C64;
 
 public static class CommandLineHandler
 {
-    public record Values(FileInfo? BasicRom, FileInfo? KernelRom, FileInfo? CharacterRom);
+    public record Values(
+        FileInfo? BasicRom,
+        FileInfo? KernelRom,
+        FileInfo? CharacterRom,
+        FileInfo? LogFile,
+        bool InDebugMode);
 
     public static Values Parse(string[] args)
     {
-        FileInfo? basicRom = null, kernelRom = null, charRom = null;
+        FileInfo? basicRom = null, kernelRom = null, charRom = null, logFile = null;
+        var inDebugMode = false;
 
         for (var x = 0; x < args.Length; x++)
         {
@@ -38,10 +44,24 @@ public static class CommandLineHandler
                     }
 
                     break;
+
+                case "--log":
+                case "-l":
+                    if (x + 1 < args.Length && !args[x + 1].StartsWith("-"))
+                    {
+                        logFile = new FileInfo(args[++x]);
+                    }
+
+                    break;
+
+                case "--debug":
+                case "-d":
+                    inDebugMode = true;
+                    break;
             }
         }
 
-        return new Values(basicRom, kernelRom, charRom);
+        return new Values(basicRom, kernelRom, charRom, logFile, inDebugMode);
     }
 
     public static void ShowHelp()
@@ -56,6 +76,10 @@ public static class CommandLineHandler
                             --kernel     -k <file>     The Kernel ROM to load
                             --basic      -b <file>     The BASIC ROM to load
                             --char       -c <file>     The character rom to load
+                            
+                          Optional options
+                            --log        -l <file>     The file to write instruction log contents to
+                            --debug      -d            Enables debug mode which caches instruction
                           """);
     }
 }

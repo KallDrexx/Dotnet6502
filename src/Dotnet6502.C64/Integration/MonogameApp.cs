@@ -23,6 +23,7 @@ public class MonogameApp : Game, IC64Display
     private bool _displayQuit; // Tells the VIC-II that the display quit, and thus Monitor will never be pulsed
     private TimeSpan _totalTime;
     private int _frameCountSinceLastTimer;
+    private bool _warningRaised;
 
     public Task? C64CodeTask { get; set; }
 
@@ -127,10 +128,15 @@ public class MonogameApp : Game, IC64Display
         // Now that update has called, Signal to the C64 thread that it can continue with the next frame
         lock (_synchronizationLock)
         {
+            _texture.SetData(_pixelColors);
             _readyToContinue = true;
             Monitor.Pulse(_synchronizationLock);
 
-            _texture.SetData(_pixelColors);
+            if (_timer.Elapsed > TimeSpan.FromSeconds(60) && !_warningRaised)
+            {
+                Console.WriteLine($"Frame not received from vic2 in over 60 seconds");
+                _warningRaised = true;
+            }
         }
 
         var keyboardState = Keyboard.GetState();
