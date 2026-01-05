@@ -92,7 +92,7 @@ public class Vic2
 
         _lineCycleCount++;
         _lineDotCount += DotsPerCpuCycle;
-        if (_lineDotCount >= DotsPerCpuCycle)
+        if (_lineDotCount >= DotsPerScanline)
         {
             AdvanceToNextScanLine(registers);
         }
@@ -207,6 +207,11 @@ public class Vic2
         for (var x = 0; x < DotsPerCpuCycle; x++)
         {
             var dot = _lineDotCount + x;
+            if (dot >= VisibleDotsPerScanLine)
+            {
+                break;
+            }
+
             var pixelIndex = (_currentScanLine - FirstVisibleScanline) * VisibleDotsPerScanLine + dot;
             if (_currentScanLine <= lastBorderTopLine ||
                 _currentScanLine >= firstBorderBottomLine ||
@@ -218,8 +223,8 @@ public class Vic2
             }
 
             // Standard text only mode atm
-            var columnInChar = x;
-            var charCode = screenRam[row * 40 + column];
+            // var columnInChar = x;
+            // var charCode = screenRam[row * 40 + column];
             // var color = colorRam[row * 40 + column];
         }
     }
