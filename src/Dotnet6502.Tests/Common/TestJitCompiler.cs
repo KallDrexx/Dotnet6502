@@ -23,7 +23,7 @@ public class TestJitCompiler : JitCompiler
 
     public static TestJitCompiler Create()
     {
-        var memoryBus = new MemoryBus();
+        var memoryBus = new MemoryBus(0xFFFF + 1);
         var memoryMap = new TestMemoryMap();
         memoryBus.Attach(memoryMap, 0);
 

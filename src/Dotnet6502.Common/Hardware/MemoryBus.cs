@@ -15,7 +15,12 @@ public class MemoryBus
     /// Provides fast lookup of the index of the attached device mapped to a given region. Each index
     /// is incremented by 1, to allow a `0` to represent unmapped memory.
     /// </summary>
-    private readonly ushort[] _deviceIndexMap = new ushort[0x10000];
+    private readonly ushort[] _deviceIndexMap;
+
+    public MemoryBus(int memorySize)
+    {
+        _deviceIndexMap = new ushort[memorySize];
+    }
 
     public void Attach(IMemoryDevice device, ushort baseAddress)
     {

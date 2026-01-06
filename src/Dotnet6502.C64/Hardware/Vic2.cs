@@ -1,4 +1,5 @@
 using Dotnet6502.C64.Emulation;
+using Dotnet6502.Common.Hardware;
 
 namespace Dotnet6502.C64.Hardware;
 
@@ -8,7 +9,7 @@ namespace Dotnet6502.C64.Hardware;
 public class Vic2
 {
     // Reference: https://zimmers.net/cbmpics/cbm/c64/vic-ii.txt
-    public enum GraphicsMode
+    private enum GraphicsMode
     {
         StandardTextMode,
         MulticolorTextMode,
@@ -29,8 +30,8 @@ public class Vic2
     public const int VisibleScanLines = LastVisibleScanLine - FirstVisibleScanline + 1;
 
     private readonly IC64Display _c64Display;
-    private readonly Memory<byte> _vic2Registers;
-    private readonly Memory<byte> _colorRam;
+    private readonly BasicRamMemoryDevice _vic2Registers;
+    private readonly BasicRamMemoryDevice _colorRam;
     private readonly ReadOnlyMemory<byte> _screenRam;
     private readonly RgbColor[] _frameBuffer = new RgbColor[VisibleDotsPerScanLine * VisibleScanLines];
     private readonly RgbColor[] _palette = new RgbColor[16];
@@ -88,7 +89,7 @@ public class Vic2
 
     public void RunSingleCycle()
     {
-        var registers = new Vic2RegisterData(_vic2Registers.Span);
+        var registers = new Vic2RegisterData(_vic2Registers);
 
         _lineCycleCount++;
         _lineDotCount += DotsPerCpuCycle;

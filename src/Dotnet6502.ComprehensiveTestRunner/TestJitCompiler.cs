@@ -22,7 +22,7 @@ public class TestJitCompiler : JitCompiler
     public static TestJitCompiler Create()
     {
         var memoryMap = new TestMemoryMap();
-        var memoryBus = new MemoryBus();
+        var memoryBus = new MemoryBus(0xFFFF + 1);
         memoryBus.Attach(memoryMap, 0);
 
         var hal = new Base6502Hal(memoryBus);

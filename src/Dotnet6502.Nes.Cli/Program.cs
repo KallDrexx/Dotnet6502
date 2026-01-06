@@ -65,7 +65,7 @@ static (MonogameApp, CancellationTokenSource, MemoryBus, NesHal) SetupHardware(
 
 static MemoryBus SetupMemoryBus(Ppu ppu, MonogameApp monogameApp, byte[] bytes)
 {
-    var memoryBus = new MemoryBus();
+    var memoryBus = new MemoryBus(0xFFFF + 1);
     var cpuRam = new BasicRamMemoryDevice(0x800);
     var cartridgeSpace = new BasicRamMemoryDevice(0xBFE0);
 

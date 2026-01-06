@@ -1,10 +1,12 @@
+using Dotnet6502.Common.Hardware;
+
 namespace Dotnet6502.C64.Hardware;
 
 public readonly ref struct Vic2RegisterData
 {
-    private readonly Span<byte> _registerBytes;
+    private readonly BasicRamMemoryDevice _registerBytes;
 
-    public Vic2RegisterData(Span<byte> registerBytes)
+    public Vic2RegisterData(BasicRamMemoryDevice registerBytes)
     {
         _registerBytes = registerBytes;
     }
@@ -12,48 +14,48 @@ public readonly ref struct Vic2RegisterData
     /// <summary>
     /// Used for switching on/off the graphics
     /// </summary>
-    public bool DisplayEnable => (_registerBytes[ControlRegister1] & (1 << 4)) > 0;
+    public bool DisplayEnable => (_registerBytes.Read(ControlRegister1) & (1 << 4)) > 0;
 
-    public byte YScroll => (byte)(_registerBytes[ControlRegister1] & 0b111);
+    public byte YScroll => (byte)(_registerBytes.Read(ControlRegister1) & 0b111);
 
-    public bool RSel => (_registerBytes[ControlRegister1] & (1 << 3)) > 0;
+    public bool RSel => (_registerBytes.Read(ControlRegister1) & (1 << 3)) > 0;
 
-    public bool CSel => (_registerBytes[ControlRegister2] & (1 << 3)) > 0;
+    public bool CSel => (_registerBytes.Read(ControlRegister2) & (1 << 3)) > 0;
 
     public ushort RasterCounter
     {
         get
         {
-            var result = (ushort)((_registerBytes[ControlRegister1] & (1 << 7)) << 8);
-            result += _registerBytes[Raster];
+            var result = (ushort)((_registerBytes.Read(ControlRegister1) & (1 << 7)) << 8);
+            result += _registerBytes.Read(Raster);
             return result;
         }
         set
         {
             var msb = (value >> 8) & 1;
-            var cr1 = _registerBytes[ControlRegister1];
-            _registerBytes[ControlRegister1] = (byte)((cr1 & 0b0111_1111) + (msb << 7));
-            _registerBytes[Raster] = (byte)value;
+            var cr1 = _registerBytes.Read(ControlRegister1);
+            _registerBytes.Write(ControlRegister1, (byte)((cr1 & 0b0111_1111) + (msb << 7)));
+            _registerBytes.Write(Raster, (byte)value);
         }
     }
 
-    public byte BorderColor => (byte)(_registerBytes[Ec] & 0xF);
+    public byte BorderColor => (byte)(_registerBytes.Read(Ec) & 0xF);
 
     /// <summary>
     /// Pointer to the next area within the video matrix to load in
     /// </summary>
-    public byte ScreenPointer => (byte)(_registerBytes[VmCb] >> 4);
+    public byte ScreenPointer => (byte)(_registerBytes.Read(VmCb) >> 4);
 
     /// <summary>
     /// Points to the next area within the character map to load in
     /// </summary>
-    public byte CharacterMapPointer => (byte)((_registerBytes[VmCb] & 0xF) >> 1);
+    public byte CharacterMapPointer => (byte)((_registerBytes.Read(VmCb) & 0xF) >> 1);
 
-    public bool Ecm => (_registerBytes[ControlRegister1] & 0b0100_0000) > 0;
+    public bool Ecm => (_registerBytes.Read(ControlRegister1) & 0b0100_0000) > 0;
 
-    public bool Bmm => (_registerBytes[ControlRegister1] & 0b0010_0000) > 0;
+    public bool Bmm => (_registerBytes.Read(ControlRegister1) & 0b0010_0000) > 0;
 
-    public bool Mcm => (_registerBytes[ControlRegister2] & 0b00010000) > 0;
+    public bool Mcm => (_registerBytes.Read(ControlRegister2) & 0b00010000) > 0;
 
     /// <summary>
     /// - 7   = Raster bit 8

@@ -75,7 +75,7 @@ async Task<ProgrammableLogicArray> SetupPla(CommandLineHandler.Values values)
 
 (MemoryBus, ReadOnlyMemory<byte> screenRam) SetupMemoryBus()
 {
-    var bus = new MemoryBus();
+    var bus = new MemoryBus(0xFFFF + 1);
     bus.Attach(pla, 0x0000);
     pla.AttachToBus(bus);
 

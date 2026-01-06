@@ -16,7 +16,6 @@ public interface IMemoryDevice
     ///
     /// This is mostly used to retrieve regions of memory that could contain code to be disassembled.
     /// </summary>
-    /// <returns></returns>
     ReadOnlyMemory<byte>? RawBlockFromZero { get; }
 
     /// <summary>
@@ -27,7 +26,5 @@ public interface IMemoryDevice
     /// <summary>
     /// Reads a byte from the device based on the offset from where the device is mapped to on the bus
     /// </summary>
-    /// <param name="offset"></param>
-    /// <returns></returns>
     byte Read(ushort offset);
 }
