@@ -30,7 +30,7 @@ public class Vic2
 
     private readonly IC64Display _c64Display;
     private readonly Memory<byte> _vic2Registers;
-    // private readonly Memory<byte> _colorRam;
+    private readonly Memory<byte> _colorRam;
     private readonly ReadOnlyMemory<byte> _screenRam;
     private readonly RgbColor[] _frameBuffer = new RgbColor[VisibleDotsPerScanLine * VisibleScanLines];
     private readonly RgbColor[] _palette = new RgbColor[16];
@@ -65,7 +65,7 @@ public class Vic2
         _c64Display = c64Display;
         _screenRam = screenRam;
         _vic2Registers = ioMemoryArea.Vic2Registers;
-        // _colorRam = ioMemoryArea.ColorRam;
+        _colorRam = ioMemoryArea.ColorRam;
 
         // Colors from https://www.c64-wiki.com/wiki/Color
         _palette[0] = new RgbColor(0, 0, 0);        // Black
