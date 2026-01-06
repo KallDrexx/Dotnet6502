@@ -15,8 +15,8 @@ public class IoMemoryArea : IMemoryDevice
     public readonly BasicRamMemoryDevice Vic2Registers = new BasicRamMemoryDevice(64);
     public readonly BasicRamMemoryDevice SidRegisters = new BasicRamMemoryDevice(0x400);
     public readonly BasicRamMemoryDevice ColorRam = new BasicRamMemoryDevice(0x400);
-    public readonly BasicRamMemoryDevice Cia1 = new BasicRamMemoryDevice(0x100);
-    public readonly BasicRamMemoryDevice Cia2 = new BasicRamMemoryDevice(0x100);
+    public readonly ComplexInterfaceAdapter Cia1 = new();
+    public readonly ComplexInterfaceAdapter Cia2 = new();
     public readonly BasicRamMemoryDevice Io1 = new BasicRamMemoryDevice(0x100);
     public readonly BasicRamMemoryDevice Io2 = new BasicRamMemoryDevice(0x100);
 

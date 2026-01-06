@@ -24,7 +24,7 @@ public class ComplexInterfaceAdapter : IMemoryDevice
     public byte DataPortB { get; set; }
 
     /// <summary>
-    /// DDRA jegister.
+    /// DDRA register.
     /// Whether each bit of the DataPortA is read only (0) or read + write (1)
     /// </summary>
     public byte DataDirectionPortA { get; set; }
@@ -117,18 +117,137 @@ public class ComplexInterfaceAdapter : IMemoryDevice
     /// </summary>
     public byte SerialShiftRegister { get; set; }
 
+    /// <summary>
+    /// ICR register
+    /// </summary>
+    public byte InterruptControlAndStatus { get; set; }
+
+    /// <summary>
+    /// CRA register
+    /// </summary>
+    public byte ControlTimerA
+    {
+        get;
+        set
+        {
+            field = value;
+            _timerA.IsRunning = (value & 0b0000_0001) > 0;
+        }
+    }
+
+    /// <summary>
+    /// CRB register
+    /// </summary>
+    public byte ControlTimerB
+    {
+        get;
+        set
+        {
+            field = value;
+            _timerB.IsRunning = (value & 0b0000_0001) > 0;
+        }
+    }
+
     public void Write(ushort offset, byte value)
     {
-        throw new NotImplementedException();
+        switch (offset % 0x0F)
+        {
+            case 0x00:
+                DataPortA = value;
+                break;
+
+            case 0x01:
+                DataPortB = value;
+                break;
+
+            case 0x02:
+                DataDirectionPortA = value;
+                break;
+
+            case 0x03:
+                DataDirectionPortB = value;
+                break;
+
+            case 0x04:
+                TimerALowByte = value;
+                break;
+
+            case 0x05:
+                TimerAHighByte = value;
+                break;
+
+            case 0x06:
+                TimerBLowByte = value;
+                break;
+
+            case 0x07:
+                TimerBHighByte = value;
+                break;
+
+            case 0x08:
+                RealTimeClockTenthSeconds = value;
+                break;
+
+            case 0x09:
+                RealTimeClockSeconds = value;
+                break;
+
+            case 0x0A:
+                RealTimeClockMinutes = value;
+                break;
+
+            case 0x0B:
+                RealTimeClockHours = value;
+                break;
+
+            case 0x0C:
+                SerialShiftRegister = value;
+                break;
+
+            case 0x0D:
+                InterruptControlAndStatus = value;
+                break;
+
+            case 0x0E:
+                ControlTimerA = value;
+                break;
+
+            case 0x0F:
+                ControlTimerB = value;
+                break;
+
+            default:
+                throw new NotSupportedException(offset.ToString());
+        }
     }
 
     public byte Read(ushort offset)
     {
-        throw new NotImplementedException();
+        return (offset % 0x0F) switch
+        {
+            0x00 => DataPortA,
+            0x01 => DataPortB,
+            0x02 => DataDirectionPortA,
+            0x03 => DataDirectionPortB,
+            0x04 => TimerALowByte,
+            0x05 => TimerAHighByte,
+            0x06 => TimerBLowByte,
+            0x07 => TimerBHighByte,
+            0x08 => RealTimeClockTenthSeconds,
+            0x09 => RealTimeClockSeconds,
+            0x0A => RealTimeClockMinutes,
+            0x0B => RealTimeClockHours,
+            0x0C => SerialShiftRegister,
+            0x0D => InterruptControlAndStatus,
+            0x0E => ControlTimerA,
+            0x0F => ControlTimerB,
+            _ => throw new NotSupportedException(offset.ToString())
+        };
     }
 
     public void RunCycle()
     {
+
     }
 
     private class Timer

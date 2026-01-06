@@ -6,6 +6,7 @@ public class C64Hal : Base6502Hal
 {
     private readonly CancellationToken _cancellationToken;
     private readonly Vic2 _vic2;
+    private readonly IoMemoryArea _ioMemoryArea;
     private readonly DebugWriter? _debugWriter;
     private readonly Queue<string> _lastInstructions = new();
     private readonly bool _debugModeEnabled;
@@ -14,11 +15,13 @@ public class C64Hal : Base6502Hal
         MemoryBus memoryBus,
         CancellationToken cancellationToken,
         Vic2 vic2,
+        IoMemoryArea ioMemoryArea,
         DebugWriter? debugWriter,
         bool debugModeEnabled) : base(memoryBus)
     {
         _cancellationToken = cancellationToken;
         _vic2 = vic2;
+        _ioMemoryArea = ioMemoryArea;
         _debugWriter = debugWriter;
         _debugModeEnabled = debugModeEnabled;
     }
@@ -37,6 +40,8 @@ public class C64Hal : Base6502Hal
         for (var x = 0; x < count; x++)
         {
             _vic2.RunSingleCycle();
+            _ioMemoryArea.Cia1.RunCycle();
+            _ioMemoryArea.Cia2.RunCycle();
         }
     }
 
