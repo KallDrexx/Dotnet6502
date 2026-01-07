@@ -22,7 +22,20 @@ public class MemoryBus
         _deviceIndexMap = new ushort[memorySize];
     }
 
-    public void Attach(IMemoryDevice device, ushort baseAddress)
+    /// <summary>
+    /// Attaches a memory device to the bus at a specific address
+    /// </summary>
+    /// <param name="device">The device to add</param>
+    /// <param name="baseAddress">The base address this device is visible starting from</param>
+    /// <param name="allowsOverriding">
+    /// If true and the memory space is already occupied by another device, this device will take over
+    /// responding to memory requests from the specified base address onto the size of the device being
+    /// attached. This allows segmenting a portion of memory without needing to subdivide memory devices.
+    ///
+    /// If this is false, an exception will be thrown if any device has already claimed space between this
+    /// device's base address and end address.
+    /// </param>
+    public void Attach(IMemoryDevice device, ushort baseAddress, bool allowsOverriding = false)
     {
         if (_devices.Count == ushort.MaxValue - 1)
         {
@@ -30,29 +43,40 @@ public class MemoryBus
         }
 
         // Make sure this doesn't overlap with an existing device
-        var newDeviceEnd = baseAddress + device.Size;
-        foreach (var (existingStart, memoryDevice) in _devices)
+        if (!allowsOverriding)
         {
-            var existingEnd = existingStart + memoryDevice.Size;
-
-            if (existingEnd > baseAddress && existingStart < newDeviceEnd)
+            var newDeviceEnd = baseAddress + device.Size;
+            foreach (var (existingStart, memoryDevice) in _devices)
             {
-                var message = $"Cannot attach device {device.GetType().Name} at address 0x{baseAddress:X4}-" +
-                              $"0x{newDeviceEnd:X4} as it overlaps with an already attached device of type " +
-                              $"{memoryDevice.GetType().Name} is using addresses 0x{existingStart:X4}-" +
-                              $"0x{existingEnd:X4}";
+                var existingEnd = existingStart + memoryDevice.Size;
 
-                throw new InvalidOperationException(message);
+                if (existingEnd > baseAddress && existingStart < newDeviceEnd)
+                {
+                    var message = $"Cannot attach device {device.GetType().Name} at address 0x{baseAddress:X4}-" +
+                                  $"0x{newDeviceEnd:X4} as it overlaps with an already attached device of type " +
+                                  $"{memoryDevice.GetType().Name} is using addresses 0x{existingStart:X4}-" +
+                                  $"0x{existingEnd:X4}";
+
+                    throw new InvalidOperationException(message);
+                }
             }
         }
 
-        // If we got here we can attach it
-        _devices.Add(new AttachedDevice(baseAddress, device));
+        // If we got here we can attach it.
+        // Is this a new device or a respecification of an existing one?
+        var deviceIndex = _devices.FindIndex(x => x.Device == device);
+        if (deviceIndex < 0)
+        {
+            _devices.Add(new AttachedDevice(baseAddress, device));
+            deviceIndex = (ushort)_devices.Count - 1;
+        }
 
-        var index = (ushort)_devices.Count; // index is incremented so that 0 represents unmapped memory
+        // index is incremented so that 0 represents unmapped memory
+        deviceIndex++;
+
         for (var x = 0; x < device.Size; x++)
         {
-            _deviceIndexMap[baseAddress + x] = index;
+            _deviceIndexMap[baseAddress + x] = (ushort)deviceIndex;
         }
     }
 

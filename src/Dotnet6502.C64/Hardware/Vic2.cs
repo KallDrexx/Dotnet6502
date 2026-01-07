@@ -30,9 +30,9 @@ public class Vic2
     public const int VisibleScanLines = LastVisibleScanLine - FirstVisibleScanline + 1;
 
     private readonly IC64Display _c64Display;
-    private readonly BasicRamMemoryDevice _vic2Registers;
-    private readonly BasicRamMemoryDevice _colorRam;
-    private readonly ReadOnlyMemory<byte> _screenRam;
+    private readonly Vic2RegisterData _vic2Registers;
+    private readonly MemoryBus _ramView;
+    private readonly ComplexInterfaceAdapter _cia2;
     private readonly RgbColor[] _frameBuffer = new RgbColor[VisibleDotsPerScanLine * VisibleScanLines];
     private readonly RgbColor[] _palette = new RgbColor[16];
     private int _lineCycleCount;
@@ -61,12 +61,12 @@ public class Vic2
     /// </summary>
     private ushort _videoMatrixLineIndex;
 
-    public Vic2(IC64Display c64Display, IoMemoryArea ioMemoryArea, ReadOnlyMemory<byte> screenRam)
+    public Vic2(IC64Display c64Display, C64MemoryConfig memoryConfig)
     {
         _c64Display = c64Display;
-        _screenRam = screenRam;
-        _vic2Registers = ioMemoryArea.Vic2Registers;
-        _colorRam = ioMemoryArea.ColorRam;
+        _vic2Registers = new Vic2RegisterData(memoryConfig.IoMemoryArea.Vic2Registers);
+        _cia2 = memoryConfig.IoMemoryArea.Cia2;
+        _ramView = memoryConfig.Vic2MemoryBus;
 
         // Colors from https://www.c64-wiki.com/wiki/Color
         _palette[0] = new RgbColor(0, 0, 0);        // Black
@@ -89,20 +89,18 @@ public class Vic2
 
     public void RunSingleCycle()
     {
-        var registers = new Vic2RegisterData(_vic2Registers);
-
         _lineCycleCount++;
         _lineDotCount += DotsPerCpuCycle;
         if (_lineDotCount >= DotsPerScanline)
         {
-            AdvanceToNextScanLine(registers);
+            AdvanceToNextScanLine();
         }
 
-        RunMemoryAccessPhase(registers);
-        UpdateFramebuffer(registers);
+        RunMemoryAccessPhase();
+        UpdateFramebuffer();
     }
 
-    private void AdvanceToNextScanLine(Vic2RegisterData registers)
+    private void AdvanceToNextScanLine()
     {
         _currentScanLine++;
         _lineCycleCount = 0;
@@ -121,7 +119,7 @@ public class Vic2
         }
 
         // Update the raster counter
-        registers.RasterCounter = _currentScanLine;
+        _vic2Registers.RasterCounter = _currentScanLine;
 
         // Reset internal registers
         _videoCounter = 0;
@@ -129,7 +127,7 @@ public class Vic2
         _rowCounter = 0;
     }
 
-    private void RunMemoryAccessPhase(Vic2RegisterData registerData)
+    private void RunMemoryAccessPhase()
     {
         if (_lineCycleCount < 10)
         {
@@ -146,7 +144,7 @@ public class Vic2
             _videoCounter = _videoCounterBase;
             _videoMatrixLineIndex = 0;
 
-            if (IsBadline(registerData))
+            if (IsBadline())
             {
                 _rowCounter = 0;
 
@@ -179,7 +177,7 @@ public class Vic2
         }
     }
 
-    private void UpdateFramebuffer(Vic2RegisterData registerData)
+    private void UpdateFramebuffer()
     {
         if (_currentScanLine < FirstVisibleScanline ||
             _currentScanLine > LastVisibleScanLine || // just to be safe
@@ -189,20 +187,13 @@ public class Vic2
             return;
         }
 
-        var csel = registerData.CSel;
-        var rsel = registerData.RSel;
+        var csel = _vic2Registers.CSel;
+        var rsel = _vic2Registers.RSel;
         var lastBorderLeftDot = csel ? 24 : 31;
         var firstBorderRightDot = csel ? 344 : 335;
         var lastBorderTopLine = rsel ? 51 : 55;
         var firstBorderBottomLine = rsel ? 247 : 251;
-        var borderColor = registerData.BorderColor;
-
-        // var colorRam = _colorRam.Span;
-        var screenRam = _screenRam.Span;
-
-        var row = (_currentScanLine - FirstVisibleScanline) / 8;
-        var rowInChar = (_currentScanLine - FirstVisibleScanline) % 8;
-        var column = _lineCycleCount - 17;
+        var borderColor = _vic2Registers.BorderColor;
 
         // Write the next 8 dots
         for (var x = 0; x < DotsPerCpuCycle; x++)
@@ -235,12 +226,12 @@ public class Vic2
     /// CPU for 40 cycles in order to pull in new character and graphics data from memory.
     /// </summary>
     /// <returns></returns>
-    private bool IsBadline(Vic2RegisterData registerData)
+    private bool IsBadline()
     {
-        return registerData.DisplayEnable &&
+        return _vic2Registers.DisplayEnable &&
                _currentScanLine >= 48 &&
                _currentScanLine <= 247 &&
-               (_currentScanLine & 0b111) == registerData.YScroll;
+               (_currentScanLine & 0b111) == _vic2Registers.YScroll;
     }
 
     /// <summary>
@@ -263,5 +254,16 @@ public class Vic2
             (true, false, false) => GraphicsMode.EcmTextMode,
             _ => GraphicsMode.Invalid,
         };
+    }
+
+    private byte ReadRam(ushort address)
+    {
+        // The VIC only knows about the first 14 bits of the address. The 2 MSB are set by CIA2 to determine
+        // what bank the VIC ends up reading. The CIA2 has the two bits inverted, so 0b01 translates to
+        // 0b10 in the address call.
+        var bank = (ushort)(((_cia2.DataPortA & 0b11) ^ 0b11) << 14);
+        address = (ushort)(bank | (address & 0b0011_1111_1111_1111));
+
+        return _ramView.Read(address);
     }
 }

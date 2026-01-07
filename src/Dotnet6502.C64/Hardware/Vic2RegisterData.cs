@@ -2,7 +2,7 @@ using Dotnet6502.Common.Hardware;
 
 namespace Dotnet6502.C64.Hardware;
 
-public readonly ref struct Vic2RegisterData
+public class Vic2RegisterData
 {
     private readonly BasicRamMemoryDevice _registerBytes;
 

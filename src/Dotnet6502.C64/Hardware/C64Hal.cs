@@ -12,16 +12,15 @@ public class C64Hal : Base6502Hal
     private readonly bool _debugModeEnabled;
 
     public C64Hal(
-        MemoryBus memoryBus,
+        C64MemoryConfig memoryConfig,
         CancellationToken cancellationToken,
         Vic2 vic2,
-        IoMemoryArea ioMemoryArea,
         DebugWriter? debugWriter,
-        bool debugModeEnabled) : base(memoryBus)
+        bool debugModeEnabled) : base(memoryConfig.CpuMemoryBus)
     {
         _cancellationToken = cancellationToken;
         _vic2 = vic2;
-        _ioMemoryArea = ioMemoryArea;
+        _ioMemoryArea = memoryConfig.IoMemoryArea;
         _debugWriter = debugWriter;
         _debugModeEnabled = debugModeEnabled;
     }

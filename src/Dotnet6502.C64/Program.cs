@@ -1,9 +1,7 @@
 ﻿using Dotnet6502.C64;
-using Dotnet6502.C64.Emulation;
 using Dotnet6502.C64.Hardware;
 using Dotnet6502.C64.Integration;
 using Dotnet6502.Common.Compilation;
-using Dotnet6502.Common.Hardware;
 
 var cancellationTokenSource = new CancellationTokenSource();
 var cliArgs = CommandLineHandler.Parse(args);
@@ -16,22 +14,20 @@ if (cliArgs.LogFile != null)
     logWriter = new DebugWriter(cliArgs.LogFile);
 }
 
-var ioMemoryArea = new IoMemoryArea();
-var pla = await SetupPla(cliArgs);
-var (memoryBus, screenRam) = SetupMemoryBus();
+var memoryConfig = await SetupMemory();
 var app = new MonogameApp(false);
-var vic2 = new Vic2(app, ioMemoryArea, screenRam);
-var hal = new C64Hal(memoryBus, cancellationTokenSource.Token, vic2, ioMemoryArea, logWriter, cliArgs.InDebugMode);
+var vic2 = new Vic2(app, memoryConfig);
+var hal = new C64Hal(memoryConfig, cancellationTokenSource.Token, vic2, logWriter, cliArgs.InDebugMode);
 var jitCustomizer = new C64JitCustomizer();
-var jitCompiler = new JitCompiler(hal, jitCustomizer, memoryBus);
+var jitCompiler = new JitCompiler(hal, jitCustomizer, memoryConfig.CpuMemoryBus);
 await RunSystem();
 
 Console.WriteLine("Done");
 return 0;
 
-async Task<ProgrammableLogicArray> SetupPla(CommandLineHandler.Values values)
+async Task<C64MemoryConfig> SetupMemory()
 {
-    if (values.KernelRom == null)
+    if (cliArgs.KernelRom == null)
     {
         Console.WriteLine("Error: No kernel rom specified");
         Console.WriteLine();
@@ -40,7 +36,7 @@ async Task<ProgrammableLogicArray> SetupPla(CommandLineHandler.Values values)
         Environment.Exit(1);
     }
 
-    if (values.BasicRom == null)
+    if (cliArgs.BasicRom == null)
     {
         Console.WriteLine("Error: No basic rom specified");
         Console.WriteLine();
@@ -49,7 +45,7 @@ async Task<ProgrammableLogicArray> SetupPla(CommandLineHandler.Values values)
         Environment.Exit(1);
     }
 
-    if (values.CharacterRom == null)
+    if (cliArgs.CharacterRom == null)
     {
         Console.WriteLine("Error: No character rom specified");
         Console.WriteLine();
@@ -58,42 +54,21 @@ async Task<ProgrammableLogicArray> SetupPla(CommandLineHandler.Values values)
         Environment.Exit(1);
     }
 
-    var basicRomContents = await File.ReadAllBytesAsync(values.BasicRom.FullName);
-    var kernelRomContents = await File.ReadAllBytesAsync(values.KernelRom.FullName);
-    var charRomContents = await File.ReadAllBytesAsync(values.CharacterRom.FullName);
+    var basicRomContents = await File.ReadAllBytesAsync(cliArgs.BasicRom.FullName);
+    var kernelRomContents = await File.ReadAllBytesAsync(cliArgs.KernelRom.FullName);
+    var charRomContents = await File.ReadAllBytesAsync(cliArgs.CharacterRom.FullName);
 
-    var programmableLogicArray = new ProgrammableLogicArray(ioMemoryArea);
-    programmableLogicArray.BasicRom.SetContent(basicRomContents);
-    programmableLogicArray.KernelRom.SetContent(kernelRomContents);
-    programmableLogicArray.CharacterRom.SetContent(charRomContents);
+    var config = new C64MemoryConfig();
+    config.KernelRom.SetContent(kernelRomContents);
+    config.BasicRom.SetContent(basicRomContents);
+    config.CharRom.SetContent(charRomContents);
 
-    // Set the default map configuration value
-    programmableLogicArray.Write(1, 0b00110111);
-
-    return programmableLogicArray;
-}
-
-(MemoryBus, ReadOnlyMemory<byte> screenRam) SetupMemoryBus()
-{
-    var bus = new MemoryBus(0xFFFF + 1);
-    bus.Attach(pla, 0x0000);
-    pla.AttachToBus(bus);
-
-    // fill in the rest with ram
-    var screenRamArea = new BasicRamMemoryDevice(0x07ff - 0x0400 + 1);
-    bus.Attach(new BasicRamMemoryDevice(0x03ff - 0x0002 + 1), 0x0002);
-    bus.Attach(screenRamArea, 0x0400);
-    bus.Attach(new BasicRamMemoryDevice(0x7fff - 0x0800 + 1), 0x0800);
-    bus.Attach(new BasicRamMemoryDevice(0xcfff - 0xc000 + 1), 0xc000);
-
-    // TODO: Add cartridge rom low swapping to this region
-    bus.Attach(new BasicRamMemoryDevice(0x9fff - 0x8000 + 1), 0x8000);
-    return (bus, screenRamArea.RawBlockFromZero!.Value);
+    return config;
 }
 
 async Task RunSystem()
 {
-    var resetVector = (ushort)((memoryBus.Read(0xFFFD) << 8) | memoryBus.Read(0xFFFC));
+    var resetVector = (ushort)((memoryConfig.CpuMemoryBus.Read(0xFFFD) << 8) | memoryConfig.CpuMemoryBus.Read(0xFFFC));
     Console.WriteLine($"Starting at reset vector {resetVector:X4}");
 
     var c64Task = Task.Run(() =>
