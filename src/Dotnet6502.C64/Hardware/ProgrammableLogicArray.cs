@@ -48,19 +48,27 @@ public class ProgrammableLogicArray : IMemoryDevice
         {
             // RAM visible in all 3 sections
             _a000ToBfffDevice.SetRoutableDevice(_memoryConfig.FullRam, RoutableMemoryDevice.RoutableDirection.Read);
-            _d000ToDfffDevice.SetRoutableDevice(_memoryConfig.FullRam, RoutableMemoryDevice.RoutableDirection.Read);
+            _d000ToDfffDevice.SetRoutableDevice(_memoryConfig.FullRam, RoutableMemoryDevice.RoutableDirection.ReadAndWrite);
             _e000ToFfffDevice.SetRoutableDevice(_memoryConfig.FullRam, RoutableMemoryDevice.RoutableDirection.Read);
 
             return;
         }
 
         IMemoryDevice a0Device = (section & 0b011) == 0b11 ? _memoryConfig.BasicRom : _memoryConfig.FullRam;
-        IMemoryDevice d0Device = (section & 0b100) > 0 ? _memoryConfig.IoMemoryArea : _memoryConfig.CharRom;
         IMemoryDevice e0Device = (section & 0b011) == 0b01 ? _memoryConfig.FullRam : _memoryConfig.KernelRom;
 
         _a000ToBfffDevice.SetRoutableDevice(a0Device, RoutableMemoryDevice.RoutableDirection.Read);
-        _d000ToDfffDevice.SetRoutableDevice(d0Device, RoutableMemoryDevice.RoutableDirection.Read);
         _e000ToFfffDevice.SetRoutableDevice(e0Device, RoutableMemoryDevice.RoutableDirection.Read);
+
+        if ((section & 0b100) > 0)
+        {
+            _d000ToDfffDevice.SetRoutableDevice(_memoryConfig.IoMemoryArea, RoutableMemoryDevice.RoutableDirection.ReadAndWrite);
+        }
+        else
+        {
+            _d000ToDfffDevice.SetRoutableDevice(_memoryConfig.FullRam, RoutableMemoryDevice.RoutableDirection.Write);
+            _d000ToDfffDevice.SetRoutableDevice(_memoryConfig.CharRom, RoutableMemoryDevice.RoutableDirection.Read);
+        }
     }
 
     public uint Size => (uint) _cpuIoPort.Length;
