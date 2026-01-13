@@ -34,6 +34,10 @@ public class ProgrammableLogicArray : IMemoryDevice
         _memoryConfig.CpuMemoryBus.Attach(_d000ToDfffDevice, 0xd000, true);
         _memoryConfig.CpuMemoryBus.Attach(_e000ToFfffDevice, 0xe000, true);
 
+        _a000ToBfffDevice.SetRoutableDevice(memoryConfig.FullRam, RoutableMemoryDevice.RoutableDirection.ReadAndWrite);
+        _d000ToDfffDevice.SetRoutableDevice(memoryConfig.FullRam, RoutableMemoryDevice.RoutableDirection.ReadAndWrite);
+        _e000ToFfffDevice.SetRoutableDevice(memoryConfig.FullRam, RoutableMemoryDevice.RoutableDirection.ReadAndWrite);
+
         UpdateDevices();
     }
 

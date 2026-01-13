@@ -14,7 +14,7 @@ public class RoutableMemoryDevice : IMemoryDevice
     private IMemoryDevice? _routableDeviceForWrite;
 
     public uint Size { get; }
-    public ReadOnlyMemory<byte>? RawBlockFromZero => null;
+    public ReadOnlyMemory<byte>? RawBlockFromZero => _routableDeviceForRead!.RawBlockFromZero;
 
     public RoutableMemoryDevice(uint size)
     {
