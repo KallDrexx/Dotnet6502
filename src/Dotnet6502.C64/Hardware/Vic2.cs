@@ -33,6 +33,7 @@ public class Vic2
     private readonly Vic2RegisterData _vic2Registers;
     private readonly MemoryBus _ramView;
     private readonly ComplexInterfaceAdapter _cia2;
+    private readonly BasicRamMemoryDevice _colorRam;
     private readonly RgbColor[] _frameBuffer = new RgbColor[VisibleDotsPerScanLine * VisibleScanLines];
     private readonly RgbColor[] _palette = new RgbColor[16];
     private int _lineCycleCount;
@@ -61,12 +62,19 @@ public class Vic2
     /// </summary>
     private ushort _videoMatrixLineIndex;
 
+    /// <summary>
+    /// 40 entries of 12 bits. Bits 0-7 contain video matrix data (character codes) while
+    /// bits 8-11 contain color information.
+    /// </summary>
+    private ushort[] _videoColorBuffer = new ushort[40];
+
     public Vic2(IC64Display c64Display, C64MemoryConfig memoryConfig)
     {
         _c64Display = c64Display;
         _vic2Registers = new Vic2RegisterData(memoryConfig.IoMemoryArea.Vic2Registers);
         _cia2 = memoryConfig.IoMemoryArea.Cia2;
         _ramView = memoryConfig.Vic2MemoryBus;
+        _colorRam = memoryConfig.IoMemoryArea.ColorRam;
 
         // Colors from https://www.c64-wiki.com/wiki/Color
         _palette[0] = new RgbColor(0, 0, 0);        // Black
@@ -87,7 +95,14 @@ public class Vic2
         _palette[15] = new RgbColor(187, 187, 187); // Light Gray
     }
 
-    public void RunSingleCycle()
+    /// <summary>
+    /// Runs a single VIC-II cycle
+    /// </summary>
+    /// <returns>
+    /// True if a bad line condition has been meant. This indicates that the hardware should run
+    /// 40 cycles before executing the next CPU instruction.
+    /// </returns>
+    public bool RunSingleCycle()
     {
         _lineCycleCount++;
         _lineDotCount += DotsPerCpuCycle;
@@ -96,8 +111,10 @@ public class Vic2
             AdvanceToNextScanLine();
         }
 
-        RunMemoryAccessPhase();
+        var startsBadLine = RunMemoryAccessPhase();
         UpdateFramebuffer();
+
+        return startsBadLine;
     }
 
     private void AdvanceToNextScanLine()
@@ -127,7 +144,7 @@ public class Vic2
         _rowCounter = 0;
     }
 
-    private void RunMemoryAccessPhase()
+    private bool RunMemoryAccessPhase()
     {
         if (_lineCycleCount < 10)
         {
@@ -149,12 +166,21 @@ public class Vic2
                 _rowCounter = 0;
 
                 // TODO: trigger badline condition
+
+                return true;
             }
         }
 
         else if (_lineCycleCount < 54)
         {
             // Perform C-access read if we are in a badline
+            var ramAddress = _videoCounter;
+            ramAddress += (ushort)(_vic2Registers.ScreenPointer << 10);
+
+            var ramByte = ReadRam(ramAddress);
+
+            var colorByte = _colorRam.Read(_videoCounter);
+
         }
 
         else if (_lineCycleCount < 58)
@@ -175,6 +201,8 @@ public class Vic2
         {
             // TODO: Refresh cycles, more sprite checks
         }
+
+        return false;
     }
 
     private void UpdateFramebuffer()

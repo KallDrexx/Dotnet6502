@@ -38,9 +38,19 @@ public class C64Hal : Base6502Hal
 
         for (var x = 0; x < count; x++)
         {
-            _vic2.RunSingleCycle();
+            var badLineStarted = _vic2.RunSingleCycle();
             _ioMemoryArea.Cia1.RunCycle();
             _ioMemoryArea.Cia2.RunCycle();
+
+            if (badLineStarted)
+            {
+                for (var badLineCount = 0; badLineCount < 40; badLineCount++)
+                {
+                    _vic2.RunSingleCycle();
+                    _ioMemoryArea.Cia1.RunCycle();
+                    _ioMemoryArea.Cia2.RunCycle();
+                }
+            }
         }
     }
 

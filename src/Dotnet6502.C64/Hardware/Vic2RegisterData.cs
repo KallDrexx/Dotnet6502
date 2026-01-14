@@ -82,8 +82,8 @@ public class Vic2RegisterData
     private const ushort ControlRegister2 = 0x016;
 
     /// <summary>
-    /// - 7-4 = Screen pointer (A13-A10) (aka video screen matrix?)
-    /// - 3-1 = Bitmap/Charset pointer (A13-A11)
+    /// - 7-4 = Screen pointer (A13-A10) (aka video screen matrix?) (VM13-VM10)
+    /// - 3-1 = Bitmap/Charset pointer (A13-A11) / (CB13-CB11)
     /// - 0   = unused
     /// </summary>
     private const ushort VmCb = 0x018;
