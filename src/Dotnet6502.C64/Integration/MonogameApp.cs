@@ -185,7 +185,7 @@ public class MonogameApp : Game, IC64Display
         {
             // texture has a wider aspect ratio than the viewport, texture is width constrained.
             width = GraphicsDevice.Viewport.Width;
-            height = (int)Math.Round(width * textureAspectRatio);
+            height = (int)Math.Round(width / textureAspectRatio);
             startY = (GraphicsDevice.Viewport.Height - height) / 2;
         }
         else
