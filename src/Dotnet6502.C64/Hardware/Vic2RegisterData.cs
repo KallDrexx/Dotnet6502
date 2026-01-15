@@ -41,6 +41,8 @@ public class Vic2RegisterData
 
     public byte BorderColor => (byte)(_registerBytes.Read(Ec) & 0xF);
 
+    public byte BackgroundColor0 => (byte)(_registerBytes.Read(B0C) & 0xF);
+
     /// <summary>
     /// Pointer to the next area within the video matrix to load in
     /// </summary>
@@ -101,4 +103,9 @@ public class Vic2RegisterData
     /// Border color (bits 3-0)
     /// </summary>
     private const ushort Ec = 0x020;
+
+    /// <summary>
+    /// Background color 0 (bits 3-0)
+    /// </summary>
+    private const ushort B0C = 0x021;
 }

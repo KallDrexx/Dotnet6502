@@ -70,6 +70,11 @@ public class Vic2
     /// </summary>
     private ushort[] _videoColorBuffer = new ushort[40];
 
+    /// <summary>
+    /// Stores the 8-pixel pattern data from the most recent g-access.
+    /// </summary>
+    private byte[] _graphicsDataBuffer = new byte[40];
+
     public Vic2(IC64Display c64Display, C64MemoryConfig memoryConfig)
     {
         _c64Display = c64Display;
@@ -135,15 +140,13 @@ public class Vic2
             {
                 _frameBuffer[x] = new RgbColor(0, 0, 0);
             }
+
+            // Reset VCBASE at frame start only
+            _videoCounterBase = 0;
         }
 
         // Update the raster counter
         _vic2Registers.RasterCounter = _currentScanLine;
-
-        // Reset internal registers
-        _videoCounter = 0;
-        _videoMatrixLineIndex = 0;
-        _rowCounter = 0;
     }
 
     private bool RunMemoryAccessPhase()
@@ -173,23 +176,30 @@ public class Vic2
             }
         }
 
-        else if (_lineCycleCount < 54)
+        else if (_lineCycleCount >= 15 && _lineCycleCount <= 54)
         {
-            // Perform C-access read if we are in a badline
+            // C-access: fetch character code and color on badlines
             _inBadline = IsBadline();
             if (_inBadline)
             {
                 var ramAddress = _videoCounter;
                 ramAddress += (ushort)(_vic2Registers.ScreenPointer << 10);
-
-                var ramByte = ReadRam(ramAddress);
-
+                var charCode = ReadRam(ramAddress);
                 var colorByte = _colorRam.Read(_videoCounter);
+
+                // Store 12-bit value: bits 0-7 = char code, bits 8-11 = color
+                _videoColorBuffer[_videoMatrixLineIndex] = (ushort)(charCode | ((colorByte & 0x0F) << 8));
             }
 
-            // Perform G-access
+            // G-access: fetch pixel pattern from character generator
             if (_inDisplayState)
             {
+                var charCode = (byte)(_videoColorBuffer[_videoMatrixLineIndex] & 0xFF);
+                var charRomAddress = (ushort)((charCode * 8) + _rowCounter);
+                charRomAddress += (ushort)(_vic2Registers.CharacterMapPointer << 11);
+
+                _graphicsDataBuffer[_videoMatrixLineIndex] = ReadRam(charRomAddress);
+
                 _videoCounter++;
                 _videoMatrixLineIndex++;
             }
@@ -199,12 +209,18 @@ public class Vic2
         {
             if (_rowCounter == 7)
             {
-                _videoCounter = _videoCounterBase;
+                // Store VC into VCBASE at end of character row
+                _videoCounterBase = _videoCounter;
 
                 if (!_inBadline)
                 {
                     _inDisplayState = false;
                 }
+            }
+            else if (_inDisplayState)
+            {
+                // Increment row counter within character
+                _rowCounter++;
             }
         }
 
@@ -253,10 +269,30 @@ public class Vic2
                 continue;
             }
 
-            // Standard text only mode atm
-            // var columnInChar = x;
-            // var charCode = screenRam[row * 40 + column];
-            // var color = colorRam[row * 40 + column];
+            // Render standard text mode pixel
+            var displayX = dot - (csel ? 47 : 54);
+            var charColumn = displayX / 8;
+            var bitPosition = 7 - (displayX % 8);
+
+            if (charColumn >= 0 && charColumn < 40)
+            {
+                var pixelData = _graphicsDataBuffer[charColumn];
+                var isForeground = ((pixelData >> bitPosition) & 1) == 1;
+
+                if (isForeground)
+                {
+                    var fgColor = (_videoColorBuffer[charColumn] >> 8) & 0x0F;
+                    _frameBuffer[pixelIndex] = _palette[fgColor];
+                }
+                else
+                {
+                    _frameBuffer[pixelIndex] = _palette[_vic2Registers.BackgroundColor0];
+                }
+            }
+            else
+            {
+                _frameBuffer[pixelIndex] = _palette[_vic2Registers.BackgroundColor0];
+            }
         }
     }
 
