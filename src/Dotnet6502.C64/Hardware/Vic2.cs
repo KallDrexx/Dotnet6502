@@ -39,6 +39,8 @@ public class Vic2
     private int _lineCycleCount;
     private int _lineDotCount;
     private ushort _currentScanLine;
+    private bool _inDisplayState; // When false, in idle state
+    private bool _inBadline;
 
     /// <summary>
     /// AKA VC, 10-bit counter that tracks which character/sprite data to fetch from memory. It acts as the main
@@ -164,8 +166,8 @@ public class Vic2
             if (IsBadline())
             {
                 _rowCounter = 0;
-
-                // TODO: trigger badline condition
+                _inDisplayState = true;
+                _inBadline = true;
 
                 return true;
             }
@@ -174,26 +176,35 @@ public class Vic2
         else if (_lineCycleCount < 54)
         {
             // Perform C-access read if we are in a badline
-            var ramAddress = _videoCounter;
-            ramAddress += (ushort)(_vic2Registers.ScreenPointer << 10);
+            _inBadline = IsBadline();
+            if (_inBadline)
+            {
+                var ramAddress = _videoCounter;
+                ramAddress += (ushort)(_vic2Registers.ScreenPointer << 10);
 
-            var ramByte = ReadRam(ramAddress);
+                var ramByte = ReadRam(ramAddress);
 
-            var colorByte = _colorRam.Read(_videoCounter);
+                var colorByte = _colorRam.Read(_videoCounter);
+            }
 
-        }
-
-        else if (_lineCycleCount < 58)
-        {
-            // TODO: Graphics fetch - perform g-access (fetch character/bitmap data) using the character pointers
-            // from c-access
+            // Perform G-access
+            if (_inDisplayState)
+            {
+                _videoCounter++;
+                _videoMatrixLineIndex++;
+            }
         }
 
         else if (_lineCycleCount == 58)
         {
             if (_rowCounter == 7)
             {
+                _videoCounter = _videoCounterBase;
 
+                if (!_inBadline)
+                {
+                    _inDisplayState = false;
+                }
             }
         }
 
