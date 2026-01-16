@@ -449,6 +449,8 @@ public class MsilGenerator
         GeneratePushStackValue(new Ir6502.PushStackValue(addressLowByte), ilGenerator);
         GeneratePushStackValue(new Ir6502.PushStackValue(new Ir6502.AllFlags()), ilGenerator);
 
+        WriteDebugString(ilGenerator, $"Saving 0x{poll.ContinuationAddress:X4} as address on stack");
+
         // Set the interrupt disable flag to true
         var setFlagMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.SetFlag))!;
         ilGenerator.Emit(JitCompiler.LoadHalArg);
@@ -825,5 +827,13 @@ public class MsilGenerator
             Ir6502.FlagName.Negative => CpuStatusFlags.Negative,
             _ => throw new NotSupportedException(flagName.ToString())
         };
+    }
+
+    private static void WriteDebugString(ILGenerator ilGenerator, string debugMessage)
+    {
+        var debugHookMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.DebugHook))!;
+        ilGenerator.Emit(JitCompiler.LoadHalArg);
+        ilGenerator.Emit(OpCodes.Ldstr, debugMessage);
+        ilGenerator.Emit(OpCodes.Callvirt, debugHookMethod);
     }
 }

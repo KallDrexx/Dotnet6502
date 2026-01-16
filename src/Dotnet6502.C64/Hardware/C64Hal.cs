@@ -54,6 +54,18 @@ public class C64Hal : Base6502Hal
         }
     }
 
+    public override ushort PollForInterrupt()
+    {
+        if (_vic2.IrqTriggered && !GetFlag(CpuStatusFlags.InterruptDisable))
+        {
+            _debugWriter?.Log(this, "IRQ Triggered", true);
+            return 0xFFFE;
+        }
+
+        // No interrupt
+        return 0;
+    }
+
     public override void DebugHook(string info)
     {
         _debugWriter?.Log(this, info, true);

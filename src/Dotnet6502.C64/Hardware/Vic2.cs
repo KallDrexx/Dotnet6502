@@ -75,6 +75,20 @@ public class Vic2
     /// </summary>
     private byte[] _graphicsDataBuffer = new byte[40];
 
+    /// <summary>
+    /// Determines if the VIC triggers an IRQ. Will be set to false once the value is read.
+    /// </summary>
+    public bool IrqTriggered
+    {
+        get
+        {
+            var value = field;
+            field = false;
+            return value;
+        }
+        private set;
+    }
+
     public Vic2(IC64Display c64Display, C64MemoryConfig memoryConfig)
     {
         _c64Display = c64Display;
@@ -135,6 +149,7 @@ public class Vic2
             // Vblank starts
             _c64Display.RenderFrame(_frameBuffer);
             _currentScanLine = 0; // vblank period is the beginning of the scanlines
+            IrqTriggered = true;
 
             for (var x = 0; x < _frameBuffer.Length; x++)
             {
