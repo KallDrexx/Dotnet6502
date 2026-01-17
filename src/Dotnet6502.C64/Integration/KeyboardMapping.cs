@@ -145,7 +145,9 @@ public class KeyboardMapping
         {
             if (KeyMappings.TryGetValue(key, out var mapping))
             {
-                var (col, row) = mapping;
+                // NOTE: row/col are transposed due to a bug, not sure what's going wrong
+                // Probably something wrong with the CIA logic?
+                var (row, col) = mapping;
                 if ((columnMask & (1 << col)) == 0)
                 {
                     result &= ~(1 << row);
