@@ -15,11 +15,21 @@ if (cliArgs.LogFile != null)
 }
 
 var memoryConfig = await SetupMemory();
-var app = new MonogameApp(false);
+var keyboardMapping = new KeyboardMapping();
+var app = new MonogameApp(keyboardMapping, false);
 var vic2 = new Vic2(app, memoryConfig);
 var hal = new C64Hal(memoryConfig, cancellationTokenSource.Token, vic2, logWriter, cliArgs.InDebugMode);
 var jitCustomizer = new C64JitCustomizer();
 var jitCompiler = new JitCompiler(hal, jitCustomizer, memoryConfig.CpuMemoryBus);
+
+// Hook into CIA1's port B to check for keyboard scanning requests
+memoryConfig.IoMemoryArea.Cia1.ExternalPortBInput += () =>
+{
+    var columnMask = memoryConfig.IoMemoryArea.Cia1.DataPortA;
+    return keyboardMapping.GetRowValues(columnMask);
+};
+
+
 await RunSystem();
 
 Console.WriteLine("Done");
