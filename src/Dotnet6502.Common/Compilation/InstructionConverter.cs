@@ -16,7 +16,7 @@ public static class InstructionConverter
         Context context)
     {
         var results = new List<Ir6502.Instruction>();
-        if (instruction.Label != null)
+        if (instruction.Label != null && instruction.SubAddressOrder == 0)
         {
             results.Add(new Ir6502.Label(new Ir6502.Identifier(instruction.Label)));
         }
