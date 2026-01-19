@@ -8,7 +8,18 @@ public class ExecutableMethodCache
     // eviction every frame.
     public const int MaxCachedMethodCount = 2000;
 
-    private record MethodInfo(ExecutableMethod Method, HashSet<byte> RelevantPages, LinkedListNode<ushort> LruEntry);
+    /// <summary>
+    /// Information about a cached executable method
+    /// </summary>
+    /// <param name="Method">The delegate to execute the method with</param>
+    /// <param name="RelevantPages">Which memory pages are relevant to this method</param>
+    /// <param name="LruEntry">The exact node in the LRU that refers to this method</param>
+    /// <param name="InstructionAddresses">Every address relevant to the method</param>
+    private record MethodInfo(
+        ExecutableMethod Method,
+        HashSet<byte> RelevantPages,
+        LinkedListNode<ushort> LruEntry,
+        HashSet<ushort> InstructionAddresses);
 
     private readonly Dictionary<ushort, MethodInfo> _executableMethods = new();
 
@@ -35,7 +46,12 @@ public class ExecutableMethodCache
             .Select(x => GetPageNumber(x.CPUAddress))
             .ToHashSet();
 
-        var info = new MethodInfo(method, relevantPages, new LinkedListNode<ushort>(decompiledFunction.Address));
+        var relevantAddresses = decompiledFunction.OrderedInstructions
+            .Where(x => x.SubAddressOrder == 0) // only real instructions
+            .SelectMany(x => Enumerable.Range(0, x.Info.Size).Select(y => (ushort)(x.CPUAddress + y)))
+            .ToHashSet();
+
+        var info = new MethodInfo(method, relevantPages, new LinkedListNode<ushort>(decompiledFunction.Address), relevantAddresses);
         _executableMethods[decompiledFunction.Address] = info;
         _lruCache.AddLast(info.LruEntry);
 
@@ -78,6 +94,15 @@ public class ExecutableMethodCache
         _lruCache.AddLast(info.LruEntry);
 
         return info.Method;
+    }
+
+    /// <summary>
+    /// Checks if the specified address is part of an instruction from the specified function
+    /// </summary>
+    public bool AddressPartOfFunctionInstructions(ushort functionAddress, ushort checkAddress)
+    {
+        return _executableMethods.TryGetValue(functionAddress, out var info) &&
+               info.InstructionAddresses.Contains(checkAddress);
     }
 
     /// <summary>

@@ -18,11 +18,21 @@ public class JitCompiler
     private readonly MemoryBus _memoryBus;
     private readonly Queue<ushort> _ranMethods = new();
     protected readonly ExecutableMethodCache ExecutableMethodCache = new();
+    private ushort _currentlyExecutingAddress;
 
     public JitCompiler(Base6502Hal hal, IJitCustomizer? jitCustomizer, MemoryBus memoryBus)
     {
         _hal = hal;
-        _hal.OnMemoryWritten = address => ExecutableMethodCache.MemoryChanged(address);
+        _hal.OnMemoryWritten = address =>
+        {
+            ExecutableMethodCache.MemoryChanged(address);
+
+            if (AddressPartOfCurrentlyRunningFunction(address))
+            {
+                Console.WriteLine($"Self modifying code detected from function 0x{_currentlyExecutingAddress:X4}");
+            }
+        };
+
         _jitCustomizers = jitCustomizer != null
             ? [new StandardJitCustomizer(), jitCustomizer]
             : [new StandardJitCustomizer()];
@@ -57,9 +67,9 @@ public class JitCompiler
             }
 
             _hal.DebugHook($"Entering function 0x{nextAddress:X4}");
-            var currentAddress = nextAddress;
+            _currentlyExecutingAddress = (ushort) nextAddress;
             nextAddress = method(_hal);
-            _hal.DebugHook($"Exiting function 0x{currentAddress:X4}");
+            _hal.DebugHook($"Exiting function 0x{_currentlyExecutingAddress:X4}");
         }
 
         if (_ranMethods.Count == 0)
@@ -73,6 +83,14 @@ public class JitCompiler
 
             _hal.DebugHook($"Function path: {path}");
         }
+    }
+
+    /// <summary>
+    /// Checks if the specified address is part of the instruction set for the currently executing function
+    /// </summary>
+    public bool AddressPartOfCurrentlyRunningFunction(ushort address)
+    {
+        return ExecutableMethodCache.AddressPartOfFunctionInstructions(_currentlyExecutingAddress, address);
     }
 
     protected virtual DecompiledFunction DecompileFunction(ushort address)
