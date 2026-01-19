@@ -58,8 +58,20 @@ public class C64Hal : Base6502Hal
     {
         if (_vic2.IrqTriggered && !GetFlag(CpuStatusFlags.InterruptDisable))
         {
-            _debugWriter?.Log(this, "IRQ Triggered", true);
+            _debugWriter?.Log(this, "VIC-II IRQ Triggered", true);
             return 0xFFFE;
+        }
+
+        if (_ioMemoryArea.Cia1.IrqActive && !GetFlag(CpuStatusFlags.InterruptDisable))
+        {
+            _debugWriter?.Log(this, "CIA1 IRQ Triggered", true);
+            return 0xFFFE;
+        }
+
+        if (_ioMemoryArea.Cia2.IrqActive)
+        {
+            _debugWriter?.Log(this, "CIA2 NMI Triggered", true);
+            return 0xFFFA;
         }
 
         // No interrupt

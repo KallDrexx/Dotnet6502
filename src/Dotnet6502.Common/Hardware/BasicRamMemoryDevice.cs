@@ -11,6 +11,8 @@ public class BasicRamMemoryDevice : IMemoryDevice
 
     public ReadOnlyMemory<byte>? RawBlockFromZero => _bytes.AsMemory();
 
+    public Action<ushort, byte>? OnWriteDebugHook { get; set; }
+
     public BasicRamMemoryDevice(int size)
     {
         if (size is > ushort.MaxValue + 1 or <= 0)
@@ -41,6 +43,7 @@ public class BasicRamMemoryDevice : IMemoryDevice
 
     public void Write(ushort offset, byte value)
     {
+        OnWriteDebugHook?.Invoke(offset, value);
         _bytes[offset] = value;
     }
 
