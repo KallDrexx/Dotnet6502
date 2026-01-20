@@ -1,4 +1,3 @@
-using Dotnet6502.Common;
 using Dotnet6502.Common.Compilation;
 using Dotnet6502.Common.Hardware;
 using NESDecompiler.Core.CPU;
@@ -7,13 +6,6 @@ using Shouldly;
 
 namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 
-/// <summary>
-/// Tests for 6502 STX (Store X Register) instruction
-///
-/// STX stores the X register value to memory and:
-/// - Does NOT affect any processor status flags
-/// - Simply copies the X register value to the specified memory location
-/// </summary>
 public class StxTests
 {
     [Fact]
@@ -392,5 +384,72 @@ public class StxTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
         jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeFalse();
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void STX_Redirects_To_Next_Address_On_Recompile()
+    {
+        var instructionInfo = InstructionSet.GetInstruction(0x86);
+        var instruction = new DisassembledInstruction
+        {
+            Info = instructionInfo,
+            Bytes = [0x86, 0x10],
+            CPUAddress = 0x1234,
+        };
+
+        var instruction2 = new DisassembledInstruction
+        {
+            Info = instructionInfo,
+            Bytes = [0x86, 0x12],
+        };
+
+        var context = new InstructionConverter.Context(
+            new Dictionary<ushort, string>());
+
+        var jit = TestJitCompiler.Create();
+        jit.AddMethod(0x1234, InstructionConverter.Convert(instruction, context));
+        jit.AddMethod(0x1234 + 2, InstructionConverter.Convert(instruction2, context));
+
+        var count = 1;
+        jit.TestHal.OnMemoryWritten = _ => (count--) > 0;
+        jit.TestHal.XRegister = 0x42;
+        jit.Memory.MemoryBlock[0x10] = 0x00; // Initial value
+        jit.RunMethod(0x1234);
+
+        jit.Memory.MemoryBlock[0x10].ShouldBe((byte)0x42);
+        jit.Memory.MemoryBlock[0x12].ShouldBe((byte)0x42);
+    }
+
+    [Fact]
+    public void STX_Does_Not_Redirect_When_Recompile_Not_Needed()
+    {
+        var instructionInfo = InstructionSet.GetInstruction(0x86);
+        var instruction = new DisassembledInstruction
+        {
+            Info = instructionInfo,
+            Bytes = [0x86, 0x10],
+            CPUAddress = 0x1234,
+        };
+
+        var instruction2 = new DisassembledInstruction
+        {
+            Info = instructionInfo,
+            Bytes = [0x86, 0x12],
+        };
+
+        var context = new InstructionConverter.Context(
+            new Dictionary<ushort, string>());
+
+        var jit = TestJitCompiler.Create();
+        jit.AddMethod(0x1234, InstructionConverter.Convert(instruction, context));
+        jit.AddMethod(0x1234 + 2, InstructionConverter.Convert(instruction2, context));
+
+        jit.TestHal.OnMemoryWritten = _ => false;
+        jit.TestHal.XRegister = 0x42;
+        jit.Memory.MemoryBlock[0x10] = 0x00; // Initial value
+        jit.RunMethod(0x1234);
+
+        jit.Memory.MemoryBlock[0x10].ShouldBe((byte)0x42);
+        jit.Memory.MemoryBlock[0x12].ShouldBe((byte)0x0);
     }
 }

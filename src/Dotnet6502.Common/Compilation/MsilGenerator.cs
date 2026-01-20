@@ -121,6 +121,10 @@ public class MsilGenerator
                 GeneratePollForInterrupts(poll, ilGenerator);
                 break;
 
+            case Ir6502.PollForRecompilation recompilation:
+                GeneratePollForRecompilation(recompilation, ilGenerator);
+                break;
+
             default:
                 throw new NotSupportedException(instruction.GetType().FullName);
         }
@@ -483,6 +487,25 @@ public class MsilGenerator
         // Continue execution if we got this far
         ilGenerator.MarkLabel(continueExecution);
         ilGenerator.Emit(OpCodes.Nop); // Just in case a bug means we have no trailing instruction
+    }
+
+    private static void GeneratePollForRecompilation(Ir6502.PollForRecompilation recompilation, ILGenerator ilGenerator)
+    {
+        var pollMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.PollForRecompilation))!;
+        var continueExecution = ilGenerator.DefineLabel();
+
+        ilGenerator.Emit(JitCompiler.LoadHalArg);
+        ilGenerator.Emit(OpCodes.Callvirt, pollMethod);
+
+        // If true was returned, we need to return with the specified address. Otherwise, continue on.
+        ilGenerator.Emit(OpCodes.Ldc_I4_0);
+        ilGenerator.Emit(OpCodes.Beq, continueExecution);
+
+        ilGenerator.Emit(OpCodes.Ldc_I4, recompilation.AddressToReenterFrom);
+        ilGenerator.Emit(OpCodes.Ret);
+
+        ilGenerator.MarkLabel(continueExecution);
+        ilGenerator.Emit(OpCodes.Nop); // Guaranteed instruction to branch to
     }
 
     private static void LoadValueToStack(Ir6502.Value value, ILGenerator ilGenerator)

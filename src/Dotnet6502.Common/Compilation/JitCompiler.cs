@@ -27,10 +27,7 @@ public class JitCompiler
         {
             ExecutableMethodCache.MemoryChanged(address);
 
-            if (AddressPartOfCurrentlyRunningFunction(address))
-            {
-                Console.WriteLine($"Self modifying code detected from function 0x{_currentlyExecutingAddress:X4}");
-            }
+            return AddressPartOfCurrentlyRunningFunction(address);
         };
 
         _jitCustomizers = jitCustomizer != null

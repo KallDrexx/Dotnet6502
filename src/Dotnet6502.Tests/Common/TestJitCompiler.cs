@@ -19,6 +19,8 @@ public class TestJitCompiler : JitCompiler
     {
         Memory = memory;
         TestHal = testHal;
+
+        TestHal.OnMemoryWritten = null;
     }
 
     public static TestJitCompiler Create()

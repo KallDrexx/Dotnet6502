@@ -52,6 +52,13 @@ public static class Ir6502
 
     public record NoOp : Instruction;
 
+    /// <summary>
+    /// Polls the HAL if a recompilation circumstance has been detected. If the HAL reports that a
+    /// recompilation of the current function is required, re-enter the function from the specified
+    /// address.
+    /// </summary>
+    public record PollForRecompilation(ushort AddressToReenterFrom) : Instruction;
+
     public abstract record Value;
 
     public record Constant(byte Number) : Value;

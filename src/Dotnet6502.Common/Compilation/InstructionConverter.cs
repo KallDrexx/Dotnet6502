@@ -678,8 +678,9 @@ public static class InstructionConverter
         var store = new Ir6502.Copy(variable, operand);
         var zero = ZeroFlagInstruction(variable);
         var (checkNegative, setNegative) = NegativeFlagInstructions(variable, variable);
+        var poll = new Ir6502.PollForRecompilation((ushort)(instruction.CPUAddress + instruction.Info.Size));
 
-        return [subtract, store, zero, checkNegative, setNegative];
+        return [subtract, store, zero, checkNegative, setNegative, poll];
     }
 
     /// <summary>
@@ -753,8 +754,9 @@ public static class InstructionConverter
         var store = new Ir6502.Copy(variable, operand);
         var zero = ZeroFlagInstruction(variable);
         var (checkNegative, setNegative) = NegativeFlagInstructions(variable, variable);
+        var poll = new Ir6502.PollForRecompilation((ushort)(instruction.CPUAddress + instruction.Info.Size));
 
-        return [increment, convertToByte, store, zero, checkNegative, setNegative];
+        return [increment, convertToByte, store, zero, checkNegative, setNegative, poll];
     }
 
     /// <summary>
@@ -1470,8 +1472,9 @@ public static class InstructionConverter
         var register = new Ir6502.Register(Ir6502.RegisterName.Accumulator);
         var operand = ParseAddress(instruction);
         var copy = new Ir6502.Copy(register, operand);
+        var poll = new Ir6502.PollForRecompilation((ushort)(instruction.CPUAddress + instruction.Info.Size));
 
-        return [copy];
+        return [copy, poll];
     }
 
     /// <summary>
@@ -1482,8 +1485,9 @@ public static class InstructionConverter
         var register = new Ir6502.Register(Ir6502.RegisterName.XIndex);
         var operand = ParseAddress(instruction);
         var copy = new Ir6502.Copy(register, operand);
+        var poll = new Ir6502.PollForRecompilation((ushort)(instruction.CPUAddress + instruction.Info.Size));
 
-        return [copy];
+        return [copy, poll];
     }
 
     /// <summary>
@@ -1494,8 +1498,9 @@ public static class InstructionConverter
         var register = new Ir6502.Register(Ir6502.RegisterName.YIndex);
         var operand = ParseAddress(instruction);
         var copy = new Ir6502.Copy(register, operand);
+        var poll = new Ir6502.PollForRecompilation((ushort)(instruction.CPUAddress + instruction.Info.Size));
 
-        return [copy];
+        return [copy, poll];
     }
 
     /// <summary>

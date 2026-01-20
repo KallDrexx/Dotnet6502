@@ -2,7 +2,12 @@ namespace Dotnet6502.Common.Hardware;
 
 public class Base6502Hal
 {
-    public delegate void MemoryWriteEvent(ushort address);
+    /// <summary>
+    /// A delegate that allows the JIT to be notified of memory being changed. A value of
+    /// true being returned means that the currently executing function has had its instructions
+    /// modified.
+    /// </summary>
+    public delegate bool MemoryWriteEvent(ushort address);
 
     private readonly MemoryBus _memoryBus;
     private readonly Dictionary<CpuStatusFlags, bool> _flags  = new()
@@ -16,6 +21,8 @@ public class Base6502Hal
         { CpuStatusFlags.Overflow, false },
         { CpuStatusFlags.Zero, false },
     };
+
+    private bool _recompilationRequired;
 
     public byte ARegister { get; set; }
     public byte XRegister { get; set; }
@@ -70,7 +77,11 @@ public class Base6502Hal
     public virtual void WriteMemory(ushort address, byte value)
     {
         _memoryBus.Write(address, value);
-        OnMemoryWritten?.Invoke(address);
+        if (OnMemoryWritten?.Invoke(address) == true)
+        {
+            // Only reset via a poll or a new function call
+            _recompilationRequired = true;
+        }
     }
 
     public virtual void PushToStack(byte value)
@@ -99,6 +110,14 @@ public class Base6502Hal
     public virtual ushort PollForInterrupt()
     {
         return 0;
+    }
+
+    public bool PollForRecompilation()
+    {
+        var previous = _recompilationRequired;
+        _recompilationRequired = false;
+
+        return previous;
     }
 
     public virtual void DebugHook(string info)

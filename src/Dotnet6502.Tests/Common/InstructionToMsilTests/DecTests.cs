@@ -1,4 +1,3 @@
-using Dotnet6502.Common;
 using Dotnet6502.Common.Compilation;
 using Dotnet6502.Common.Hardware;
 using NESDecompiler.Core.CPU;
@@ -7,16 +6,6 @@ using Shouldly;
 
 namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 
-/// <summary>
-/// Tests for 6502 DEC (Decrement Memory) instruction
-///
-/// 6502 DEC Behavior:
-/// - Decrements memory location by 1
-/// - Sets Zero flag if result is 0x00
-/// - Sets Negative flag if bit 7 of result is set
-/// - Does NOT affect Carry or Overflow flags
-/// - Wraparound behavior: 0x00 - 1 = 0xFF
-/// </summary>
 public class DecTests
 {
     [Fact]
@@ -281,5 +270,38 @@ public class DecTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue(); // 0xFF has bit 7 set
         jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeFalse();
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void DEC_Redirects_When_Recompile_Requested()
+    {
+        var instructionInfo = InstructionSet.GetInstruction(0xC6);
+        var instruction1 = new DisassembledInstruction
+        {
+            Info = instructionInfo,
+            Bytes = [0xC6, 0x10],
+            CPUAddress = 0x1234,
+        };
+
+        var instruction2 = new DisassembledInstruction
+        {
+            Info = instructionInfo,
+            Bytes = [0xC6, 0x11],
+        };
+        var context = new InstructionConverter.Context(
+            new Dictionary<ushort, string>());
+
+        var jit = TestJitCompiler.Create();
+        jit.AddMethod(0x1234, InstructionConverter.Convert(instruction1, context));
+        jit.AddMethod(0x1234 + 2, InstructionConverter.Convert(instruction2, context));
+
+        var count = 1;
+        jit.TestHal.OnMemoryWritten = _ => (count--) > 0;
+        jit.Memory.MemoryBlock[0x10] = 0x05;
+        jit.Memory.MemoryBlock[0x11] = 0x08;
+        jit.RunMethod(0x1234);
+
+        jit.Memory.MemoryBlock[0x10].ShouldBe((byte)0x04);
+        jit.Memory.MemoryBlock[0x11].ShouldBe((byte)0x07);
     }
 }
