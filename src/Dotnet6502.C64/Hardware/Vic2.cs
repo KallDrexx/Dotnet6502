@@ -97,23 +97,23 @@ public class Vic2
         _ramView = memoryConfig.Vic2MemoryBus;
         _colorRam = memoryConfig.IoMemoryArea.ColorRam;
 
-        // Colors from https://www.c64-wiki.com/wiki/Color
+        // Colodore palette - https://www.colodore.com/
         _palette[0] = new RgbColor(0, 0, 0);        // Black
         _palette[1] = new RgbColor(255, 255, 255);  // White
-        _palette[2] = new RgbColor(136, 0, 0);      // Red
-        _palette[3] = new RgbColor(170, 255, 238);  // Cyan
-        _palette[4] = new RgbColor(204, 68, 204);   // Purple
-        _palette[5] = new RgbColor(0, 204, 85);     // Green
-        _palette[6] = new RgbColor(0, 0, 170);      // Blue
-        _palette[7] = new RgbColor(238, 238, 119);  // Yellow
-        _palette[8] = new RgbColor(221, 136, 85);   // Orange
-        _palette[9] = new RgbColor(102, 68, 0);     // Brown
-        _palette[10] = new RgbColor(255, 119, 119); // Light Red
-        _palette[11] = new RgbColor(51, 51, 51);    // Dark Gray
-        _palette[12] = new RgbColor(119, 119, 119); // Gray
-        _palette[13] = new RgbColor(170, 255, 102); // Light Green
-        _palette[14] = new RgbColor(0, 136, 255);   // Light Blue
-        _palette[15] = new RgbColor(187, 187, 187); // Light Gray
+        _palette[2] = new RgbColor(129, 51, 56);    // Red
+        _palette[3] = new RgbColor(117, 206, 200);  // Cyan
+        _palette[4] = new RgbColor(142, 60, 151);   // Purple
+        _palette[5] = new RgbColor(86, 172, 77);    // Green
+        _palette[6] = new RgbColor(46, 44, 155);    // Blue
+        _palette[7] = new RgbColor(237, 241, 113);  // Yellow
+        _palette[8] = new RgbColor(142, 80, 41);    // Orange
+        _palette[9] = new RgbColor(85, 56, 0);      // Brown
+        _palette[10] = new RgbColor(196, 108, 113); // Light Red
+        _palette[11] = new RgbColor(74, 74, 74);    // Dark Gray
+        _palette[12] = new RgbColor(123, 123, 123); // Gray
+        _palette[13] = new RgbColor(169, 255, 159); // Light Green
+        _palette[14] = new RgbColor(112, 109, 235); // Light Blue
+        _palette[15] = new RgbColor(178, 178, 178); // Light Gray
     }
 
     /// <summary>
