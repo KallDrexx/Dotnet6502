@@ -13,7 +13,7 @@ public class TestJitCompiler : JitCompiler
     public Base6502Hal TestHal { get; }
 
     private TestJitCompiler(Base6502Hal testHal, TestMemoryMap testMemoryMap, MemoryBus memoryBus)
-        : base(testHal, null, memoryBus)
+        : base(testHal, null, memoryBus, new Ir6502Interpreter())
     {
         MemoryMap = testMemoryMap;
         TestHal = testHal;

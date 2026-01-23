@@ -19,7 +19,7 @@ var (app, nesCodeCancellationTokenSource, memoryBus, hal) = SetupHardware(
     programRomData);
 
 var jitCustomizer = new NesJitCustomizer();
-var jitCompiler = new JitCompiler(hal, jitCustomizer, memoryBus);
+var jitCompiler = new JitCompiler(hal, jitCustomizer, memoryBus, new Ir6502Interpreter());
 
 await RunRom(romInfo, jitCompiler, app, nesCodeCancellationTokenSource);
 

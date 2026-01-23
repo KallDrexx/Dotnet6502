@@ -1,4 +1,5 @@
 ﻿using Dotnet6502.Common.Hardware;
+using NESDecompiler.Core.Disassembly;
 
 namespace Dotnet6502.Common.Compilation;
 
@@ -7,17 +8,30 @@ namespace Dotnet6502.Common.Compilation;
 /// </summary>
 public class Ir6502Interpreter
 {
+    public delegate void CustomInstructionHandler(Ir6502.Instruction instruction, Base6502Hal hal, int[] locals);
+
+    private readonly Dictionary<Type, CustomInstructionHandler> _customHandlers = new();
+
+    public void AddHandler<T>(CustomInstructionHandler handler) where T : Ir6502.Instruction
+    {
+        _customHandlers.Add(typeof(T), handler);
+    }
+
     public ExecutableMethod CreateExecutableMethod(IReadOnlyList<ConvertedInstruction> instructions)
     {
-        var flattenedInstructions = instructions.SelectMany(x => x.Ir6502Instructions).ToArray();
+        var flattenedInstructions = instructions
+            .SelectMany(x => x.Ir6502Instructions.Select(y => new { Orig = x.OriginalInstruction, Ir = y }))
+            .Select(x => new KeyValuePair<Ir6502.Instruction, DisassembledInstruction>(x.Ir, x.Orig))
+            .ToArray();
+
         var labelTargets = BuildLabelTargets(flattenedInstructions);
         var localCount = GetMaxLocalCount(flattenedInstructions);
 
         return hal => Execute(flattenedInstructions, labelTargets, localCount, hal);
     }
 
-    private static int Execute(
-        IReadOnlyList<Ir6502.Instruction> instructions,
+    private int Execute(
+        IReadOnlyList<KeyValuePair<Ir6502.Instruction, DisassembledInstruction>> instructions,
         IReadOnlyDictionary<Ir6502.Identifier, int> labelTargets,
         int localCount,
         Base6502Hal hal)
@@ -27,88 +41,107 @@ public class Ir6502Interpreter
 
         while (instructionPointer < instructions.Count)
         {
-            switch (instructions[instructionPointer])
+            var instructionKvp = instructions[instructionPointer];
+            var instruction = instructionKvp.Key;
+
+            // First check custom instructions
+            if (_customHandlers.TryGetValue(instruction.GetType(), out var handler))
             {
-                case Ir6502.Binary binary:
-                    ExecuteBinary(binary, hal, locals);
-                    break;
+                handler(instruction, hal, locals);
+            }
+            else
+            {
+                switch (instruction)
+                {
+                    case Ir6502.Binary binary:
+                        ExecuteBinary(binary, hal, locals);
+                        break;
 
-                case Ir6502.CallFunction callFunction:
-                    return ResolveCallTarget(callFunction.CallTarget, hal, locals);
+                    case Ir6502.CallFunction callFunction:
+                        return ResolveCallTarget(callFunction.CallTarget, hal, locals);
 
-                case Ir6502.ConvertVariableToByte convert:
-                    locals[convert.Variable.Index] = (byte)locals[convert.Variable.Index];
-                    break;
+                    case Ir6502.ConvertVariableToByte convert:
+                        locals[convert.Variable.Index] = (byte)locals[convert.Variable.Index];
+                        break;
 
-                case Ir6502.Copy copy:
-                    var value = ReadValue(copy.Source, hal, locals);
-                    WriteValue(copy.Destination, value, hal, locals);
-                    break;
+                    case Ir6502.Copy copy:
+                        var value = ReadValue(copy.Source, hal, locals);
+                        WriteValue(copy.Destination, value, hal, locals);
+                        break;
 
-                case Ir6502.DebugValue debugValue:
-                    hal.DebugHook($"{debugValue.ValueToLog} value: {ReadValue(debugValue.ValueToLog, hal, locals)}");
-                    break;
+                    case Ir6502.DebugValue debugValue:
+                        hal.DebugHook(
+                            $"{debugValue.ValueToLog} value: {ReadValue(debugValue.ValueToLog, hal, locals)}");
+                        break;
 
-                case Ir6502.Jump jump:
-                    instructionPointer = ResolveLabel(jump.Target, labelTargets);
-                    continue;
-
-                case Ir6502.JumpIfNotZero jump:
-                    if (ReadValue(jump.Condition, hal, locals) != 0)
-                    {
+                    case Ir6502.Jump jump:
                         instructionPointer = ResolveLabel(jump.Target, labelTargets);
                         continue;
-                    }
-                    break;
 
-                case Ir6502.JumpIfZero jump:
-                    if (ReadValue(jump.Condition, hal, locals) == 0)
-                    {
-                        instructionPointer = ResolveLabel(jump.Target, labelTargets);
-                        continue;
-                    }
-                    break;
+                    case Ir6502.JumpIfNotZero jump:
+                        if (ReadValue(jump.Condition, hal, locals) != 0)
+                        {
+                            instructionPointer = ResolveLabel(jump.Target, labelTargets);
+                            continue;
+                        }
 
-                case Ir6502.Label:
-                    break;
+                        break;
 
-                case Ir6502.NoOp:
-                    break;
+                    case Ir6502.JumpIfZero jump:
+                        if (ReadValue(jump.Condition, hal, locals) == 0)
+                        {
+                            instructionPointer = ResolveLabel(jump.Target, labelTargets);
+                            continue;
+                        }
 
-                case Ir6502.PopStackValue pop:
-                    WriteValue(pop.Destination, hal.PopFromStack(), hal, locals);
-                    break;
+                        break;
 
-                case Ir6502.PushStackValue push:
-                    hal.PushToStack((byte)ReadValue(push.Source, hal, locals));
-                    break;
+                    case Ir6502.Label:
+                        break;
 
-                case Ir6502.Return returnInstruction:
-                    return ReadValue(returnInstruction.VariableWithReturnAddress, hal, locals);
+                    case Ir6502.NoOp:
+                        break;
 
-                case Ir6502.StoreDebugString debugString:
-                    hal.DebugHook(debugString.Text);
-                    break;
+                    case Ir6502.PopStackValue pop:
+                        WriteValue(pop.Destination, hal.PopFromStack(), hal, locals);
+                        break;
 
-                case Ir6502.Unary unary:
-                    ExecuteUnary(unary, hal, locals);
-                    break;
+                    case Ir6502.PushStackValue push:
+                        hal.PushToStack((byte)ReadValue(push.Source, hal, locals));
+                        break;
 
-                case Ir6502.PollForInterrupt poll:
-                    var nextAddress = ExecutePollForInterrupt(poll, hal);
-                    if (nextAddress != 0)
-                    {
-                        return nextAddress;
-                    }
-                    break;
+                    case Ir6502.Return returnInstruction:
+                        return ReadValue(returnInstruction.VariableWithReturnAddress, hal, locals);
 
-                case Ir6502.PollForRecompilation:
-                    // Self-modifying routines should not trigger JIT re-entry; consume the flag and continue.
-                    hal.PollForRecompilation();
-                    break;
+                    case Ir6502.StoreDebugString debugString:
+                        hal.DebugHook(debugString.Text);
+                        break;
 
-                default:
-                    throw new NotSupportedException(instructions[instructionPointer].GetType().FullName);
+                    case Ir6502.Unary unary:
+                        ExecuteUnary(unary, hal, locals);
+                        break;
+
+                    case Ir6502.PollForInterrupt poll:
+                        var nextAddress = ExecutePollForInterrupt(poll, hal);
+                        if (nextAddress != 0)
+                        {
+                            return nextAddress;
+                        }
+
+                        break;
+
+                    case Ir6502.PollForRecompilation:
+                        if (hal.PollForRecompilation())
+                        {
+                            // Return the next instruction to start recompilation from
+                            var originalInstruction = instructionKvp.Value;
+                            return originalInstruction.CPUAddress + originalInstruction.Info.Size;
+                        }
+                        break;
+
+                    default:
+                        throw new NotSupportedException(instruction.GetType().FullName);
+                }
             }
 
             instructionPointer++;
@@ -352,12 +385,12 @@ public class Ir6502Interpreter
     }
 
     private static IReadOnlyDictionary<Ir6502.Identifier, int> BuildLabelTargets(
-        IReadOnlyList<Ir6502.Instruction> instructions)
+        IReadOnlyList<KeyValuePair<Ir6502.Instruction, DisassembledInstruction>> instructions)
     {
         var labels = new Dictionary<Ir6502.Identifier, int>();
         for (var i = 0; i < instructions.Count; i++)
         {
-            if (instructions[i] is Ir6502.Label label)
+            if (instructions[i].Key is Ir6502.Label label)
             {
                 labels[label.Name] = i;
             }
@@ -366,11 +399,12 @@ public class Ir6502Interpreter
         return labels;
     }
 
-    private static int GetMaxLocalCount(IReadOnlyList<Ir6502.Instruction> instructions)
+    private static int GetMaxLocalCount(IReadOnlyList<KeyValuePair<Ir6502.Instruction, DisassembledInstruction>> instructions)
     {
         var largestLocalCount = 0;
-        foreach (var instruction in instructions)
+        foreach (var kvp in instructions)
         {
+            var instruction = kvp.Key;
             var valueProperties = instruction.GetType()
                 .GetProperties()
                 .Where(x => x.PropertyType == typeof(Ir6502.Value))

@@ -17,11 +17,11 @@ public class JitCompiler
     private readonly IReadOnlyList<IJitCustomizer> _jitCustomizers;
     private readonly MemoryBus _memoryBus;
     private readonly Queue<ushort> _ranMethods = new();
-    private readonly Ir6502Interpreter _interpreter = new();
+    private readonly Ir6502Interpreter _interpreter;
     protected readonly ExecutableMethodCache ExecutableMethodCache = new();
     private ushort _currentlyExecutingAddress;
 
-    public JitCompiler(Base6502Hal hal, IJitCustomizer? jitCustomizer, MemoryBus memoryBus)
+    public JitCompiler(Base6502Hal hal, IJitCustomizer? jitCustomizer, MemoryBus memoryBus, Ir6502Interpreter interpreter)
     {
         _hal = hal;
         _hal.OnMemoryWritten = address =>
@@ -36,6 +36,7 @@ public class JitCompiler
             : [new StandardJitCustomizer()];
 
         _memoryBus = memoryBus;
+        _interpreter = interpreter;
     }
 
     /// <summary>
@@ -116,6 +117,7 @@ public class JitCompiler
 
         if (SelfModifyingCodeDetector.TryDetect(function, out var affectedAddresses))
         {
+            Console.WriteLine($"Function 0x{function.Address} has self-modifying code");
             function.IsSelfModifying = true;
             _hal.DebugHook(
                 $"Self-modifying pattern detected in function 0x{function.Address:X4} at " +

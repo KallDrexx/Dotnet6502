@@ -13,6 +13,22 @@ public class C64JitCustomizer : IJitCustomizer
 
     private record CallDebugHook(string Info) : Ir6502.Instruction;
 
+    public void AddInstructions(Ir6502Interpreter interpreter)
+    {
+        interpreter.AddHandler<CallDebugHook>((instruction, hal, _) =>
+        {
+            var inst = (CallDebugHook)instruction;
+            hal.DebugHook(inst.Info);
+        });
+
+        interpreter.AddHandler<IncrementCycleCount>((instruction, hal, _) =>
+        {
+            var inst = (IncrementCycleCount)instruction;
+            var c64Hal = (C64Hal)hal;
+            c64Hal.IncrementCpuCycleCount(inst.Cycles);
+        });
+    }
+
     public IReadOnlyList<ConvertedInstruction> MutateInstructions(IReadOnlyList<ConvertedInstruction> instructions)
     {
         var result = new List<ConvertedInstruction>();
