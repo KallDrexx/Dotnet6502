@@ -17,6 +17,7 @@ public class JitCompiler
     private readonly IReadOnlyList<IJitCustomizer> _jitCustomizers;
     private readonly MemoryBus _memoryBus;
     private readonly Queue<ushort> _ranMethods = new();
+    private readonly Ir6502Interpreter _interpreter = new();
     protected readonly ExecutableMethodCache ExecutableMethodCache = new();
     private ushort _currentlyExecutingAddress;
 
@@ -43,7 +44,7 @@ public class JitCompiler
     public void RunMethod(ushort address)
     {
         int nextAddress = address;
-        while (nextAddress >= 0 )
+        while (nextAddress >= 0)
         {
             var method = ExecutableMethodCache.GetMethodForAddress((ushort)nextAddress);
             if (method == null)
@@ -53,7 +54,21 @@ public class JitCompiler
                 var customGenerators = _jitCustomizers.SelectMany(x => x.GetCustomIlGenerators())
                     .ToDictionary(x => x.Key, x => x.Value);
 
-                method = ExecutableMethodGenerator.Generate($"func_{function.Address:X4}", instructions, customGenerators);
+                if (function.IsSelfModifying)
+                {
+                    // Self-modifying routines (e.g. GETCHR-style operand patching) can repeatedly
+                    // invalidate JITed code, so we route them through the interpreter instead.
+                    _hal.DebugHook(
+                        $"Detected self-modifying code at 0x{function.Address:X4}; routing through interpreter.");
+                    method = _interpreter.CreateExecutableMethod(instructions);
+                }
+                else
+                {
+                    method = ExecutableMethodGenerator.Generate(
+                        $"func_{function.Address:X4}",
+                        instructions,
+                        customGenerators);
+                }
                 ExecutableMethodCache.AddExecutableMethod(method, function);
             }
 
@@ -64,7 +79,7 @@ public class JitCompiler
             }
 
             _hal.DebugHook($"Entering function 0x{nextAddress:X4}");
-            _currentlyExecutingAddress = (ushort) nextAddress;
+            _currentlyExecutingAddress = (ushort)nextAddress;
             nextAddress = method(_hal);
             _hal.DebugHook($"Exiting function 0x{_currentlyExecutingAddress:X4}");
         }
@@ -97,6 +112,14 @@ public class JitCompiler
         {
             var message = $"Function at address 0x{address:X4} contained no instructions";
             throw new InvalidOperationException(message);
+        }
+
+        if (SelfModifyingCodeDetector.TryDetect(function, out var affectedAddresses))
+        {
+            function.IsSelfModifying = true;
+            _hal.DebugHook(
+                $"Self-modifying pattern detected in function 0x{function.Address:X4} at " +
+                $"{string.Join(", ", affectedAddresses.Select(addr => $"0x{addr:X4}"))}");
         }
 
         return function;
