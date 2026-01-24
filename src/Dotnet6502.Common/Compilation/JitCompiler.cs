@@ -117,7 +117,7 @@ public class JitCompiler
 
         if (SelfModifyingCodeDetector.TryDetect(function, out var affectedAddresses))
         {
-            Console.WriteLine($"Function 0x{function.Address} has self-modifying code");
+            Console.WriteLine($"Function 0x{function.Address:X4} has self-modifying code");
             function.IsSelfModifying = true;
             _hal.DebugHook(
                 $"Self-modifying pattern detected in function 0x{function.Address:X4} at " +

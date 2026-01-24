@@ -34,17 +34,16 @@ public class BcsTests
         var context = new InstructionConverter.Context(
             labels);
 
-        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var irInstructions = InstructionConverter.Convert(instruction, context);
 
         // Add setup and target instructions around the branch
         var allInstructions = new List<Ir6502.Instruction>
         {
             // Set up carry flag as set
             new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Carry)),
-
-            // Add the BCS instruction
-            nesIrInstructions[0],
-
+        };
+        allInstructions.AddRange(irInstructions);
+        allInstructions.AddRange([
             // Instruction that should be skipped if branch is taken
             new Ir6502.Copy(new Ir6502.Constant(99), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
@@ -53,7 +52,7 @@ public class BcsTests
 
             // Instruction that should be executed at branch target
             new Ir6502.Copy(new Ir6502.Constant(42), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
-        };
+        ]);
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
@@ -81,17 +80,16 @@ public class BcsTests
         var context = new InstructionConverter.Context(
             labels);
 
-        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var irInstructions = InstructionConverter.Convert(instruction, context);
 
         // Add setup and target instructions around the branch
         var allInstructions = new List<Ir6502.Instruction>
         {
             // Set up carry flag as clear
             new Ir6502.Copy(new Ir6502.Constant(0), new Ir6502.Flag(Ir6502.FlagName.Carry)),
-
-            // Add the BCS instruction
-            nesIrInstructions[0],
-
+        };
+        allInstructions.AddRange(irInstructions);
+        allInstructions.AddRange([
             // Instruction that should be executed if branch is NOT taken
             new Ir6502.Copy(new Ir6502.Constant(77), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
@@ -100,7 +98,7 @@ public class BcsTests
 
             // Instruction that should be skipped if branch is not taken
             new Ir6502.Copy(new Ir6502.Constant(88), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
-        };
+        ]);
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
@@ -128,7 +126,7 @@ public class BcsTests
         var context = new InstructionConverter.Context(
             labels);
 
-        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var irInstructions = InstructionConverter.Convert(instruction, context);
 
         // Add setup for a loop-like scenario
         var allInstructions = new List<Ir6502.Instruction>
@@ -152,10 +150,8 @@ public class BcsTests
                 new Ir6502.Register(Ir6502.RegisterName.XIndex),
                 new Ir6502.Constant(3),
                 new Ir6502.Flag(Ir6502.FlagName.Carry)),
-
-            // Add the BCS instruction (will branch if carry is set)
-            nesIrInstructions[0]
         };
+        allInstructions.AddRange(irInstructions);
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
@@ -181,7 +177,7 @@ public class BcsTests
         var context = new InstructionConverter.Context(
             labels);
 
-        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var irInstructions = InstructionConverter.Convert(instruction, context);
 
         var allInstructions = new List<Ir6502.Instruction>
         {
@@ -190,13 +186,12 @@ public class BcsTests
             new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Zero)),
             new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Negative)),
             new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Overflow)),
-
-            // Add the BCS instruction
-            nesIrInstructions[0],
-
+        };
+        allInstructions.AddRange(irInstructions);
+        allInstructions.AddRange([
             // Target label
             new Ir6502.Label(new Ir6502.Identifier("target"))
-        };
+        ]);
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
@@ -235,19 +230,18 @@ public class BcsTests
         var context = new InstructionConverter.Context(
             labels);
 
-        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var irInstructions = InstructionConverter.Convert(instruction, context);
 
         var allInstructions = new List<Ir6502.Instruction>
         {
             // Set carry set for branch to occur
             new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Carry)),
-
-            // Add the BCS instruction
-            nesIrInstructions[0],
-
+        };
+        allInstructions.AddRange(irInstructions);
+        allInstructions.AddRange([
             // Target label
             new Ir6502.Label(new Ir6502.Identifier("target"))
-        };
+        ]);
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
@@ -283,16 +277,15 @@ public class BcsTests
         var context = new InstructionConverter.Context(
             labels);
 
-        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var irInstructions = InstructionConverter.Convert(instruction, context);
 
         var allInstructions = new List<Ir6502.Instruction>
         {
             // Set carry set
             new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Carry)),
-
-            // Add the BCS instruction
-            nesIrInstructions[0],
-
+        };
+        allInstructions.AddRange(irInstructions);
+        allInstructions.AddRange([
             // This should be skipped
             new Ir6502.Copy(new Ir6502.Constant(111), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
@@ -301,7 +294,7 @@ public class BcsTests
 
             // This should be executed
             new Ir6502.Copy(new Ir6502.Constant(222), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
-        };
+        ]);
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
@@ -328,7 +321,7 @@ public class BcsTests
         var context = new InstructionConverter.Context(
             labels);
 
-        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var irInstructions = InstructionConverter.Convert(instruction, context);
 
         var allInstructions = new List<Ir6502.Instruction>
         {
@@ -351,10 +344,8 @@ public class BcsTests
                 new Ir6502.Register(Ir6502.RegisterName.XIndex),
                 new Ir6502.Constant(1),
                 new Ir6502.Register(Ir6502.RegisterName.XIndex)),
-
-            // Add the BCS instruction
-            nesIrInstructions[0]
         };
+        allInstructions.AddRange(irInstructions);
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
@@ -381,7 +372,7 @@ public class BcsTests
         var context = new InstructionConverter.Context(
             labels);
 
-        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var irInstructions = InstructionConverter.Convert(instruction, context);
 
         // Test case 1: After operation that clears carry
         {
@@ -389,10 +380,9 @@ public class BcsTests
             {
                 // Simulate operation that clears carry flag
                 new Ir6502.Copy(new Ir6502.Constant(0), new Ir6502.Flag(Ir6502.FlagName.Carry)),
-
-                // Add the BCS instruction
-                nesIrInstructions[0],
-
+            };
+            allInstructions.AddRange(irInstructions);
+            allInstructions.AddRange([
                 // This should execute (branch NOT taken)
                 new Ir6502.Copy(new Ir6502.Constant(50), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
@@ -401,7 +391,7 @@ public class BcsTests
 
                 // This should also execute
                 new Ir6502.Copy(new Ir6502.Constant(100), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
-            };
+            ]);
 
             var jit1 = TestJitCompiler.Create();
             jit1.AddMethod(0x1234, allInstructions);
@@ -419,10 +409,9 @@ public class BcsTests
             {
                 // Simulate operation that sets carry flag (like overflow addition)
                 new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Carry)),
-
-                // Add the BCS instruction
-                nesIrInstructions[0],
-
+            };
+            allInstructions.AddRange(irInstructions);
+            allInstructions.AddRange([
                 // This should be skipped (branch taken)
                 new Ir6502.Copy(new Ir6502.Constant(75), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
@@ -431,7 +420,7 @@ public class BcsTests
 
                 // This should execute
                 new Ir6502.Copy(new Ir6502.Constant(150), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
-            };
+            ]);
 
             var jit2 = TestJitCompiler.Create();
             jit2.AddMethod(0x1234, allInstructions);

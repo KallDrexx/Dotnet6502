@@ -125,6 +125,10 @@ public class MsilGenerator
                 GeneratePollForRecompilation(recompilation, ilGenerator);
                 break;
 
+            case Ir6502.RecordCurrentInstructionAddress record:
+                GenerateRecordInstructionAddress(record, ilGenerator);
+                break;
+
             default:
                 throw new NotSupportedException(instruction.GetType().FullName);
         }
@@ -487,6 +491,19 @@ public class MsilGenerator
         // Continue execution if we got this far
         ilGenerator.MarkLabel(continueExecution);
         ilGenerator.Emit(OpCodes.Nop); // Just in case a bug means we have no trailing instruction
+    }
+
+    private static void GenerateRecordInstructionAddress(
+        Ir6502.RecordCurrentInstructionAddress record,
+        ILGenerator ilGenerator)
+    {
+        var setInstructionMethod = typeof(Base6502Hal)
+            .GetProperty(nameof(Base6502Hal.CurrentInstructionAddress))!
+            .SetMethod!;
+
+        ilGenerator.Emit(JitCompiler.LoadHalArg);
+        ilGenerator.Emit(OpCodes.Ldc_I4, (int)record.Address);
+        ilGenerator.Emit(OpCodes.Callvirt, setInstructionMethod);
     }
 
     private static void GeneratePollForRecompilation(Ir6502.PollForRecompilation recompilation, ILGenerator ilGenerator)

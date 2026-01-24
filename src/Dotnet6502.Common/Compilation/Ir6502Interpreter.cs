@@ -139,6 +139,10 @@ public class Ir6502Interpreter
                         }
                         break;
 
+                    case Ir6502.RecordCurrentInstructionAddress record:
+                        hal.CurrentInstructionAddress = record.Address;
+                        break;
+
                     default:
                         throw new NotSupportedException(instruction.GetType().FullName);
                 }

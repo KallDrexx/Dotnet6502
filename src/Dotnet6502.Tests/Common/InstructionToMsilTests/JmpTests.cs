@@ -34,14 +34,12 @@ public class JmpTests
         var context = new InstructionConverter.Context(
             labels);
 
-        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var irInstructions = InstructionConverter.Convert(instruction, context);
 
         // Add setup and target instructions around the jump
-        var allInstructions = new List<Ir6502.Instruction>
-        {
-            // Add the JMP instruction
-            nesIrInstructions[0],
-
+        var allInstructions = new List<Ir6502.Instruction>();
+        allInstructions.AddRange(irInstructions);
+        allInstructions.AddRange([
             // Instruction that should be skipped (never reached)
             new Ir6502.Copy(new Ir6502.Constant(99), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
@@ -50,10 +48,10 @@ public class JmpTests
 
             // Instruction that should be executed at jump target
             new Ir6502.Copy(new Ir6502.Constant(42), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
-        };
+        ]);
 
         var jit = TestJitCompiler.Create();
-        jit.AddMethod(0x1234, allInstructions);
+        jit.AddMethod(0x1234, allInstructions, true);
         jit.RunMethod(0x1234);
 
         // Jump should always be taken, skipping X register assignment
@@ -114,7 +112,7 @@ public class JmpTests
         var context = new InstructionConverter.Context(
             labels);
 
-        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var irInstructions = InstructionConverter.Convert(instruction, context);
 
         var allInstructions = new List<Ir6502.Instruction>
         {
@@ -123,13 +121,12 @@ public class JmpTests
             new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Zero)),
             new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Negative)),
             new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Overflow)),
-
-            // Add the JMP instruction
-            nesIrInstructions[0],
-
+        };
+        allInstructions.AddRange(irInstructions);
+        allInstructions.AddRange([
             // Target label
             new Ir6502.Label(new Ir6502.Identifier("target"))
-        };
+        ]);
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
@@ -168,7 +165,7 @@ public class JmpTests
         var context = new InstructionConverter.Context(
             labels);
 
-        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var irInstructions = InstructionConverter.Convert(instruction, context);
 
         var allInstructions = new List<Ir6502.Instruction>
         {
@@ -177,13 +174,12 @@ public class JmpTests
             new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Zero)),
             new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Negative)),
             new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Overflow)),
-
-            // Add the JMP indirect instruction
-            nesIrInstructions[0],
-
+        };
+        allInstructions.AddRange(irInstructions);
+        allInstructions.AddRange([
             // Target label
             new Ir6502.Label(new Ir6502.Identifier("target"))
-        };
+        ]);
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
@@ -229,16 +225,14 @@ public class JmpTests
         var context = new InstructionConverter.Context(
             labels);
 
-        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var irInstructions = InstructionConverter.Convert(instruction, context);
 
-        var allInstructions = new List<Ir6502.Instruction>
-        {
-            // Add the JMP instruction
-            nesIrInstructions[0],
-
+        var allInstructions = new List<Ir6502.Instruction>();
+        allInstructions.AddRange(irInstructions);
+        allInstructions.AddRange([
             // Target label
             new Ir6502.Label(new Ir6502.Identifier("target"))
-        };
+        ]);
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
@@ -273,16 +267,14 @@ public class JmpTests
         var context = new InstructionConverter.Context(
             labels);
 
-        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var irInstructions = InstructionConverter.Convert(instruction, context);
 
-        var allInstructions = new List<Ir6502.Instruction>
-        {
-            // Add the JMP indirect instruction
-            nesIrInstructions[0],
-
+        var allInstructions = new List<Ir6502.Instruction>();
+        allInstructions.AddRange(irInstructions);
+        allInstructions.AddRange([
             // Target label
             new Ir6502.Label(new Ir6502.Identifier("target"))
-        };
+        ]);
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
@@ -322,13 +314,11 @@ public class JmpTests
         var context = new InstructionConverter.Context(
             labels);
 
-        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var irInstructions = InstructionConverter.Convert(instruction, context);
 
-        var allInstructions = new List<Ir6502.Instruction>
-        {
-            // Add the JMP instruction
-            nesIrInstructions[0],
-
+        var allInstructions = new List<Ir6502.Instruction>();
+        allInstructions.AddRange(irInstructions);
+        allInstructions.AddRange([
             // This should be skipped
             new Ir6502.Copy(new Ir6502.Constant(111), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
@@ -337,7 +327,7 @@ public class JmpTests
 
             // This should be executed
             new Ir6502.Copy(new Ir6502.Constant(222), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
-        };
+        ]);
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
@@ -356,20 +346,19 @@ public class JmpTests
         {
             Info = instructionInfo,
             Bytes = [0x4C, 0x00, 0x00], // JMP $0000 (lowest address)
-            TargetAddress = 0x0000
+            TargetAddress = 0x0000,
+            CPUAddress = 0x1122
         };
 
         var labels = new Dictionary<ushort, string> { { 0x0000, "low_target" } };
         var context = new InstructionConverter.Context(
             labels);
 
-        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var irInstructions = InstructionConverter.Convert(instruction, context);
 
-        var allInstructions = new List<Ir6502.Instruction>
-        {
-            // Add the JMP instruction
-            nesIrInstructions[0],
-
+        var allInstructions = new List<Ir6502.Instruction>();
+        allInstructions.AddRange(irInstructions);
+        allInstructions.AddRange([
             // This should be skipped
             new Ir6502.Copy(new Ir6502.Constant(88), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
@@ -378,7 +367,7 @@ public class JmpTests
 
             // This should be executed
             new Ir6502.Copy(new Ir6502.Constant(99), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
-        };
+        ]);
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
@@ -405,7 +394,7 @@ public class JmpTests
         var context = new InstructionConverter.Context(
             labels);
 
-        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var irInstructions = InstructionConverter.Convert(instruction, context);
 
         // Test with all flags set to different states
         foreach (bool carryState in new[] { true, false })
@@ -420,10 +409,9 @@ public class JmpTests
                 new Ir6502.Copy(new Ir6502.Constant((byte)(zeroState ? 1 : 0)), new Ir6502.Flag(Ir6502.FlagName.Zero)),
                 new Ir6502.Copy(new Ir6502.Constant((byte)(negativeState ? 1 : 0)), new Ir6502.Flag(Ir6502.FlagName.Negative)),
                 new Ir6502.Copy(new Ir6502.Constant((byte)(overflowState ? 1 : 0)), new Ir6502.Flag(Ir6502.FlagName.Overflow)),
-
-                // Add the JMP instruction
-                nesIrInstructions[0],
-
+            };
+            allInstructions.AddRange(irInstructions);
+            allInstructions.AddRange([
                 // This should always be skipped
                 new Ir6502.Copy(new Ir6502.Constant(44), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
@@ -432,7 +420,7 @@ public class JmpTests
 
                 // This should always be executed
                 new Ir6502.Copy(new Ir6502.Constant(55), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
-            };
+            ]);
 
             var jit = TestJitCompiler.Create();
             jit.AddMethod(0x1234, allInstructions);

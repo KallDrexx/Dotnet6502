@@ -59,6 +59,12 @@ public static class Ir6502
     /// </summary>
     public record PollForRecompilation(ushort AddressToReenterFrom) : Instruction;
 
+    /// <summary>
+    /// Tells the HAL the 6502 instruction address that is currently being processed
+    /// </summary>
+    /// <param name="Address"></param>
+    public record RecordCurrentInstructionAddress(ushort Address) : Instruction;
+
     public abstract record Value;
 
     public record Constant(byte Number) : Value;

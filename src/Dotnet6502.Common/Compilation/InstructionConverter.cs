@@ -21,6 +21,8 @@ public static class InstructionConverter
             results.Add(new Ir6502.Label(new Ir6502.Identifier(instruction.Label)));
         }
 
+        results.Add(new Ir6502.RecordCurrentInstructionAddress(instruction.CPUAddress));
+
         switch (instruction.Info.Mnemonic)
         {
             case "ADC": results.AddRange(ConvertAdc(instruction)); break;

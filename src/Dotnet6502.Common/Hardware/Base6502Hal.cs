@@ -28,6 +28,7 @@ public class Base6502Hal
     public byte XRegister { get; set; }
     public byte YRegister { get; set; }
     public byte StackPointer { get; set; } = 0xFF;
+    public ushort CurrentInstructionAddress { get; set; }
     public MemoryWriteEvent? OnMemoryWritten;
 
     public byte ProcessorStatus

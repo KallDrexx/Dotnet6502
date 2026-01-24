@@ -34,17 +34,16 @@ public class BvcTests
         var context = new InstructionConverter.Context(
             labels);
 
-        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var irInstructions = InstructionConverter.Convert(instruction, context);
 
         // Add setup and target instructions around the branch
         var allInstructions = new List<Ir6502.Instruction>
         {
             // Set up overflow flag as clear (no overflow)
             new Ir6502.Copy(new Ir6502.Constant(0), new Ir6502.Flag(Ir6502.FlagName.Overflow)),
-
-            // Add the BVC instruction
-            nesIrInstructions[0],
-
+        };
+        allInstructions.AddRange(irInstructions);
+        allInstructions.AddRange([
             // Instruction that should be skipped if branch is taken
             new Ir6502.Copy(new Ir6502.Constant(99), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
@@ -53,7 +52,7 @@ public class BvcTests
 
             // Instruction that should be executed at branch target
             new Ir6502.Copy(new Ir6502.Constant(42), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
-        };
+        ]);
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
@@ -81,17 +80,16 @@ public class BvcTests
         var context = new InstructionConverter.Context(
             labels);
 
-        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var irInstructions = InstructionConverter.Convert(instruction, context);
 
         // Add setup and target instructions around the branch
         var allInstructions = new List<Ir6502.Instruction>
         {
             // Set up overflow flag as set (overflow occurred)
             new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Overflow)),
-
-            // Add the BVC instruction
-            nesIrInstructions[0],
-
+        };
+        allInstructions.AddRange(irInstructions);
+        allInstructions.AddRange([
             // Instruction that should be executed if branch is NOT taken
             new Ir6502.Copy(new Ir6502.Constant(77), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
@@ -100,7 +98,7 @@ public class BvcTests
 
             // Instruction that should be skipped if branch is not taken
             new Ir6502.Copy(new Ir6502.Constant(88), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
-        };
+        ]);
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
@@ -128,7 +126,7 @@ public class BvcTests
         var context = new InstructionConverter.Context(
             labels);
 
-        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var irInstructions = InstructionConverter.Convert(instruction, context);
 
         // Add setup for a loop-like scenario
         var allInstructions = new List<Ir6502.Instruction>
@@ -152,10 +150,8 @@ public class BvcTests
                 new Ir6502.Register(Ir6502.RegisterName.XIndex),
                 new Ir6502.Constant(3),
                 new Ir6502.Flag(Ir6502.FlagName.Overflow)), // Set overflow flag when X >= 3 (loop should exit)
-
-            // Add the BVC instruction (will branch if overflow flag is clear)
-            nesIrInstructions[0]
         };
+        allInstructions.AddRange(irInstructions);
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
@@ -181,7 +177,7 @@ public class BvcTests
         var context = new InstructionConverter.Context(
             labels);
 
-        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var irInstructions = InstructionConverter.Convert(instruction, context);
 
         var allInstructions = new List<Ir6502.Instruction>
         {
@@ -190,13 +186,12 @@ public class BvcTests
             new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Carry)),
             new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Zero)),
             new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Negative)),
-
-            // Add the BVC instruction
-            nesIrInstructions[0],
-
+        };
+        allInstructions.AddRange(irInstructions);
+        allInstructions.AddRange([
             // Target label
             new Ir6502.Label(new Ir6502.Identifier("target"))
-        };
+        ]);
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
@@ -235,19 +230,18 @@ public class BvcTests
         var context = new InstructionConverter.Context(
             labels);
 
-        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var irInstructions = InstructionConverter.Convert(instruction, context);
 
         var allInstructions = new List<Ir6502.Instruction>
         {
             // Set overflow flag clear for branch to occur
             new Ir6502.Copy(new Ir6502.Constant(0), new Ir6502.Flag(Ir6502.FlagName.Overflow)),
-
-            // Add the BVC instruction
-            nesIrInstructions[0],
-
+        };
+        allInstructions.AddRange(irInstructions);
+        allInstructions.AddRange([
             // Target label
             new Ir6502.Label(new Ir6502.Identifier("target"))
-        };
+        ]);
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
@@ -283,16 +277,15 @@ public class BvcTests
         var context = new InstructionConverter.Context(
             labels);
 
-        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var irInstructions = InstructionConverter.Convert(instruction, context);
 
         var allInstructions = new List<Ir6502.Instruction>
         {
             // Clear overflow flag
             new Ir6502.Copy(new Ir6502.Constant(0), new Ir6502.Flag(Ir6502.FlagName.Overflow)),
-
-            // Add the BVC instruction
-            nesIrInstructions[0],
-
+        };
+        allInstructions.AddRange(irInstructions);
+        allInstructions.AddRange([
             // This should be skipped
             new Ir6502.Copy(new Ir6502.Constant(111), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
@@ -301,7 +294,7 @@ public class BvcTests
 
             // This should be executed
             new Ir6502.Copy(new Ir6502.Constant(222), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
-        };
+        ]);
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
@@ -328,7 +321,7 @@ public class BvcTests
         var context = new InstructionConverter.Context(
             labels);
 
-        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var irInstructions = InstructionConverter.Convert(instruction, context);
 
         var allInstructions = new List<Ir6502.Instruction>
         {
@@ -356,10 +349,8 @@ public class BvcTests
                 new Ir6502.Register(Ir6502.RegisterName.XIndex),
                 new Ir6502.Constant(1),
                 new Ir6502.Register(Ir6502.RegisterName.XIndex)),
-
-            // Add the BVC instruction
-            nesIrInstructions[0]
         };
+        allInstructions.AddRange(irInstructions);
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
@@ -386,7 +377,7 @@ public class BvcTests
         var context = new InstructionConverter.Context(
             labels);
 
-        var nesIrInstructions = InstructionConverter.Convert(instruction, context);
+        var irInstructions = InstructionConverter.Convert(instruction, context);
 
         // Test case 1: After operation that sets overflow flag (overflow occurred)
         {
@@ -394,10 +385,9 @@ public class BvcTests
             {
                 // Simulate operation that sets overflow flag
                 new Ir6502.Copy(new Ir6502.Constant(1), new Ir6502.Flag(Ir6502.FlagName.Overflow)),
-
-                // Add the BVC instruction
-                nesIrInstructions[0],
-
+            };
+            allInstructions.AddRange(irInstructions);
+            allInstructions.AddRange([
                 // This should execute (branch NOT taken)
                 new Ir6502.Copy(new Ir6502.Constant(50), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
@@ -406,7 +396,7 @@ public class BvcTests
 
                 // This should also execute
                 new Ir6502.Copy(new Ir6502.Constant(100), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
-            };
+            ]);
 
             var jit1 = TestJitCompiler.Create();
             jit1.AddMethod(0x1234, allInstructions);
@@ -424,10 +414,9 @@ public class BvcTests
             {
                 // Simulate operation that clears overflow flag
                 new Ir6502.Copy(new Ir6502.Constant(0), new Ir6502.Flag(Ir6502.FlagName.Overflow)),
-
-                // Add the BVC instruction
-                nesIrInstructions[0],
-
+            };
+            allInstructions.AddRange(irInstructions);
+            allInstructions.AddRange([
                 // This should be skipped (branch taken)
                 new Ir6502.Copy(new Ir6502.Constant(75), new Ir6502.Register(Ir6502.RegisterName.XIndex)),
 
@@ -436,7 +425,7 @@ public class BvcTests
 
                 // This should execute
                 new Ir6502.Copy(new Ir6502.Constant(150), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
-            };
+            ]);
 
             var jit2 = TestJitCompiler.Create();
             jit2.AddMethod(0x1234, allInstructions);
