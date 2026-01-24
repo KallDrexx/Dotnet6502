@@ -26,9 +26,10 @@ public class JitCompiler
         _hal = hal;
         _hal.OnMemoryWritten = address =>
         {
-            ExecutableMethodCache.MemoryChanged(address);
+            // ExecutableMethodCache.MemoryChanged(address);
 
-            return AddressPartOfCurrentlyRunningFunction(address);
+            // return AddressPartOfCurrentlyRunningFunction(address);
+            return false;
         };
 
         _jitCustomizers = jitCustomizer != null
@@ -55,15 +56,17 @@ public class JitCompiler
                 var customGenerators = _jitCustomizers.SelectMany(x => x.GetCustomIlGenerators())
                     .ToDictionary(x => x.Key, x => x.Value);
 
-                if (function.IsSelfModifying)
-                {
-                    // Self-modifying routines (e.g. GETCHR-style operand patching) can repeatedly
-                    // invalidate JITed code, so we route them through the interpreter instead.
-                    _hal.DebugHook(
-                        $"Detected self-modifying code at 0x{function.Address:X4}; routing through interpreter.");
-                    method = _interpreter.CreateExecutableMethod(instructions);
-                }
-                else
+                instructions = JitOptimizer.Optimize(instructions, _memoryBus);
+
+                // if (function.IsSelfModifying)
+                // {
+                //     // Self-modifying routines (e.g. GETCHR-style operand patching) can repeatedly
+                //     // invalidate JITed code, so we route them through the interpreter instead.
+                //     _hal.DebugHook(
+                //         $"Detected self-modifying code at 0x{function.Address:X4}; routing through interpreter.");
+                //     method = _interpreter.CreateExecutableMethod(instructions);
+                // }
+                // else
                 {
                     method = ExecutableMethodGenerator.Generate(
                         $"func_{function.Address:X4}",
@@ -117,7 +120,7 @@ public class JitCompiler
 
         if (SelfModifyingCodeDetector.TryDetect(function, out var affectedAddresses))
         {
-            Console.WriteLine($"Function 0x{function.Address} has self-modifying code");
+            // Console.WriteLine($"Function 0x{function.Address} has self-modifying code");
             function.IsSelfModifying = true;
             _hal.DebugHook(
                 $"Self-modifying pattern detected in function 0x{function.Address:X4} at " +
