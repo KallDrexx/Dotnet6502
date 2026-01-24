@@ -35,10 +35,10 @@ public class ExecutableMethodCache
     private readonly LinkedList<ushort> _lruCache = [];
 
     /// <summary>
-    /// Memory pages that have been written to and any functions that have instructions in that page should
-    /// have their caches removed at the next opportunity.
+    /// Memory addresses that have been written to that may require functions to be evicted from the cache
+    /// at the next opportunity
     /// </summary>
-    private readonly HashSet<byte> _pendingPageInvalidations = [];
+    private readonly HashSet<ushort> _pendingAddressInvalidations = [];
 
     public void AddExecutableMethod(ExecutableMethod method, DecompiledFunction decompiledFunction)
     {
@@ -77,12 +77,7 @@ public class ExecutableMethodCache
     {
         // Process pending memory page invalidations. Do this here instead of on memory changed notifications
         // As this should be much less frequent.
-        foreach (var page in _pendingPageInvalidations)
-        {
-            InvalidateFunctionsAtPage(page);
-        }
-
-        _pendingPageInvalidations.Clear();
+        ProcessPendingMemoryInvalidations();
 
         if (!_executableMethods.TryGetValue(functionStartAddress, out var info))
         {
@@ -111,22 +106,7 @@ public class ExecutableMethodCache
     /// </summary>
     public void MemoryChanged(ushort address)
     {
-        var page = GetPageNumber(address);
-        _pendingPageInvalidations.Add(page);
-    }
-
-    /// <summary>
-    /// Notifies the cache that the values located at the specified memory address range has changed, and if any
-    /// functions are cached at those relevant sections then they should be invalidated.
-    /// </summary>
-    public void BulkMemoryChanged(ushort startAddress, ushort lastAddress)
-    {
-        var firstPage = GetPageNumber(startAddress);
-        var lastPage = GetPageNumber(lastAddress);
-        foreach (byte page in Enumerable.Range(firstPage, lastPage - firstPage + 1))
-        {
-            _pendingPageInvalidations.Add(page);
-        }
+        _pendingAddressInvalidations.Add(address);
     }
 
     private static byte GetPageNumber(ushort address)
@@ -134,17 +114,29 @@ public class ExecutableMethodCache
         return (byte)(address >> 8);
     }
 
-    private void InvalidateFunctionsAtPage(byte page)
+    private void ProcessPendingMemoryInvalidations()
     {
-        if (_pageToRelevantFunctionAddressMap.TryGetValue(page, out var addresses))
+        var changesByPage = _pendingAddressInvalidations.GroupBy(GetPageNumber)
+            .ToDictionary(x => x.Key, x => x.ToHashSet());
+
+        foreach (var page in changesByPage)
         {
-            foreach (var functionAddress in addresses)
+            if (!_pageToRelevantFunctionAddressMap.TryGetValue(page.Key, out var functionAddresses))
             {
-                RemoveCachedMethod(functionAddress);
+                continue;
             }
 
-            addresses.Clear();
+            foreach (var functionAddress in functionAddresses)
+            {
+                var function = _executableMethods[functionAddress];
+                if (function.InstructionAddresses.Any(x => page.Value.Contains(x)))
+                {
+                    RemoveCachedMethod(functionAddress);
+                }
+            }
         }
+
+        _pendingAddressInvalidations.Clear();
     }
 
     private void RemoveCachedMethod(ushort address)
