@@ -26,6 +26,11 @@ public class JitCompiler
     /// </summary>
     private readonly Dictionary<ushort, ushort> _knownSelfModifyingInstructionsAndTargets = [];
 
+    /// <summary>
+    /// If true, the compiler will always use the interpreter instead of the JIT compiler
+    /// </summary>
+    public bool AlwaysUseInterpreter { get; set; }
+
     public JitCompiler(Base6502Hal hal, IJitCustomizer? jitCustomizer, MemoryBus memoryBus, Ir6502Interpreter interpreter)
     {
         _hal = hal;
@@ -83,7 +88,7 @@ public class JitCompiler
                 var customGenerators = _jitCustomizers.SelectMany(x => x.GetCustomIlGenerators())
                     .ToDictionary(x => x.Key, x => x.Value);
 
-                if (ContainsSelfModifyingCode(function))
+                if (ContainsSelfModifyingCode(function) || AlwaysUseInterpreter)
                 {
                     method = _interpreter.CreateExecutableMethod(instructions);
                 }
