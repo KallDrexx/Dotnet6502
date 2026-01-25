@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Reflection.Emit;
 using Dotnet6502.Common.Hardware;
 using NESDecompiler.Core.Decompilation;
@@ -21,6 +20,12 @@ public class JitCompiler
     protected readonly ExecutableMethodCache ExecutableMethodCache = new();
     private ushort _currentlyExecutingAddress;
 
+    /// <summary>
+    /// Contains a list of the addresses of instructions that are known to make modifications to the functions
+    /// they exist in, and the addresses of the instructions they've targeted.
+    /// </summary>
+    private readonly Dictionary<ushort, ushort> _knownSelfModifyingInstructionsAndTargets = [];
+
     public JitCompiler(Base6502Hal hal, IJitCustomizer? jitCustomizer, MemoryBus memoryBus, Ir6502Interpreter interpreter)
     {
         _hal = hal;
@@ -28,7 +33,30 @@ public class JitCompiler
         {
             ExecutableMethodCache.MemoryChanged(address);
 
-            return AddressPartOfCurrentlyRunningFunction(address);
+            // If the address was an instruction that was previously known to trigger SMC, then the
+            // update to that memory location means we no longer know if it contained SMC. So clear it.
+            _knownSelfModifyingInstructionsAndTargets.Remove(address);
+
+            var isSelfModifying = ExecutableMethodCache.AddressPartOfFunctionInstructions(
+                _currentlyExecutingAddress,
+                address);
+
+            if (isSelfModifying)
+            {
+                if (!_knownSelfModifyingInstructionsAndTargets.TryAdd(hal.CurrentInstructionAddress, address))
+                {
+                    var existingTarget = _knownSelfModifyingInstructionsAndTargets[hal.CurrentInstructionAddress];
+                    if (existingTarget != address)
+                    {
+                        var message = $"Instruction at 0x{hal.CurrentInstructionAddress:X4} has modified both " +
+                                      $"0x{address:X4} and 0x{existingTarget:X4}";
+
+                        throw new InvalidOperationException(message);
+                    }
+                }
+            }
+
+            return isSelfModifying;
         };
 
         _jitCustomizers = jitCustomizer != null
@@ -55,12 +83,8 @@ public class JitCompiler
                 var customGenerators = _jitCustomizers.SelectMany(x => x.GetCustomIlGenerators())
                     .ToDictionary(x => x.Key, x => x.Value);
 
-                if (function.IsSelfModifying)
+                if (ContainsSelfModifyingCode(function))
                 {
-                    // Self-modifying routines (e.g. GETCHR-style operand patching) can repeatedly
-                    // invalidate JITed code, so we route them through the interpreter instead.
-                    _hal.DebugHook(
-                        $"Detected self-modifying code at 0x{function.Address:X4}; routing through interpreter.");
                     method = _interpreter.CreateExecutableMethod(instructions);
                 }
                 else
@@ -98,30 +122,13 @@ public class JitCompiler
         }
     }
 
-    /// <summary>
-    /// Checks if the specified address is part of the instruction set for the currently executing function
-    /// </summary>
-    public bool AddressPartOfCurrentlyRunningFunction(ushort address)
-    {
-        return ExecutableMethodCache.AddressPartOfFunctionInstructions(_currentlyExecutingAddress, address);
-    }
-
-    protected virtual DecompiledFunction DecompileFunction(ushort address)
+    private DecompiledFunction DecompileFunction(ushort address)
     {
         var function = FunctionDecompiler.Decompile(address, _memoryBus.GetAllCodeRegions());
         if (function.OrderedInstructions.Count == 0)
         {
             var message = $"Function at address 0x{address:X4} contained no instructions";
             throw new InvalidOperationException(message);
-        }
-
-        if (SelfModifyingCodeDetector.TryDetect(function, out var affectedAddresses))
-        {
-            Console.WriteLine($"Function 0x{function.Address:X4} has self-modifying code");
-            function.IsSelfModifying = true;
-            _hal.DebugHook(
-                $"Self-modifying pattern detected in function 0x{function.Address:X4} at " +
-                $"{string.Join(", ", affectedAddresses.Select(addr => $"0x{addr:X4}"))}");
         }
 
         return function;
@@ -149,5 +156,11 @@ public class JitCompiler
         }
 
         return convertedInstructions;
+    }
+
+    private bool ContainsSelfModifyingCode(DecompiledFunction function)
+    {
+        return function.OrderedInstructions
+            .Any(x => _knownSelfModifyingInstructionsAndTargets.ContainsKey(x.CPUAddress));
     }
 }
