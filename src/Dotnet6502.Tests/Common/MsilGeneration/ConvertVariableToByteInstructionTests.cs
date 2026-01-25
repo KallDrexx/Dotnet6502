@@ -70,7 +70,7 @@ public class ConvertVariableToByteInstructionTests
         var convertInstruction = new Ir6502.ConvertVariableToByte(new Ir6502.Variable(0));
         var writeToMemory = new Ir6502.Copy(
             new Ir6502.Variable(0),
-            new Ir6502.Memory(0x2000, null, false));
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x2000), null, false));
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [setupVar, convertInstruction, writeToMemory]);

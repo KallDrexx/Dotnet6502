@@ -555,7 +555,7 @@ public class MsilGenerator
                 var readMemoryMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.ReadMemory))!;
 
                 ilGenerator.Emit(JitCompiler.LoadHalArg);
-                ilGenerator.Emit(OpCodes.Ldc_I4, memory.Address);
+                LoadMemoryLocationToStack(memory.Location, ilGenerator);
 
                 if (memory.RegisterToAdd != null)
                 {
@@ -654,6 +654,46 @@ public class MsilGenerator
         ilGenerator.Emit(OpCodes.Conv_I4);
     }
 
+    private static void LoadMemoryLocationToStack(Ir6502.MemoryLocation memoryLocation, ILGenerator ilGenerator)
+    {
+        switch (memoryLocation)
+        {
+            case Ir6502.DirectMemoryLocation direct:
+                ilGenerator.Emit(OpCodes.Ldc_I4, direct.Address);
+                break;
+
+            case Ir6502.DynamicMemoryLocation dynamic:
+            {
+                // Need to load the final memory location from the location specified
+                var readMemoryMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.ReadMemory))!;
+
+                // Load the low byte first
+                ilGenerator.Emit(JitCompiler.LoadHalArg);
+                ilGenerator.Emit(OpCodes.Ldc_I4, dynamic.AddressToLoadTargetAddressFrom);
+                ilGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
+                ilGenerator.Emit(OpCodes.Conv_I4);
+
+                // Load the high byte next
+                ilGenerator.Emit(JitCompiler.LoadHalArg);
+                ilGenerator.Emit(OpCodes.Ldc_I4, dynamic.AddressToLoadTargetAddressFrom + 1);
+                ilGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
+                ilGenerator.Emit(OpCodes.Conv_I4);
+
+                // Shift the high byte value up
+                ilGenerator.Emit(OpCodes.Ldc_I4_8);
+                ilGenerator.Emit(OpCodes.Shl);
+
+                // Add the high and low byte together
+                ilGenerator.Emit(OpCodes.Add);
+
+                break;
+            }
+
+            default:
+                throw new NotSupportedException(memoryLocation.GetType().FullName);
+        }
+    }
+
     private static void WriteTempLocalToValue(Ir6502.Value destination, ILGenerator ilGenerator)
     {
         switch (destination)
@@ -688,7 +728,7 @@ public class MsilGenerator
                 var writeMemoryMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.WriteMemory))!;
 
                 ilGenerator.Emit(JitCompiler.LoadHalArg);
-                ilGenerator.Emit(OpCodes.Ldc_I4, memory.Address);
+                LoadMemoryLocationToStack(memory.Location, ilGenerator);
 
                 if (memory.RegisterToAdd != null)
                 {

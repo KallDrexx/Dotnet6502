@@ -349,7 +349,7 @@ public class BinaryInstructionTests
             Ir6502.BinaryOperator.Add,
             new Ir6502.Register(Ir6502.RegisterName.Accumulator),
             new Ir6502.Constant(10),
-            new Ir6502.Memory(0x1000, null, false));
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x1000), null, false));
 
         var jit = TestJitCompiler.Create();
         jit.TestHal.ARegister = 25;
@@ -384,8 +384,8 @@ public class BinaryInstructionTests
     {
         var instruction = new Ir6502.Binary(
             Ir6502.BinaryOperator.Add,
-            new Ir6502.Memory(0x2000, null, false),
-            new Ir6502.Memory(0x2001, null, false),
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x2000), null, false),
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x2001), null, false),
             new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
         var jit = TestJitCompiler.Create();
@@ -402,7 +402,7 @@ public class BinaryInstructionTests
     {
         var instruction = new Ir6502.Binary(
             Ir6502.BinaryOperator.Add,
-            new Ir6502.Memory(0x3000, Ir6502.RegisterName.XIndex, false),
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x3000), Ir6502.RegisterName.XIndex, false),
             new Ir6502.Constant(5),
             new Ir6502.Register(Ir6502.RegisterName.YIndex));
 
@@ -528,7 +528,7 @@ public class BinaryInstructionTests
             Ir6502.BinaryOperator.Add,
             new Ir6502.Constant(10),
             new Ir6502.Constant(20),
-            new Ir6502.Memory(0x4000, Ir6502.RegisterName.YIndex, false));
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x4000), Ir6502.RegisterName.YIndex, false));
 
         var jit = TestJitCompiler.Create();
         jit.TestHal.YRegister = 15;

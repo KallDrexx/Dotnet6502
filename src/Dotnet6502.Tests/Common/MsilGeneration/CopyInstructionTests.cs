@@ -1,4 +1,3 @@
-using Dotnet6502.Common;
 using Dotnet6502.Common.Compilation;
 using Dotnet6502.Common.Hardware;
 using Shouldly;
@@ -54,7 +53,7 @@ public class CopyInstructionTests
     {
         var instruction = new Ir6502.Copy(
             new Ir6502.Constant(77),
-            new Ir6502.Memory(0x1000, null, false));
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x1000), null, false));
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
@@ -72,7 +71,7 @@ public class CopyInstructionTests
 
         var instruction2 = new Ir6502.Copy(
             new Ir6502.Variable(0),
-            new Ir6502.Memory(0x3434, null, false));
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x3434), null, false));
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction, instruction2]);
@@ -218,7 +217,7 @@ public class CopyInstructionTests
     public void Can_Copy_Memory_To_Register()
     {
         var instruction = new Ir6502.Copy(
-            new Ir6502.Memory(0x2000, null, false),
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x2000), null, false),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
         var jit = TestJitCompiler.Create();
@@ -233,7 +232,7 @@ public class CopyInstructionTests
     public void Can_Copy_Memory_With_Offset_To_Register_Via_16_Bit_Address()
     {
         var instruction = new Ir6502.Copy(
-            new Ir6502.Memory(0x00FF, Ir6502.RegisterName.XIndex, false),
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x00FF), Ir6502.RegisterName.XIndex, false),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
         var jit = TestJitCompiler.Create();
@@ -250,7 +249,7 @@ public class CopyInstructionTests
     public void Can_Copy_Memory_With_Offset_To_Register_Via_8_Bit_Address()
     {
         var instruction = new Ir6502.Copy(
-            new Ir6502.Memory(0x00FF, Ir6502.RegisterName.XIndex, true),
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x00FF), Ir6502.RegisterName.XIndex, true),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
         var jit = TestJitCompiler.Create();
@@ -268,7 +267,7 @@ public class CopyInstructionTests
     {
         var instruction = new Ir6502.Copy(
             new Ir6502.Register(Ir6502.RegisterName.XIndex),
-            new Ir6502.Memory(0x3000, null, false));
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x3000), null, false));
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
@@ -283,7 +282,7 @@ public class CopyInstructionTests
     {
         var instruction = new Ir6502.Copy(
             new Ir6502.Register(Ir6502.RegisterName.XIndex),
-            new Ir6502.Memory(0x0000, Ir6502.RegisterName.YIndex, true));
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x0000), Ir6502.RegisterName.YIndex, true));
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
@@ -298,7 +297,7 @@ public class CopyInstructionTests
     public void Can_Copy_Memory_With_Register_Offset()
     {
         var instruction = new Ir6502.Copy(
-            new Ir6502.Memory(0x4000, Ir6502.RegisterName.XIndex, false),
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x4000), Ir6502.RegisterName.XIndex, false),
             new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
         var jit = TestJitCompiler.Create();
@@ -315,7 +314,7 @@ public class CopyInstructionTests
     {
         var instruction = new Ir6502.Copy(
             new Ir6502.Register(Ir6502.RegisterName.YIndex),
-            new Ir6502.Memory(0x00FF, Ir6502.RegisterName.XIndex, false));
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x00FF), Ir6502.RegisterName.XIndex, false));
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
@@ -331,7 +330,7 @@ public class CopyInstructionTests
     {
         var instruction = new Ir6502.Copy(
             new Ir6502.Register(Ir6502.RegisterName.YIndex),
-            new Ir6502.Memory(0x00FF, Ir6502.RegisterName.XIndex, true));
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x00FF), Ir6502.RegisterName.XIndex, true));
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
@@ -346,8 +345,8 @@ public class CopyInstructionTests
     public void Can_Copy_Memory_To_Memory()
     {
         var instruction = new Ir6502.Copy(
-            new Ir6502.Memory(0x6000, null, false),
-            new Ir6502.Memory(0x7000, null, false));
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x6000), null, false),
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x7000), null, false));
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
@@ -400,7 +399,7 @@ public class CopyInstructionTests
             new Ir6502.Variable(2));
         var copyFromVar = new Ir6502.Copy(
             new Ir6502.Variable(2),
-            new Ir6502.Memory(0x8000, null, false));
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x8000), null, false));
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [copyToVar, copyFromVar]);
@@ -478,7 +477,7 @@ public class CopyInstructionTests
     {
         var instruction = new Ir6502.Copy(
             new Ir6502.Flag(Ir6502.FlagName.Carry),
-            new Ir6502.Memory(0x9000, null, false));
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x9000), null, false));
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
@@ -492,7 +491,7 @@ public class CopyInstructionTests
     public void Can_Copy_Memory_To_Flag()
     {
         var instruction = new Ir6502.Copy(
-            new Ir6502.Memory(0xA000, null, false),
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0xA000), null, false),
             new Ir6502.Flag(Ir6502.FlagName.InterruptDisable));
 
         var jit = TestJitCompiler.Create();
@@ -556,7 +555,7 @@ public class CopyInstructionTests
     {
         var instruction = new Ir6502.Copy(
             new Ir6502.AllFlags(),
-            new Ir6502.Memory(0xB000, null, false));
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0xB000), null, false));
 
         var jit = TestJitCompiler.Create();
         jit.TestHal.ProcessorStatus = 0x85;
@@ -570,7 +569,7 @@ public class CopyInstructionTests
     public void Can_Copy_Memory_To_AllFlags()
     {
         var instruction = new Ir6502.Copy(
-            new Ir6502.Memory(0xC000, null, false),
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0xC000), null, false),
             new Ir6502.AllFlags());
 
         var jit = TestJitCompiler.Create();
@@ -616,7 +615,7 @@ public class CopyInstructionTests
     {
         var instruction = new Ir6502.Copy(
             new Ir6502.StackPointer(),
-            new Ir6502.Memory(0xD000, null, false));
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0xD000), null, false));
 
         var jit = TestJitCompiler.Create();
         jit.TestHal.StackPointer = 0xCC;
@@ -630,7 +629,7 @@ public class CopyInstructionTests
     public void Can_Copy_Memory_To_StackPointer()
     {
         var instruction = new Ir6502.Copy(
-            new Ir6502.Memory(0xE000, null, false),
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0xE000), null, false),
             new Ir6502.StackPointer());
 
         var jit = TestJitCompiler.Create();
@@ -727,5 +726,22 @@ public class CopyInstructionTests
         jit.RunMethod(0x1234);
 
         jit.TestHal.ReadMemory(0x200A).ShouldBe((byte)0x84);
+    }
+
+    [Fact]
+    public void Can_Copy_Memory_With_Dynamic_Location_To_Register()
+    {
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Memory(new Ir6502.DynamicMemoryLocation(0x2000), null, false),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
+
+        var jit = TestJitCompiler.Create();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.TestHal.WriteMemory(0x2000, 0xCD);
+        jit.TestHal.WriteMemory(0x2001, 0xAB);
+        jit.TestHal.WriteMemory(0xABCD, 156);
+        jit.RunMethod(0x1234);
+
+        jit.TestHal.ARegister.ShouldBe((byte)156);
     }
 }

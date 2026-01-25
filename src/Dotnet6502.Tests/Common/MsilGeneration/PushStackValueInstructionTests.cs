@@ -60,7 +60,7 @@ public class PushStackValueInstructionTests
     [Fact]
     public void Can_Push_Memory_To_Stack()
     {
-        var instruction = new Ir6502.PushStackValue(new Ir6502.Memory(0x2000, null, false));
+        var instruction = new Ir6502.PushStackValue(new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x2000), null, false));
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
@@ -73,7 +73,7 @@ public class PushStackValueInstructionTests
     [Fact]
     public void Can_Push_Memory_With_Register_Offset_To_Stack()
     {
-        var instruction = new Ir6502.PushStackValue(new Ir6502.Memory(0x4000, Ir6502.RegisterName.XIndex, false));
+        var instruction = new Ir6502.PushStackValue(new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x4000), Ir6502.RegisterName.XIndex, false));
 
         var jit = TestJitCompiler.Create();
         jit.TestHal.XRegister = 5;

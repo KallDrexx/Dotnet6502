@@ -48,7 +48,7 @@ public class PopStackValueInstructionTests
     [Fact]
     public void Can_Pop_To_Memory()
     {
-        var instruction = new Ir6502.PopStackValue(new Ir6502.Memory(0x3000, null, false));
+        var instruction = new Ir6502.PopStackValue(new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x3000), null, false));
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
@@ -61,7 +61,7 @@ public class PopStackValueInstructionTests
     [Fact]
     public void Can_Pop_To_Memory_With_Register_Offset()
     {
-        var instruction = new Ir6502.PopStackValue(new Ir6502.Memory(0x5000, Ir6502.RegisterName.XIndex, false));
+        var instruction = new Ir6502.PopStackValue(new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x5000), Ir6502.RegisterName.XIndex, false));
 
         var jit = TestJitCompiler.Create();
         jit.TestHal.XRegister = 10;

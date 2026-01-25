@@ -8,7 +8,7 @@ public class PollForRecompilationTests
     [Fact]
     public void Runs_Next_Instruction_When_Recompilation_Not_Needed()
     {
-        var write = new Ir6502.Copy(new Ir6502.Constant(34), new Ir6502.Memory(0x1111, null, false));
+        var write = new Ir6502.Copy(new Ir6502.Constant(34), new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x1111), null, false));
         var poll = new Ir6502.PollForRecompilation(0x3456);
         var nextOp = new Ir6502.Copy(new Ir6502.Constant(12), new Ir6502.Register(Ir6502.RegisterName.Accumulator));
 
@@ -23,7 +23,7 @@ public class PollForRecompilationTests
     [Fact]
     public void Calls_Recompilation_Address_When_Recompilation_Requested()
     {
-        var write = new Ir6502.Copy(new Ir6502.Constant(34), new Ir6502.Memory(0x1111, null, false));
+        var write = new Ir6502.Copy(new Ir6502.Constant(34), new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x1111), null, false));
         var poll = new Ir6502.PollForRecompilation(0x3456);
         var nextOp = new Ir6502.Copy(new Ir6502.Constant(12), new Ir6502.Register(Ir6502.RegisterName.Accumulator));
         var setX = new Ir6502.Copy(new Ir6502.Constant(56), new Ir6502.Register(Ir6502.RegisterName.XIndex));

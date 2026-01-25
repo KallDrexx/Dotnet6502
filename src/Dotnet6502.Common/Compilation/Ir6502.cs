@@ -69,7 +69,7 @@ public static class Ir6502
 
     public record Constant(byte Number) : Value;
 
-    public record Memory(ushort Address, RegisterName? RegisterToAdd, bool SingleByteAddress) : Value;
+    public record Memory(MemoryLocation Location, RegisterName? RegisterToAdd, bool SingleByteAddress) : Value;
 
     public record IndirectMemory(byte ZeroPageAddress, bool IsPreIndexed, bool IsPostIndexed) : Value;
 
@@ -86,6 +86,12 @@ public static class Ir6502
     public record Identifier(string Characters) : JumpTarget;
 
     public record FunctionAddress(ushort Address, bool IsIndirect) : ICallTarget;
+
+    public abstract record MemoryLocation;
+
+    public record DirectMemoryLocation(ushort Address) : MemoryLocation;
+
+    public record DynamicMemoryLocation(ushort AddressToLoadTargetAddressFrom) : MemoryLocation;
 
     public enum RegisterName { Accumulator, XIndex, YIndex }
 

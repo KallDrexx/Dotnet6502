@@ -39,7 +39,7 @@ public class JsrTests
         // Add a callable function at the JSR target address that writes a test value to memory
         var callableInstruction = new Ir6502.Copy(
             new Ir6502.Constant(99),
-            new Ir6502.Memory(0x4000, null, false));
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x4000), null, false));
         jit.AddMethod(0x9000, [callableInstruction]); // JSR target address from instruction bytes
 
         jit.RunMethod(0x1234);
@@ -82,7 +82,7 @@ public class JsrTests
         // Add a callable function at the JSR target address
         var callableInstruction = new Ir6502.Copy(
             new Ir6502.Constant(102),
-            new Ir6502.Memory(0x5003, null, false));
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x5003), null, false));
         jit.AddMethod(0x9000, [callableInstruction]); // JSR target address
 
         // Set initial flag states
@@ -124,7 +124,7 @@ public class JsrTests
 
         var callableInstruction = new Ir6502.Copy(
             new Ir6502.Constant(103),
-            new Ir6502.Memory(0x5004, null, false));
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x5004), null, false));
         jit.AddMethod(0x9000, [callableInstruction]); // JSR target address
 
         // Set initial register values

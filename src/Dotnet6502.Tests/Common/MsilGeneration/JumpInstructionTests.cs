@@ -190,9 +190,9 @@ public class JumpInstructionTests
     {
         var setMemory = new Ir6502.Copy(
             new Ir6502.Constant(0),
-            new Ir6502.Memory(0x2000, null, false));
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x2000), null, false));
         var jumpIfZero = new Ir6502.JumpIfZero(
-            new Ir6502.Memory(0x2000, null, false),
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x2000), null, false),
             new Ir6502.Identifier("jump_target"));
         var skipInstruction = new Ir6502.Copy(
             new Ir6502.Constant(100),

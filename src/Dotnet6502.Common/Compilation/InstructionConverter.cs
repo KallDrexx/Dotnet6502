@@ -1625,30 +1625,30 @@ public static class InstructionConverter
                 return new Ir6502.Constant(instruction.Operands[0]);
 
             case AddressingMode.ZeroPage:
-                return new Ir6502.Memory(instruction.Operands[0], null, true);
+                return new Ir6502.Memory(new Ir6502.DirectMemoryLocation(instruction.Operands[0]), null, true);
 
             case AddressingMode.ZeroPageX:
-                return new Ir6502.Memory(instruction.Operands[0], Ir6502.RegisterName.XIndex, true);
+                return new Ir6502.Memory(new Ir6502.DirectMemoryLocation(instruction.Operands[0]), Ir6502.RegisterName.XIndex, true);
 
             case AddressingMode.ZeroPageY:
-                return new Ir6502.Memory(instruction.Operands[0], Ir6502.RegisterName.YIndex, true);
+                return new Ir6502.Memory(new Ir6502.DirectMemoryLocation(instruction.Operands[0]), Ir6502.RegisterName.YIndex, true);
 
             case AddressingMode.Absolute:
             {
                 var fullAddress = (ushort)((instruction.Operands[1] << 8) | instruction.Operands[0]);
-                return new Ir6502.Memory(fullAddress, null, false);
+                return new Ir6502.Memory(new Ir6502.DirectMemoryLocation(fullAddress), null, false);
             }
 
             case AddressingMode.AbsoluteX:
             {
                 var fullAddress = (ushort)((instruction.Operands[1] << 8) | instruction.Operands[0]);
-                return new Ir6502.Memory(fullAddress, Ir6502.RegisterName.XIndex, false);
+                return new Ir6502.Memory(new Ir6502.DirectMemoryLocation(fullAddress), Ir6502.RegisterName.XIndex, false);
             }
 
             case AddressingMode.AbsoluteY:
             {
                 var fullAddress = (ushort)((instruction.Operands[1] << 8) | instruction.Operands[0]);
-                return new Ir6502.Memory(fullAddress, Ir6502.RegisterName.YIndex, false);
+                return new Ir6502.Memory(new Ir6502.DirectMemoryLocation(fullAddress), Ir6502.RegisterName.YIndex, false);
             }
 
             case AddressingMode.IndexedIndirect:

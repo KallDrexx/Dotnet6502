@@ -31,7 +31,7 @@ public class RtiTests
         // Add a returnable function at the irq address
         var callableInstruction = new Ir6502.Copy(
             new Ir6502.Constant(99),
-            new Ir6502.Memory(0x4000, null, false));
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x4000), null, false));
         jit.AddMethod(0x2345, [callableInstruction]);
 
         jit.RunMethod(0x1234);

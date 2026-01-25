@@ -300,7 +300,27 @@ public class Ir6502Interpreter
 
     private static ushort GetMemoryAddress(Ir6502.Memory memory, Base6502Hal hal)
     {
-        var address = memory.Address;
+        var location = memory.Location;
+        ushort address = 0;
+
+        switch (location)
+        {
+            case Ir6502.DirectMemoryLocation direct:
+                address = direct.Address;
+                break;
+
+            case Ir6502.DynamicMemoryLocation dynamic:
+            {
+                var lowByte = hal.ReadMemory(dynamic.AddressToLoadTargetAddressFrom);
+                var highByte = hal.ReadMemory((ushort)(dynamic.AddressToLoadTargetAddressFrom + 1));
+
+                address = (ushort)((highByte << 8) | lowByte);
+                break;
+            }
+
+            default:
+                throw new NotSupportedException(location.GetType().FullName);
+        }
 
         if (memory.RegisterToAdd != null)
         {

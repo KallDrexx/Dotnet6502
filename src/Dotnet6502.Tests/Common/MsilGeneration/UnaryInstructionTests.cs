@@ -26,7 +26,7 @@ public class UnaryInstructionTests
     {
         var instruction = new Ir6502.Unary(
             Ir6502.UnaryOperator.BitwiseNot,
-            new Ir6502.Memory(0x2000, null, false),
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x2000), null, false),
             new Ir6502.Register(Ir6502.RegisterName.XIndex));
 
         var jit = TestJitCompiler.Create();
@@ -109,7 +109,7 @@ public class UnaryInstructionTests
         var instruction = new Ir6502.Unary(
             Ir6502.UnaryOperator.BitwiseNot,
             new Ir6502.Constant(0x77),
-            new Ir6502.Memory(0x3000, null, false));
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x3000), null, false));
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction]);
@@ -127,7 +127,7 @@ public class UnaryInstructionTests
             new Ir6502.Variable(0));
         var readVar = new Ir6502.Copy(
             new Ir6502.Variable(0),
-            new Ir6502.Memory(0x4000, null, false));
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x4000), null, false));
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, [instruction, readVar]);
@@ -172,7 +172,7 @@ public class UnaryInstructionTests
         var instruction = new Ir6502.Unary(
             Ir6502.UnaryOperator.BitwiseNot,
             new Ir6502.Constant(0x5A),
-            new Ir6502.Memory(0x6000, Ir6502.RegisterName.YIndex, false));
+            new Ir6502.Memory(new Ir6502.DirectMemoryLocation(0x6000), Ir6502.RegisterName.YIndex, false));
 
         var jit = TestJitCompiler.Create();
         jit.TestHal.YRegister = 5;
