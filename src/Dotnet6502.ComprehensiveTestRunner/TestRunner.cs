@@ -116,7 +116,7 @@ public static class TestRunner
 
             try
             {
-                var context = new InstructionConverter.Context(new Dictionary<ushort, string>());
+                var context = new InstructionConverter.Context(new Dictionary<ushort, string>(), []);
                 var irInstructions = InstructionConverter.Convert(disassembledInstruction, context);
 
                 jit.AddMethod(testCase.Initial.Pc, irInstructions);

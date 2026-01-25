@@ -9,7 +9,24 @@ namespace Dotnet6502.Common.Compilation;
 /// </summary>
 public static class InstructionConverter
 {
-    public record Context(IReadOnlyDictionary<ushort, string> Labels);
+    /// <summary>
+    /// Contains relevant and mutable state information for a whole set of
+    /// instruction conversion processes
+    /// </summary>
+    /// <param name="Labels">All known labels for jump instructions</param>
+    /// <param name="SmcTargetAddresses">
+    /// All known addresses that are targets for self modifying code
+    /// </param>
+    public record Context(
+        IReadOnlyDictionary<ushort, string> Labels,
+        HashSet<ushort> SmcTargetAddresses)
+    {
+        /// <summary>
+        /// All addresses of targets for self modifying code that have been adequately
+        /// handled and does not require a recompile on each change.
+        /// </summary>
+        public HashSet<ushort> HandledSmcTargets { get; } = [];
+    }
 
     public static IReadOnlyList<Ir6502.Instruction> Convert(
         DisassembledInstruction instruction,

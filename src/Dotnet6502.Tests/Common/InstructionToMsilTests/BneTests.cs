@@ -31,8 +31,7 @@ public class BneTests
         };
 
         var labels = new Dictionary<ushort, string> { { 0x8007, "branch_target" } };
-        var context = new InstructionConverter.Context(
-            labels);
+        var context = new InstructionConverter.Context(labels, []);
 
         var irInstructions = InstructionConverter.Convert(instruction, context);
 
@@ -78,7 +77,7 @@ public class BneTests
 
         var labels = new Dictionary<ushort, string> { { 0x8007, "branch_target" } };
         var context = new InstructionConverter.Context(
-            labels);
+            labels, []);
 
         var irInstructions = InstructionConverter.Convert(instruction, context);
 
@@ -124,7 +123,7 @@ public class BneTests
 
         var labels = new Dictionary<ushort, string> { { 0x7FFA, "loop_start" } };
         var context = new InstructionConverter.Context(
-            labels);
+            labels, []);
 
         var irInstructions = InstructionConverter.Convert(instruction, context);
 
@@ -175,7 +174,7 @@ public class BneTests
 
         var labels = new Dictionary<ushort, string> { { 0x8004, "target" } };
         var context = new InstructionConverter.Context(
-            labels);
+            labels, []);
 
         var irInstructions = InstructionConverter.Convert(instruction, context);
 
@@ -228,7 +227,7 @@ public class BneTests
 
         var labels = new Dictionary<ushort, string> { { 0x8004, "target" } };
         var context = new InstructionConverter.Context(
-            labels);
+            labels, []);
 
         var irInstructions = InstructionConverter.Convert(instruction, context);
 
@@ -275,7 +274,7 @@ public class BneTests
 
         var labels = new Dictionary<ushort, string> { { 0x8081, "far_target" } };
         var context = new InstructionConverter.Context(
-            labels);
+            labels, []);
 
         var irInstructions = InstructionConverter.Convert(instruction, context);
 
@@ -319,7 +318,7 @@ public class BneTests
 
         var labels = new Dictionary<ushort, string> { { 0x7F82, "back_target" } };
         var context = new InstructionConverter.Context(
-            labels);
+            labels, []);
 
         var irInstructions = InstructionConverter.Convert(instruction, context);
 
@@ -370,7 +369,7 @@ public class BneTests
 
         var labels = new Dictionary<ushort, string> { { 0x8005, "target" } };
         var context = new InstructionConverter.Context(
-            labels);
+            labels, []);
 
         var irInstructions = InstructionConverter.Convert(instruction, context);
 

@@ -18,8 +18,7 @@ public class AdcTests
             Bytes = [0x69, 0x34],
         };
 
-        var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+        var context = new InstructionConverter.Context(new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -46,7 +45,7 @@ public class AdcTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -74,7 +73,7 @@ public class AdcTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -102,7 +101,7 @@ public class AdcTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -130,7 +129,7 @@ public class AdcTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -158,7 +157,7 @@ public class AdcTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -185,7 +184,7 @@ public class AdcTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -213,7 +212,7 @@ public class AdcTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -242,7 +241,7 @@ public class AdcTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -270,7 +269,7 @@ public class AdcTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -300,7 +299,7 @@ public class AdcTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -329,7 +328,7 @@ public class AdcTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -360,7 +359,7 @@ public class AdcTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -388,7 +387,7 @@ public class AdcTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -418,7 +417,7 @@ public class AdcTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -448,7 +447,7 @@ public class AdcTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -477,7 +476,7 @@ public class AdcTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -507,7 +506,7 @@ public class AdcTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -531,7 +530,7 @@ public class AdcTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -555,7 +554,7 @@ public class AdcTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -580,7 +579,7 @@ public class AdcTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -605,7 +604,7 @@ public class AdcTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -630,7 +629,7 @@ public class AdcTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -655,7 +654,7 @@ public class AdcTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();

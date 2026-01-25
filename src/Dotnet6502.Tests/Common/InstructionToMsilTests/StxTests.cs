@@ -19,7 +19,7 @@ public class StxTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -49,7 +49,7 @@ public class StxTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -79,7 +79,7 @@ public class StxTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -109,7 +109,7 @@ public class StxTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -140,7 +140,7 @@ public class StxTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -173,7 +173,7 @@ public class StxTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -203,7 +203,7 @@ public class StxTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -233,7 +233,7 @@ public class StxTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -272,7 +272,7 @@ public class StxTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -302,7 +302,7 @@ public class StxTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -336,7 +336,7 @@ public class StxTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -367,7 +367,7 @@ public class StxTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -404,7 +404,7 @@ public class StxTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, InstructionConverter.Convert(instruction, context));
@@ -438,7 +438,7 @@ public class StxTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, InstructionConverter.Convert(instruction, context));

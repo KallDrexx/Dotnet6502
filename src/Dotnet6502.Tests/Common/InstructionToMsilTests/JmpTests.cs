@@ -32,7 +32,7 @@ public class JmpTests
 
         var labels = new Dictionary<ushort, string> { { 0x9000, "jump_target" } };
         var context = new InstructionConverter.Context(
-            labels);
+            labels, []);
 
         var irInstructions = InstructionConverter.Convert(instruction, context);
 
@@ -70,7 +70,7 @@ public class JmpTests
             TargetAddress = 0x8020
         };
 
-        var context = new InstructionConverter.Context(new Dictionary<ushort, string>());
+        var context = new InstructionConverter.Context(new Dictionary<ushort, string>(), []);
 
         var allInstructions = InstructionConverter.Convert(instruction, context)
             .Append(
@@ -110,7 +110,7 @@ public class JmpTests
 
         var labels = new Dictionary<ushort, string> { { 0x8500, "target" } };
         var context = new InstructionConverter.Context(
-            labels);
+            labels, []);
 
         var irInstructions = InstructionConverter.Convert(instruction, context);
 
@@ -163,7 +163,7 @@ public class JmpTests
 
         var labels = new Dictionary<ushort, string> { { 0x8500, "target" } };
         var context = new InstructionConverter.Context(
-            labels);
+            labels, []);
 
         var irInstructions = InstructionConverter.Convert(instruction, context);
 
@@ -223,7 +223,7 @@ public class JmpTests
 
         var labels = new Dictionary<ushort, string> { { 0x8600, "target" } };
         var context = new InstructionConverter.Context(
-            labels);
+            labels, []);
 
         var irInstructions = InstructionConverter.Convert(instruction, context);
 
@@ -265,7 +265,7 @@ public class JmpTests
 
         var labels = new Dictionary<ushort, string> { { 0x8600, "target" } };
         var context = new InstructionConverter.Context(
-            labels);
+            labels, []);
 
         var irInstructions = InstructionConverter.Convert(instruction, context);
 
@@ -312,7 +312,7 @@ public class JmpTests
 
         var labels = new Dictionary<ushort, string> { { 0xFFFF, "far_target" } };
         var context = new InstructionConverter.Context(
-            labels);
+            labels, []);
 
         var irInstructions = InstructionConverter.Convert(instruction, context);
 
@@ -352,7 +352,7 @@ public class JmpTests
 
         var labels = new Dictionary<ushort, string> { { 0x0000, "low_target" } };
         var context = new InstructionConverter.Context(
-            labels);
+            labels, []);
 
         var irInstructions = InstructionConverter.Convert(instruction, context);
 
@@ -392,7 +392,7 @@ public class JmpTests
 
         var labels = new Dictionary<ushort, string> { { 0x8750, "always_target" } };
         var context = new InstructionConverter.Context(
-            labels);
+            labels, []);
 
         var irInstructions = InstructionConverter.Convert(instruction, context);
 

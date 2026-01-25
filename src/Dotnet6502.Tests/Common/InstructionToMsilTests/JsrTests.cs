@@ -24,7 +24,7 @@ public class JsrTests
         };
 
         var labels = new Dictionary<ushort, string>();
-        var context = new InstructionConverter.Context(labels);
+        var context = new InstructionConverter.Context(labels, []);
 
         var allInstructions = InstructionConverter.Convert(instruction, context)
             .Prepend(
@@ -60,7 +60,7 @@ public class JsrTests
         };
 
         var labels = new Dictionary<ushort, string>();
-        var context = new InstructionConverter.Context(labels);
+        var context = new InstructionConverter.Context(labels, []);
 
         var irInstructions = InstructionConverter.Convert(instruction, context);
 
@@ -116,7 +116,7 @@ public class JsrTests
             CPUAddress = 0x2345,
         };
 
-        var context = new InstructionConverter.Context(new Dictionary<ushort, string>());
+        var context = new InstructionConverter.Context(new Dictionary<ushort, string>(), []);
         var irInstructions = InstructionConverter.Convert(instruction, context);
 
         var jit = TestJitCompiler.Create();
@@ -151,7 +151,7 @@ public class JsrTests
             TargetAddress = null // No target address specified
         };
 
-        var context = new InstructionConverter.Context(new Dictionary<ushort, string>());
+        var context = new InstructionConverter.Context(new Dictionary<ushort, string>(), []);
 
         // Should throw exception when JSR has no target address
         Should.Throw<InvalidOperationException>(() => InstructionConverter.Convert(instruction, context))
@@ -170,7 +170,7 @@ public class JsrTests
             CPUAddress = 0x3456,
         };
 
-        var context = new InstructionConverter.Context(new Dictionary<ushort, string>());
+        var context = new InstructionConverter.Context(new Dictionary<ushort, string>(), []);
         var allInstructions = InstructionConverter.Convert(instruction, context)
             .Prepend(
                 // Set up initial state

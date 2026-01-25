@@ -125,7 +125,7 @@ public class JitCompiler
 
     protected virtual IReadOnlyList<ConvertedInstruction> GetIrInstructions(DecompiledFunction function)
     {
-        var instructionConverterContext = new InstructionConverter.Context(function.JumpTargets);
+        var instructionConverterContext = new InstructionConverter.Context(function.JumpTargets, []);
 
         // Convert each 6502 instruction into one or more IR instructions
         IReadOnlyList<ConvertedInstruction> convertedInstructions = function.OrderedInstructions

@@ -17,7 +17,7 @@ public class RtiTests
             Bytes = [0x40],
         };
 
-        var context = new InstructionConverter.Context(new Dictionary<ushort, string>());
+        var context = new InstructionConverter.Context(new Dictionary<ushort, string>(), []);
         var allInstructions = InstructionConverter.Convert(instruction, context);
 
         var jit = TestJitCompiler.Create();

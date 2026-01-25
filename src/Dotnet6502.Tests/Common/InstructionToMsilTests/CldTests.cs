@@ -28,7 +28,7 @@ public class CldTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -53,7 +53,7 @@ public class CldTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -78,7 +78,7 @@ public class CldTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
@@ -116,7 +116,7 @@ public class CldTests
         };
 
         var context = new InstructionConverter.Context(
-            new Dictionary<ushort, string>());
+            new Dictionary<ushort, string>(), []);
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();

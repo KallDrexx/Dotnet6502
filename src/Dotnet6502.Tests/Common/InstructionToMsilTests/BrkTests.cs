@@ -18,7 +18,7 @@ public class BrkTests
             Bytes = [0x00], // BRK
         };
 
-        var context = new InstructionConverter.Context(new Dictionary<ushort, string>());
+        var context = new InstructionConverter.Context(new Dictionary<ushort, string>(), []);
         var allInstructions = InstructionConverter.Convert(instruction, context);
 
         var jit = TestJitCompiler.Create();
@@ -49,7 +49,7 @@ public class BrkTests
             CPUAddress = 0x2345,
         };
 
-        var context = new InstructionConverter.Context(new Dictionary<ushort, string>());
+        var context = new InstructionConverter.Context(new Dictionary<ushort, string>(), []);
         var allInstructions = InstructionConverter.Convert(instruction, context);
 
         var jit = TestJitCompiler.Create();
@@ -81,7 +81,7 @@ public class BrkTests
             CPUAddress = 0x2345,
         };
 
-        var context = new InstructionConverter.Context(new Dictionary<ushort, string>());
+        var context = new InstructionConverter.Context(new Dictionary<ushort, string>(), []);
         var allInstructions = InstructionConverter.Convert(instruction, context);
 
         var jit = TestJitCompiler.Create();
@@ -111,7 +111,7 @@ public class BrkTests
             CPUAddress = 0x2345,
         };
 
-        var context = new InstructionConverter.Context(new Dictionary<ushort, string>());
+        var context = new InstructionConverter.Context(new Dictionary<ushort, string>(), []);
         var allInstructions = InstructionConverter.Convert(instruction, context);
 
         var jit = TestJitCompiler.Create();
