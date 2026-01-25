@@ -8,8 +8,10 @@ namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 
 public class BrkTests
 {
-    [Fact]
-    public void Brk_Invokes_Function_Call_To_Address_Pointed_To_By_Fffe()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Brk_Invokes_Function_Call_To_Address_Pointed_To_By_Fffe(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x00);
         var instruction = new DisassembledInstruction
@@ -22,6 +24,7 @@ public class BrkTests
         var allInstructions = InstructionConverter.Convert(instruction, context);
 
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.Memory.MemoryBlock[0xFFFE] = 0x56;
         jit.Memory.MemoryBlock[0xFFFF] = 0x34;
         jit.AddMethod(0x1234, allInstructions);
@@ -38,8 +41,10 @@ public class BrkTests
         jit.TestHal.ReadMemory(0x4000).ShouldBe((byte)99);
     }
 
-    [Fact]
-    public void Brk_Pushes_Next_Address_And_Processor_Flags_With_Unused_As_Ones_To_Stack()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Brk_Pushes_Next_Address_And_Processor_Flags_With_Unused_As_Ones_To_Stack(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x00);
         var instruction = new DisassembledInstruction
@@ -53,6 +58,7 @@ public class BrkTests
         var allInstructions = InstructionConverter.Convert(instruction, context);
 
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.Memory.MemoryBlock[0xFFFE] = 0x56;
         jit.Memory.MemoryBlock[0xFFFF] = 0x34;
         jit.TestHal.ProcessorStatus = 0b11001111;
@@ -70,8 +76,10 @@ public class BrkTests
         jit.TestHal.PopFromStack().ShouldBe((byte)0x23); // high address byte
     }
 
-    [Fact]
-    public void Brk_Sets_Interrupt_Disable_To_True()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Brk_Sets_Interrupt_Disable_To_True(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x00);
         var instruction = new DisassembledInstruction
@@ -85,6 +93,7 @@ public class BrkTests
         var allInstructions = InstructionConverter.Convert(instruction, context);
 
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.Memory.MemoryBlock[0xFFFE] = 0x56;
         jit.Memory.MemoryBlock[0xFFFF] = 0x34;
         jit.TestHal.ProcessorStatus = 0;
@@ -100,8 +109,10 @@ public class BrkTests
         jit.TestHal.GetFlag(CpuStatusFlags.InterruptDisable).ShouldBe(true);
     }
 
-    [Fact]
-    public void Brk_Sets_B_Disable_To_True_For_Value_Pushed_To_Stack()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Brk_Sets_B_Disable_To_True_For_Value_Pushed_To_Stack(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x00);
         var instruction = new DisassembledInstruction
@@ -115,6 +126,7 @@ public class BrkTests
         var allInstructions = InstructionConverter.Convert(instruction, context);
 
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.Memory.MemoryBlock[0xFFFE] = 0x56;
         jit.Memory.MemoryBlock[0xFFFF] = 0x34;
         jit.TestHal.ProcessorStatus = 0;

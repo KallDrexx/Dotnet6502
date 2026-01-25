@@ -19,8 +19,10 @@ namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 /// </summary>
 public class JmpTests
 {
-    [Fact]
-    public void JMP_Absolute_Basic_Jump()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void JMP_Absolute_Basic_Jump(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x4C);
         var instruction = new DisassembledInstruction
@@ -51,6 +53,7 @@ public class JmpTests
         ]);
 
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, allInstructions, true);
         jit.RunMethod(0x1234);
 
@@ -59,8 +62,10 @@ public class JmpTests
         jit.TestHal.ARegister.ShouldBe((byte)42); // Should be executed at target
     }
 
-    [Fact]
-    public void JMP_Indirect_Basic_Jump()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void JMP_Indirect_Basic_Jump(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x6C);
         var instruction = new DisassembledInstruction
@@ -80,6 +85,7 @@ public class JmpTests
             .ToArray();
 
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, allInstructions);
 
         // Set up method that will be jumped to
@@ -97,8 +103,10 @@ public class JmpTests
         jit.TestHal.ARegister.ShouldBe((byte)77); // Should be executed at target
     }
 
-    [Fact]
-    public void JMP_Absolute_Does_Not_Affect_Flags()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void JMP_Absolute_Does_Not_Affect_Flags(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x4C);
         var instruction = new DisassembledInstruction
@@ -129,6 +137,7 @@ public class JmpTests
         ]);
 
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, allInstructions);
 
         // Set initial flag states
@@ -150,8 +159,10 @@ public class JmpTests
         jit.TestHal.GetFlag(CpuStatusFlags.Decimal).ShouldBeTrue();
     }
 
-    [Fact]
-    public void JMP_Indirect_Does_Not_Affect_Flags()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void JMP_Indirect_Does_Not_Affect_Flags(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x6C);
         var instruction = new DisassembledInstruction
@@ -182,6 +193,7 @@ public class JmpTests
         ]);
 
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, allInstructions);
 
         // Set up method that will be jumped to
@@ -210,8 +222,10 @@ public class JmpTests
         jit.TestHal.GetFlag(CpuStatusFlags.Decimal).ShouldBeTrue();
     }
 
-    [Fact]
-    public void JMP_Absolute_Does_Not_Affect_Registers()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void JMP_Absolute_Does_Not_Affect_Registers(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x4C);
         var instruction = new DisassembledInstruction
@@ -235,6 +249,7 @@ public class JmpTests
         ]);
 
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, allInstructions);
 
         // Set initial register values
@@ -252,8 +267,10 @@ public class JmpTests
         jit.TestHal.StackPointer.ShouldBe((byte)0xFF);
     }
 
-    [Fact]
-    public void JMP_Indirect_Does_Not_Affect_Registers()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void JMP_Indirect_Does_Not_Affect_Registers(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x6C);
         var instruction = new DisassembledInstruction
@@ -277,6 +294,7 @@ public class JmpTests
         ]);
 
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, allInstructions);
 
         // Set up method that will be jumped to
@@ -299,8 +317,10 @@ public class JmpTests
         jit.TestHal.StackPointer.ShouldBe((byte)0xCC);
     }
 
-    [Fact]
-    public void JMP_Absolute_Far_Address()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void JMP_Absolute_Far_Address(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x4C);
         var instruction = new DisassembledInstruction
@@ -330,6 +350,7 @@ public class JmpTests
         ]);
 
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, allInstructions);
         jit.RunMethod(0x1234);
 
@@ -338,8 +359,10 @@ public class JmpTests
         jit.TestHal.ARegister.ShouldBe((byte)222); // Should be executed
     }
 
-    [Fact]
-    public void JMP_Absolute_Low_Address()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void JMP_Absolute_Low_Address(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x4C);
         var instruction = new DisassembledInstruction
@@ -370,6 +393,7 @@ public class JmpTests
         ]);
 
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, allInstructions);
         jit.RunMethod(0x1234);
 
@@ -378,8 +402,10 @@ public class JmpTests
         jit.TestHal.ARegister.ShouldBe((byte)99); // Should be executed
     }
 
-    [Fact]
-    public void JMP_Instructions_Are_Unconditional()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void JMP_Instructions_Are_Unconditional(bool useInterpreter)
     {
         // Test that JMP works regardless of flag states
         var instructionInfo = InstructionSet.GetInstruction(0x4C);
@@ -423,6 +449,7 @@ public class JmpTests
             ]);
 
             var jit = TestJitCompiler.Create();
+            jit.AlwaysUseInterpreter = useInterpreter;
             jit.AddMethod(0x1234, allInstructions);
 
             // Set flag states

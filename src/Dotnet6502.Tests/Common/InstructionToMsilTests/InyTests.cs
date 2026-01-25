@@ -19,8 +19,10 @@ namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 /// </summary>
 public class InyTests
 {
-    [Fact]
-    public void INY_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void INY_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xC8);
         var instruction = new DisassembledInstruction
@@ -34,6 +36,7 @@ public class InyTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x05;
         jit.RunMethod(0x1234);
@@ -45,8 +48,10 @@ public class InyTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void INY_Zero_Result()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void INY_Zero_Result(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xC8);
         var instruction = new DisassembledInstruction
@@ -60,6 +65,7 @@ public class InyTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0xFF; // 0xFF + 1 = 0x00 (wraparound)
         jit.RunMethod(0x1234);
@@ -71,8 +77,10 @@ public class InyTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void INY_Negative_Result()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void INY_Negative_Result(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xC8);
         var instruction = new DisassembledInstruction
@@ -86,6 +94,7 @@ public class InyTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x7F; // 127, increment to 128 (0x80, negative)
         jit.RunMethod(0x1234);
@@ -97,8 +106,10 @@ public class InyTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void INY_Positive_Non_Zero_Result()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void INY_Positive_Non_Zero_Result(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xC8);
         var instruction = new DisassembledInstruction
@@ -112,6 +123,7 @@ public class InyTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x42;
         jit.RunMethod(0x1234);
@@ -123,8 +135,10 @@ public class InyTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void INY_From_Zero()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void INY_From_Zero(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xC8);
         var instruction = new DisassembledInstruction
@@ -138,6 +152,7 @@ public class InyTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x00;
         jit.RunMethod(0x1234);
@@ -149,8 +164,10 @@ public class InyTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void INY_From_Negative_To_Negative()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void INY_From_Negative_To_Negative(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xC8);
         var instruction = new DisassembledInstruction
@@ -164,6 +181,7 @@ public class InyTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x80; // -128, increment to -127 (0x81)
         jit.RunMethod(0x1234);
@@ -175,8 +193,10 @@ public class InyTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void INY_Boundary_Value_0x7E()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void INY_Boundary_Value_0x7E(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xC8);
         var instruction = new DisassembledInstruction
@@ -190,6 +210,7 @@ public class InyTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x7E; // 126, increment to 127 (0x7F, still positive)
         jit.RunMethod(0x1234);
@@ -201,8 +222,10 @@ public class InyTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void INY_Negative_To_More_Negative()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void INY_Negative_To_More_Negative(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xC8);
         var instruction = new DisassembledInstruction
@@ -216,6 +239,7 @@ public class InyTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0xFE; // -2, increment to -1 (0xFF)
         jit.RunMethod(0x1234);

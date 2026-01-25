@@ -18,8 +18,10 @@ namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 /// </summary>
 public class PlpTests
 {
-    [Fact]
-    public void PLP_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void PLP_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x28);
         var instruction = new DisassembledInstruction
@@ -33,6 +35,7 @@ public class PlpTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Clear all flags initially
@@ -57,8 +60,10 @@ public class PlpTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();  // bit 7
     }
 
-    [Fact]
-    public void PLP_All_Flags_Set()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void PLP_All_Flags_Set(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x28);
         var instruction = new DisassembledInstruction
@@ -72,6 +77,7 @@ public class PlpTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Clear all flags initially
@@ -97,8 +103,10 @@ public class PlpTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void PLP_All_Flags_Clear()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void PLP_All_Flags_Clear(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x28);
         var instruction = new DisassembledInstruction
@@ -112,6 +120,7 @@ public class PlpTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Set all flags initially
@@ -136,8 +145,10 @@ public class PlpTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void PLP_Mixed_Flags()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void PLP_Mixed_Flags(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x28);
         var instruction = new DisassembledInstruction
@@ -151,6 +162,7 @@ public class PlpTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Start with opposite pattern
@@ -176,8 +188,10 @@ public class PlpTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void PLP_Does_Not_Affect_Registers()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void PLP_Does_Not_Affect_Registers(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x28);
         var instruction = new DisassembledInstruction
@@ -191,6 +205,7 @@ public class PlpTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x42;
         jit.TestHal.XRegister = 0x33;
@@ -204,8 +219,10 @@ public class PlpTests
         jit.TestHal.YRegister.ShouldBe((byte)0x77); // Should remain unchanged
     }
 
-    [Fact]
-    public void PLP_Edge_Cases()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void PLP_Edge_Cases(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x28);
         var instruction = new DisassembledInstruction
@@ -221,6 +238,7 @@ public class PlpTests
 
         // Test with just carry flag
         var jit1 = TestJitCompiler.Create();
+        jit1.AlwaysUseInterpreter = useInterpreter;
             jit1.AddMethod(0x1234, nesIrInstructions);
         jit1.TestHal.PushToStack(0x01); // Just carry flag
         jit1.RunMethod(0x1234);
@@ -229,6 +247,7 @@ public class PlpTests
 
         // Test with alternating pattern
         var jit2 = TestJitCompiler.Create();
+        jit2.AlwaysUseInterpreter = useInterpreter;
             jit2.AddMethod(0x1234, nesIrInstructions);
         jit2.TestHal.PushToStack(0xAA); // 10101010 pattern
         jit2.RunMethod(0x1234);

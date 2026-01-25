@@ -19,8 +19,10 @@ namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 /// </summary>
 public class BplTests
 {
-    [Fact]
-    public void BPL_Branches_When_Negative_Flag_Clear()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void BPL_Branches_When_Negative_Flag_Clear(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x10);
         var instruction = new DisassembledInstruction
@@ -55,6 +57,7 @@ public class BplTests
         ]);
 
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, allInstructions);
         jit.TestHal.SetFlag(CpuStatusFlags.Negative, false); // Negative flag clear
         jit.RunMethod(0x1234);
@@ -65,8 +68,10 @@ public class BplTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse(); // Should remain unchanged
     }
 
-    [Fact]
-    public void BPL_Does_Not_Branch_When_Negative_Flag_Set()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void BPL_Does_Not_Branch_When_Negative_Flag_Set(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x10);
         var instruction = new DisassembledInstruction
@@ -101,6 +106,7 @@ public class BplTests
         ]);
 
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, allInstructions);
         jit.TestHal.SetFlag(CpuStatusFlags.Negative, true); // Negative flag set
         jit.RunMethod(0x1234);
@@ -111,8 +117,10 @@ public class BplTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue(); // Should remain unchanged
     }
 
-    [Fact]
-    public void BPL_Backward_Branch_When_Negative_Flag_Clear()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void BPL_Backward_Branch_When_Negative_Flag_Clear(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x10);
         var instruction = new DisassembledInstruction
@@ -154,6 +162,7 @@ public class BplTests
         allInstructions.AddRange(irInstructions);
 
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, allInstructions);
         jit.RunMethod(0x1234);
 
@@ -162,8 +171,10 @@ public class BplTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue(); // Final state: negative flag set (loop exit condition)
     }
 
-    [Fact]
-    public void BPL_Does_Not_Affect_Other_Flags()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void BPL_Does_Not_Affect_Other_Flags(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x10);
         var instruction = new DisassembledInstruction
@@ -194,6 +205,7 @@ public class BplTests
         ]);
 
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, allInstructions);
 
         // Set initial flag states
@@ -215,8 +227,10 @@ public class BplTests
         jit.TestHal.GetFlag(CpuStatusFlags.Decimal).ShouldBeTrue();
     }
 
-    [Fact]
-    public void BPL_Does_Not_Affect_Registers()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void BPL_Does_Not_Affect_Registers(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x10);
         var instruction = new DisassembledInstruction
@@ -244,6 +258,7 @@ public class BplTests
         ]);
 
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, allInstructions);
 
         // Set initial register values
@@ -262,8 +277,10 @@ public class BplTests
         jit.TestHal.StackPointer.ShouldBe((byte)0xFF);
     }
 
-    [Fact]
-    public void BPL_Forward_Branch_Maximum_Positive_Offset()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void BPL_Forward_Branch_Maximum_Positive_Offset(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x10);
         var instruction = new DisassembledInstruction
@@ -297,6 +314,7 @@ public class BplTests
         ]);
 
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, allInstructions);
         jit.TestHal.SetFlag(CpuStatusFlags.Negative, false);
         jit.RunMethod(0x1234);
@@ -306,8 +324,10 @@ public class BplTests
         jit.TestHal.ARegister.ShouldBe((byte)222); // Should be executed
     }
 
-    [Fact]
-    public void BPL_Backward_Branch_Maximum_Negative_Offset()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void BPL_Backward_Branch_Maximum_Negative_Offset(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x10);
         var instruction = new DisassembledInstruction
@@ -353,6 +373,7 @@ public class BplTests
         allInstructions.AddRange(irInstructions);
 
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, allInstructions);
         jit.TestHal.XRegister = 0; // Start with 0 to trigger branch once
         jit.RunMethod(0x1234);
@@ -362,8 +383,10 @@ public class BplTests
         jit.TestHal.XRegister.ShouldBe((byte)2); // Incremented twice (loop executes twice)
     }
 
-    [Fact]
-    public void BPL_With_Various_Negative_States_From_Previous_Operations()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void BPL_With_Various_Negative_States_From_Previous_Operations(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x10);
         var instruction = new DisassembledInstruction
@@ -399,6 +422,7 @@ public class BplTests
             ]);
 
             var jit1 = TestJitCompiler.Create();
+            jit1.AlwaysUseInterpreter = useInterpreter;
             jit1.AddMethod(0x1234, allInstructions);
             jit1.TestHal.SetFlag(CpuStatusFlags.Negative, true);
             jit1.RunMethod(0x1234);
@@ -428,6 +452,7 @@ public class BplTests
             ]);
 
             var jit2 = TestJitCompiler.Create();
+            jit2.AlwaysUseInterpreter = useInterpreter;
             jit2.AddMethod(0x1234, allInstructions);
             jit2.TestHal.SetFlag(CpuStatusFlags.Negative, false);
             jit2.RunMethod(0x1234);

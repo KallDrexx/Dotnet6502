@@ -17,8 +17,10 @@ namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 /// </summary>
 public class CliTests
 {
-    [Fact]
-    public void CLI_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CLI_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x58);
         var instruction = new DisassembledInstruction
@@ -32,6 +34,7 @@ public class CliTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Set interrupt disable flag initially
@@ -42,8 +45,10 @@ public class CliTests
         jit.TestHal.GetFlag(CpuStatusFlags.InterruptDisable).ShouldBeFalse();
     }
 
-    [Fact]
-    public void CLI_When_Already_Clear()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CLI_When_Already_Clear(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x58);
         var instruction = new DisassembledInstruction
@@ -57,6 +62,7 @@ public class CliTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Interrupt disable flag already clear
@@ -67,8 +73,10 @@ public class CliTests
         jit.TestHal.GetFlag(CpuStatusFlags.InterruptDisable).ShouldBeFalse();
     }
 
-    [Fact]
-    public void CLI_Preserves_Other_Flags()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CLI_Preserves_Other_Flags(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x58);
         var instruction = new DisassembledInstruction
@@ -82,6 +90,7 @@ public class CliTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Set all flags
@@ -105,8 +114,10 @@ public class CliTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void CLI_Does_Not_Affect_Registers()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CLI_Does_Not_Affect_Registers(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x58);
         var instruction = new DisassembledInstruction
@@ -120,6 +131,7 @@ public class CliTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
 
         jit.TestHal.ARegister = 0x42;

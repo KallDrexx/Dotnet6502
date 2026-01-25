@@ -17,8 +17,10 @@ namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 /// </summary>
 public class TxsTests
 {
-    [Fact]
-    public void TXS_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TXS_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x9A);
         var instruction = new DisassembledInstruction
@@ -32,6 +34,7 @@ public class TxsTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x42;
         jit.TestHal.StackPointer = 0xFF;
@@ -45,8 +48,10 @@ public class TxsTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void TXS_Zero()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TXS_Zero(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x9A);
         var instruction = new DisassembledInstruction
@@ -60,6 +65,7 @@ public class TxsTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x00;
         jit.TestHal.StackPointer = 0xFF;
@@ -72,8 +78,10 @@ public class TxsTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void TXS_Negative()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TXS_Negative(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x9A);
         var instruction = new DisassembledInstruction
@@ -87,6 +95,7 @@ public class TxsTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x80;
         jit.TestHal.StackPointer = 0xFF;
@@ -99,8 +108,10 @@ public class TxsTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void TXS_High_Value()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TXS_High_Value(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x9A);
         var instruction = new DisassembledInstruction
@@ -114,6 +125,7 @@ public class TxsTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0xFF;
         jit.TestHal.StackPointer = 0x00;
@@ -125,8 +137,10 @@ public class TxsTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void TXS_Preserves_All_Flags()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TXS_Preserves_All_Flags(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x9A);
         var instruction = new DisassembledInstruction
@@ -140,6 +154,7 @@ public class TxsTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x80; // Negative value
         jit.TestHal.StackPointer = 0xFF;
@@ -166,8 +181,10 @@ public class TxsTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void TXS_Does_Not_Affect_Other_Registers()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TXS_Does_Not_Affect_Other_Registers(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x9A);
         var instruction = new DisassembledInstruction
@@ -181,6 +198,7 @@ public class TxsTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x11;
         jit.TestHal.XRegister = 0x42;
@@ -194,8 +212,10 @@ public class TxsTests
         jit.TestHal.YRegister.ShouldBe((byte)0x33); // Should remain unchanged
     }
 
-    [Fact]
-    public void TXS_Preserves_Clear_Flags()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TXS_Preserves_Clear_Flags(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x9A);
         var instruction = new DisassembledInstruction
@@ -209,6 +229,7 @@ public class TxsTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x00; // Zero value
         jit.TestHal.StackPointer = 0xFF;

@@ -21,8 +21,10 @@ namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 /// </summary>
 public class CmpTests
 {
-    [Fact]
-    public void CMP_Immediate_Equal()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CMP_Immediate_Equal(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xC9);
         var instruction = new DisassembledInstruction
@@ -36,6 +38,7 @@ public class CmpTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x42;
         jit.TestHal.SetFlag(CpuStatusFlags.Overflow, true);
@@ -48,8 +51,10 @@ public class CmpTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeTrue();
     }
 
-    [Fact]
-    public void CMP_Immediate_Greater()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CMP_Immediate_Greater(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xC9);
         var instruction = new DisassembledInstruction
@@ -63,6 +68,7 @@ public class CmpTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x50;
         jit.RunMethod(0x1234);
@@ -73,8 +79,10 @@ public class CmpTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void CMP_Immediate_Less()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CMP_Immediate_Less(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xC9);
         var instruction = new DisassembledInstruction
@@ -88,6 +96,7 @@ public class CmpTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x30;
         jit.RunMethod(0x1234);
@@ -98,8 +107,10 @@ public class CmpTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void CMP_Immediate_Zero_Compare()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CMP_Immediate_Zero_Compare(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xC9);
         var instruction = new DisassembledInstruction
@@ -113,6 +124,7 @@ public class CmpTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x80;
         jit.RunMethod(0x1234);
@@ -123,8 +135,10 @@ public class CmpTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void CMP_ZeroPage_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CMP_ZeroPage_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xC5);
         var instruction = new DisassembledInstruction
@@ -138,6 +152,7 @@ public class CmpTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x7F;
         jit.Memory.MemoryBlock[0x10] = 0x7F;
@@ -149,8 +164,10 @@ public class CmpTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void CMP_ZeroPageX_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CMP_ZeroPageX_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xD5);
         var instruction = new DisassembledInstruction
@@ -164,6 +181,7 @@ public class CmpTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x10;
         jit.TestHal.XRegister = 0x05;
@@ -176,8 +194,10 @@ public class CmpTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void CMP_ZeroPageX_Wraparound()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CMP_ZeroPageX_Wraparound(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xD5);
         var instruction = new DisassembledInstruction
@@ -191,6 +211,7 @@ public class CmpTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x80;
         jit.TestHal.XRegister = 0x02;
@@ -203,8 +224,10 @@ public class CmpTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void CMP_Absolute_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CMP_Absolute_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xCD);
         var instruction = new DisassembledInstruction
@@ -218,6 +241,7 @@ public class CmpTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0xFF;
         jit.Memory.MemoryBlock[0x3000] = 0x01;
@@ -229,8 +253,10 @@ public class CmpTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void CMP_AbsoluteX_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CMP_AbsoluteX_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xDD);
         var instruction = new DisassembledInstruction
@@ -244,6 +270,7 @@ public class CmpTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x42;
         jit.TestHal.XRegister = 0x0F;
@@ -256,8 +283,10 @@ public class CmpTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void CMP_AbsoluteY_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CMP_AbsoluteY_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xD9);
         var instruction = new DisassembledInstruction
@@ -271,6 +300,7 @@ public class CmpTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.TestHal.YRegister = 0x01;
@@ -283,8 +313,10 @@ public class CmpTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void CMP_Signed_Comparison()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CMP_Signed_Comparison(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xC9);
         var instruction = new DisassembledInstruction
@@ -298,6 +330,7 @@ public class CmpTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x7F;
         jit.RunMethod(0x1234);
@@ -308,8 +341,10 @@ public class CmpTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void CMP_Boundary_Values()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CMP_Boundary_Values(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xC9);
         var instruction = new DisassembledInstruction
@@ -323,6 +358,7 @@ public class CmpTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0xFF;
         jit.RunMethod(0x1234);

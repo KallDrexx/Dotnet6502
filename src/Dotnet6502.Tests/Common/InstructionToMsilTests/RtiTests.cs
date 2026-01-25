@@ -7,8 +7,10 @@ namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 
 public class RtiTests
 {
-    [Fact]
-    public void Rti_Updates_Flag_From_Stack_First_Stack_Value_Return_Address_From_Second_And_Third()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Rti_Updates_Flag_From_Stack_First_Stack_Value_Return_Address_From_Second_And_Third(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x40);
         var instruction = new DisassembledInstruction
@@ -21,6 +23,7 @@ public class RtiTests
         var allInstructions = InstructionConverter.Convert(instruction, context);
 
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.TestHal.ProcessorStatus = 0;
         jit.TestHal.PushToStack(0x23); // return address low byte
         jit.TestHal.PushToStack(0x45);  // return address high byte

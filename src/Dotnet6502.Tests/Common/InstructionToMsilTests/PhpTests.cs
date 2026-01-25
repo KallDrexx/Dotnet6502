@@ -18,8 +18,10 @@ namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 /// </summary>
 public class PhpTests
 {
-    [Fact]
-    public void PHP_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void PHP_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x08);
         var instruction = new DisassembledInstruction
@@ -33,6 +35,7 @@ public class PhpTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Set some flags
@@ -66,8 +69,10 @@ public class PhpTests
         (stackValue & 0x80).ShouldBe((byte)0x00); // Negative clear
     }
 
-    [Fact]
-    public void PHP_All_Flags_Set()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void PHP_All_Flags_Set(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x08);
         var instruction = new DisassembledInstruction
@@ -81,6 +86,7 @@ public class PhpTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Set all flags
@@ -111,8 +117,10 @@ public class PhpTests
         (stackValue & 0x80).ShouldBe((byte)0x80); // Negative
     }
 
-    [Fact]
-    public void PHP_All_Flags_Clear()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void PHP_All_Flags_Clear(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x08);
         var instruction = new DisassembledInstruction
@@ -126,6 +134,7 @@ public class PhpTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Clear all flags
@@ -156,8 +165,10 @@ public class PhpTests
         (stackValue & 0x80).ShouldBe((byte)0x00); // Negative
     }
 
-    [Fact]
-    public void PHP_Does_Not_Affect_Registers()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void PHP_Does_Not_Affect_Registers(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x08);
         var instruction = new DisassembledInstruction
@@ -171,6 +182,7 @@ public class PhpTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x42;
         jit.TestHal.XRegister = 0x33;
@@ -182,8 +194,10 @@ public class PhpTests
         jit.TestHal.YRegister.ShouldBe((byte)0x77); // Should remain unchanged
     }
 
-    [Fact]
-    public void PHP_Specific_Flag_Pattern()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void PHP_Specific_Flag_Pattern(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x08);
         var instruction = new DisassembledInstruction
@@ -197,6 +211,7 @@ public class PhpTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Set a specific pattern: Only carry and negative flags

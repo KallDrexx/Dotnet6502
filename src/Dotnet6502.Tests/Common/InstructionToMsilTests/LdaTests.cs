@@ -17,8 +17,10 @@ namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 /// </summary>
 public class LdaTests
 {
-    [Fact]
-    public void LDA_Immediate_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LDA_Immediate_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xA9);
         var instruction = new DisassembledInstruction
@@ -32,6 +34,7 @@ public class LdaTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.RunMethod(0x1234);
@@ -43,8 +46,10 @@ public class LdaTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void LDA_Immediate_Zero()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LDA_Immediate_Zero(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xA9);
         var instruction = new DisassembledInstruction
@@ -58,6 +63,7 @@ public class LdaTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0xFF;
         jit.RunMethod(0x1234);
@@ -69,8 +75,10 @@ public class LdaTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void LDA_Immediate_Negative()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LDA_Immediate_Negative(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xA9);
         var instruction = new DisassembledInstruction
@@ -84,6 +92,7 @@ public class LdaTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.RunMethod(0x1234);
@@ -95,8 +104,10 @@ public class LdaTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void LDA_Immediate_HighValue()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LDA_Immediate_HighValue(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xA9);
         var instruction = new DisassembledInstruction
@@ -110,6 +121,7 @@ public class LdaTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.RunMethod(0x1234);
@@ -121,8 +133,10 @@ public class LdaTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void LDA_ZeroPage_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LDA_ZeroPage_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xA5);
         var instruction = new DisassembledInstruction
@@ -136,6 +150,7 @@ public class LdaTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.Memory.MemoryBlock[0x10] = 0x33;
@@ -148,8 +163,10 @@ public class LdaTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void LDA_ZeroPage_Zero()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LDA_ZeroPage_Zero(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xA5);
         var instruction = new DisassembledInstruction
@@ -163,6 +180,7 @@ public class LdaTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0xFF;
         jit.Memory.MemoryBlock[0x20] = 0x00;
@@ -175,8 +193,10 @@ public class LdaTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void LDA_ZeroPageX_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LDA_ZeroPageX_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xB5);
         var instruction = new DisassembledInstruction
@@ -190,6 +210,7 @@ public class LdaTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.TestHal.XRegister = 0x05;
@@ -203,8 +224,10 @@ public class LdaTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void LDA_ZeroPageX_Wraparound()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LDA_ZeroPageX_Wraparound(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xB5);
         var instruction = new DisassembledInstruction
@@ -218,6 +241,7 @@ public class LdaTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.TestHal.XRegister = 0x02;
@@ -232,8 +256,10 @@ public class LdaTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void LDA_Absolute_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LDA_Absolute_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xAD);
         var instruction = new DisassembledInstruction
@@ -247,6 +273,7 @@ public class LdaTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.Memory.MemoryBlock[0x3000] = 0x99;
@@ -259,8 +286,10 @@ public class LdaTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void LDA_AbsoluteX_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LDA_AbsoluteX_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xBD);
         var instruction = new DisassembledInstruction
@@ -274,6 +303,7 @@ public class LdaTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.TestHal.XRegister = 0x0F;
@@ -287,8 +317,10 @@ public class LdaTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void LDA_AbsoluteY_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LDA_AbsoluteY_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xB9);
         var instruction = new DisassembledInstruction
@@ -302,6 +334,7 @@ public class LdaTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.TestHal.YRegister = 0x10;
@@ -315,8 +348,10 @@ public class LdaTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void LDA_IndexedIndirect_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LDA_IndexedIndirect_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xA1);
         var instruction = new DisassembledInstruction
@@ -330,6 +365,7 @@ public class LdaTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.TestHal.XRegister = 0x05;
@@ -350,8 +386,10 @@ public class LdaTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void LDA_IndexedIndirect_255()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LDA_IndexedIndirect_255(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xA1);
         var instruction = new DisassembledInstruction
@@ -365,6 +403,7 @@ public class LdaTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.TestHal.XRegister = 0x05;
@@ -382,8 +421,10 @@ public class LdaTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void LDA_IndexedIndirect_Zero()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LDA_IndexedIndirect_Zero(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xA1);
         var instruction = new DisassembledInstruction
@@ -397,6 +438,7 @@ public class LdaTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0xFF;
         jit.TestHal.XRegister = 0x03;
@@ -417,8 +459,10 @@ public class LdaTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void LDA_IndexedIndirect_Negative()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LDA_IndexedIndirect_Negative(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xA1);
         var instruction = new DisassembledInstruction
@@ -432,6 +476,7 @@ public class LdaTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.TestHal.XRegister = 0x08;
@@ -452,8 +497,10 @@ public class LdaTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void LDA_IndexedIndirect_ZeroPageWrapAround()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LDA_IndexedIndirect_ZeroPageWrapAround(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xA1);
         var instruction = new DisassembledInstruction
@@ -467,6 +514,7 @@ public class LdaTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.TestHal.XRegister = 0x02;
@@ -487,8 +535,10 @@ public class LdaTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void LDA_IndirectIndexed_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LDA_IndirectIndexed_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xB1);
         var instruction = new DisassembledInstruction
@@ -502,6 +552,7 @@ public class LdaTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.TestHal.YRegister = 0x10;
@@ -522,8 +573,10 @@ public class LdaTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void LDA_IndirectIndexed_255()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LDA_IndirectIndexed_255(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xB1);
         var instruction = new DisassembledInstruction
@@ -537,6 +590,7 @@ public class LdaTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.TestHal.YRegister = 0x10;
@@ -557,8 +611,10 @@ public class LdaTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void LDA_IndirectIndexed_Zero()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LDA_IndirectIndexed_Zero(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xB1);
         var instruction = new DisassembledInstruction
@@ -572,6 +628,7 @@ public class LdaTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0xFF;
         jit.TestHal.YRegister = 0x05;
@@ -592,8 +649,10 @@ public class LdaTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void LDA_IndirectIndexed_Negative()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LDA_IndirectIndexed_Negative(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xB1);
         var instruction = new DisassembledInstruction
@@ -607,6 +666,7 @@ public class LdaTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.TestHal.YRegister = 0x20;
@@ -627,8 +687,10 @@ public class LdaTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void LDA_IndirectIndexed_PageBoundary()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LDA_IndirectIndexed_PageBoundary(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xB1);
         var instruction = new DisassembledInstruction
@@ -642,6 +704,7 @@ public class LdaTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.TestHal.YRegister = 0xFF;
@@ -662,8 +725,10 @@ public class LdaTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void LDA_Preserves_Other_Flags()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LDA_Preserves_Other_Flags(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xA9);
         var instruction = new DisassembledInstruction
@@ -677,6 +742,7 @@ public class LdaTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
 

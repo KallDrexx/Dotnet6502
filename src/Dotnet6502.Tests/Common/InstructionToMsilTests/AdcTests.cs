@@ -8,8 +8,10 @@ namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 
 public class AdcTests
 {
-    [Fact]
-    public void ADC_Immediate_No_Overflow()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ADC_Immediate_No_Overflow(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x69);
         var instruction = new DisassembledInstruction
@@ -23,6 +25,7 @@ public class AdcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 10;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
@@ -35,8 +38,10 @@ public class AdcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void ADC_Immediate_With_Carry_Out()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ADC_Immediate_With_Carry_Out(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x69);
         var instruction = new DisassembledInstruction
@@ -50,6 +55,7 @@ public class AdcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x02;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
@@ -63,8 +69,10 @@ public class AdcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void ADC_Immediate_Zero_Result()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ADC_Immediate_Zero_Result(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x69);
         var instruction = new DisassembledInstruction
@@ -78,6 +86,7 @@ public class AdcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x01;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
@@ -91,8 +100,10 @@ public class AdcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void ADC_Immediate_Negative_Result()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ADC_Immediate_Negative_Result(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x69);
         var instruction = new DisassembledInstruction
@@ -106,6 +117,7 @@ public class AdcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x50;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
@@ -119,8 +131,10 @@ public class AdcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void ADC_Immediate_Overflow_Negative_To_Positive()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ADC_Immediate_Overflow_Negative_To_Positive(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x69);
         var instruction = new DisassembledInstruction
@@ -134,6 +148,7 @@ public class AdcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x80;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
@@ -147,8 +162,10 @@ public class AdcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void ADC_Immediate_With_Carry_In()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ADC_Immediate_With_Carry_In(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x69);
         var instruction = new DisassembledInstruction
@@ -162,6 +179,7 @@ public class AdcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x20;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
@@ -174,8 +192,10 @@ public class AdcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void ADC_Immediate_No_Overflow_Mixed_Signs()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ADC_Immediate_No_Overflow_Mixed_Signs(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x69);
         var instruction = new DisassembledInstruction
@@ -189,6 +209,7 @@ public class AdcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x7F; // +127 in signed
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
@@ -202,8 +223,10 @@ public class AdcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void ADC_Immediate_Overflow_Positive_Result_From_Negatives()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ADC_Immediate_Overflow_Positive_Result_From_Negatives(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x69);
         var instruction = new DisassembledInstruction
@@ -217,6 +240,7 @@ public class AdcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x82; // -126 in signed
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
@@ -231,8 +255,10 @@ public class AdcTests
     }
 
     // ZeroPage addressing mode tests
-    [Fact]
-    public void ADC_ZeroPage_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ADC_ZeroPage_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x65);
         var instruction = new DisassembledInstruction
@@ -246,6 +272,7 @@ public class AdcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x05;
         jit.Memory.MemoryBlock[0x10] = 0x03;
@@ -259,8 +286,10 @@ public class AdcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void ADC_ZeroPage_With_Carry()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ADC_ZeroPage_With_Carry(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x65);
         var instruction = new DisassembledInstruction
@@ -274,6 +303,7 @@ public class AdcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0xFF;
         jit.Memory.MemoryBlock[0x20] = 0x02;
@@ -289,8 +319,10 @@ public class AdcTests
     }
 
     // ZeroPageX addressing mode tests
-    [Fact]
-    public void ADC_ZeroPageX_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ADC_ZeroPageX_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x75);
         var instruction = new DisassembledInstruction
@@ -304,6 +336,7 @@ public class AdcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x10;
         jit.TestHal.XRegister = 0x05;
@@ -318,8 +351,10 @@ public class AdcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void ADC_ZeroPageX_Wraparound()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ADC_ZeroPageX_Wraparound(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x75);
         var instruction = new DisassembledInstruction
@@ -333,6 +368,7 @@ public class AdcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x01;
         jit.TestHal.XRegister = 0x02;
@@ -349,8 +385,10 @@ public class AdcTests
     }
 
     // Absolute addressing mode tests
-    [Fact]
-    public void ADC_Absolute_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ADC_Absolute_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x6D);
         var instruction = new DisassembledInstruction
@@ -364,6 +402,7 @@ public class AdcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x42;
         jit.Memory.MemoryBlock[0x3000] = 0x33;
@@ -377,8 +416,10 @@ public class AdcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void ADC_Absolute_Overflow()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ADC_Absolute_Overflow(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x6D);
         var instruction = new DisassembledInstruction
@@ -392,6 +433,7 @@ public class AdcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x7F;
         jit.Memory.MemoryBlock[0x1234] = 0x01;
@@ -407,8 +449,10 @@ public class AdcTests
     }
 
     // AbsoluteX addressing mode tests
-    [Fact]
-    public void ADC_AbsoluteX_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ADC_AbsoluteX_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x7D);
         var instruction = new DisassembledInstruction
@@ -422,6 +466,7 @@ public class AdcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x11;
         jit.TestHal.XRegister = 0x0F;
@@ -437,8 +482,10 @@ public class AdcTests
     }
 
     // AbsoluteY addressing mode tests
-    [Fact]
-    public void ADC_AbsoluteY_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ADC_AbsoluteY_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x79);
         var instruction = new DisassembledInstruction
@@ -452,6 +499,7 @@ public class AdcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x08;
         jit.TestHal.YRegister = 0x10;
@@ -466,8 +514,10 @@ public class AdcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void ADC_AbsoluteY_Zero_And_Carry()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ADC_AbsoluteY_Zero_And_Carry(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x79);
         var instruction = new DisassembledInstruction
@@ -481,6 +531,7 @@ public class AdcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x01;
         jit.TestHal.YRegister = 0x01;
@@ -496,8 +547,10 @@ public class AdcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void Adc_Result_With_Cleared_Decimal_Flag_Test()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Adc_Result_With_Cleared_Decimal_Flag_Test(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x69);
         var instruction = new DisassembledInstruction
@@ -511,6 +564,7 @@ public class AdcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x47;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
@@ -520,8 +574,10 @@ public class AdcTests
         jit.TestHal.ARegister.ShouldBe((byte)0x6D);
     }
 
-    [Fact]
-    public void Adc_Result_With_Set_Decimal_Flag_Test()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Adc_Result_With_Set_Decimal_Flag_Test(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x69);
         var instruction = new DisassembledInstruction
@@ -535,6 +591,7 @@ public class AdcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x47;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
@@ -544,8 +601,10 @@ public class AdcTests
         jit.TestHal.ARegister.ShouldBe((byte)0x73);
     }
 
-    [Fact]
-    public void Adc_Decimal_Calculation_Without_Zero_Result_Should_Have_Zero_Flag_Unset()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Adc_Decimal_Calculation_Without_Zero_Result_Should_Have_Zero_Flag_Unset(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x69);
         var instruction = new DisassembledInstruction
@@ -559,6 +618,7 @@ public class AdcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x47;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
@@ -569,8 +629,10 @@ public class AdcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeFalse();
     }
 
-    [Fact]
-    public void Negative_Flags_Set_By_Non_Bcd_Logic_When_Bcd_Enabled()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Negative_Flags_Set_By_Non_Bcd_Logic_When_Bcd_Enabled(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x69);
         var instruction = new DisassembledInstruction
@@ -584,6 +646,7 @@ public class AdcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x05;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
@@ -594,8 +657,10 @@ public class AdcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void Overflow_Flags_Set_By_Non_Bcd_Logic_When_Bcd_Enabled()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Overflow_Flags_Set_By_Non_Bcd_Logic_When_Bcd_Enabled(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x69);
         var instruction = new DisassembledInstruction
@@ -609,6 +674,7 @@ public class AdcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x99;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
@@ -619,8 +685,10 @@ public class AdcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeTrue();
     }
 
-    [Fact]
-    public void Zero_Flags_Set_When_Bcd_Enabled_And_Non_Bcd_Adc_Would_Be_Zero()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Zero_Flags_Set_When_Bcd_Enabled_And_Non_Bcd_Adc_Would_Be_Zero(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x69);
         var instruction = new DisassembledInstruction
@@ -634,6 +702,7 @@ public class AdcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x67;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
@@ -644,8 +713,10 @@ public class AdcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Zero).ShouldBeTrue();
     }
 
-    [Fact]
-    public void Zero_Flags_Not_Set_When_Bcd_Enabled_And_Non_Bcd_Adc_Would_Not_Be_Zero()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Zero_Flags_Not_Set_When_Bcd_Enabled_And_Non_Bcd_Adc_Would_Not_Be_Zero(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x69);
         var instruction = new DisassembledInstruction
@@ -659,6 +730,7 @@ public class AdcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x01;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);

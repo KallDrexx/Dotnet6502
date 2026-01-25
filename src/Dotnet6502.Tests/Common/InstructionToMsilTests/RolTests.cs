@@ -23,8 +23,10 @@ public class RolTests
     // Note: ROL Accumulator mode tests are not included as the InstructionConverter
     // does not yet support the Accumulator addressing mode for shift instructions
 
-    [Fact]
-    public void ROL_ZeroPage_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ROL_ZeroPage_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x26);
         var instruction = new DisassembledInstruction
@@ -38,6 +40,7 @@ public class RolTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.Memory.MemoryBlock[0x10] = 0x55;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
@@ -49,8 +52,10 @@ public class RolTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void ROL_ZeroPage_Carry_In()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ROL_ZeroPage_Carry_In(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x26);
         var instruction = new DisassembledInstruction
@@ -64,6 +69,7 @@ public class RolTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.Memory.MemoryBlock[0x20] = 0x7E;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
@@ -75,8 +81,10 @@ public class RolTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void ROL_ZeroPageX_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ROL_ZeroPageX_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x36);
         var instruction = new DisassembledInstruction
@@ -90,6 +98,7 @@ public class RolTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x05;
         jit.Memory.MemoryBlock[0x35] = 0x81;
@@ -102,8 +111,10 @@ public class RolTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void ROL_ZeroPageX_Wraparound()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ROL_ZeroPageX_Wraparound(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x36);
         var instruction = new DisassembledInstruction
@@ -117,6 +128,7 @@ public class RolTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x02;
         jit.Memory.MemoryBlock[0x01] = 0x33;
@@ -129,8 +141,10 @@ public class RolTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void ROL_Absolute_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ROL_Absolute_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x2E);
         var instruction = new DisassembledInstruction
@@ -144,6 +158,7 @@ public class RolTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.Memory.MemoryBlock[0x3000] = 0x42;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
@@ -155,8 +170,10 @@ public class RolTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void ROL_AbsoluteX_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ROL_AbsoluteX_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x3E);
         var instruction = new DisassembledInstruction
@@ -170,6 +187,7 @@ public class RolTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x0F;
         jit.Memory.MemoryBlock[0x200F] = 0x01;
@@ -182,8 +200,10 @@ public class RolTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void ROL_AbsoluteX_Zero_Result()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ROL_AbsoluteX_Zero_Result(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x3E);
         var instruction = new DisassembledInstruction
@@ -197,6 +217,7 @@ public class RolTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x01;
         jit.Memory.MemoryBlock[0x5000] = 0x80;

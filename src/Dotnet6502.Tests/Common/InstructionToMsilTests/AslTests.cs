@@ -23,8 +23,10 @@ public class AslTests
     // Note: ASL Accumulator mode tests are not included as the InstructionConverter
     // does not yet support the Accumulator addressing mode for shift instructions
 
-    [Fact]
-    public void ASL_ZeroPage_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ASL_ZeroPage_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x06);
         var instruction = new DisassembledInstruction
@@ -38,6 +40,7 @@ public class AslTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.Memory.MemoryBlock[0x10] = 0x20;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
@@ -49,8 +52,10 @@ public class AslTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void ASL_ZeroPage_Carry_And_Negative()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ASL_ZeroPage_Carry_And_Negative(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x06);
         var instruction = new DisassembledInstruction
@@ -64,6 +69,7 @@ public class AslTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.Memory.MemoryBlock[0x20] = 0xC0;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
@@ -75,8 +81,10 @@ public class AslTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void ASL_ZeroPageX_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ASL_ZeroPageX_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x16);
         var instruction = new DisassembledInstruction
@@ -90,6 +98,7 @@ public class AslTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x05;
         jit.Memory.MemoryBlock[0x35] = 0x15;
@@ -102,8 +111,10 @@ public class AslTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void ASL_ZeroPageX_Wraparound()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ASL_ZeroPageX_Wraparound(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x16);
         var instruction = new DisassembledInstruction
@@ -117,6 +128,7 @@ public class AslTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x02;
         jit.Memory.MemoryBlock[0x01] = 0x33;
@@ -129,8 +141,10 @@ public class AslTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void ASL_Absolute_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ASL_Absolute_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x0E);
         var instruction = new DisassembledInstruction
@@ -144,6 +158,7 @@ public class AslTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.Memory.MemoryBlock[0x3000] = 0x42;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
@@ -155,8 +170,10 @@ public class AslTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void ASL_AbsoluteX_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ASL_AbsoluteX_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x1E);
         var instruction = new DisassembledInstruction
@@ -170,6 +187,7 @@ public class AslTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x0F;
         jit.Memory.MemoryBlock[0x200F] = 0x7F;
@@ -182,8 +200,10 @@ public class AslTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void ASL_AbsoluteX_Carry_Zero()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ASL_AbsoluteX_Carry_Zero(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x1E);
         var instruction = new DisassembledInstruction
@@ -197,6 +217,7 @@ public class AslTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x01;
         jit.Memory.MemoryBlock[0x5000] = 0x80;

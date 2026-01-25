@@ -8,8 +8,10 @@ namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 
 public class SbcTests
 {
-    [Fact]
-    public void SBC_Immediate_No_Borrow()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SBC_Immediate_No_Borrow(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xE9);
         var instruction = new DisassembledInstruction
@@ -23,6 +25,7 @@ public class SbcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x10;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true); // No borrow
@@ -35,8 +38,10 @@ public class SbcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void SBC_Immediate_With_Borrow()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SBC_Immediate_With_Borrow(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xE9);
         var instruction = new DisassembledInstruction
@@ -50,6 +55,7 @@ public class SbcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x10;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false); // Borrow
@@ -62,8 +68,10 @@ public class SbcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void SBC_Immediate_Result_Zero()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SBC_Immediate_Result_Zero(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xE9);
         var instruction = new DisassembledInstruction
@@ -77,6 +85,7 @@ public class SbcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x05;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true); // No borrow
@@ -89,8 +98,10 @@ public class SbcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void SBC_Immediate_Borrow_From_Zero()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SBC_Immediate_Borrow_From_Zero(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xE9);
         var instruction = new DisassembledInstruction
@@ -104,6 +115,7 @@ public class SbcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true); // No initial borrow
@@ -116,8 +128,10 @@ public class SbcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void SBC_Immediate_Negative_Result()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SBC_Immediate_Negative_Result(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xE9);
         var instruction = new DisassembledInstruction
@@ -131,6 +145,7 @@ public class SbcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x10;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true); // No initial borrow
@@ -143,8 +158,10 @@ public class SbcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void SBC_Immediate_Overflow_Positive_Minus_Negative()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SBC_Immediate_Overflow_Positive_Minus_Negative(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xE9);
         var instruction = new DisassembledInstruction
@@ -158,6 +175,7 @@ public class SbcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x7F; // +127 in signed
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true); // No initial borrow
@@ -170,8 +188,10 @@ public class SbcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void SBC_Immediate_Overflow_Negative_Minus_Positive()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SBC_Immediate_Overflow_Negative_Minus_Positive(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xE9);
         var instruction = new DisassembledInstruction
@@ -185,6 +205,7 @@ public class SbcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x80; // -128 in signed
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true); // No initial borrow
@@ -197,8 +218,10 @@ public class SbcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void SBC_Immediate_No_Overflow_Same_Signs_Positive()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SBC_Immediate_No_Overflow_Same_Signs_Positive(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xE9);
         var instruction = new DisassembledInstruction
@@ -212,6 +235,7 @@ public class SbcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x50; // +80 in signed
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true); // No initial borrow
@@ -224,8 +248,10 @@ public class SbcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void SBC_Immediate_No_Overflow_Same_Signs_Negative()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SBC_Immediate_No_Overflow_Same_Signs_Negative(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xE9);
         var instruction = new DisassembledInstruction
@@ -239,6 +265,7 @@ public class SbcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0xA0; // -96 in signed
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true); // No initial borrow
@@ -251,8 +278,10 @@ public class SbcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void SBC_Immediate_With_Previous_Borrow()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SBC_Immediate_With_Previous_Borrow(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xE9);
         var instruction = new DisassembledInstruction
@@ -266,6 +295,7 @@ public class SbcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x20;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false); // Previous borrow
@@ -279,8 +309,10 @@ public class SbcTests
     }
 
     // ZeroPage addressing mode tests
-    [Fact]
-    public void SBC_ZeroPage_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SBC_ZeroPage_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xE5);
         var instruction = new DisassembledInstruction
@@ -294,6 +326,7 @@ public class SbcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x20;
         jit.Memory.MemoryBlock[0x10] = 0x08;
@@ -307,8 +340,10 @@ public class SbcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void SBC_ZeroPage_With_Borrow()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SBC_ZeroPage_With_Borrow(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xE5);
         var instruction = new DisassembledInstruction
@@ -322,6 +357,7 @@ public class SbcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x05;
         jit.Memory.MemoryBlock[0x20] = 0x10;
@@ -336,8 +372,10 @@ public class SbcTests
     }
 
     // ZeroPageX addressing mode tests
-    [Fact]
-    public void SBC_ZeroPageX_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SBC_ZeroPageX_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xF5);
         var instruction = new DisassembledInstruction
@@ -351,6 +389,7 @@ public class SbcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x50;
         jit.TestHal.XRegister = 0x05;
@@ -365,8 +404,10 @@ public class SbcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void SBC_ZeroPageX_Wraparound()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SBC_ZeroPageX_Wraparound(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xF5);
         var instruction = new DisassembledInstruction
@@ -380,6 +421,7 @@ public class SbcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x10;
         jit.TestHal.XRegister = 0x02;
@@ -396,8 +438,10 @@ public class SbcTests
     }
 
     // Absolute addressing mode tests
-    [Fact]
-    public void SBC_Absolute_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SBC_Absolute_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xED);
         var instruction = new DisassembledInstruction
@@ -411,6 +455,7 @@ public class SbcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x40;
         jit.Memory.MemoryBlock[0x3000] = 0x20;
@@ -424,8 +469,10 @@ public class SbcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void SBC_Absolute_Overflow()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SBC_Absolute_Overflow(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xED);
         var instruction = new DisassembledInstruction
@@ -439,6 +486,7 @@ public class SbcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x80; // -128 in signed
         jit.Memory.MemoryBlock[0x1234] = 0x7F; // +127 in signed
@@ -453,8 +501,10 @@ public class SbcTests
     }
 
     // AbsoluteX addressing mode tests
-    [Fact]
-    public void SBC_AbsoluteX_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SBC_AbsoluteX_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xFD);
         var instruction = new DisassembledInstruction
@@ -468,6 +518,7 @@ public class SbcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x30;
         jit.TestHal.XRegister = 0x0F;
@@ -483,8 +534,10 @@ public class SbcTests
     }
 
     // AbsoluteY addressing mode tests
-    [Fact]
-    public void SBC_AbsoluteY_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SBC_AbsoluteY_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xF9);
         var instruction = new DisassembledInstruction
@@ -498,6 +551,7 @@ public class SbcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x25;
         jit.TestHal.YRegister = 0x10;
@@ -512,8 +566,10 @@ public class SbcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void SBC_AbsoluteY_Zero_Result_With_Borrow()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SBC_AbsoluteY_Zero_Result_With_Borrow(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xF9);
         var instruction = new DisassembledInstruction
@@ -527,6 +583,7 @@ public class SbcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x01;
         jit.TestHal.YRegister = 0x01;
@@ -541,8 +598,10 @@ public class SbcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void Decimal_Mode_Subtraction_Without_Underflow_No_Carry()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Decimal_Mode_Subtraction_Without_Underflow_No_Carry(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xE9);
         var instruction = new DisassembledInstruction
@@ -556,6 +615,7 @@ public class SbcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x60;
         jit.TestHal.SetFlag(CpuStatusFlags.Decimal, true);
@@ -566,8 +626,10 @@ public class SbcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
     }
 
-    [Fact]
-    public void Decimal_Mode_Correct_Borrow_Logic_For_Each_Step()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Decimal_Mode_Correct_Borrow_Logic_For_Each_Step(bool useInterpreter)
     {
         // Validates the correct (inverted) borrow logic happens for each step
         var instructionInfo = InstructionSet.GetInstruction(0xE9);
@@ -582,6 +644,7 @@ public class SbcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x66;
         jit.TestHal.SetFlag(CpuStatusFlags.Decimal, true);

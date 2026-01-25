@@ -19,8 +19,10 @@ namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 /// </summary>
 public class DeyTests
 {
-    [Fact]
-    public void DEY_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void DEY_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x88);
         var instruction = new DisassembledInstruction
@@ -34,6 +36,7 @@ public class DeyTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x05;
         jit.RunMethod(0x1234);
@@ -45,8 +48,10 @@ public class DeyTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void DEY_Zero_Result()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void DEY_Zero_Result(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x88);
         var instruction = new DisassembledInstruction
@@ -60,6 +65,7 @@ public class DeyTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x01; // 0x01 - 1 = 0x00
         jit.RunMethod(0x1234);
@@ -71,8 +77,10 @@ public class DeyTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void DEY_Wraparound_To_Negative()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void DEY_Wraparound_To_Negative(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x88);
         var instruction = new DisassembledInstruction
@@ -86,6 +94,7 @@ public class DeyTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x00; // 0x00 - 1 = 0xFF (wraparound)
         jit.RunMethod(0x1234);
@@ -97,8 +106,10 @@ public class DeyTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void DEY_Negative_Result()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void DEY_Negative_Result(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x88);
         var instruction = new DisassembledInstruction
@@ -112,6 +123,7 @@ public class DeyTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x81; // 0x81 - 1 = 0x80 (still negative)
         jit.RunMethod(0x1234);
@@ -123,8 +135,10 @@ public class DeyTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void DEY_Positive_Non_Zero_Result()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void DEY_Positive_Non_Zero_Result(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x88);
         var instruction = new DisassembledInstruction
@@ -138,6 +152,7 @@ public class DeyTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x42;
         jit.RunMethod(0x1234);
@@ -149,8 +164,10 @@ public class DeyTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void DEY_From_Maximum_Positive()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void DEY_From_Maximum_Positive(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x88);
         var instruction = new DisassembledInstruction
@@ -164,6 +181,7 @@ public class DeyTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x7F; // 127, decrement to 126 (0x7E, still positive)
         jit.RunMethod(0x1234);
@@ -175,8 +193,10 @@ public class DeyTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void DEY_From_Negative_To_Negative()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void DEY_From_Negative_To_Negative(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x88);
         var instruction = new DisassembledInstruction
@@ -190,6 +210,7 @@ public class DeyTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0xFE; // -2, decrement to -3 (0xFD)
         jit.RunMethod(0x1234);
@@ -201,8 +222,10 @@ public class DeyTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void DEY_Boundary_Value_0x80()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void DEY_Boundary_Value_0x80(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x88);
         var instruction = new DisassembledInstruction
@@ -216,6 +239,7 @@ public class DeyTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x80; // -128, decrement to 127 (0x7F, becomes positive)
         jit.RunMethod(0x1234);

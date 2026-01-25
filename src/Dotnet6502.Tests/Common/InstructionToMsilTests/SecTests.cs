@@ -17,8 +17,10 @@ namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 /// </summary>
 public class SecTests
 {
-    [Fact]
-    public void SEC_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SEC_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x38);
         var instruction = new DisassembledInstruction
@@ -32,6 +34,7 @@ public class SecTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Clear carry flag initially
@@ -42,8 +45,10 @@ public class SecTests
         jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
     }
 
-    [Fact]
-    public void SEC_When_Already_Set()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SEC_When_Already_Set(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x38);
         var instruction = new DisassembledInstruction
@@ -57,6 +62,7 @@ public class SecTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Carry flag already set
@@ -67,8 +73,10 @@ public class SecTests
         jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
     }
 
-    [Fact]
-    public void SEC_Preserves_Other_Flags()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SEC_Preserves_Other_Flags(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x38);
         var instruction = new DisassembledInstruction
@@ -82,6 +90,7 @@ public class SecTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Set all flags except carry
@@ -105,8 +114,10 @@ public class SecTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void SEC_Does_Not_Affect_Registers()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SEC_Does_Not_Affect_Registers(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x38);
         var instruction = new DisassembledInstruction
@@ -120,6 +131,7 @@ public class SecTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
 
         jit.TestHal.ARegister = 0x42;
@@ -140,8 +152,10 @@ public class SecTests
         jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
     }
 
-    [Fact]
-    public void SEC_With_Mixed_Initial_Flags()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SEC_With_Mixed_Initial_Flags(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x38);
         var instruction = new DisassembledInstruction
@@ -155,6 +169,7 @@ public class SecTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Set a mixed pattern of flags
@@ -178,8 +193,10 @@ public class SecTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void SEC_Preserves_Clear_Flags()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SEC_Preserves_Clear_Flags(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x38);
         var instruction = new DisassembledInstruction
@@ -193,6 +210,7 @@ public class SecTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Clear all flags
@@ -216,8 +234,10 @@ public class SecTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void SEC_Multiple_Calls()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SEC_Multiple_Calls(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x38);
         var instruction = new DisassembledInstruction
@@ -231,6 +251,7 @@ public class SecTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Clear carry flag initially
@@ -242,6 +263,7 @@ public class SecTests
 
         // Second SEC call (should have no effect)
         var jit2 = TestJitCompiler.Create();
+        jit2.AlwaysUseInterpreter = useInterpreter;
             jit2.AddMethod(0x1234, nesIrInstructions);
         jit2.TestHal.SetFlag(CpuStatusFlags.Carry, true); // Already set
         jit2.RunMethod(0x1234);

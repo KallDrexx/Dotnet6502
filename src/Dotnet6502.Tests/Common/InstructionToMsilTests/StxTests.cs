@@ -8,8 +8,10 @@ namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 
 public class StxTests
 {
-    [Fact]
-    public void STX_ZeroPage_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void STX_ZeroPage_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x86);
         var instruction = new DisassembledInstruction
@@ -23,6 +25,7 @@ public class StxTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x42;
         jit.Memory.MemoryBlock[0x10] = 0x00; // Initial value
@@ -38,8 +41,10 @@ public class StxTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void STX_ZeroPage_Zero_Value()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void STX_ZeroPage_Zero_Value(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x86);
         var instruction = new DisassembledInstruction
@@ -53,6 +58,7 @@ public class StxTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x00;
         jit.Memory.MemoryBlock[0x20] = 0xFF; // Initial value
@@ -68,8 +74,10 @@ public class StxTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void STX_ZeroPage_Negative_Value()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void STX_ZeroPage_Negative_Value(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x86);
         var instruction = new DisassembledInstruction
@@ -83,6 +91,7 @@ public class StxTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x80; // Negative value
         jit.Memory.MemoryBlock[0x30] = 0x00; // Initial value
@@ -98,8 +107,10 @@ public class StxTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void STX_ZeroPageY_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void STX_ZeroPageY_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x96);
         var instruction = new DisassembledInstruction
@@ -113,6 +124,7 @@ public class StxTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x55;
         jit.TestHal.YRegister = 0x05;
@@ -129,8 +141,10 @@ public class StxTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void STX_ZeroPageY_Wraparound()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void STX_ZeroPageY_Wraparound(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x96);
         var instruction = new DisassembledInstruction
@@ -144,6 +158,7 @@ public class StxTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x77;
         jit.TestHal.YRegister = 0x02;
@@ -162,8 +177,10 @@ public class StxTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void STX_Absolute_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void STX_Absolute_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x8E);
         var instruction = new DisassembledInstruction
@@ -177,6 +194,7 @@ public class StxTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x99;
         jit.Memory.MemoryBlock[0x3000] = 0x00; // Initial value
@@ -192,8 +210,10 @@ public class StxTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void STX_Absolute_HighAddress()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void STX_Absolute_HighAddress(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x8E);
         var instruction = new DisassembledInstruction
@@ -207,6 +227,7 @@ public class StxTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0xAB;
         jit.Memory.MemoryBlock[0x1234] = 0x00; // Initial value
@@ -222,8 +243,10 @@ public class StxTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void STX_Preserves_All_Flags()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void STX_Preserves_All_Flags(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x86);
         var instruction = new DisassembledInstruction
@@ -237,6 +260,7 @@ public class StxTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0xFF;
         // Set all flags that should be preserved
@@ -261,8 +285,10 @@ public class StxTests
         jit.TestHal.GetFlag(CpuStatusFlags.InterruptDisable).ShouldBeTrue();
     }
 
-    [Fact]
-    public void STX_Overwrite_Memory()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void STX_Overwrite_Memory(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x86);
         var instruction = new DisassembledInstruction
@@ -276,6 +302,7 @@ public class StxTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0xAA;
         jit.Memory.MemoryBlock[0x60] = 0x55; // Existing value to be overwritten
@@ -291,8 +318,10 @@ public class StxTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void STX_Does_Not_Affect_A_Or_Y_Registers()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void STX_Does_Not_Affect_A_Or_Y_Registers(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x86);
         var instruction = new DisassembledInstruction
@@ -306,6 +335,7 @@ public class StxTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x11;
         jit.TestHal.XRegister = 0x22;
@@ -325,8 +355,10 @@ public class StxTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void STX_ZeroPageY_Maximum_Y_Value()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void STX_ZeroPageY_Maximum_Y_Value(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x96);
         var instruction = new DisassembledInstruction
@@ -340,6 +372,7 @@ public class StxTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0xCC;
         jit.TestHal.YRegister = 0xFF;
@@ -356,8 +389,10 @@ public class StxTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void STX_Maximum_Value()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void STX_Maximum_Value(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x86);
         var instruction = new DisassembledInstruction
@@ -371,6 +406,7 @@ public class StxTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0xFF; // Maximum value
         jit.Memory.MemoryBlock[0x80] = 0x00; // Initial value
@@ -386,8 +422,10 @@ public class StxTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void STX_Redirects_To_Next_Address_On_Recompile()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void STX_Redirects_To_Next_Address_On_Recompile(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x86);
         var instruction = new DisassembledInstruction
@@ -407,6 +445,7 @@ public class StxTests
             new Dictionary<ushort, string>());
 
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, InstructionConverter.Convert(instruction, context));
         jit.AddMethod(0x1234 + 2, InstructionConverter.Convert(instruction2, context));
 
@@ -420,8 +459,10 @@ public class StxTests
         jit.Memory.MemoryBlock[0x12].ShouldBe((byte)0x42);
     }
 
-    [Fact]
-    public void STX_Does_Not_Redirect_When_Recompile_Not_Needed()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void STX_Does_Not_Redirect_When_Recompile_Not_Needed(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x86);
         var instruction = new DisassembledInstruction
@@ -441,6 +482,7 @@ public class StxTests
             new Dictionary<ushort, string>());
 
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, InstructionConverter.Convert(instruction, context));
         jit.AddMethod(0x1234 + 2, InstructionConverter.Convert(instruction2, context));
 

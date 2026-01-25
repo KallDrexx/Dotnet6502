@@ -18,8 +18,10 @@ namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 /// </summary>
 public class TsxTests
 {
-    [Fact]
-    public void TSX_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TSX_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xBA);
         var instruction = new DisassembledInstruction
@@ -33,6 +35,7 @@ public class TsxTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.StackPointer = 0x42;
         jit.TestHal.XRegister = 0x00;
@@ -46,8 +49,10 @@ public class TsxTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void TSX_Zero()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TSX_Zero(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xBA);
         var instruction = new DisassembledInstruction
@@ -61,6 +66,7 @@ public class TsxTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.StackPointer = 0x00;
         jit.TestHal.XRegister = 0xFF;
@@ -74,8 +80,10 @@ public class TsxTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void TSX_Negative()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TSX_Negative(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xBA);
         var instruction = new DisassembledInstruction
@@ -89,6 +97,7 @@ public class TsxTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.StackPointer = 0x80;
         jit.TestHal.XRegister = 0x00;
@@ -102,8 +111,10 @@ public class TsxTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void TSX_High_Value()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TSX_High_Value(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xBA);
         var instruction = new DisassembledInstruction
@@ -117,6 +128,7 @@ public class TsxTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.StackPointer = 0xFF;
         jit.TestHal.XRegister = 0x00;
@@ -130,8 +142,10 @@ public class TsxTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void TSX_Preserves_Other_Flags()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TSX_Preserves_Other_Flags(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xBA);
         var instruction = new DisassembledInstruction
@@ -145,6 +159,7 @@ public class TsxTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.StackPointer = 0x7F;
         jit.TestHal.XRegister = 0x00;
@@ -169,8 +184,10 @@ public class TsxTests
         jit.TestHal.GetFlag(CpuStatusFlags.InterruptDisable).ShouldBeTrue();
     }
 
-    [Fact]
-    public void TSX_Does_Not_Affect_Other_Registers()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TSX_Does_Not_Affect_Other_Registers(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xBA);
         var instruction = new DisassembledInstruction
@@ -184,6 +201,7 @@ public class TsxTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x11;
         jit.TestHal.StackPointer = 0x42;
@@ -199,8 +217,10 @@ public class TsxTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void TSX_Flag_Changes_Override_Previous()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TSX_Flag_Changes_Override_Previous(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xBA);
         var instruction = new DisassembledInstruction
@@ -214,6 +234,7 @@ public class TsxTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.StackPointer = 0x7F; // Positive value
         jit.TestHal.XRegister = 0x00;

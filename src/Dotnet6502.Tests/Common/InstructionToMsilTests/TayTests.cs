@@ -17,8 +17,10 @@ namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 /// </summary>
 public class TayTests
 {
-    [Fact]
-    public void TAY_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TAY_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xA8);
         var instruction = new DisassembledInstruction
@@ -32,6 +34,7 @@ public class TayTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x42;
         jit.TestHal.YRegister = 0x00;
@@ -45,8 +48,10 @@ public class TayTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void TAY_Zero()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TAY_Zero(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xA8);
         var instruction = new DisassembledInstruction
@@ -60,6 +65,7 @@ public class TayTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.TestHal.YRegister = 0xFF;
@@ -73,8 +79,10 @@ public class TayTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void TAY_Negative()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TAY_Negative(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xA8);
         var instruction = new DisassembledInstruction
@@ -88,6 +96,7 @@ public class TayTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x80;
         jit.TestHal.YRegister = 0x00;
@@ -101,8 +110,10 @@ public class TayTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void TAY_HighValue()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TAY_HighValue(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xA8);
         var instruction = new DisassembledInstruction
@@ -116,6 +127,7 @@ public class TayTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0xFF;
         jit.TestHal.YRegister = 0x00;
@@ -129,8 +141,10 @@ public class TayTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void TAY_Preserves_Other_Flags()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TAY_Preserves_Other_Flags(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xA8);
         var instruction = new DisassembledInstruction
@@ -144,6 +158,7 @@ public class TayTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x7F;
         jit.TestHal.YRegister = 0x00;
@@ -168,8 +183,10 @@ public class TayTests
         jit.TestHal.GetFlag(CpuStatusFlags.InterruptDisable).ShouldBeTrue();
     }
 
-    [Fact]
-    public void TAY_Does_Not_Affect_X_Register()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TAY_Does_Not_Affect_X_Register(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xA8);
         var instruction = new DisassembledInstruction
@@ -183,6 +200,7 @@ public class TayTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x42;
         jit.TestHal.YRegister = 0x00;

@@ -17,8 +17,10 @@ namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 /// </summary>
 public class PhaTests
 {
-    [Fact]
-    public void PHA_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void PHA_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x48);
         var instruction = new DisassembledInstruction
@@ -32,6 +34,7 @@ public class PhaTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x42;
         jit.RunMethod(0x1234);
@@ -40,8 +43,10 @@ public class PhaTests
         jit.TestHal.PopFromStack().ShouldBe((byte)0x42); // Value on stack
     }
 
-    [Fact]
-    public void PHA_Zero_Value()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void PHA_Zero_Value(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x48);
         var instruction = new DisassembledInstruction
@@ -55,6 +60,7 @@ public class PhaTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.RunMethod(0x1234);
@@ -63,8 +69,10 @@ public class PhaTests
         jit.TestHal.PopFromStack().ShouldBe((byte)0x00);
     }
 
-    [Fact]
-    public void PHA_High_Value()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void PHA_High_Value(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x48);
         var instruction = new DisassembledInstruction
@@ -78,6 +86,7 @@ public class PhaTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0xFF;
         jit.RunMethod(0x1234);
@@ -86,8 +95,10 @@ public class PhaTests
         jit.TestHal.PopFromStack().ShouldBe((byte)0xFF);
     }
 
-    [Fact]
-    public void PHA_Does_Not_Affect_Flags()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void PHA_Does_Not_Affect_Flags(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x48);
         var instruction = new DisassembledInstruction
@@ -101,6 +112,7 @@ public class PhaTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x80;
 
@@ -123,8 +135,10 @@ public class PhaTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void PHA_Does_Not_Affect_Other_Registers()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void PHA_Does_Not_Affect_Other_Registers(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x48);
         var instruction = new DisassembledInstruction
@@ -138,6 +152,7 @@ public class PhaTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x42;
         jit.TestHal.XRegister = 0x33;
@@ -150,8 +165,10 @@ public class PhaTests
         jit.TestHal.PopFromStack().ShouldBe((byte)0x42);
     }
 
-    [Fact]
-    public void PHA_Multiple_Values()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void PHA_Multiple_Values(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x48);
         var instruction = new DisassembledInstruction
@@ -167,12 +184,14 @@ public class PhaTests
 
         // Test pushing multiple values
         var jit1 = TestJitCompiler.Create();
+        jit1.AlwaysUseInterpreter = useInterpreter;
             jit1.AddMethod(0x1234, nesIrInstructions);
         jit1.TestHal.ARegister = 0x55;
         jit1.RunMethod(0x1234);
         jit1.TestHal.PopFromStack().ShouldBe((byte)0x55);
 
         var jit2 = TestJitCompiler.Create();
+        jit2.AlwaysUseInterpreter = useInterpreter;
             jit2.AddMethod(0x1234, nesIrInstructions);
         jit2.TestHal.ARegister = 0xAA;
         jit2.RunMethod(0x1234);

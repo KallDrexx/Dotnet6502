@@ -45,11 +45,20 @@ public class TestJitCompiler : JitCompiler
 
         var function = new DecompiledFunction(address, [nop], new HashSet<ushort>());
         var convertedInstructions = new ConvertedInstruction(nop, instructions);
-        var method = ExecutableMethodGenerator.Generate(
-            $"test_0x{address:X4}",
-            [convertedInstructions],
-            CustomGenerators,
-            generateDll);
+
+        ExecutableMethod method;
+        if (AlwaysUseInterpreter)
+        {
+            method = new Ir6502Interpreter().CreateExecutableMethod([convertedInstructions]);
+        }
+        else
+        {
+            method = ExecutableMethodGenerator.Generate(
+                $"test_0x{address:X4}",
+                [convertedInstructions],
+                CustomGenerators,
+                generateDll);
+        }
 
         ExecutableMethodCache.AddExecutableMethod(method, function);
     }

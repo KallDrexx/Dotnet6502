@@ -17,8 +17,10 @@ namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 /// </summary>
 public class ClvTests
 {
-    [Fact]
-    public void CLV_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CLV_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xB8);
         var instruction = new DisassembledInstruction
@@ -32,6 +34,7 @@ public class ClvTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Set overflow flag initially
@@ -42,8 +45,10 @@ public class ClvTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void CLV_When_Already_Clear()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CLV_When_Already_Clear(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xB8);
         var instruction = new DisassembledInstruction
@@ -57,6 +62,7 @@ public class ClvTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Overflow flag already clear
@@ -67,8 +73,10 @@ public class ClvTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void CLV_Preserves_Other_Flags()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CLV_Preserves_Other_Flags(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xB8);
         var instruction = new DisassembledInstruction
@@ -82,6 +90,7 @@ public class ClvTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Set all flags
@@ -105,8 +114,10 @@ public class ClvTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void CLV_Does_Not_Affect_Registers()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CLV_Does_Not_Affect_Registers(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xB8);
         var instruction = new DisassembledInstruction
@@ -120,6 +131,7 @@ public class ClvTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
 
         jit.TestHal.ARegister = 0x42;
@@ -140,14 +152,16 @@ public class ClvTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void CLV_No_Set_Instruction()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CLV_No_Set_Instruction(bool useInterpreter)
     {
         // Note: The 6502 has no "Set Overflow" instruction
         // The overflow flag can only be set by arithmetic operations (ADC, SBC)
         // or pulled from the stack (PLP, RTI)
         // This test verifies CLV works regardless of how overflow was set
-        
+
         var instructionInfo = InstructionSet.GetInstruction(0xB8);
         var instruction = new DisassembledInstruction
         {
@@ -160,6 +174,7 @@ public class ClvTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Manually set overflow flag (simulating an arithmetic operation result)

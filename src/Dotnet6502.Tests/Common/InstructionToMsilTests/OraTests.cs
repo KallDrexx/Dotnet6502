@@ -20,8 +20,10 @@ namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 /// </summary>
 public class OraTests
 {
-    [Fact]
-    public void ORA_Immediate_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ORA_Immediate_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x09);
         var instruction = new DisassembledInstruction
@@ -35,6 +37,7 @@ public class OraTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x10;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
@@ -48,8 +51,10 @@ public class OraTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeTrue();
     }
 
-    [Fact]
-    public void ORA_Immediate_Zero_Result()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ORA_Immediate_Zero_Result(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x09);
         var instruction = new DisassembledInstruction
@@ -63,6 +68,7 @@ public class OraTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
@@ -74,8 +80,10 @@ public class OraTests
         jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
     }
 
-    [Fact]
-    public void ORA_Immediate_Negative_Result()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ORA_Immediate_Negative_Result(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x09);
         var instruction = new DisassembledInstruction
@@ -89,6 +97,7 @@ public class OraTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x01;
         jit.TestHal.SetFlag(CpuStatusFlags.Overflow, true);
@@ -100,8 +109,10 @@ public class OraTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeTrue();
     }
 
-    [Fact]
-    public void ORA_ZeroPage_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ORA_ZeroPage_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x05);
         var instruction = new DisassembledInstruction
@@ -115,6 +126,7 @@ public class OraTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x55;
         jit.Memory.MemoryBlock[0x10] = 0xAA;
@@ -125,8 +137,10 @@ public class OraTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void ORA_ZeroPageX_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ORA_ZeroPageX_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x15);
         var instruction = new DisassembledInstruction
@@ -140,6 +154,7 @@ public class OraTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x30;
         jit.TestHal.XRegister = 0x05;
@@ -151,8 +166,10 @@ public class OraTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void ORA_ZeroPageX_Wraparound()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ORA_ZeroPageX_Wraparound(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x15);
         var instruction = new DisassembledInstruction
@@ -166,6 +183,7 @@ public class OraTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x01;
         jit.TestHal.XRegister = 0x02;
@@ -177,8 +195,10 @@ public class OraTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void ORA_Absolute_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ORA_Absolute_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x0D);
         var instruction = new DisassembledInstruction
@@ -192,6 +212,7 @@ public class OraTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x41;
         jit.Memory.MemoryBlock[0x3000] = 0x82;
@@ -202,8 +223,10 @@ public class OraTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void ORA_AbsoluteX_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ORA_AbsoluteX_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x1D);
         var instruction = new DisassembledInstruction
@@ -217,6 +240,7 @@ public class OraTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x42;
         jit.TestHal.XRegister = 0x0F;
@@ -228,8 +252,10 @@ public class OraTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void ORA_AbsoluteY_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ORA_AbsoluteY_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x19);
         var instruction = new DisassembledInstruction
@@ -243,6 +269,7 @@ public class OraTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x0F;
         jit.TestHal.YRegister = 0x01;
@@ -254,8 +281,10 @@ public class OraTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void ORA_Pattern_Combine()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ORA_Pattern_Combine(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x09);
         var instruction = new DisassembledInstruction
@@ -269,6 +298,7 @@ public class OraTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x33;
         jit.RunMethod(0x1234);
@@ -278,8 +308,10 @@ public class OraTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void ORA_Load_Pattern()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ORA_Load_Pattern(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x09);
         var instruction = new DisassembledInstruction
@@ -293,6 +325,7 @@ public class OraTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.RunMethod(0x1234);

@@ -12,8 +12,10 @@ namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 /// </summary>
 public class JsrTests
 {
-    [Fact]
-    public void JSR_Basic_Function_Call()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void JSR_Basic_Function_Call(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x20);
         var instruction = new DisassembledInstruction
@@ -34,6 +36,7 @@ public class JsrTests
             .ToArray();
 
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, allInstructions);
 
         // Add a callable function at the JSR target address that writes a test value to memory
@@ -48,8 +51,10 @@ public class JsrTests
         jit.TestHal.ReadMemory(0x4000).ShouldBe((byte)99);
     }
 
-    [Fact]
-    public void JSR_Does_Not_Affect_Flags()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void JSR_Does_Not_Affect_Flags(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x20);
         var instruction = new DisassembledInstruction
@@ -77,6 +82,7 @@ public class JsrTests
         };
 
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, allInstructions);
 
         // Add a callable function at the JSR target address
@@ -104,8 +110,10 @@ public class JsrTests
         jit.TestHal.GetFlag(CpuStatusFlags.Decimal).ShouldBeTrue();
     }
 
-    [Fact]
-    public void JSR_Does_Not_Affect_Registers()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void JSR_Does_Not_Affect_Registers(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x20);
         var instruction = new DisassembledInstruction
@@ -120,6 +128,7 @@ public class JsrTests
         var irInstructions = InstructionConverter.Convert(instruction, context);
 
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, irInstructions);
 
         var callableInstruction = new Ir6502.Copy(
@@ -140,8 +149,10 @@ public class JsrTests
         jit.TestHal.YRegister.ShouldBe((byte)0x77);
     }
 
-    [Fact]
-    public void JSR_Target_Address_Required()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void JSR_Target_Address_Required(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x20);
         var instruction = new DisassembledInstruction
@@ -158,8 +169,10 @@ public class JsrTests
             .Message.ShouldContain("JSR instruction with no target address");
     }
 
-    [Fact]
-    public void JSR_Pushes_Address_Plus_Two_To_The_stack()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void JSR_Pushes_Address_Plus_Two_To_The_stack(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x20);
         var instruction = new DisassembledInstruction
@@ -179,6 +192,7 @@ public class JsrTests
             .ToArray();
 
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, allInstructions);
 
         // Add a callable function at the JSR target address that writes a test value to memory

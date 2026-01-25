@@ -23,8 +23,10 @@ namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 /// </summary>
 public class CpxTests
 {
-    [Fact]
-    public void CPX_Immediate_Equal()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CPX_Immediate_Equal(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xE0);
         var instruction = new DisassembledInstruction
@@ -38,6 +40,7 @@ public class CpxTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x42;
         jit.TestHal.SetFlag(CpuStatusFlags.Overflow, true);
@@ -50,8 +53,10 @@ public class CpxTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeTrue();
     }
 
-    [Fact]
-    public void CPX_Immediate_Greater()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CPX_Immediate_Greater(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xE0);
         var instruction = new DisassembledInstruction
@@ -65,6 +70,7 @@ public class CpxTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x50;
         jit.RunMethod(0x1234);
@@ -75,8 +81,10 @@ public class CpxTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void CPX_Immediate_Less()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CPX_Immediate_Less(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xE0);
         var instruction = new DisassembledInstruction
@@ -90,6 +98,7 @@ public class CpxTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x30;
         jit.RunMethod(0x1234);
@@ -100,8 +109,10 @@ public class CpxTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void CPX_Immediate_Zero_Compare()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CPX_Immediate_Zero_Compare(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xE0);
         var instruction = new DisassembledInstruction
@@ -115,6 +126,7 @@ public class CpxTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x80;
         jit.RunMethod(0x1234);
@@ -125,8 +137,10 @@ public class CpxTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void CPX_ZeroPage_Equal()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CPX_ZeroPage_Equal(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xE4);
         var instruction = new DisassembledInstruction
@@ -140,6 +154,7 @@ public class CpxTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x7F;
         jit.Memory.MemoryBlock[0x10] = 0x7F;
@@ -151,8 +166,10 @@ public class CpxTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void CPX_ZeroPage_Greater()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CPX_ZeroPage_Greater(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xE4);
         var instruction = new DisassembledInstruction
@@ -166,6 +183,7 @@ public class CpxTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x90;
         jit.Memory.MemoryBlock[0x20] = 0x80;
@@ -177,8 +195,10 @@ public class CpxTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void CPX_ZeroPage_Less()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CPX_ZeroPage_Less(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xE4);
         var instruction = new DisassembledInstruction
@@ -192,6 +212,7 @@ public class CpxTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x10;
         jit.Memory.MemoryBlock[0x30] = 0x20;
@@ -203,8 +224,10 @@ public class CpxTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void CPX_Absolute_Equal()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CPX_Absolute_Equal(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xEC);
         var instruction = new DisassembledInstruction
@@ -218,6 +241,7 @@ public class CpxTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0xAA;
         jit.Memory.MemoryBlock[0x3000] = 0xAA;
@@ -229,8 +253,10 @@ public class CpxTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void CPX_Absolute_Greater()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CPX_Absolute_Greater(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xEC);
         var instruction = new DisassembledInstruction
@@ -244,6 +270,7 @@ public class CpxTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0xFF;
         jit.Memory.MemoryBlock[0x1234] = 0x01;
@@ -255,8 +282,10 @@ public class CpxTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void CPX_Absolute_Less()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CPX_Absolute_Less(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xEC);
         var instruction = new DisassembledInstruction
@@ -270,6 +299,7 @@ public class CpxTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x00;
         jit.Memory.MemoryBlock[0x4FFF] = 0xFF;
@@ -281,8 +311,10 @@ public class CpxTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void CPX_Signed_Comparison()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CPX_Signed_Comparison(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xE0);
         var instruction = new DisassembledInstruction
@@ -296,6 +328,7 @@ public class CpxTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x7F;
         jit.RunMethod(0x1234);
@@ -306,8 +339,10 @@ public class CpxTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void CPX_Boundary_Values()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CPX_Boundary_Values(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xE0);
         var instruction = new DisassembledInstruction
@@ -321,6 +356,7 @@ public class CpxTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0xFF;
         jit.RunMethod(0x1234);

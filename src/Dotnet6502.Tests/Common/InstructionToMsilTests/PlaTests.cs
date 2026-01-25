@@ -18,8 +18,10 @@ namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 /// </summary>
 public class PlaTests
 {
-    [Fact]
-    public void PLA_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void PLA_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x68);
         var instruction = new DisassembledInstruction
@@ -33,6 +35,7 @@ public class PlaTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.TestHal.PushToStack(0x42);
@@ -43,8 +46,10 @@ public class PlaTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void PLA_Zero()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void PLA_Zero(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x68);
         var instruction = new DisassembledInstruction
@@ -58,6 +63,7 @@ public class PlaTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0xFF;
         jit.TestHal.PushToStack(0x00);
@@ -68,8 +74,10 @@ public class PlaTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void PLA_Negative()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void PLA_Negative(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x68);
         var instruction = new DisassembledInstruction
@@ -83,6 +91,7 @@ public class PlaTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.TestHal.PushToStack(0x80);
@@ -93,8 +102,10 @@ public class PlaTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void PLA_High_Value()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void PLA_High_Value(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x68);
         var instruction = new DisassembledInstruction
@@ -108,6 +119,7 @@ public class PlaTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.TestHal.PushToStack(0xFF);
@@ -118,8 +130,10 @@ public class PlaTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void PLA_Preserves_Other_Flags()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void PLA_Preserves_Other_Flags(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x68);
         var instruction = new DisassembledInstruction
@@ -133,6 +147,7 @@ public class PlaTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.TestHal.PushToStack(0x7F);
@@ -156,8 +171,10 @@ public class PlaTests
         jit.TestHal.GetFlag(CpuStatusFlags.InterruptDisable).ShouldBeTrue();
     }
 
-    [Fact]
-    public void PLA_Does_Not_Affect_Other_Registers()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void PLA_Does_Not_Affect_Other_Registers(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x68);
         var instruction = new DisassembledInstruction
@@ -171,6 +188,7 @@ public class PlaTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x00;
         jit.TestHal.XRegister = 0x33;
@@ -183,8 +201,10 @@ public class PlaTests
         jit.TestHal.YRegister.ShouldBe((byte)0x77); // Should remain unchanged
     }
 
-    [Fact]
-    public void PLA_Multiple_Values()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void PLA_Multiple_Values(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x68);
         var instruction = new DisassembledInstruction
@@ -200,6 +220,7 @@ public class PlaTests
 
         // Test pulling multiple different values
         var jit1 = TestJitCompiler.Create();
+        jit1.AlwaysUseInterpreter = useInterpreter;
             jit1.AddMethod(0x1234, nesIrInstructions);
         jit1.TestHal.ARegister = 0x00;
         jit1.TestHal.PushToStack(0x55);
@@ -209,6 +230,7 @@ public class PlaTests
         jit1.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
 
         var jit2 = TestJitCompiler.Create();
+        jit2.AlwaysUseInterpreter = useInterpreter;
             jit2.AddMethod(0x1234, nesIrInstructions);
         jit2.TestHal.ARegister = 0xFF;
         jit2.TestHal.PushToStack(0xAA);

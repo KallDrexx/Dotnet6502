@@ -20,8 +20,10 @@ namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 /// </summary>
 public class LsrTests
 {
-    [Fact]
-    public void LSR_ZeroPage_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LSR_ZeroPage_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x46);
         var instruction = new DisassembledInstruction
@@ -35,6 +37,7 @@ public class LsrTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.Memory.MemoryBlock[0x10] = 0xFE;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);
@@ -46,8 +49,10 @@ public class LsrTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void LSR_ZeroPage_Carry_And_Zero()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LSR_ZeroPage_Carry_And_Zero(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x46);
         var instruction = new DisassembledInstruction
@@ -61,6 +66,7 @@ public class LsrTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.Memory.MemoryBlock[0x20] = 0x01;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
@@ -72,8 +78,10 @@ public class LsrTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void LSR_ZeroPageX_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LSR_ZeroPageX_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x56);
         var instruction = new DisassembledInstruction
@@ -87,6 +95,7 @@ public class LsrTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x05;
         jit.Memory.MemoryBlock[0x35] = 0xAA;
@@ -99,8 +108,10 @@ public class LsrTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void LSR_ZeroPageX_Wraparound()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LSR_ZeroPageX_Wraparound(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x56);
         var instruction = new DisassembledInstruction
@@ -114,6 +125,7 @@ public class LsrTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x02;
         jit.Memory.MemoryBlock[0x01] = 0x63;
@@ -126,8 +138,10 @@ public class LsrTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void LSR_Absolute_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LSR_Absolute_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x4E);
         var instruction = new DisassembledInstruction
@@ -141,6 +155,7 @@ public class LsrTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.Memory.MemoryBlock[0x3000] = 0x88;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
@@ -152,8 +167,10 @@ public class LsrTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void LSR_AbsoluteX_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LSR_AbsoluteX_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x5E);
         var instruction = new DisassembledInstruction
@@ -167,6 +184,7 @@ public class LsrTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x0F;
         jit.Memory.MemoryBlock[0x200F] = 0xFF;
@@ -179,8 +197,10 @@ public class LsrTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void LSR_Accumulator_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LSR_Accumulator_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x4A);
         var instruction = new DisassembledInstruction
@@ -194,6 +214,7 @@ public class LsrTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0xFE;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, true);

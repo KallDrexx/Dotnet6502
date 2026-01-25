@@ -8,8 +8,10 @@ namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 
 public class StyTests
 {
-    [Fact]
-    public void STY_ZeroPage_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void STY_ZeroPage_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x84);
         var instruction = new DisassembledInstruction
@@ -23,6 +25,7 @@ public class StyTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x42;
         jit.Memory.MemoryBlock[0x10] = 0x00; // Initial value
@@ -38,8 +41,10 @@ public class StyTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void STY_ZeroPage_Zero_Value()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void STY_ZeroPage_Zero_Value(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x84);
         var instruction = new DisassembledInstruction
@@ -53,6 +58,7 @@ public class StyTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x00;
         jit.Memory.MemoryBlock[0x20] = 0xFF; // Initial value
@@ -68,8 +74,10 @@ public class StyTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void STY_ZeroPage_Negative_Value()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void STY_ZeroPage_Negative_Value(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x84);
         var instruction = new DisassembledInstruction
@@ -83,6 +91,7 @@ public class StyTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x80; // Negative value
         jit.Memory.MemoryBlock[0x30] = 0x00; // Initial value
@@ -98,8 +107,10 @@ public class StyTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void STY_ZeroPageX_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void STY_ZeroPageX_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x94);
         var instruction = new DisassembledInstruction
@@ -113,6 +124,7 @@ public class StyTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x55;
         jit.TestHal.XRegister = 0x05;
@@ -129,8 +141,10 @@ public class StyTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void STY_ZeroPageX_Wraparound()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void STY_ZeroPageX_Wraparound(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x94);
         var instruction = new DisassembledInstruction
@@ -144,6 +158,7 @@ public class StyTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x77;
         jit.TestHal.XRegister = 0x02;
@@ -162,8 +177,10 @@ public class StyTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void STY_Absolute_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void STY_Absolute_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x8C);
         var instruction = new DisassembledInstruction
@@ -177,6 +194,7 @@ public class StyTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0x99;
         jit.Memory.MemoryBlock[0x3000] = 0x00; // Initial value
@@ -192,8 +210,10 @@ public class StyTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void STY_Absolute_HighAddress()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void STY_Absolute_HighAddress(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x8C);
         var instruction = new DisassembledInstruction
@@ -207,6 +227,7 @@ public class StyTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0xAB;
         jit.Memory.MemoryBlock[0x1234] = 0x00; // Initial value
@@ -222,8 +243,10 @@ public class StyTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void STY_Preserves_All_Flags()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void STY_Preserves_All_Flags(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x84);
         var instruction = new DisassembledInstruction
@@ -237,6 +260,7 @@ public class StyTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0xFF;
 
@@ -262,8 +286,10 @@ public class StyTests
         jit.TestHal.GetFlag(CpuStatusFlags.InterruptDisable).ShouldBeTrue();
     }
 
-    [Fact]
-    public void STY_Overwrite_Memory()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void STY_Overwrite_Memory(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x84);
         var instruction = new DisassembledInstruction
@@ -277,6 +303,7 @@ public class StyTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0xAA;
         jit.Memory.MemoryBlock[0x60] = 0x55; // Existing value to be overwritten
@@ -292,8 +319,10 @@ public class StyTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void STY_Does_Not_Affect_A_Or_X_Registers()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void STY_Does_Not_Affect_A_Or_X_Registers(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x84);
         var instruction = new DisassembledInstruction
@@ -307,6 +336,7 @@ public class StyTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x11;
         jit.TestHal.XRegister = 0x33;
@@ -326,8 +356,10 @@ public class StyTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void STY_ZeroPageX_Maximum_X_Value()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void STY_ZeroPageX_Maximum_X_Value(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x94);
         var instruction = new DisassembledInstruction
@@ -341,6 +373,7 @@ public class StyTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0xCC;
         jit.TestHal.XRegister = 0xFF;
@@ -357,8 +390,10 @@ public class StyTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void STY_Maximum_Value()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void STY_Maximum_Value(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x84);
         var instruction = new DisassembledInstruction
@@ -372,6 +407,7 @@ public class StyTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0xFF; // Maximum value
         jit.Memory.MemoryBlock[0x80] = 0x00; // Initial value
@@ -387,8 +423,10 @@ public class StyTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void STY_ZeroPageX_Zero_Index()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void STY_ZeroPageX_Zero_Index(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x94);
         var instruction = new DisassembledInstruction
@@ -402,6 +440,7 @@ public class StyTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.YRegister = 0xBB;
         jit.TestHal.XRegister = 0x00; // No offset
@@ -418,8 +457,10 @@ public class StyTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void STY_Redirects_To_Next_Instruction_On_Recompile()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void STY_Redirects_To_Next_Instruction_On_Recompile(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x84);
         var instruction = new DisassembledInstruction
@@ -439,6 +480,7 @@ public class StyTests
             new Dictionary<ushort, string>());
 
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, InstructionConverter.Convert(instruction, context));
         jit.AddMethod(0x1234 + 2, InstructionConverter.Convert(instruction2, context));
 
@@ -452,8 +494,10 @@ public class StyTests
         jit.Memory.MemoryBlock[0x12].ShouldBe((byte)0x42);
     }
 
-    [Fact]
-    public void STY_Does_Not_Redirect_When_Recompilation_Not_Needed()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void STY_Does_Not_Redirect_When_Recompilation_Not_Needed(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x84);
         var instruction = new DisassembledInstruction
@@ -473,6 +517,7 @@ public class StyTests
             new Dictionary<ushort, string>());
 
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, InstructionConverter.Convert(instruction, context));
         jit.AddMethod(0x1234 + 2, InstructionConverter.Convert(instruction2, context));
 

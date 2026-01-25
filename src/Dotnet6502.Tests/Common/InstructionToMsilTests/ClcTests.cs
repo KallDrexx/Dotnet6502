@@ -17,8 +17,10 @@ namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 /// </summary>
 public class ClcTests
 {
-    [Fact]
-    public void CLC_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CLC_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x18);
         var instruction = new DisassembledInstruction
@@ -32,6 +34,7 @@ public class ClcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Set carry flag initially
@@ -42,8 +45,10 @@ public class ClcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeFalse();
     }
 
-    [Fact]
-    public void CLC_When_Already_Clear()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CLC_When_Already_Clear(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x18);
         var instruction = new DisassembledInstruction
@@ -57,6 +62,7 @@ public class ClcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Carry flag already clear
@@ -67,8 +73,10 @@ public class ClcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeFalse();
     }
 
-    [Fact]
-    public void CLC_Preserves_Other_Flags()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CLC_Preserves_Other_Flags(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x18);
         var instruction = new DisassembledInstruction
@@ -82,6 +90,7 @@ public class ClcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Set all flags
@@ -105,8 +114,10 @@ public class ClcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void CLC_Does_Not_Affect_Registers()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CLC_Does_Not_Affect_Registers(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x18);
         var instruction = new DisassembledInstruction
@@ -120,6 +131,7 @@ public class ClcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
 
         jit.TestHal.ARegister = 0x42;
@@ -140,8 +152,10 @@ public class ClcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeFalse();
     }
 
-    [Fact]
-    public void CLC_With_Mixed_Initial_Flags()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CLC_With_Mixed_Initial_Flags(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x18);
         var instruction = new DisassembledInstruction
@@ -155,6 +169,7 @@ public class ClcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Set a mixed pattern of flags
@@ -178,8 +193,10 @@ public class ClcTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeFalse();
     }
 
-    [Fact]
-    public void CLC_Multiple_Calls()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CLC_Multiple_Calls(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x18);
         var instruction = new DisassembledInstruction
@@ -193,6 +210,7 @@ public class ClcTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Set carry flag initially
@@ -204,6 +222,7 @@ public class ClcTests
 
         // Second CLC call (should have no effect)
         var jit2 = TestJitCompiler.Create();
+        jit2.AlwaysUseInterpreter = useInterpreter;
             jit2.AddMethod(0x1234, nesIrInstructions);
         jit2.TestHal.SetFlag(CpuStatusFlags.Carry, false); // Already clear
         jit2.RunMethod(0x1234);

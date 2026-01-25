@@ -19,8 +19,10 @@ namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 /// </summary>
 public class DexTests
 {
-    [Fact]
-    public void DEX_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void DEX_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xCA);
         var instruction = new DisassembledInstruction
@@ -34,6 +36,7 @@ public class DexTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x05;
         jit.RunMethod(0x1234);
@@ -45,8 +48,10 @@ public class DexTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void DEX_Zero_Result()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void DEX_Zero_Result(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xCA);
         var instruction = new DisassembledInstruction
@@ -60,6 +65,7 @@ public class DexTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x01; // 0x01 - 1 = 0x00
         jit.RunMethod(0x1234);
@@ -71,8 +77,10 @@ public class DexTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void DEX_Wraparound_To_Negative()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void DEX_Wraparound_To_Negative(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xCA);
         var instruction = new DisassembledInstruction
@@ -86,6 +94,7 @@ public class DexTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x00; // 0x00 - 1 = 0xFF (wraparound)
         jit.RunMethod(0x1234);
@@ -97,8 +106,10 @@ public class DexTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void DEX_Negative_Result()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void DEX_Negative_Result(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xCA);
         var instruction = new DisassembledInstruction
@@ -112,6 +123,7 @@ public class DexTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x81; // 0x81 - 1 = 0x80 (still negative)
         jit.RunMethod(0x1234);
@@ -123,8 +135,10 @@ public class DexTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void DEX_Positive_Non_Zero_Result()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void DEX_Positive_Non_Zero_Result(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xCA);
         var instruction = new DisassembledInstruction
@@ -138,6 +152,7 @@ public class DexTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x42;
         jit.RunMethod(0x1234);
@@ -149,8 +164,10 @@ public class DexTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void DEX_From_Maximum_Positive()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void DEX_From_Maximum_Positive(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xCA);
         var instruction = new DisassembledInstruction
@@ -164,6 +181,7 @@ public class DexTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x7F; // 127, decrement to 126 (0x7E, still positive)
         jit.RunMethod(0x1234);
@@ -175,8 +193,10 @@ public class DexTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void DEX_From_Negative_To_Negative()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void DEX_From_Negative_To_Negative(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xCA);
         var instruction = new DisassembledInstruction
@@ -190,6 +210,7 @@ public class DexTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0xFE; // -2, decrement to -3 (0xFD)
         jit.RunMethod(0x1234);
@@ -201,8 +222,10 @@ public class DexTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void DEX_Boundary_Value_0x80()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void DEX_Boundary_Value_0x80(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xCA);
         var instruction = new DisassembledInstruction
@@ -216,6 +239,7 @@ public class DexTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x80; // -128, decrement to 127 (0x7F, becomes positive)
         jit.RunMethod(0x1234);

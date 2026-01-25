@@ -23,8 +23,10 @@ namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 /// </summary>
 public class BitTests
 {
-    [Fact]
-    public void BIT_ZeroPage_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void BIT_ZeroPage_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x24);
         var instruction = new DisassembledInstruction
@@ -38,6 +40,7 @@ public class BitTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0xFF;
         jit.Memory.MemoryBlock[0x10] = 0x33;
@@ -51,8 +54,10 @@ public class BitTests
         jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
     }
 
-    [Fact]
-    public void BIT_ZeroPage_Zero_Result()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void BIT_ZeroPage_Zero_Result(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x24);
         var instruction = new DisassembledInstruction
@@ -66,6 +71,7 @@ public class BitTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x0F;
         jit.Memory.MemoryBlock[0x20] = 0xF0;
@@ -77,8 +83,10 @@ public class BitTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeTrue();
     }
 
-    [Fact]
-    public void BIT_ZeroPage_Negative_Flag()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void BIT_ZeroPage_Negative_Flag(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x24);
         var instruction = new DisassembledInstruction
@@ -92,6 +100,7 @@ public class BitTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0xFF;
         jit.Memory.MemoryBlock[0x30] = 0x80;
@@ -103,8 +112,10 @@ public class BitTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void BIT_ZeroPage_Overflow_Flag()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void BIT_ZeroPage_Overflow_Flag(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x24);
         var instruction = new DisassembledInstruction
@@ -118,6 +129,7 @@ public class BitTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0xFF;
         jit.Memory.MemoryBlock[0x40] = 0x40;
@@ -129,8 +141,10 @@ public class BitTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeTrue();
     }
 
-    [Fact]
-    public void BIT_ZeroPage_Both_Negative_And_Overflow()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void BIT_ZeroPage_Both_Negative_And_Overflow(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x24);
         var instruction = new DisassembledInstruction
@@ -144,6 +158,7 @@ public class BitTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0xFF;
         jit.Memory.MemoryBlock[0x50] = 0xC0;
@@ -155,8 +170,10 @@ public class BitTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeTrue();
     }
 
-    [Fact]
-    public void BIT_Absolute_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void BIT_Absolute_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x2C);
         var instruction = new DisassembledInstruction
@@ -170,6 +187,7 @@ public class BitTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x55;
         jit.Memory.MemoryBlock[0x3000] = 0xAA;
@@ -183,8 +201,10 @@ public class BitTests
         jit.TestHal.GetFlag(CpuStatusFlags.Carry).ShouldBeTrue();
     }
 
-    [Fact]
-    public void BIT_Absolute_Clear_All_Flags()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void BIT_Absolute_Clear_All_Flags(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x2C);
         var instruction = new DisassembledInstruction
@@ -198,6 +218,7 @@ public class BitTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x0F;
         jit.Memory.MemoryBlock[0x1234] = 0x0F;
@@ -211,8 +232,10 @@ public class BitTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void BIT_Absolute_Pattern_Test()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void BIT_Absolute_Pattern_Test(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x2C);
         var instruction = new DisassembledInstruction
@@ -226,6 +249,7 @@ public class BitTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x80;
         jit.Memory.MemoryBlock[0x4FFF] = 0x7F;
@@ -237,8 +261,10 @@ public class BitTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeTrue();
     }
 
-    [Fact]
-    public void BIT_Test_Specific_Bits()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void BIT_Test_Specific_Bits(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x24);
         var instruction = new DisassembledInstruction
@@ -252,6 +278,7 @@ public class BitTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0x01;
         jit.Memory.MemoryBlock[0x80] = 0xE1;
@@ -263,8 +290,10 @@ public class BitTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeTrue();
     }
 
-    [Fact]
-    public void BIT_Zero_Memory_Value()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void BIT_Zero_Memory_Value(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0x24);
         var instruction = new DisassembledInstruction
@@ -278,6 +307,7 @@ public class BitTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.ARegister = 0xFF;
         jit.Memory.MemoryBlock[0x90] = 0x00;

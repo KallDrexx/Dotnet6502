@@ -8,8 +8,10 @@ namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 
 public class IncTests
 {
-    [Fact]
-    public void INC_ZeroPage_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void INC_ZeroPage_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xE6);
         var instruction = new DisassembledInstruction
@@ -23,6 +25,7 @@ public class IncTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.Memory.MemoryBlock[0x10] = 0x05;
         jit.TestHal.SetFlag(CpuStatusFlags.Carry, false);
@@ -38,8 +41,10 @@ public class IncTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void INC_ZeroPage_Zero_Result()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void INC_ZeroPage_Zero_Result(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xE6);
         var instruction = new DisassembledInstruction
@@ -53,6 +58,7 @@ public class IncTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.Memory.MemoryBlock[0x20] = 0xFF;
         jit.RunMethod(0x1234);
@@ -64,8 +70,10 @@ public class IncTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void INC_ZeroPage_Negative_Result()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void INC_ZeroPage_Negative_Result(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xE6);
         var instruction = new DisassembledInstruction
@@ -79,6 +87,7 @@ public class IncTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.Memory.MemoryBlock[0x30] = 0x7F; // 127, increment to 128 (0x80, negative)
         jit.RunMethod(0x1234);
@@ -90,8 +99,10 @@ public class IncTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void INC_ZeroPageX_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void INC_ZeroPageX_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xF6);
         var instruction = new DisassembledInstruction
@@ -105,6 +116,7 @@ public class IncTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x05;
         jit.Memory.MemoryBlock[0x45] = 0x10; // 0x40 + 0x05
@@ -117,8 +129,10 @@ public class IncTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void INC_ZeroPageX_Wraparound()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void INC_ZeroPageX_Wraparound(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xF6);
         var instruction = new DisassembledInstruction
@@ -132,6 +146,7 @@ public class IncTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x02;
         jit.Memory.MemoryBlock[0x01] = 0x42; // (0xFF + 0x02) & 0xFF = 0x01
@@ -144,8 +159,10 @@ public class IncTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void INC_Absolute_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void INC_Absolute_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xEE);
         var instruction = new DisassembledInstruction
@@ -159,6 +176,7 @@ public class IncTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.Memory.MemoryBlock[0x3000] = 0x99;
         jit.RunMethod(0x1234);
@@ -170,8 +188,10 @@ public class IncTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void INC_Absolute_Wraparound_To_Zero()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void INC_Absolute_Wraparound_To_Zero(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xEE);
         var instruction = new DisassembledInstruction
@@ -185,6 +205,7 @@ public class IncTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.Memory.MemoryBlock[0x1234] = 0xFF;
         jit.RunMethod(0x1234);
@@ -196,8 +217,10 @@ public class IncTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void INC_AbsoluteX_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void INC_AbsoluteX_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xFE);
         var instruction = new DisassembledInstruction
@@ -211,6 +234,7 @@ public class IncTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x0F;
         jit.Memory.MemoryBlock[0x200F] = 0x33;
@@ -223,8 +247,10 @@ public class IncTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void INC_AbsoluteX_Negative_To_Positive()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void INC_AbsoluteX_Negative_To_Positive(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xFE);
         var instruction = new DisassembledInstruction
@@ -238,6 +264,7 @@ public class IncTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
         jit.TestHal.XRegister = 0x01;
         jit.Memory.MemoryBlock[0x5000] = 0xFE; // Negative value
@@ -250,8 +277,10 @@ public class IncTests
         jit.TestHal.GetFlag(CpuStatusFlags.Overflow).ShouldBeFalse();
     }
 
-    [Fact]
-    public void INC_Redirects_When_Recompile_Requested()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void INC_Redirects_When_Recompile_Requested(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xE6);
         var instruction1 = new DisassembledInstruction
@@ -270,6 +299,7 @@ public class IncTests
             new Dictionary<ushort, string>());
 
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, InstructionConverter.Convert(instruction1, context));
         jit.AddMethod(0x1234 + 2, InstructionConverter.Convert(instruction2, context));
 

@@ -17,8 +17,10 @@ namespace Dotnet6502.Tests.Common.InstructionToMsilTests;
 /// </summary>
 public class SedTests
 {
-    [Fact]
-    public void SED_Basic()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SED_Basic(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xF8);
         var instruction = new DisassembledInstruction
@@ -32,6 +34,7 @@ public class SedTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Clear decimal flag initially
@@ -42,8 +45,10 @@ public class SedTests
         jit.TestHal.GetFlag(CpuStatusFlags.Decimal).ShouldBeTrue();
     }
 
-    [Fact]
-    public void SED_When_Already_Set()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SED_When_Already_Set(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xF8);
         var instruction = new DisassembledInstruction
@@ -57,6 +62,7 @@ public class SedTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Decimal flag already set
@@ -67,8 +73,10 @@ public class SedTests
         jit.TestHal.GetFlag(CpuStatusFlags.Decimal).ShouldBeTrue();
     }
 
-    [Fact]
-    public void SED_Preserves_Other_Flags()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SED_Preserves_Other_Flags(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xF8);
         var instruction = new DisassembledInstruction
@@ -82,6 +90,7 @@ public class SedTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
 
         // Set all flags except decimal
@@ -105,8 +114,10 @@ public class SedTests
         jit.TestHal.GetFlag(CpuStatusFlags.Negative).ShouldBeTrue();
     }
 
-    [Fact]
-    public void SED_Does_Not_Affect_Registers()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SED_Does_Not_Affect_Registers(bool useInterpreter)
     {
         var instructionInfo = InstructionSet.GetInstruction(0xF8);
         var instruction = new DisassembledInstruction
@@ -120,6 +131,7 @@ public class SedTests
 
         var nesIrInstructions = InstructionConverter.Convert(instruction, context);
         var jit = TestJitCompiler.Create();
+        jit.AlwaysUseInterpreter = useInterpreter;
         jit.AddMethod(0x1234, nesIrInstructions);
 
         jit.TestHal.ARegister = 0x42;
