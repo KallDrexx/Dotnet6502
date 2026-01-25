@@ -17,14 +17,9 @@ public class JitCompiler
     private readonly MemoryBus _memoryBus;
     private readonly Queue<ushort> _ranMethods = new();
     private readonly Ir6502Interpreter _interpreter;
+    private readonly SmcTracker _smcTracker = new();
     protected readonly ExecutableMethodCache ExecutableMethodCache = new();
-    private ushort _currentlyExecutingAddress;
-
-    /// <summary>
-    /// Contains a list of the addresses of instructions that are known to make modifications to the functions
-    /// they exist in, and the addresses of the instructions they've targeted.
-    /// </summary>
-    private readonly Dictionary<ushort, ushort> _knownSelfModifyingInstructionsAndTargets = [];
+    private ushort _currentlyExecutingFunctionAddress;
 
     /// <summary>
     /// If true, the compiler will always use the interpreter instead of the JIT compiler
@@ -37,28 +32,15 @@ public class JitCompiler
         _hal.OnMemoryWritten = address =>
         {
             ExecutableMethodCache.MemoryChanged(address);
-
-            // If the address was an instruction that was previously known to trigger SMC, then the
-            // update to that memory location means we no longer know if it contained SMC. So clear it.
-            _knownSelfModifyingInstructionsAndTargets.Remove(address);
+            _smcTracker.MemoryChanged(address);
 
             var isSelfModifying = ExecutableMethodCache.AddressPartOfFunctionInstructions(
-                _currentlyExecutingAddress,
+                _currentlyExecutingFunctionAddress,
                 address);
 
             if (isSelfModifying)
             {
-                if (!_knownSelfModifyingInstructionsAndTargets.TryAdd(hal.CurrentInstructionAddress, address))
-                {
-                    var existingTarget = _knownSelfModifyingInstructionsAndTargets[hal.CurrentInstructionAddress];
-                    if (existingTarget != address)
-                    {
-                        var message = $"Instruction at 0x{hal.CurrentInstructionAddress:X4} has modified both " +
-                                      $"0x{address:X4} and 0x{existingTarget:X4}";
-
-                        throw new InvalidOperationException(message);
-                    }
-                }
+                _smcTracker.MarkAsSelfModifying(hal.CurrentInstructionAddress, address);
             }
 
             return isSelfModifying;
@@ -84,11 +66,13 @@ public class JitCompiler
             if (method == null)
             {
                 var function = DecompileFunction((ushort)nextAddress);
+                var smcTargets = _smcTracker.GetTargets(function);
+
                 var instructions = GetIrInstructions(function);
                 var customGenerators = _jitCustomizers.SelectMany(x => x.GetCustomIlGenerators())
                     .ToDictionary(x => x.Key, x => x.Value);
 
-                if (ContainsSelfModifyingCode(function) || AlwaysUseInterpreter)
+                if (smcTargets.Count == 0 || AlwaysUseInterpreter)
                 {
                     method = _interpreter.CreateExecutableMethod(instructions);
                 }
@@ -109,9 +93,9 @@ public class JitCompiler
             }
 
             _hal.DebugHook($"Entering function 0x{nextAddress:X4}");
-            _currentlyExecutingAddress = (ushort)nextAddress;
+            _currentlyExecutingFunctionAddress = (ushort)nextAddress;
             nextAddress = method(_hal);
-            _hal.DebugHook($"Exiting function 0x{_currentlyExecutingAddress:X4}");
+            _hal.DebugHook($"Exiting function 0x{_currentlyExecutingFunctionAddress:X4}");
         }
 
         if (_ranMethods.Count == 0)
@@ -161,11 +145,5 @@ public class JitCompiler
         }
 
         return convertedInstructions;
-    }
-
-    private bool ContainsSelfModifyingCode(DecompiledFunction function)
-    {
-        return function.OrderedInstructions
-            .Any(x => _knownSelfModifyingInstructionsAndTargets.ContainsKey(x.CPUAddress));
     }
 }
