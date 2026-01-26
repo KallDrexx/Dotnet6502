@@ -15,7 +15,7 @@ public class ExecutableMethodCacheTests
         var method = CreateTestMethod();
         var cache = new ExecutableMethodCache();
 
-        cache.AddExecutableMethod(method, function);
+        cache.AddExecutableMethod(method, function, []);
         var result = cache.GetMethodForAddress(0x1234);
 
         result.ShouldNotBeNull();
@@ -29,7 +29,7 @@ public class ExecutableMethodCacheTests
         var method = CreateTestMethod();
         var cache = new ExecutableMethodCache();
 
-        cache.AddExecutableMethod(method, function);
+        cache.AddExecutableMethod(method, function, []);
         cache.MemoryChanged(0x1234);
         var result = cache.GetMethodForAddress(0x1234);
 
@@ -43,11 +43,25 @@ public class ExecutableMethodCacheTests
         var method = CreateTestMethod();
         var cache = new ExecutableMethodCache();
 
-        cache.AddExecutableMethod(method, function);
+        cache.AddExecutableMethod(method, function, []);
         cache.MemoryChanged(0x2345);
         var result = cache.GetMethodForAddress(0x1234);
 
         result.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Reporting_Memory_Change_On_Non_Entry_Address_Not_Invalidated_When_Excluded()
+    {
+        var function = CreateTestFunction(0x1234, 0x2345);
+        var method = CreateTestMethod();
+        var cache = new ExecutableMethodCache();
+
+        cache.AddExecutableMethod(method, function, [0x2345]);
+        cache.MemoryChanged(0x2345);
+        var result = cache.GetMethodForAddress(0x1234);
+
+        result.ShouldNotBeNull();
     }
 
     [Fact]
@@ -57,7 +71,7 @@ public class ExecutableMethodCacheTests
         var method = CreateTestMethod();
         var cache = new ExecutableMethodCache();
 
-        cache.AddExecutableMethod(method, function);
+        cache.AddExecutableMethod(method, function, []);
         cache.MemoryChanged(0x0135);
         var result = cache.GetMethodForAddress(0x1234);
 
@@ -72,15 +86,15 @@ public class ExecutableMethodCacheTests
         var testFunction = CreateTestFunction(0x1234);
         var method = CreateTestMethod();
 
-        cache.AddExecutableMethod(method, testFunction);
+        cache.AddExecutableMethod(method, testFunction, []);
 
         for (var x = 0; x < ExecutableMethodCache.MaxCachedMethodCount - 1; x++)
         {
             var address = 0x3344 + x;
-            cache.AddExecutableMethod(CreateTestMethod(), CreateTestFunction((ushort)address));
+            cache.AddExecutableMethod(CreateTestMethod(), CreateTestFunction((ushort)address), []);
         }
 
-        cache.AddExecutableMethod(CreateTestMethod(), CreateTestFunction(0x5555));
+        cache.AddExecutableMethod(CreateTestMethod(), CreateTestFunction(0x5555), []);
         cache.GetMethodForAddress(0x1234).ShouldBeNull();
     }
 
@@ -91,16 +105,16 @@ public class ExecutableMethodCacheTests
         var testFunction = CreateTestFunction(0x1234);
         var method = CreateTestMethod();
 
-        cache.AddExecutableMethod(method, testFunction);
+        cache.AddExecutableMethod(method, testFunction, []);
 
         for (var x = 0; x < ExecutableMethodCache.MaxCachedMethodCount - 1; x++)
         {
             var address = 0x3344 + x;
-            cache.AddExecutableMethod(CreateTestMethod(), CreateTestFunction((ushort)address));
+            cache.AddExecutableMethod(CreateTestMethod(), CreateTestFunction((ushort)address), []);
         }
 
         cache.GetMethodForAddress(0x1234).ShouldNotBeNull();
-        cache.AddExecutableMethod(CreateTestMethod(), CreateTestFunction(0x5555));
+        cache.AddExecutableMethod(CreateTestMethod(), CreateTestFunction(0x5555), []);
         cache.GetMethodForAddress(0x1234).ShouldNotBeNull();
     }
 

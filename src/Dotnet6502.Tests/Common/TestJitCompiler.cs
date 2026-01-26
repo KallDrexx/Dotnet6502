@@ -3,7 +3,6 @@ using Dotnet6502.Common.Hardware;
 using NESDecompiler.Core.CPU;
 using NESDecompiler.Core.Decompilation;
 using NESDecompiler.Core.Disassembly;
-using NESDecompiler.Core.ROM;
 
 namespace Dotnet6502.Tests.Common;
 
@@ -51,10 +50,10 @@ public class TestJitCompiler : JitCompiler
             CustomGenerators,
             generateDll);
 
-        ExecutableMethodCache.AddExecutableMethod(method, function);
+        ExecutableMethodCache.AddExecutableMethod(method, function, []);
     }
 
-    protected override IReadOnlyList<ConvertedInstruction> GetIrInstructions(DecompiledFunction function)
+    protected override ConvertedFunction GetIrInstructions(DecompiledFunction function)
     {
         var message = $"Function address 0x{function.Address:X4} called but that address has not been configured";
         throw new InvalidOperationException(message);

@@ -46,10 +46,10 @@ public class TestJitCompiler : JitCompiler
             [convertedInstructions],
             new Dictionary<Type, MsilGenerator.CustomIlGenerator>());
 
-        ExecutableMethodCache.AddExecutableMethod(method, function);
+        ExecutableMethodCache.AddExecutableMethod(method, function, []);
     }
 
-    protected override IReadOnlyList<ConvertedInstruction> GetIrInstructions(DecompiledFunction function)
+    protected override ConvertedFunction GetIrInstructions(DecompiledFunction function)
     {
         var message = $"Function address 0x{function.Address:X4} called but that address has not been configured";
         throw new InvalidOperationException(message);

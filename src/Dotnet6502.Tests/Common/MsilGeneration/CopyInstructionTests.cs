@@ -744,4 +744,21 @@ public class CopyInstructionTests
 
         jit.TestHal.ARegister.ShouldBe((byte)156);
     }
+
+    [Fact]
+    public void Can_Copy_Memory_With_Dynamic_Location_With_Single_Byte_Address_To_Register()
+    {
+        var instruction = new Ir6502.Copy(
+            new Ir6502.Memory(new Ir6502.DynamicMemoryLocation(0x2000, true), null, false),
+            new Ir6502.Register(Ir6502.RegisterName.Accumulator));
+
+        var jit = TestJitCompiler.Create();
+        jit.AddMethod(0x1234, [instruction]);
+        jit.TestHal.WriteMemory(0x2000, 0xCD);
+        jit.TestHal.WriteMemory(0x2001, 0xAB);
+        jit.TestHal.WriteMemory(0x00CD, 156);
+        jit.RunMethod(0x1234);
+
+        jit.TestHal.ARegister.ShouldBe((byte)156);
+    }
 }

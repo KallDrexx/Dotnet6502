@@ -673,18 +673,21 @@ public class MsilGenerator
                 ilGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
                 ilGenerator.Emit(OpCodes.Conv_I4);
 
-                // Load the high byte next
-                ilGenerator.Emit(JitCompiler.LoadHalArg);
-                ilGenerator.Emit(OpCodes.Ldc_I4, dynamic.AddressToLoadTargetAddressFrom + 1);
-                ilGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
-                ilGenerator.Emit(OpCodes.Conv_I4);
+                if (!dynamic.SingleByteAddress)
+                {
+                    // Load the high byte next
+                    ilGenerator.Emit(JitCompiler.LoadHalArg);
+                    ilGenerator.Emit(OpCodes.Ldc_I4, dynamic.AddressToLoadTargetAddressFrom + 1);
+                    ilGenerator.Emit(OpCodes.Callvirt, readMemoryMethod);
+                    ilGenerator.Emit(OpCodes.Conv_I4);
 
-                // Shift the high byte value up
-                ilGenerator.Emit(OpCodes.Ldc_I4_8);
-                ilGenerator.Emit(OpCodes.Shl);
+                    // Shift the high byte value up
+                    ilGenerator.Emit(OpCodes.Ldc_I4_8);
+                    ilGenerator.Emit(OpCodes.Shl);
 
-                // Add the high and low byte together
-                ilGenerator.Emit(OpCodes.Add);
+                    // Add the high and low byte together
+                    ilGenerator.Emit(OpCodes.Add);
+                }
 
                 break;
             }

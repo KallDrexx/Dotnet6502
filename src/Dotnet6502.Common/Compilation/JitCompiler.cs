@@ -10,6 +10,11 @@ namespace Dotnet6502.Common.Compilation;
 /// </summary>
 public class JitCompiler
 {
+    protected record ConvertedFunction(
+        IReadOnlyList<ConvertedInstruction> Instructions,
+        HashSet<ushort> AllowedSmcTargets,
+        bool HandledAllKnownSmcTargets);
+
     public static readonly OpCode LoadHalArg = OpCodes.Ldarg_0;
 
     private readonly Base6502Hal _hal;
@@ -66,24 +71,25 @@ public class JitCompiler
             if (method == null)
             {
                 var function = DecompileFunction((ushort)nextAddress);
-                var smcTargets = _smcTracker.GetTargets(function);
-
-                var instructions = GetIrInstructions(function);
+                var convertedFunction = GetIrInstructions(function);
                 var customGenerators = _jitCustomizers.SelectMany(x => x.GetCustomIlGenerators())
                     .ToDictionary(x => x.Key, x => x.Value);
 
-                if (smcTargets.Count == 0 || AlwaysUseInterpreter)
+                if (AlwaysUseInterpreter || !convertedFunction.HandledAllKnownSmcTargets)
                 {
-                    method = _interpreter.CreateExecutableMethod(instructions);
+                    _hal.DebugHook($"Using interpreter for 0x{nextAddress:X4}");
+                    method = _interpreter.CreateExecutableMethod(convertedFunction.Instructions);
                 }
                 else
                 {
+                    _hal.DebugHook($"Using JIT for 0x{nextAddress:X4}");
                     method = ExecutableMethodGenerator.Generate(
                         $"func_{function.Address:X4}",
-                        instructions,
+                        convertedFunction.Instructions,
                         customGenerators);
                 }
-                ExecutableMethodCache.AddExecutableMethod(method, function);
+
+                ExecutableMethodCache.AddExecutableMethod(method, function, convertedFunction.AllowedSmcTargets);
             }
 
             _ranMethods.Enqueue((ushort)nextAddress);
@@ -123,9 +129,11 @@ public class JitCompiler
         return function;
     }
 
-    protected virtual IReadOnlyList<ConvertedInstruction> GetIrInstructions(DecompiledFunction function)
+    protected virtual ConvertedFunction GetIrInstructions(DecompiledFunction function)
     {
-        var instructionConverterContext = new InstructionConverter.Context(function.JumpTargets, []);
+        var instructionConverterContext = new InstructionConverter.Context(
+            function.JumpTargets,
+            _smcTracker.GetTargets(function));
 
         // Convert each 6502 instruction into one or more IR instructions
         IReadOnlyList<ConvertedInstruction> convertedInstructions = function.OrderedInstructions
@@ -144,6 +152,13 @@ public class JitCompiler
             throw new InvalidOperationException(message);
         }
 
-        return convertedInstructions;
+        var unhandledSmcTargetsExist = instructionConverterContext.SmcTargetAddresses
+            .Where(x => !instructionConverterContext.HandledSmcTargets.Contains(x))
+            .Any();
+
+        return new ConvertedFunction(
+            convertedInstructions,
+            instructionConverterContext.HandledSmcTargets,
+            !unhandledSmcTargetsExist);
     }
 }

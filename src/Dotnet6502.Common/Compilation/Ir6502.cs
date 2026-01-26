@@ -91,7 +91,7 @@ public static class Ir6502
 
     public record DirectMemoryLocation(ushort Address) : MemoryLocation;
 
-    public record DynamicMemoryLocation(ushort AddressToLoadTargetAddressFrom) : MemoryLocation;
+    public record DynamicMemoryLocation(ushort AddressToLoadTargetAddressFrom, bool SingleByteAddress = false) : MemoryLocation;
 
     public enum RegisterName { Accumulator, XIndex, YIndex }
 

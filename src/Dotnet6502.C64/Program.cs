@@ -16,7 +16,7 @@ if (cliArgs.LogFile != null)
 
 var memoryConfig = await SetupMemory();
 var keyboardMapping = new KeyboardMapping();
-var app = new MonogameApp(keyboardMapping, false);
+var app = new MonogameApp(keyboardMapping, true);
 var vic2 = new Vic2(app, memoryConfig);
 var hal = new C64Hal(memoryConfig, cancellationTokenSource.Token, vic2, logWriter, cliArgs.InDebugMode);
 var interpreter = new Ir6502Interpreter();
@@ -24,6 +24,7 @@ var jitCustomizer = new C64JitCustomizer();
 jitCustomizer.AddInstructions(interpreter);
 
 var jitCompiler = new JitCompiler(hal, jitCustomizer, memoryConfig.CpuMemoryBus, interpreter);
+// jitCompiler.AlwaysUseInterpreter = true;
 
 // Hook into CIA1's port B to check for keyboard scanning requests
 memoryConfig.IoMemoryArea.Cia1.ExternalPortBInput += () =>

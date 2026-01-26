@@ -15,11 +15,13 @@ public class ExecutableMethodCache
     /// <param name="RelevantPages">Which memory pages are relevant to this method</param>
     /// <param name="LruEntry">The exact node in the LRU that refers to this method</param>
     /// <param name="InstructionAddresses">Every address relevant to the method</param>
+    /// <param name="AddressesThatDontTriggerEviction">Modifications to this address won't cause eviction</param>
     private record MethodInfo(
         ExecutableMethod Method,
         HashSet<byte> RelevantPages,
         LinkedListNode<ushort> LruEntry,
-        HashSet<ushort> InstructionAddresses);
+        HashSet<ushort> InstructionAddresses,
+        HashSet<ushort> AddressesThatDontTriggerEviction);
 
     private readonly Dictionary<ushort, MethodInfo> _executableMethods = new();
 
@@ -40,7 +42,19 @@ public class ExecutableMethodCache
     /// </summary>
     private readonly HashSet<ushort> _pendingAddressInvalidations = [];
 
-    public void AddExecutableMethod(ExecutableMethod method, DecompiledFunction decompiledFunction)
+    /// <summary>
+    /// Adds the specified method into the cache
+    /// </summary>
+    /// <param name="method">The .net method delegate that should be used to run this method</param>
+    /// <param name="decompiledFunction">The original decompiled method that generated the method</param>
+    /// <param name="addressesWhichAllowModifications">
+    /// Which addresses that can be modified without causing a cache eviction. This is mostly because the delegate
+    /// is already set up to handle self modifying code at these specific addresses.
+    /// </param>
+    public void AddExecutableMethod(
+        ExecutableMethod method,
+        DecompiledFunction decompiledFunction,
+        HashSet<ushort> addressesWhichAllowModifications)
     {
         var relevantPages = decompiledFunction.OrderedInstructions
             .Select(x => GetPageNumber(x.CPUAddress))
@@ -51,7 +65,13 @@ public class ExecutableMethodCache
             .SelectMany(x => Enumerable.Range(0, x.Info.Size).Select(y => (ushort)(x.CPUAddress + y)))
             .ToHashSet();
 
-        var info = new MethodInfo(method, relevantPages, new LinkedListNode<ushort>(decompiledFunction.Address), relevantAddresses);
+        var info = new MethodInfo(
+            method,
+            relevantPages,
+            new LinkedListNode<ushort>(decompiledFunction.Address),
+            relevantAddresses,
+            addressesWhichAllowModifications);
+
         _executableMethods[decompiledFunction.Address] = info;
         _lruCache.AddLast(info.LruEntry);
 
@@ -129,7 +149,12 @@ public class ExecutableMethodCache
             foreach (var functionAddress in functionAddresses)
             {
                 var function = _executableMethods[functionAddress];
-                if (function.InstructionAddresses.Any(x => page.Value.Contains(x)))
+                var shouldBeEvicted = function.InstructionAddresses
+                    .Where(x => !function.AddressesThatDontTriggerEviction.Contains(x))
+                    .Where(x => page.Value.Contains(x))
+                    .Any();
+
+                if (shouldBeEvicted)
                 {
                     RemoveCachedMethod(functionAddress);
                 }

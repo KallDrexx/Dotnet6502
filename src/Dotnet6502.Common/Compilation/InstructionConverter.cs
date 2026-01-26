@@ -1,5 +1,4 @@
 using NESDecompiler.Core.CPU;
-using NESDecompiler.Core.Decompilation;
 using NESDecompiler.Core.Disassembly;
 
 namespace Dotnet6502.Common.Compilation;
@@ -71,9 +70,9 @@ public static class InstructionConverter
             case "INY": results.AddRange(ConvertIny()); break;
             case "JMP": results.AddRange(ConvertJmp(instruction, context)); break;
             case "JSR": results.AddRange(ConvertJsr(instruction)); break;
-            case "LDA": results.AddRange(ConvertLda(instruction)); break;
-            case "LDX": results.AddRange(ConvertLdx(instruction)); break;
-            case "LDY": results.AddRange(ConvertLdy(instruction)); break;
+            case "LDA": results.AddRange(ConvertLda(instruction, context)); break;
+            case "LDX": results.AddRange(ConvertLdx(instruction, context)); break;
+            case "LDY": results.AddRange(ConvertLdy(instruction, context)); break;
             case "LSR": results.AddRange(ConvertLsr(instruction)); break;
             case "NOP": results.AddRange(ConvertNop()); break;
             case "ORA": results.AddRange(ConvertOra(instruction)); break;
@@ -862,10 +861,12 @@ public static class InstructionConverter
     /// <summary>
     /// Load A
     /// </summary>
-    private static Ir6502.Instruction[] ConvertLda(DisassembledInstruction instruction)
+    private static Ir6502.Instruction[] ConvertLda(DisassembledInstruction instruction, Context context)
     {
         var accumulator = new Ir6502.Register(Ir6502.RegisterName.Accumulator);
         var operand = ParseAddress(instruction);
+        operand = UpdateOperandForSmc(operand, instruction, context);
+
         var variable = new Ir6502.Variable(0);
 
         var copy = new Ir6502.Copy(operand, accumulator);
@@ -878,10 +879,10 @@ public static class InstructionConverter
     /// <summary>
     /// Load X
     /// </summary>
-    private static Ir6502.Instruction[] ConvertLdx(DisassembledInstruction instruction)
+    private static Ir6502.Instruction[] ConvertLdx(DisassembledInstruction instruction, Context context)
     {
         var xIndex = new Ir6502.Register(Ir6502.RegisterName.XIndex);
-        var operand = ParseAddress(instruction);
+        var operand = UpdateOperandForSmc(ParseAddress(instruction), instruction, context);
         var variable = new Ir6502.Variable(0);
 
         var copy = new Ir6502.Copy(operand, xIndex);
@@ -894,10 +895,10 @@ public static class InstructionConverter
     /// <summary>
     /// Load Y
     /// </summary>
-    private static Ir6502.Instruction[] ConvertLdy(DisassembledInstruction instruction)
+    private static Ir6502.Instruction[] ConvertLdy(DisassembledInstruction instruction, Context context)
     {
         var yIndex = new Ir6502.Register(Ir6502.RegisterName.YIndex);
-        var operand = ParseAddress(instruction);
+        var operand = UpdateOperandForSmc(ParseAddress(instruction), instruction, context);
         var variable = new Ir6502.Variable(0);
 
         var copy = new Ir6502.Copy(operand, yIndex);
@@ -1659,6 +1660,50 @@ public static class InstructionConverter
 
             default:
                 throw new NotSupportedException(instruction.Info.AddressingMode.ToString());
+        }
+    }
+
+    private static Ir6502.Value UpdateOperandForSmc(
+        Ir6502.Value operand,
+        DisassembledInstruction instruction,
+        Context context)
+    {
+        if (context.SmcTargetAddresses.Contains(instruction.CPUAddress))
+        {
+            // If the opcode is targeted for modification, then we can't do anything
+            return operand;
+        }
+
+        var hasRelevantAddresses = Enumerable.Range(0, instruction.Info.Size - 1)
+            .Where(x => context.SmcTargetAddresses.Contains((ushort)(instruction.CPUAddress + x + 1)))
+            .Any();
+
+        if (!hasRelevantAddresses)
+        {
+            // No SMC targeting this operand
+            return operand;
+        }
+
+        var operandAddress = (ushort)(instruction.CPUAddress + 1);
+
+        switch (operand)
+        {
+            case Ir6502.Memory memory:
+            {
+                var location = new Ir6502.DynamicMemoryLocation(operandAddress, memory.SingleByteAddress);
+                var updatedOperand = memory with { Location = location };
+                context.HandledSmcTargets.Add(operandAddress);
+                if (instruction.Info.Size == 3)
+                {
+                    context.HandledSmcTargets.Add((ushort)(operandAddress + 1));
+                }
+
+                return updatedOperand;
+            }
+
+            default:
+                // Not a known operand that can be made dynamic for SMC
+                return operand;
         }
     }
 
