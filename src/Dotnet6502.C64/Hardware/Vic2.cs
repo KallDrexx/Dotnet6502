@@ -206,14 +206,35 @@ public class Vic2
                 _videoColorBuffer[_videoMatrixLineIndex] = (ushort)(charCode | ((colorByte & 0x0F) << 8));
             }
 
-            // G-access: fetch pixel pattern from character generator
+            // G-access: fetch pixel pattern from character generator or bitmap memory
             if (_inDisplayState)
             {
-                var charCode = (byte)(_videoColorBuffer[_videoMatrixLineIndex] & 0xFF);
-                var charRomAddress = (ushort)((charCode * 8) + _rowCounter);
-                charRomAddress += (ushort)(_vic2Registers.CharacterMapPointer << 11);
+                ushort dataAddress;
+                var mode = GetGraphicsMode(_vic2Registers);
 
-                _graphicsDataBuffer[_videoMatrixLineIndex] = ReadRam(charRomAddress);
+                if (mode == GraphicsMode.StandardBitmapMode || mode == GraphicsMode.MulticolorBitmapMode)
+                {
+                    // Bitmap modes: read from bitmap memory
+                    // Bitmap base is determined by bit 3 of CharacterMapPointer (CB13)
+                    var bitmapBase = (ushort)((_vic2Registers.CharacterMapPointer & 0x04) << 11);
+                    dataAddress = (ushort)(bitmapBase + (_videoCounter * 8) + _rowCounter);
+                }
+                else
+                {
+                    // Text modes: read from character ROM/RAM
+                    var charCode = (byte)(_videoColorBuffer[_videoMatrixLineIndex] & 0xFF);
+
+                    // In ECM mode, only lower 6 bits of character code are used
+                    if (mode == GraphicsMode.EcmTextMode)
+                    {
+                        charCode = (byte)(charCode & 0x3F);
+                    }
+
+                    dataAddress = (ushort)((charCode * 8) + _rowCounter);
+                    dataAddress += (ushort)(_vic2Registers.CharacterMapPointer << 11);
+                }
+
+                _graphicsDataBuffer[_videoMatrixLineIndex] = ReadRam(dataAddress);
 
                 _videoCounter++;
                 _videoMatrixLineIndex++;
@@ -259,11 +280,13 @@ public class Vic2
 
         var csel = _vic2Registers.CSel;
         var rsel = _vic2Registers.RSel;
+        var xScroll = _vic2Registers.XScroll;
         var lastBorderLeftDot = csel ? 46 : 53;
         var firstBorderRightDot = csel ? 367 : 358;
         var lastBorderTopLine = rsel ? 51 : 55;
         var firstBorderBottomLine = rsel ? 251 : 247;
         var borderColor = _vic2Registers.BorderColor;
+        var mode = GetGraphicsMode(_vic2Registers);
 
         // Write the next 8 dots
         for (var x = 0; x < DotsPerCpuCycle; x++)
@@ -284,31 +307,158 @@ public class Vic2
                 continue;
             }
 
-            // Render standard text mode pixel
-            var displayX = dot - (csel ? 47 : 54);
-            var charColumn = displayX / 8;
-            var bitPosition = 7 - (displayX % 8);
+            // Calculate display position with X-scroll
+            var displayX = dot - (csel ? 47 : 54) + xScroll;
 
-            if (charColumn >= 0 && charColumn < 40)
+            var pixelColor = mode switch
             {
-                var pixelData = _graphicsDataBuffer[charColumn];
-                var isForeground = ((pixelData >> bitPosition) & 1) == 1;
+                GraphicsMode.StandardTextMode => RenderStandardTextModePixel(displayX),
+                GraphicsMode.MulticolorTextMode => RenderMulticolorTextModePixel(displayX),
+                GraphicsMode.StandardBitmapMode => RenderStandardBitmapModePixel(displayX),
+                GraphicsMode.MulticolorBitmapMode => RenderMulticolorBitmapModePixel(displayX),
+                GraphicsMode.EcmTextMode => RenderEcmTextModePixel(displayX),
+                GraphicsMode.Invalid => _palette[0], // Black screen for invalid modes
+                _ => _palette[_vic2Registers.BackgroundColor0],
+            };
 
-                if (isForeground)
-                {
-                    var fgColor = (_videoColorBuffer[charColumn] >> 8) & 0x0F;
-                    _frameBuffer[pixelIndex] = _palette[fgColor];
-                }
-                else
-                {
-                    _frameBuffer[pixelIndex] = _palette[_vic2Registers.BackgroundColor0];
-                }
-            }
-            else
-            {
-                _frameBuffer[pixelIndex] = _palette[_vic2Registers.BackgroundColor0];
-            }
+            _frameBuffer[pixelIndex] = pixelColor;
         }
+    }
+
+    private RgbColor RenderStandardTextModePixel(int displayX)
+    {
+        var charColumn = displayX / 8;
+        var bitPosition = 7 - (displayX % 8);
+
+        if (charColumn >= 0 && charColumn < 40)
+        {
+            var pixelData = _graphicsDataBuffer[charColumn];
+            var isForeground = ((pixelData >> bitPosition) & 1) == 1;
+
+            if (isForeground)
+            {
+                var fgColor = (_videoColorBuffer[charColumn] >> 8) & 0x0F;
+                return _palette[fgColor];
+            }
+
+            return _palette[_vic2Registers.BackgroundColor0];
+        }
+
+        return _palette[_vic2Registers.BackgroundColor0];
+    }
+
+    private RgbColor RenderEcmTextModePixel(int displayX)
+    {
+        var charColumn = displayX / 8;
+        var bitPosition = 7 - (displayX % 8);
+
+        if (charColumn >= 0 && charColumn < 40)
+        {
+            var pixelData = _graphicsDataBuffer[charColumn];
+            var isForeground = ((pixelData >> bitPosition) & 1) == 1;
+
+            if (isForeground)
+            {
+                var fgColor = (_videoColorBuffer[charColumn] >> 8) & 0x0F;
+                return _palette[fgColor];
+            }
+
+            // In ECM mode, upper 2 bits of character code select background color
+            var charCode = (byte)(_videoColorBuffer[charColumn] & 0xFF);
+            var bgSelect = (charCode >> 6) & 0x03;
+
+            return bgSelect switch
+            {
+                0 => _palette[_vic2Registers.BackgroundColor0],
+                1 => _palette[_vic2Registers.BackgroundColor1],
+                2 => _palette[_vic2Registers.BackgroundColor2],
+                3 => _palette[_vic2Registers.BackgroundColor3],
+                _ => _palette[_vic2Registers.BackgroundColor0],
+            };
+        }
+
+        return _palette[_vic2Registers.BackgroundColor0];
+    }
+
+    private RgbColor RenderMulticolorTextModePixel(int displayX)
+    {
+        var charColumn = displayX / 8;
+
+        if (charColumn >= 0 && charColumn < 40)
+        {
+            var colorByte = (_videoColorBuffer[charColumn] >> 8) & 0x0F;
+
+            // If bit 3 of color RAM is 0, render as standard text mode
+            if ((colorByte & 0x08) == 0)
+            {
+                return RenderStandardTextModePixel(displayX);
+            }
+
+            // Multicolor mode: pixel pairs (half horizontal resolution)
+            var pixelData = _graphicsDataBuffer[charColumn];
+            var bitPairIndex = (displayX % 8) / 2;
+            var bitPair = (pixelData >> (6 - bitPairIndex * 2)) & 0x03;
+
+            return bitPair switch
+            {
+                0 => _palette[_vic2Registers.BackgroundColor0],
+                1 => _palette[_vic2Registers.BackgroundColor1],
+                2 => _palette[_vic2Registers.BackgroundColor2],
+                3 => _palette[colorByte & 0x07], // Lower 3 bits of color RAM
+                _ => _palette[_vic2Registers.BackgroundColor0],
+            };
+        }
+
+        return _palette[_vic2Registers.BackgroundColor0];
+    }
+
+    private RgbColor RenderStandardBitmapModePixel(int displayX)
+    {
+        var charColumn = displayX / 8;
+        var bitPosition = 7 - (displayX % 8);
+
+        if (charColumn >= 0 && charColumn < 40)
+        {
+            var pixelData = _graphicsDataBuffer[charColumn];
+            var isForeground = ((pixelData >> bitPosition) & 1) == 1;
+
+            // In bitmap mode, screen RAM provides colors:
+            // Upper nybble = foreground color, lower nybble = background color
+            var screenData = (byte)(_videoColorBuffer[charColumn] & 0xFF);
+            var fgColor = (screenData >> 4) & 0x0F;
+            var bgColor = screenData & 0x0F;
+
+            return isForeground ? _palette[fgColor] : _palette[bgColor];
+        }
+
+        return _palette[_vic2Registers.BackgroundColor0];
+    }
+
+    private RgbColor RenderMulticolorBitmapModePixel(int displayX)
+    {
+        var charColumn = displayX / 8;
+
+        if (charColumn >= 0 && charColumn < 40)
+        {
+            var pixelData = _graphicsDataBuffer[charColumn];
+            var bitPairIndex = (displayX % 8) / 2;
+            var bitPair = (pixelData >> (6 - bitPairIndex * 2)) & 0x03;
+
+            // Screen RAM and color RAM provide colors
+            var screenData = (byte)(_videoColorBuffer[charColumn] & 0xFF);
+            var colorRamData = (_videoColorBuffer[charColumn] >> 8) & 0x0F;
+
+            return bitPair switch
+            {
+                0 => _palette[_vic2Registers.BackgroundColor0],
+                1 => _palette[(screenData >> 4) & 0x0F], // Screen RAM upper nybble
+                2 => _palette[screenData & 0x0F],        // Screen RAM lower nybble
+                3 => _palette[colorRamData],             // Color RAM
+                _ => _palette[_vic2Registers.BackgroundColor0],
+            };
+        }
+
+        return _palette[_vic2Registers.BackgroundColor0];
     }
 
     /// <summary>

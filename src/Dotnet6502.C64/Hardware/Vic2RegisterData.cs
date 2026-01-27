@@ -43,6 +43,14 @@ public class Vic2RegisterData
 
     public byte BackgroundColor0 => (byte)(_registerBytes.Read(B0C) & 0xF);
 
+    public byte BackgroundColor1 => (byte)(_registerBytes.Read(B1C) & 0xF);
+
+    public byte BackgroundColor2 => (byte)(_registerBytes.Read(B2C) & 0xF);
+
+    public byte BackgroundColor3 => (byte)(_registerBytes.Read(B3C) & 0xF);
+
+    public byte XScroll => (byte)(_registerBytes.Read(ControlRegister2) & 0b111);
+
     /// <summary>
     /// Pointer to the next area within the video matrix to load in
     /// </summary>
@@ -108,4 +116,19 @@ public class Vic2RegisterData
     /// Background color 0 (bits 3-0)
     /// </summary>
     private const ushort B0C = 0x021;
+
+    /// <summary>
+    /// Background color 1 (bits 3-0)
+    /// </summary>
+    private const ushort B1C = 0x022;
+
+    /// <summary>
+    /// Background color 2 (bits 3-0)
+    /// </summary>
+    private const ushort B2C = 0x023;
+
+    /// <summary>
+    /// Background color 3 (bits 3-0)
+    /// </summary>
+    private const ushort B3C = 0x024;
 }
