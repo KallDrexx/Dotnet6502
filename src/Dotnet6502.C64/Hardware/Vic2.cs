@@ -261,8 +261,8 @@ public class Vic2
         var rsel = _vic2Registers.RSel;
         var lastBorderLeftDot = csel ? 46 : 53;
         var firstBorderRightDot = csel ? 367 : 358;
-        var lastBorderTopLine = rsel ? 37 : 41;
-        var firstBorderBottomLine = rsel ? 238 : 234;
+        var lastBorderTopLine = rsel ? 51 : 55;
+        var firstBorderBottomLine = rsel ? 251 : 247;
         var borderColor = _vic2Registers.BorderColor;
 
         // Write the next 8 dots
