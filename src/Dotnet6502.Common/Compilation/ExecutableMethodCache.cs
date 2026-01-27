@@ -21,7 +21,13 @@ public class ExecutableMethodCache
         HashSet<byte> RelevantPages,
         LinkedListNode<ushort> LruEntry,
         HashSet<ushort> InstructionAddresses,
-        HashSet<ushort> AddressesThatDontTriggerEviction);
+        HashSet<ushort> AddressesThatDontTriggerEviction)
+    {
+        /// <summary>
+        /// If this method has been invalidated and should be evicted from the cache
+        /// </summary>
+        public bool HasBeenInvalidated { get; set; }
+    }
 
     private readonly Dictionary<ushort, MethodInfo> _executableMethods = new();
 
@@ -35,12 +41,6 @@ public class ExecutableMethodCache
     /// methods at the end.
     /// </summary>
     private readonly LinkedList<ushort> _lruCache = [];
-
-    /// <summary>
-    /// Memory addresses that have been written to that may require functions to be evicted from the cache
-    /// at the next opportunity
-    /// </summary>
-    private readonly HashSet<ushort> _pendingAddressInvalidations = [];
 
     /// <summary>
     /// Adds the specified method into the cache
@@ -95,12 +95,14 @@ public class ExecutableMethodCache
 
     public ExecutableMethod? GetMethodForAddress(ushort functionStartAddress)
     {
-        // Process pending memory page invalidations. Do this here instead of on memory changed notifications
-        // As this should be much less frequent.
-        ProcessPendingMemoryInvalidations();
-
         if (!_executableMethods.TryGetValue(functionStartAddress, out var info))
         {
+            return null;
+        }
+
+        if (info.HasBeenInvalidated)
+        {
+            RemoveCachedMethod(functionStartAddress);
             return null;
         }
 
@@ -126,42 +128,25 @@ public class ExecutableMethodCache
     /// </summary>
     public void MemoryChanged(ushort address)
     {
-        _pendingAddressInvalidations.Add(address);
+        if (_pageToRelevantFunctionAddressMap.TryGetValue(GetPageNumber(address), out var functionAddresses))
+        {
+            foreach (var functionAddress in functionAddresses)
+            {
+                var function = _executableMethods[functionAddress];
+                var shouldBeInvalided = function.InstructionAddresses.Contains(address) &&
+                                        !function.AddressesThatDontTriggerEviction.Contains(address);
+
+                if (shouldBeInvalided)
+                {
+                    function.HasBeenInvalidated = true;
+                }
+            }
+        }
     }
 
     private static byte GetPageNumber(ushort address)
     {
         return (byte)(address >> 8);
-    }
-
-    private void ProcessPendingMemoryInvalidations()
-    {
-        var changesByPage = _pendingAddressInvalidations.GroupBy(GetPageNumber)
-            .ToDictionary(x => x.Key, x => x.ToHashSet());
-
-        foreach (var page in changesByPage)
-        {
-            if (!_pageToRelevantFunctionAddressMap.TryGetValue(page.Key, out var functionAddresses))
-            {
-                continue;
-            }
-
-            foreach (var functionAddress in functionAddresses)
-            {
-                var function = _executableMethods[functionAddress];
-                var shouldBeEvicted = function.InstructionAddresses
-                    .Where(x => !function.AddressesThatDontTriggerEviction.Contains(x))
-                    .Where(x => page.Value.Contains(x))
-                    .Any();
-
-                if (shouldBeEvicted)
-                {
-                    RemoveCachedMethod(functionAddress);
-                }
-            }
-        }
-
-        _pendingAddressInvalidations.Clear();
     }
 
     private void RemoveCachedMethod(ushort address)
