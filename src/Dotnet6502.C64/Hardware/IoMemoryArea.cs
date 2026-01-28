@@ -12,7 +12,7 @@ public class IoMemoryArea : IMemoryDevice
 
     public ReadOnlyMemory<byte>? RawBlockFromZero => null;
 
-    public readonly BasicRamMemoryDevice Vic2Registers = new(64);
+    public readonly Vic2MemoryDevice Vic2Registers = new(64);
     public readonly BasicRamMemoryDevice SidRegisters = new(0x400);
     public readonly BasicRamMemoryDevice ColorRam = new(0x400);
     public readonly ComplexInterfaceAdapter Cia1 = new();

@@ -4,9 +4,9 @@ namespace Dotnet6502.C64.Hardware;
 
 public class Vic2RegisterData
 {
-    private readonly BasicRamMemoryDevice _registerBytes;
+    private readonly IMemoryDevice _registerBytes;
 
-    public Vic2RegisterData(BasicRamMemoryDevice registerBytes)
+    public Vic2RegisterData(IMemoryDevice registerBytes)
     {
         _registerBytes = registerBytes;
     }
@@ -131,4 +131,95 @@ public class Vic2RegisterData
     /// Background color 3 (bits 3-0)
     /// </summary>
     private const ushort B3C = 0x024;
+
+    // Sprite register offsets
+    private const ushort SpriteXBase = 0x000;      // $D000-$D00E (even bytes)
+    private const ushort SpriteYBase = 0x001;      // $D001-$D00F (odd bytes)
+    private const ushort SpriteXMsb = 0x010;       // $D010 - MSB of X coordinates
+    private const ushort SpriteEnable = 0x015;     // $D015 - Sprite enable
+    private const ushort SpriteYExpand = 0x017;    // $D017 - Y expansion
+    private const ushort SpritePriority = 0x01B;   // $D01B - Priority (0=front, 1=behind)
+    private const ushort SpriteMulticolor = 0x01C; // $D01C - Multicolor mode enable
+    private const ushort SpriteXExpand = 0x01D;    // $D01D - X expansion
+    private const ushort SpriteSpriteCollision = 0x01E;  // $D01E - Sprite-sprite collision (read-only)
+    private const ushort SpriteDataCollision = 0x01F;    // $D01F - Sprite-data collision (read-only)
+    private const ushort SpriteMulticolor0 = 0x025;      // $D025 - Multicolor color 0 (shared)
+    private const ushort SpriteMulticolor1 = 0x026;      // $D026 - Multicolor color 1 (shared)
+    private const ushort SpriteColorBase = 0x027;        // $D027-$D02E - Individual sprite colors
+
+    /// <summary>
+    /// Gets the X position for a sprite (full 9-bit value including MSB)
+    /// </summary>
+    public ushort GetSpriteX(int spriteIndex)
+    {
+        var lowByte = _registerBytes.Read((ushort)(SpriteXBase + spriteIndex * 2));
+        var msb = (_registerBytes.Read(SpriteXMsb) >> spriteIndex) & 1;
+        return (ushort)(lowByte | (msb << 8));
+    }
+
+    /// <summary>
+    /// Gets the Y position for a sprite
+    /// </summary>
+    public byte GetSpriteY(int spriteIndex)
+    {
+        return _registerBytes.Read((ushort)(SpriteYBase + spriteIndex * 2));
+    }
+
+    /// <summary>
+    /// Gets whether a sprite is enabled
+    /// </summary>
+    public bool IsSpriteEnabled(int spriteIndex)
+    {
+        return ((_registerBytes.Read(SpriteEnable) >> spriteIndex) & 1) == 1;
+    }
+
+    /// <summary>
+    /// Gets whether a sprite has Y expansion (double height)
+    /// </summary>
+    public bool IsSpriteYExpanded(int spriteIndex)
+    {
+        return ((_registerBytes.Read(SpriteYExpand) >> spriteIndex) & 1) == 1;
+    }
+
+    /// <summary>
+    /// Gets whether a sprite has X expansion (double width)
+    /// </summary>
+    public bool IsSpriteXExpanded(int spriteIndex)
+    {
+        return ((_registerBytes.Read(SpriteXExpand) >> spriteIndex) & 1) == 1;
+    }
+
+    /// <summary>
+    /// Gets whether a sprite is behind graphics data (1=behind, 0=in front)
+    /// </summary>
+    public bool IsSpriteBehindData(int spriteIndex)
+    {
+        return ((_registerBytes.Read(SpritePriority) >> spriteIndex) & 1) == 1;
+    }
+
+    /// <summary>
+    /// Gets whether a sprite is in multicolor mode
+    /// </summary>
+    public bool IsSpriteMulticolor(int spriteIndex)
+    {
+        return ((_registerBytes.Read(SpriteMulticolor) >> spriteIndex) & 1) == 1;
+    }
+
+    /// <summary>
+    /// Gets the individual color for a sprite (bits 3-0)
+    /// </summary>
+    public byte GetSpriteColor(int spriteIndex)
+    {
+        return (byte)(_registerBytes.Read((ushort)(SpriteColorBase + spriteIndex)) & 0x0F);
+    }
+
+    /// <summary>
+    /// Gets sprite multicolor 0 (shared by all sprites)
+    /// </summary>
+    public byte SpriteMulticolorColor0 => (byte)(_registerBytes.Read(SpriteMulticolor0) & 0x0F);
+
+    /// <summary>
+    /// Gets sprite multicolor 1 (shared by all sprites)
+    /// </summary>
+    public byte SpriteMulticolorColor1 => (byte)(_registerBytes.Read(SpriteMulticolor1) & 0x0F);
 }
