@@ -23,7 +23,8 @@ public class JitCompiler
     private readonly Queue<ushort> _ranMethods = new();
     private readonly Ir6502Interpreter _interpreter;
     private readonly SmcTracker _smcTracker = new();
-    protected readonly ExecutableMethodCache ExecutableMethodCache = new();
+    private readonly Dictionary<ushort, Patch> _patches = [];
+    private readonly ExecutableMethodCache _executableMethodCache = new();
     private ushort _currentlyExecutingFunctionAddress;
 
     /// <summary>
@@ -36,10 +37,10 @@ public class JitCompiler
         _hal = hal;
         _hal.OnMemoryWritten = address =>
         {
-            ExecutableMethodCache.MemoryChanged(address);
+            _executableMethodCache.MemoryChanged(address);
             _smcTracker.MemoryChanged(address);
 
-            var isSelfModifying = ExecutableMethodCache.AddressPartOfFunctionInstructions(
+            var isSelfModifying = _executableMethodCache.AddressPartOfFunctionInstructions(
                 _currentlyExecutingFunctionAddress,
                 address);
 
@@ -67,7 +68,7 @@ public class JitCompiler
         int nextAddress = address;
         while (nextAddress >= 0)
         {
-            var method = ExecutableMethodCache.GetMethodForAddress((ushort)nextAddress);
+            var method = _executableMethodCache.GetMethodForAddress((ushort)nextAddress);
             if (method == null)
             {
                 var function = DecompileFunction((ushort)nextAddress);
@@ -89,7 +90,7 @@ public class JitCompiler
                         customGenerators);
                 }
 
-                ExecutableMethodCache.AddExecutableMethod(method, function, convertedFunction.AllowedSmcTargets);
+                method = AddExecutableMethod(nextAddress, method, function, convertedFunction);
             }
 
             _ranMethods.Enqueue((ushort)nextAddress);
@@ -115,6 +116,11 @@ public class JitCompiler
 
             _hal.DebugHook($"Function path: {path}");
         }
+    }
+
+    public void AddPatch(Patch patch)
+    {
+        _patches.Add(patch.FunctionEntryAddress, patch);
     }
 
     private DecompiledFunction DecompileFunction(ushort address)
@@ -160,5 +166,20 @@ public class JitCompiler
             convertedInstructions,
             instructionConverterContext.HandledSmcTargets,
             !unhandledSmcTargetsExist);
+    }
+
+    protected ExecutableMethod AddExecutableMethod(
+        int nextAddress,
+        ExecutableMethod method,
+        DecompiledFunction function,
+        ConvertedFunction convertedFunction)
+    {
+        if (_patches.TryGetValue((ushort)nextAddress, out var patch))
+        {
+            method = patch.Apply(method);
+        }
+
+        _executableMethodCache.AddExecutableMethod(method, function, convertedFunction.AllowedSmcTargets);
+        return method;
     }
 }

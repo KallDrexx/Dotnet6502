@@ -41,12 +41,13 @@ public class TestJitCompiler : JitCompiler
 
         var function = new DecompiledFunction(address, [nop], new HashSet<ushort>());
         var convertedInstructions = new ConvertedInstruction(nop, instructions);
+        var convertedFunction = new ConvertedFunction([convertedInstructions], [], false);
         var method = ExecutableMethodGenerator.Generate(
             $"test_0x{address:X4}",
             [convertedInstructions],
             new Dictionary<Type, MsilGenerator.CustomIlGenerator>());
 
-        ExecutableMethodCache.AddExecutableMethod(method, function, []);
+        AddExecutableMethod(address, method, function, convertedFunction);
     }
 
     protected override ConvertedFunction GetIrInstructions(DecompiledFunction function)
