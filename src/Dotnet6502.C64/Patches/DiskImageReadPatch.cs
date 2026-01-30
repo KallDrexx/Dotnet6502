@@ -37,23 +37,36 @@ public class DiskImageReadPatch : Patch
 
         var entries = _image.ListFiles();
         D64DirectoryEntry? foundEntry = null;
-        foreach (var entry in entries)
+        if (petsciiFilename.Length == 1 && petsciiFilename[0] == 42)
         {
-            if (entry.PetsciiName.Length != petsciiFilename.Length)
+            // single asterisk is a wildcard, load first file
+            foundEntry = entries[0];
+        }
+        else
+        {
+            foreach (var entry in entries)
             {
-                continue;
-            }
-
-            for (var x = 0; x < petsciiFilename.Length; x++)
-            {
-                if (entry.PetsciiName[x] != petsciiFilename[x])
+                if (entry.PetsciiName.Length != petsciiFilename.Length)
                 {
                     continue;
                 }
-            }
 
-            foundEntry = entry;
-            break;
+                var matches = true;
+                for (var x = 0; x < petsciiFilename.Length; x++)
+                {
+                    if (entry.PetsciiName[x] != petsciiFilename[x])
+                    {
+                        matches = false;
+                        break;
+                    }
+                }
+
+                if (matches)
+                {
+                    foundEntry = entry;
+                    break;
+                }
+            }
         }
 
         if (foundEntry == null)

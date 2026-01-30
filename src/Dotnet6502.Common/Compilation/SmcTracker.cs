@@ -11,34 +11,31 @@ public class SmcTracker
     /// Contains a lookup of the address of all known instructions that modify their own
     /// functions, and the address that gets modified by it.
     /// </summary>
-    private readonly Dictionary<ushort, ushort> _sourceInstructionToTargetMap = new();
+    private readonly Dictionary<ushort, HashSet<ushort>> _sourceInstructionToTargetMap = new();
 
     /// <summary>
     /// Contains a lookup of each address that is modified by self modifying code, and
     /// which source instruction triggers a change.
     /// </summary>
-    private readonly Dictionary<ushort, ushort> _targetToSourceInstructionMap = new();
+    private readonly Dictionary<ushort, HashSet<ushort>> _targetToSourceInstructionMap = new();
 
     public void MarkAsSelfModifying(ushort sourceInstructionAddress, ushort targetAddress)
     {
-        if (!_sourceInstructionToTargetMap.TryAdd(sourceInstructionAddress, targetAddress))
+        if (!_sourceInstructionToTargetMap.TryGetValue(sourceInstructionAddress, out var targetAddresses))
         {
-            // Right now we only support a single target per source instruction
-            var existingTarget = _sourceInstructionToTargetMap[sourceInstructionAddress];
-            if (existingTarget != targetAddress)
-            {
-                var message = $"Instruction at 0x{sourceInstructionAddress:X4} has modified both " +
-                              $"0x{targetAddress:X4} and 0x{existingTarget:X4}";
-
-                throw new InvalidOperationException(message);
-            }
-
+            targetAddresses = [];
+            _sourceInstructionToTargetMap.Add(sourceInstructionAddress, targetAddresses);
         }
-        else
+
+        targetAddresses.Add(targetAddress);
+
+        if (!_targetToSourceInstructionMap.TryGetValue(targetAddress, out var sourceAddresses))
         {
-            // source was added to lookup
-            _targetToSourceInstructionMap.Add(targetAddress, sourceInstructionAddress);
+            sourceAddresses = [];
+            _targetToSourceInstructionMap.Add(targetAddress, sourceAddresses);
         }
+
+        sourceAddresses.Add(sourceInstructionAddress);
     }
 
     /// <summary>
@@ -50,9 +47,12 @@ public class SmcTracker
         // If a source instruction was changed, we no longer know if it's still self modifying.
         // NOTE: This is currently unaware if a source instruction's operand was changed, only if
         // the opcode was changed.
-        if (_sourceInstructionToTargetMap.Remove(address, out var target))
+        if (_sourceInstructionToTargetMap.Remove(address, out var targets))
         {
-            _targetToSourceInstructionMap.Remove(target);
+            foreach (var target in targets)
+            {
+                _targetToSourceInstructionMap.Remove(target);
+            }
         }
     }
 
