@@ -7,11 +7,12 @@ public static class CommandLineHandler
         FileInfo? KernelRom,
         FileInfo? CharacterRom,
         FileInfo? LogFile,
+        FileInfo? DiskImage,
         bool InDebugMode);
 
     public static Values Parse(string[] args)
     {
-        FileInfo? basicRom = null, kernelRom = null, charRom = null, logFile = null;
+        FileInfo? basicRom = null, kernelRom = null, charRom = null, logFile = null, diskImage = null;
         var inDebugMode = false;
 
         for (var x = 0; x < args.Length; x++)
@@ -58,10 +59,19 @@ public static class CommandLineHandler
                 case "-d":
                     inDebugMode = true;
                     break;
+
+                case "--d64":
+                    if (x + 1 < args.Length && !args[x + 1].StartsWith("-"))
+                    {
+                        diskImage = new FileInfo(args[++x]);
+                    }
+
+                    break;
+
             }
         }
 
-        return new Values(basicRom, kernelRom, charRom, logFile, inDebugMode);
+        return new Values(basicRom, kernelRom, charRom, logFile, diskImage, inDebugMode);
     }
 
     public static void ShowHelp()
@@ -80,6 +90,7 @@ public static class CommandLineHandler
                           Optional options
                             --log        -l <file>     The file to write instruction log contents to
                             --debug      -d            Enables debug mode which caches instruction
+                            --d64                      Location of the d64 disk image to load
                           """);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Dotnet6502.C64;
 using Dotnet6502.C64.Hardware;
 using Dotnet6502.C64.Integration;
+using Dotnet6502.C64.Media;
 using Dotnet6502.Common.Compilation;
 
 var cancellationTokenSource = new CancellationTokenSource();
@@ -12,6 +13,11 @@ DebugWriter? logWriter = null;
 if (cliArgs.LogFile != null)
 {
     logWriter = new DebugWriter(cliArgs.LogFile);
+}
+
+if (cliArgs.DiskImage != null)
+{
+    var image = D64Image.Load(cliArgs.DiskImage.FullName);
 }
 
 var memoryConfig = await SetupMemory();
