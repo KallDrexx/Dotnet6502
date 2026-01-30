@@ -2,6 +2,7 @@
 using Dotnet6502.C64.Hardware;
 using Dotnet6502.C64.Integration;
 using Dotnet6502.C64.Media;
+using Dotnet6502.C64.Patches;
 using Dotnet6502.Common.Compilation;
 
 var cancellationTokenSource = new CancellationTokenSource();
@@ -15,11 +16,6 @@ if (cliArgs.LogFile != null)
     logWriter = new DebugWriter(cliArgs.LogFile);
 }
 
-if (cliArgs.DiskImage != null)
-{
-    var image = D64Image.Load(cliArgs.DiskImage.FullName);
-}
-
 var memoryConfig = await SetupMemory();
 var keyboardMapping = new KeyboardMapping();
 var app = new MonogameApp(keyboardMapping, false);
@@ -31,6 +27,13 @@ jitCustomizer.AddInstructions(interpreter);
 
 var jitCompiler = new JitCompiler(hal, jitCustomizer, memoryConfig.CpuMemoryBus, interpreter);
 // jitCompiler.AlwaysUseInterpreter = true;
+
+// Add patches
+if (cliArgs.DiskImage != null)
+{
+    var image = D64Image.Load(cliArgs.DiskImage.FullName);
+    jitCompiler.AddPatch(new DiskImageReadPatch(image));
+}
 
 // Hook into CIA1's port B to check for keyboard scanning requests
 memoryConfig.IoMemoryArea.Cia1.ExternalPortBInput += () =>

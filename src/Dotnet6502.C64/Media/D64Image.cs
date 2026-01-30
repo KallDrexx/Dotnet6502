@@ -178,7 +178,7 @@ public class D64Image
     /// <param name="track">Track number (1-40).</param>
     /// <returns>The number of sectors on the specified track.</returns>
     /// <exception cref="ArgumentOutOfRangeException">Thrown if the track number is out of range.</exception>
-    internal static int SectorsPerTrack(int track) => track switch
+    private static int SectorsPerTrack(int track) => track switch
     {
         >= 1 and <= 17 => 21,
         >= 18 and <= 24 => 19,
@@ -190,7 +190,7 @@ public class D64Image
     /// <summary>
     /// Converts a track/sector pair to a byte offset within the image data.
     /// </summary>
-    internal int GetSectorOffset(int track, int sector)
+    private int GetSectorOffset(int track, int sector)
     {
         var offset = 0;
         for (var t = 1; t < track; t++)
@@ -203,7 +203,7 @@ public class D64Image
     /// <summary>
     /// Reads a 256-byte sector from the image at the given track and sector.
     /// </summary>
-    internal byte[] ReadSector(int track, int sector)
+    private byte[] ReadSector(int track, int sector)
     {
         var offset = GetSectorOffset(track, sector);
         var buffer = new byte[SectorSize];
