@@ -34,6 +34,10 @@ if (cliArgs.DiskImage != null)
     var image = D64Image.Load(cliArgs.DiskImage.FullName);
     jitCompiler.AddPatch(new DiskImageReadPatch(image));
 }
+else if (cliArgs.PrgFile != null)
+{
+    await AddPrgPatch();
+}
 
 // Hook into CIA1's port B to check for keyboard scanning requests
 memoryConfig.IoMemoryArea.Cia1.ExternalPortBInput += () =>
@@ -41,7 +45,6 @@ memoryConfig.IoMemoryArea.Cia1.ExternalPortBInput += () =>
     var columnMask = memoryConfig.IoMemoryArea.Cia1.DataPortA;
     return keyboardMapping.GetRowValues(columnMask);
 };
-
 
 await RunSystem();
 
@@ -110,4 +113,30 @@ async Task RunSystem()
     {
         await Task.Delay(1);
     }
+}
+
+async Task AddPrgPatch()
+{
+    if (cliArgs.PrgFile == null)
+    {
+        return;
+    }
+
+    Console.WriteLine($"Loading prg file {cliArgs.PrgFile.FullName}");
+
+    byte[] data;
+    await using (var stream = cliArgs.PrgFile.OpenRead())
+    {
+        var memoryStream = new MemoryStream();
+        await stream.CopyToAsync(memoryStream);
+        data = memoryStream.ToArray();
+    }
+
+    if (data.Length < 2)
+    {
+        Console.WriteLine("Empty PRG file provided");
+        return;
+    }
+
+    jitCompiler.AddPatch(new DiskImageReadPatch(data));
 }

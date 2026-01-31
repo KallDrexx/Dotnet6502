@@ -6,13 +6,19 @@ namespace Dotnet6502.C64.Patches;
 
 public class DiskImageReadPatch : Patch
 {
-    private readonly D64Image _image;
+    private readonly D64Image? _image;
+    private readonly byte[]? _prgData;
 
     public override ushort FunctionEntryAddress => 0xFFD5;
 
     public DiskImageReadPatch(D64Image image)
     {
         _image = image;
+    }
+
+    public DiskImageReadPatch(byte[] prgData)
+    {
+        _prgData = prgData;
     }
 
     protected override int NativeFunction(Base6502Hal hal)
@@ -33,6 +39,64 @@ public class DiskImageReadPatch : Patch
         for (var x = 0; x < nameLength; x++)
         {
             petsciiFilename[x] = hal.ReadMemory((ushort)(nameAddress + x));
+        }
+
+        byte[]? content;
+        if (_prgData != null)
+        {
+            content = GetPrgContents(hal, petsciiFilename);
+        }
+        else if (_image != null)
+        {
+            content = GetDiskImageContents(hal, petsciiFilename);
+        }
+        else
+        {
+            const string message = "No known data to read from";
+            throw new InvalidOperationException(message);
+        }
+
+        if (content == null)
+        {
+            hal.WriteMemory(0x90, 0x04);  // file not found status
+            hal.SetFlag(CpuStatusFlags.Carry, true); // carry = error
+
+            return SimulateRts(hal);
+        }
+
+        ushort loadAddress;
+        if (hal.ReadMemory(0xB9) == 0)
+        {
+            // 0 here means load to BASIC start instead
+            loadAddress = (ushort)((hal.ReadMemory(0x2c) << 8) | hal.ReadMemory(0x2b));
+        }
+        else
+        {
+            loadAddress = (ushort)((content[1] << 8) | content[0]);
+        }
+
+        // Copy the file to memory
+        for (var x = 2; x < content.Length; x++)
+        {
+            hal.WriteMemory((ushort)(loadAddress + x - 2), content[x]);
+        }
+
+        // Set end address in X/Y registers
+        var endAddress = loadAddress + content.Length - 2;
+        hal.XRegister = (byte)(endAddress & 0xFF);
+        hal.YRegister = (byte)(endAddress >> 8);
+        hal.WriteMemory(0x90, 0x00); // status ok
+        hal.SetFlag(CpuStatusFlags.Carry, false);
+
+        return SimulateRts(hal);
+    }
+
+    private byte[]? GetDiskImageContents(Base6502Hal hal, byte[] petsciiFilename)
+    {
+        if (_image == null)
+        {
+            const string message = "Attempted to load from null disk image";
+            throw new NullReferenceException(message);
         }
 
         var entries = _image.ListFiles();
@@ -71,37 +135,24 @@ public class DiskImageReadPatch : Patch
 
         if (foundEntry == null)
         {
-            hal.WriteMemory(0x90, 0x04);  // file not found status
-            hal.SetFlag(CpuStatusFlags.Carry, true); // carry = error
-
-            return SimulateRts(hal);
+            return null;
         }
 
         var content = _image.ReadFile(foundEntry.AsciiName);
-        ushort loadAddress;
-        if (hal.ReadMemory(0xB9) == 0)
-        {
-            // 0 here means load to BASIC start instead
-            loadAddress = (ushort)((hal.ReadMemory(0x2c) << 8) | hal.ReadMemory(0x2b));
-        }
-        else
-        {
-            loadAddress = (ushort)((content[1] << 8) | content[0]);
-        }
+        return content;
+    }
 
-        // Copy the file to memory
-        for (var x = 2; x < content.Length; x++)
+    private byte[]? GetPrgContents(Base6502Hal hal, byte[] petsciiFilename)
+    {
+        if (_prgData == null)
         {
-            hal.WriteMemory((ushort)(loadAddress + x - 2), content[x]);
+            const string message = "Null prg data found";
+            throw new NullReferenceException(message);
         }
 
-        // Set end address in X/Y registers
-        var endAddress = loadAddress + content.Length - 2;
-        hal.XRegister = (byte)(endAddress & 0xFF);
-        hal.YRegister = (byte)(endAddress >> 8);
-        hal.WriteMemory(0x90, 0x00); // status ok
-        hal.SetFlag(CpuStatusFlags.Carry, false);
-
-        return SimulateRts(hal);
+        // Only support an asterisk
+        return petsciiFilename is [42]
+            ? _prgData
+            : null;
     }
 }

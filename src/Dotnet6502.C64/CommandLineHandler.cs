@@ -8,11 +8,14 @@ public static class CommandLineHandler
         FileInfo? CharacterRom,
         FileInfo? LogFile,
         FileInfo? DiskImage,
+        FileInfo? PrgFile,
         bool InDebugMode);
 
     public static Values Parse(string[] args)
     {
         FileInfo? basicRom = null, kernelRom = null, charRom = null, logFile = null, diskImage = null;
+        FileInfo? prgFile = null;
+
         var inDebugMode = false;
 
         for (var x = 0; x < args.Length; x++)
@@ -68,10 +71,18 @@ public static class CommandLineHandler
 
                     break;
 
+                case "--prg":
+                    if (x + 1 < args.Length && !args[x + 1].StartsWith("-"))
+                    {
+                        prgFile = new FileInfo(args[++x]);
+                    }
+
+                    break;
+
             }
         }
 
-        return new Values(basicRom, kernelRom, charRom, logFile, diskImage, inDebugMode);
+        return new Values(basicRom, kernelRom, charRom, logFile, diskImage, prgFile, inDebugMode);
     }
 
     public static void ShowHelp()
