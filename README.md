@@ -88,6 +88,36 @@ at which point the JIT will repeat the process for the returned address.
 It assumes a second call to an address that's already been compiled is for the same function, and therefore
 will re-use delegates that it has previously compiled
 
+## Cache Management
+
+Since all memory writes go through the hardware abstraction layer, the HAL notifies the JIT compiler
+for every memory address that has been changed. The JIT compiler then evicts the previously cached instance
+of the function from the cache. The function will be freshly decompiled and recompiled into MSIL 
+the next time it is invoked.
+
+## Self Modifying Code
+
+Many 6502 programs make use of self modifying code, where the function will update its own instructions.
+
+The JIT system knows the address of each instruction it has created MSIL code for. So when it gets notified
+of a memory change event for an instruction in the currently executing function, it will mark the address
+of the currently executing instruction as a known self modifying code source address. This will then trigger
+an immediate exit of the current function and a re-entry (and recompile) at the next address.
+
+On the next recompile, the addresses of known self modifying code targets are passed in. If the target
+of self modifying code is an operand of some specific instructions (e.g. `LDA`), then we know how to handle
+the SMC scenario. In that case we make the operand handling operate dynamically instead of hard coded in the
+instruction's internal representation and mark that SMC target as "handled".
+
+If all SMC targets for a function have been handled then we compile the function into pure MSIL and even
+SMC executions will not cause a recompile of the function, and the function operates successfully. This 
+handles a good number of SMC cases.
+
+If there are SMC targets that are not marked as handled, then instead of converting it to MSIL we instead
+run the function through an interpreter. That allows SMC heavy functions that we can't handle without a recompile
+to not have the .net runtime JIT cost for every modification that happens to the function, while keeping
+non-SMC'ed functions using the faster JIT system.
+
 # Creating An Emulator
 
 To emulate a 6502 based system:
@@ -143,3 +173,27 @@ any games that are larger than 32KB will not map correctly.  Likewise, any game 
 ROM will not work either.
 
 A good example homebrew game is [Alter Ego](https://www.romhacking.net/homebrew/1/).
+
+## Commodore 64 Emulator
+
+The [Dotnet6502.C64](/src/Dotnet6502.C64) project contains an implementation of the 6502 JIT system to
+execute the Commodore 64 operating system. 
+
+You will need a C64 BASIC, Kernel, and Character rom binaries.  Once you have them you can run the emulator
+via
+
+```shell
+dotnet run -- \
+  --char <character-rom-location> \
+  --basic <basic-rom-location> \
+  --kernel <kernel-rom-location> 
+```
+
+If you have a specific disk image in either the `PRG` or `D64` format you can have them loaded via
+the `--d64 <d64-filelocation>` or `--prg <prg-file-location>` arguments.
+
+Note that the keyboard mapping does not follow normal keyboard layout standards. While letters and
+numbers are correct for modern keyboards, symbols and shift values instead match the original
+Commodore 64 keyboard layout (e.g. `[` maps to `=`]).
+
+Note that not all games and applications work.
