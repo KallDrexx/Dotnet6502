@@ -9,9 +9,12 @@ to 6502 assembly.
   * [MSIL Generation](#msil-generation)
   * [Assembly Generation](#assembly-generation)
   * [Execution](#execution)
+  * [Cache Management](#cache-management)
+  * [Self Modifying Code](#self-modifying-code)
 * [Creating An Emulator](#creating-an-emulator)
 * [Example Implementations](#example-implementations)
   * [NES Emulator](#nes-emulator)
+  * [Commodore 64 Emulator](#commodore-64-emulator)
 <!-- TOC -->
 
 # How Does It Work?
