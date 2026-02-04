@@ -16,12 +16,14 @@ public class ExecutableMethodCache
     /// <param name="LruEntry">The exact node in the LRU that refers to this method</param>
     /// <param name="InstructionAddresses">Every address relevant to the method</param>
     /// <param name="AddressesThatDontTriggerEviction">Modifications to this address won't cause eviction</param>
+    /// <param name="DecompiledFunction">The original decompiled function this method was created from</param>
     private record MethodInfo(
         ExecutableMethod Method,
         HashSet<byte> RelevantPages,
         LinkedListNode<ushort> LruEntry,
         HashSet<ushort> InstructionAddresses,
-        HashSet<ushort> AddressesThatDontTriggerEviction)
+        HashSet<ushort> AddressesThatDontTriggerEviction,
+        DecompiledFunction DecompiledFunction)
     {
         /// <summary>
         /// If this method has been invalidated and should be evicted from the cache
@@ -70,7 +72,8 @@ public class ExecutableMethodCache
             relevantPages,
             new LinkedListNode<ushort>(decompiledFunction.Address),
             relevantAddresses,
-            addressesWhichAllowModifications);
+            addressesWhichAllowModifications,
+            decompiledFunction);
 
         _executableMethods[decompiledFunction.Address] = info;
         _lruCache.AddLast(info.LruEntry);
@@ -120,6 +123,34 @@ public class ExecutableMethodCache
     {
         return _executableMethods.TryGetValue(functionAddress, out var info) &&
                info.InstructionAddresses.Contains(checkAddress);
+    }
+
+    /// <summary>
+    /// Checks to see if any cached method contains the instruction address
+    /// </summary>
+    public (ushort FunctionAddress, int InstructionIndex)? GetFunctionAddressForInstruction(ushort instructionAddress)
+    {
+        var page = GetPageNumber(instructionAddress);
+        if (_pageToRelevantFunctionAddressMap.TryGetValue(page, out var functionAddresses))
+        {
+            foreach (var functionAddress in functionAddresses)
+            {
+                if (_executableMethods[functionAddress].InstructionAddresses.Contains(instructionAddress))
+                {
+                    var index = _executableMethods[functionAddress]
+                        .DecompiledFunction
+                        .OrderedInstructions
+                        .Select((x, index) => new { Instruction = x, Index = index })
+                        .Where(x => x.Instruction.CPUAddress == instructionAddress)
+                        .Select(x => x.Index)
+                        .First();
+
+                    return (functionAddress, index);
+                }
+            }
+        }
+
+        return null;
     }
 
     /// <summary>

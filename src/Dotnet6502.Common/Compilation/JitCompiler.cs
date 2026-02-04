@@ -71,6 +71,12 @@ public class JitCompiler
             var method = _executableMethodCache.GetMethodForAddress((ushort)nextAddress);
             if (method == null)
             {
+                var existingFunction = _executableMethodCache.GetFunctionAddressForInstruction((ushort)nextAddress);
+                if (existingFunction != null)
+                {
+                    Console.WriteLine($"Entry point 0x{nextAddress:X4} is already an instruction for address 0x{existingFunction.Value.FunctionAddress:X4}");
+                }
+
                 var function = DecompileFunction((ushort)nextAddress);
                 var convertedFunction = GetIrInstructions(function);
                 var customGenerators = _jitCustomizers.SelectMany(x => x.GetCustomIlGenerators())
