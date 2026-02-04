@@ -27,17 +27,18 @@ public class Ir6502Interpreter
         var labelTargets = BuildLabelTargets(flattenedInstructions);
         var localCount = GetMaxLocalCount(flattenedInstructions);
 
-        return (hal, index) => Execute(flattenedInstructions, labelTargets, localCount, hal);
+        return (hal, index) => Execute(flattenedInstructions, labelTargets, localCount, hal, index);
     }
 
     private int Execute(
         IReadOnlyList<KeyValuePair<Ir6502.Instruction, DisassembledInstruction>> instructions,
         IReadOnlyDictionary<Ir6502.Identifier, int> labelTargets,
         int localCount,
-        Base6502Hal hal)
+        Base6502Hal hal,
+        int instructionIndex)
     {
         var locals = new int[localCount];
-        var instructionPointer = 0;
+        var instructionPointer = instructionIndex; // TODO: add test cases around this logic
 
         while (instructionPointer < instructions.Count)
         {

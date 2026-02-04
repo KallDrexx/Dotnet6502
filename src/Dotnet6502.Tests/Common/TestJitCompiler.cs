@@ -48,6 +48,7 @@ public class TestJitCompiler : JitCompiler
         var method = ExecutableMethodGenerator.Generate(
             $"test_0x{address:X4}",
             [convertedInstructions],
+            [],
             CustomGenerators,
             generateDll);
 

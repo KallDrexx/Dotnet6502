@@ -12,21 +12,23 @@ public static class ExecutableMethodGenerator
     public static ExecutableMethod Generate(
         string name,
         IReadOnlyList<ConvertedInstruction> instructions,
+        IReadOnlyList<Ir6502.Label> jumpTableLabels,
         IReadOnlyDictionary<Type, MsilGenerator.CustomIlGenerator>? customIlGenerators = null,
         bool generateDll = false)
     {
         if (generateDll)
         {
-            GenerateDebuggableDll(name, instructions, customIlGenerators);
+            GenerateDebuggableDll(name, instructions, customIlGenerators, jumpTableLabels);
         }
 
-        return GenerateViaAssemblies(name, instructions, customIlGenerators);
+        return GenerateViaAssemblies(name, instructions, customIlGenerators, jumpTableLabels);
     }
 
     private static ExecutableMethod GenerateViaAssemblies(
         string name,
         IReadOnlyList<ConvertedInstruction> instructions,
-        IReadOnlyDictionary<Type, MsilGenerator.CustomIlGenerator>? customIlGenerators)
+        IReadOnlyDictionary<Type, MsilGenerator.CustomIlGenerator>? customIlGenerators,
+        IReadOnlyList<Ir6502.Label> jumpTableLabels)
     {
         // While we could use `new DynamicMethod()` to create these methods, it hurts debug-ability.
         // Specifically, the stack frame just shows "Lightweight function call" or something similar
@@ -46,7 +48,7 @@ public static class ExecutableMethodGenerator
             [typeof(Base6502Hal), typeof(int)]);
 
         var ilGenerator = methodBuilder.GetILGenerator();
-        GenerateMsil(ilGenerator, instructions, customIlGenerators);
+        GenerateMsil(ilGenerator, instructions, jumpTableLabels, customIlGenerators);
 
         var constructedType = typeBuilder.CreateType();
         var method = constructedType.GetMethod(methodBuilder.Name);
@@ -63,6 +65,7 @@ public static class ExecutableMethodGenerator
     /// </summary>
     private static void GenerateMsil(ILGenerator ilGenerator,
         IReadOnlyList<ConvertedInstruction> instructions,
+        IReadOnlyList<Ir6502.Label> jumpTableLabels,
         IReadOnlyDictionary<Type, MsilGenerator.CustomIlGenerator>? customIlGenerators = null)
     {
         // We need to pull out all labels so they can be pre-defined, since they need to be
@@ -71,6 +74,17 @@ public static class ExecutableMethodGenerator
             .SelectMany(x => x.Ir6502Instructions)
             .OfType<Ir6502.Label>()
             .ToDictionary(x => x.Name, x => ilGenerator.DefineLabel());
+
+        if (jumpTableLabels.Count > 0)
+        {
+            // Create the jump table to specific instructions
+            var msilLabels = jumpTableLabels
+                .Select(x => ilLabels[x.Name])
+                .ToArray();
+
+            ilGenerator.Emit(JitCompiler.LoadJumpIndexArg);
+            ilGenerator.Emit(OpCodes.Switch, msilLabels);
+        }
 
         // Figure out how many locals this method will need and declare them.
         MsilGenerator.DeclareRequiredLocals(ilGenerator);
@@ -125,10 +139,10 @@ public static class ExecutableMethodGenerator
         return largestLocalCount;
     }
 
-    private static void GenerateDebuggableDll(
-        string name,
+    private static void GenerateDebuggableDll(string name,
         IReadOnlyList<ConvertedInstruction> instructions,
-        IReadOnlyDictionary<Type, MsilGenerator.CustomIlGenerator>? customIlGenerators)
+        IReadOnlyDictionary<Type, MsilGenerator.CustomIlGenerator>? customIlGenerators,
+        IReadOnlyList<Ir6502.Label> jumpTableLabels)
     {
         var assemblyName = new AssemblyName($"assembly_for_{name}");
         var assemblyBuilder = new PersistedAssemblyBuilder(assemblyName, typeof(object).Assembly);
@@ -142,7 +156,7 @@ public static class ExecutableMethodGenerator
             [typeof(Base6502Hal)]);
 
         var ilGenerator = methodBuilder.GetILGenerator();
-        GenerateMsil(ilGenerator, instructions, customIlGenerators);
+        GenerateMsil(ilGenerator, instructions, jumpTableLabels, customIlGenerators);
 
         typeBuilder.CreateType();
 

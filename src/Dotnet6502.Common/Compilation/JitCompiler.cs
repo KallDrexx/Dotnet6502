@@ -95,6 +95,7 @@ public class JitCompiler
                     method = ExecutableMethodGenerator.Generate(
                         $"func_{function.Address:X4}",
                         convertedFunction.Instructions,
+                        convertedFunction.JumpTableLabels,
                         customGenerators);
                 }
 
