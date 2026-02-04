@@ -70,36 +70,11 @@ public class JitCompiler
         int nextAddress = address;
         while (nextAddress >= 0)
         {
+            var firstInstructionIndex = 0;
             var method = _executableMethodCache.GetMethodForAddress((ushort)nextAddress);
             if (method == null)
             {
-                var existingFunction = _executableMethodCache.GetFunctionAddressForInstruction((ushort)nextAddress);
-                if (existingFunction != null)
-                {
-                    Console.WriteLine($"Entry point 0x{nextAddress:X4} is already an instruction for address 0x{existingFunction.Value.FunctionAddress:X4}");
-                }
-
-                var function = DecompileFunction((ushort)nextAddress);
-                var convertedFunction = GetIrInstructions(function);
-                var customGenerators = _jitCustomizers.SelectMany(x => x.GetCustomIlGenerators())
-                    .ToDictionary(x => x.Key, x => x.Value);
-
-                if (AlwaysUseInterpreter || !convertedFunction.HandledAllKnownSmcTargets)
-                {
-                    _hal.DebugHook($"Using interpreter for 0x{nextAddress:X4}");
-                    method = _interpreter.CreateExecutableMethod(convertedFunction.Instructions);
-                }
-                else
-                {
-                    _hal.DebugHook($"Using JIT for 0x{nextAddress:X4}");
-                    method = ExecutableMethodGenerator.Generate(
-                        $"func_{function.Address:X4}",
-                        convertedFunction.Instructions,
-                        convertedFunction.JumpTableLabels,
-                        customGenerators);
-                }
-
-                method = AddExecutableMethod(nextAddress, method, function, convertedFunction);
+                (method, firstInstructionIndex) = CreateExecutableMethod(nextAddress);
             }
 
             _ranMethods.Enqueue((ushort)nextAddress);
@@ -110,7 +85,7 @@ public class JitCompiler
 
             _hal.DebugHook($"Entering function 0x{nextAddress:X4}");
             _currentlyExecutingFunctionAddress = (ushort)nextAddress;
-            nextAddress = method(_hal, 0);
+            nextAddress = method(_hal, firstInstructionIndex);
             _hal.DebugHook($"Exiting function 0x{_currentlyExecutingFunctionAddress:X4}");
         }
 
@@ -130,6 +105,48 @@ public class JitCompiler
     public void AddPatch(Patch patch)
     {
         _patches.Add(patch.FunctionEntryAddress, patch);
+    }
+
+    private (ExecutableMethod Method, int FirstIndex) CreateExecutableMethod(int nextAddress)
+    {
+        ExecutableMethod method;
+        var existingFunction = _executableMethodCache.GetFunctionAddressForInstruction((ushort)nextAddress);
+        if (existingFunction != null)
+        {
+            var cachedMethod = _executableMethodCache.GetMethodForAddress(existingFunction.Value.FunctionAddress);
+            if (cachedMethod == null)
+            {
+                var message = $"Instruction 0x{nextAddress:X4} is listed as part of function " +
+                              $"0x{existingFunction.Value.FunctionAddress:X4}, but that function is not cached";
+
+                throw new InvalidOperationException(message);
+            }
+
+            return (cachedMethod, existingFunction.Value.InstructionIndex);
+        }
+
+        var function = DecompileFunction((ushort)nextAddress);
+        var convertedFunction = GetIrInstructions(function);
+        var customGenerators = _jitCustomizers.SelectMany(x => x.GetCustomIlGenerators())
+            .ToDictionary(x => x.Key, x => x.Value);
+
+        if (AlwaysUseInterpreter || !convertedFunction.HandledAllKnownSmcTargets)
+        {
+            _hal.DebugHook($"Using interpreter for 0x{nextAddress:X4}");
+            method = _interpreter.CreateExecutableMethod(convertedFunction.Instructions);
+        }
+        else
+        {
+            _hal.DebugHook($"Using JIT for 0x{nextAddress:X4}");
+            method = ExecutableMethodGenerator.Generate(
+                $"func_{function.Address:X4}",
+                convertedFunction.Instructions,
+                convertedFunction.JumpTableLabels,
+                customGenerators);
+        }
+
+        method = AddExecutableMethod(nextAddress, method, function, convertedFunction);
+        return (method, 0);
     }
 
     private DecompiledFunction DecompileFunction(ushort address)

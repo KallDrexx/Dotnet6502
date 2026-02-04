@@ -135,7 +135,8 @@ public class ExecutableMethodCache
         {
             foreach (var functionAddress in functionAddresses)
             {
-                if (_executableMethods[functionAddress].InstructionAddresses.Contains(instructionAddress))
+                var method = _executableMethods[functionAddress];
+                if (!method.HasBeenInvalidated && method.InstructionAddresses.Contains(instructionAddress))
                 {
                     var index = _executableMethods[functionAddress]
                         .DecompiledFunction
