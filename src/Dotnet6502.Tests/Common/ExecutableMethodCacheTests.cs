@@ -146,6 +146,6 @@ public class ExecutableMethodCacheTests
 
     private static ExecutableMethod CreateTestMethod()
     {
-        return _ => 0;
+        return (_, _) => 0;
     }
 }

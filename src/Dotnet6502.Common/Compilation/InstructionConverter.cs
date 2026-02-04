@@ -27,7 +27,7 @@ public static class InstructionConverter
         public HashSet<ushort> HandledSmcTargets { get; } = [];
     }
 
-    public static IReadOnlyList<Ir6502.Instruction> Convert(
+    public static List<Ir6502.Instruction> Convert(
         DisassembledInstruction instruction,
         Context context)
     {

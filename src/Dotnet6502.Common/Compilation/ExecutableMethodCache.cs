@@ -142,6 +142,7 @@ public class ExecutableMethodCache
                         .OrderedInstructions
                         .Select((x, index) => new { Instruction = x, Index = index })
                         .Where(x => x.Instruction.CPUAddress == instructionAddress)
+                        .Where(x => x.Instruction.SubAddressOrder == 0) // Ignore virtual instructions
                         .Select(x => x.Index)
                         .First();
 

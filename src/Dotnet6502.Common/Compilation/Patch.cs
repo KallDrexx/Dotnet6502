@@ -16,11 +16,11 @@ public abstract class Patch
 
     public ExecutableMethod Apply(ExecutableMethod functionToWrap)
     {
-        return hal =>
+        return (hal, index) =>
         {
             var nextAddress = NativeFunction(hal);
             return nextAddress < 0
-                ? functionToWrap(hal)
+                ? functionToWrap(hal, index)
                 : nextAddress;
         };
     }

@@ -77,7 +77,7 @@ public class JmpTests
                 // Instruction that should be skipped (never reached)
                 new Ir6502.Copy(new Ir6502.Constant(99), new Ir6502.Register(Ir6502.RegisterName.XIndex))
             )
-            .ToArray();
+            .ToList();
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);

@@ -30,7 +30,7 @@ public class TestJitCompiler : JitCompiler
         return new TestJitCompiler(hal, memoryMap, memoryBus);
     }
 
-    public void AddMethod(ushort address, IReadOnlyList<Ir6502.Instruction> instructions)
+    public void AddMethod(ushort address, List<Ir6502.Instruction> instructions)
     {
         var nop = new DisassembledInstruction
         {
@@ -41,7 +41,7 @@ public class TestJitCompiler : JitCompiler
 
         var function = new DecompiledFunction(address, [nop], new HashSet<ushort>());
         var convertedInstructions = new ConvertedInstruction(nop, instructions);
-        var convertedFunction = new ConvertedFunction([convertedInstructions], [], false);
+        var convertedFunction = new ConvertedFunction([convertedInstructions], [], false, []);
         var method = ExecutableMethodGenerator.Generate(
             $"test_0x{address:X4}",
             [convertedInstructions],

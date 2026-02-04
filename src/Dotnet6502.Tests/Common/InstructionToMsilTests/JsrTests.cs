@@ -31,7 +31,7 @@ public class JsrTests
                 // Set up initial state
                 new Ir6502.Copy(new Ir6502.Constant(0), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
             )
-            .ToArray();
+            .ToList();
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
@@ -176,7 +176,7 @@ public class JsrTests
                 // Set up initial state
                 new Ir6502.Copy(new Ir6502.Constant(0), new Ir6502.Register(Ir6502.RegisterName.Accumulator))
             )
-            .ToArray();
+            .ToList();
 
         var jit = TestJitCompiler.Create();
         jit.AddMethod(0x1234, allInstructions);
@@ -184,7 +184,7 @@ public class JsrTests
         // Add a callable function at the JSR target address that writes a test value to memory
         var lowVariable = new Ir6502.Variable(0);
         var highVariable = new Ir6502.Variable(1);
-        Ir6502.Instruction[] targetInstructions =
+        List<Ir6502.Instruction> targetInstructions =
         [
             new Ir6502.PopStackValue(lowVariable),
             new Ir6502.PopStackValue(highVariable),

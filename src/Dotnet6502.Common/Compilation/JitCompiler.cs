@@ -13,9 +13,11 @@ public class JitCompiler
     protected record ConvertedFunction(
         IReadOnlyList<ConvertedInstruction> Instructions,
         HashSet<ushort> AllowedSmcTargets,
-        bool HandledAllKnownSmcTargets);
+        bool HandledAllKnownSmcTargets,
+        IReadOnlyList<Ir6502.Label> JumpTableLabels);
 
     public static readonly OpCode LoadHalArg = OpCodes.Ldarg_0;
+    public static readonly OpCode LoadJumpIndexArg = OpCodes.Ldarg_1;
 
     private readonly Base6502Hal _hal;
     private readonly IReadOnlyList<IJitCustomizer> _jitCustomizers;
@@ -107,7 +109,7 @@ public class JitCompiler
 
             _hal.DebugHook($"Entering function 0x{nextAddress:X4}");
             _currentlyExecutingFunctionAddress = (ushort)nextAddress;
-            nextAddress = method(_hal);
+            nextAddress = method(_hal, 0);
             _hal.DebugHook($"Exiting function 0x{_currentlyExecutingFunctionAddress:X4}");
         }
 
@@ -164,6 +166,17 @@ public class JitCompiler
             throw new InvalidOperationException(message);
         }
 
+        // Add an index based label for the jump table
+        var jumpTableLabels = new List<Ir6502.Label>();
+        for (var x = 0; x < convertedInstructions.Count; x++)
+        {
+            var identifier = new Ir6502.Identifier($"{function.Address:X4}_index_{x:000000}");
+            var label = new Ir6502.Label(identifier);
+            jumpTableLabels.Add(label);
+
+            convertedInstructions[x].Ir6502Instructions.Insert(0, label);
+        }
+
         var unhandledSmcTargetsExist = instructionConverterContext.SmcTargetAddresses
             .Where(x => !instructionConverterContext.HandledSmcTargets.Contains(x))
             .Any();
@@ -171,7 +184,8 @@ public class JitCompiler
         return new ConvertedFunction(
             convertedInstructions,
             instructionConverterContext.HandledSmcTargets,
-            !unhandledSmcTargetsExist);
+            !unhandledSmcTargetsExist,
+            jumpTableLabels);
     }
 
     protected ExecutableMethod AddExecutableMethod(

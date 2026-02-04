@@ -8,4 +8,4 @@ namespace Dotnet6502.Common.Compilation;
 /// </summary>
 public record ConvertedInstruction(
     DisassembledInstruction OriginalInstruction,
-    IReadOnlyList<Ir6502.Instruction> Ir6502Instructions);
+    List<Ir6502.Instruction> Ir6502Instructions);

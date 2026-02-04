@@ -27,7 +27,7 @@ public class Ir6502Interpreter
         var labelTargets = BuildLabelTargets(flattenedInstructions);
         var localCount = GetMaxLocalCount(flattenedInstructions);
 
-        return hal => Execute(flattenedInstructions, labelTargets, localCount, hal);
+        return (hal, index) => Execute(flattenedInstructions, labelTargets, localCount, hal);
     }
 
     private int Execute(
