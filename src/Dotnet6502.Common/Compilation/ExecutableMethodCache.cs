@@ -144,10 +144,15 @@ public class ExecutableMethodCache
                         .Select((x, index) => new { Instruction = x, Index = index })
                         .Where(x => x.Instruction.CPUAddress == instructionAddress)
                         .Where(x => x.Instruction.SubAddressOrder == 0) // Ignore virtual instructions
-                        .Select(x => x.Index)
-                        .First();
+                        .Select(x => (int?)x.Index)
+                        .FirstOrDefault();
 
-                    return (functionAddress, index);
+                    if (index == null)
+                    {
+                        return null;
+                    }
+
+                    return (functionAddress, index.Value);
                 }
             }
         }
