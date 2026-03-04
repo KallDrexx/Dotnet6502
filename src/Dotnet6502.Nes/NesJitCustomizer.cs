@@ -1,5 +1,4 @@
 using System.Reflection.Emit;
-using Dotnet6502.Common;
 using Dotnet6502.Common.Compilation;
 
 namespace Dotnet6502.Nes;
@@ -12,6 +11,22 @@ public class NesJitCustomizer : IJitCustomizer
     private record IncrementCycleCount(int Cycles) : Ir6502.Instruction;
 
     private record CallDebugHook(string Info) : Ir6502.Instruction;
+
+    public void AddInstructions(Ir6502Interpreter interpreter)
+    {
+        interpreter.AddHandler<CallDebugHook>((instruction, hal, _) =>
+        {
+            var inst = (CallDebugHook)instruction;
+            hal.DebugHook(inst.Info);
+        });
+
+        interpreter.AddHandler<IncrementCycleCount>((instruction, hal, _) =>
+        {
+            var inst = (IncrementCycleCount)instruction;
+            var c64Hal = (NesHal)hal;
+            c64Hal.IncrementCpuCycleCount(inst.Cycles);
+        });
+    }
 
     public IReadOnlyList<ConvertedInstruction> MutateInstructions(IReadOnlyList<ConvertedInstruction> instructions)
     {
