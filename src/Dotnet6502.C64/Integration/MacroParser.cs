@@ -190,6 +190,7 @@ public static class MacroParser
             instructions.Add(new PressInstruction(key));
             instructions.Add(new WaitInstruction(2));
             instructions.Add(new ReleaseInstruction(key));
+            instructions.Add(new WaitInstruction(2));
         }
 
         instructions.Add(new WaitInstruction(2));
