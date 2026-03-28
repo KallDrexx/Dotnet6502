@@ -9,12 +9,13 @@ public static class CommandLineHandler
         FileInfo? LogFile,
         FileInfo? DiskImage,
         FileInfo? PrgFile,
+        FileInfo? MacroFile,
         bool InDebugMode);
 
     public static Values Parse(string[] args)
     {
         FileInfo? basicRom = null, kernelRom = null, charRom = null, logFile = null, diskImage = null;
-        FileInfo? prgFile = null;
+        FileInfo? prgFile = null, macroFile = null;
 
         var inDebugMode = false;
 
@@ -79,10 +80,19 @@ public static class CommandLineHandler
 
                     break;
 
+                case "--macro":
+                case "-m":
+                    if (x + 1 < args.Length && !args[x + 1].StartsWith("-"))
+                    {
+                        macroFile = new FileInfo(args[++x]);
+                    }
+
+                    break;
+
             }
         }
 
-        return new Values(basicRom, kernelRom, charRom, logFile, diskImage, prgFile, inDebugMode);
+        return new Values(basicRom, kernelRom, charRom, logFile, diskImage, prgFile, macroFile, inDebugMode);
     }
 
     public static void ShowHelp()
@@ -102,6 +112,7 @@ public static class CommandLineHandler
                             --log        -l <file>     The file to write instruction log contents to
                             --debug      -d            Enables debug mode which caches instruction
                             --d64                      Location of the d64 disk image to load
+                            --macro      -m <file>     Macro file for automated key presses
                           """);
     }
 }

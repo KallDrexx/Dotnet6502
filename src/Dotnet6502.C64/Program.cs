@@ -18,7 +18,8 @@ if (cliArgs.LogFile != null)
 
 var memoryConfig = await SetupMemory();
 var keyboardMapping = new KeyboardMapping();
-var app = new MonogameApp(keyboardMapping, false);
+var macroExecutor = SetupMacroExecutor();
+var app = new MonogameApp(keyboardMapping, false, macroExecutor);
 var vic2 = new Vic2(app, memoryConfig);
 var hal = new C64Hal(memoryConfig, cancellationTokenSource.Token, vic2, logWriter, cliArgs.InDebugMode);
 var interpreter = new Ir6502Interpreter();
@@ -139,4 +140,33 @@ async Task AddPrgPatch()
     }
 
     jitCompiler.AddPatch(new DiskImageReadPatch(data));
+}
+
+MacroExecutor? SetupMacroExecutor()
+{
+    if (cliArgs.MacroFile == null)
+    {
+        return null;
+    }
+
+    if (!cliArgs.MacroFile.Exists)
+    {
+        Console.WriteLine($"Error: Macro file not found: {cliArgs.MacroFile.FullName}");
+        Environment.Exit(1);
+    }
+
+    Console.WriteLine($"Loading macro file {cliArgs.MacroFile.FullName}");
+
+    try
+    {
+        var instructions = MacroParser.ParseFile(cliArgs.MacroFile.FullName);
+        Console.WriteLine($"Loaded {instructions.Count} macro instructions");
+        return new MacroExecutor(instructions);
+    }
+    catch (FormatException ex)
+    {
+        Console.WriteLine($"Error parsing macro file: {ex.Message}");
+        Environment.Exit(1);
+        return null;
+    }
 }

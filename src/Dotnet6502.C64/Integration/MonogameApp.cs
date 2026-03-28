@@ -18,6 +18,7 @@ public class MonogameApp : Game, IC64Display
     private readonly bool _trackTime;
     private readonly Stopwatch _timer = new();
     private readonly KeyboardMapping _keyboardMapping;
+    private readonly MacroExecutor? _macroExecutor;
     private SpriteBatch _spriteBatch = null!;
     private Texture2D _texture = null!;
     private bool _readyToContinue;
@@ -28,7 +29,7 @@ public class MonogameApp : Game, IC64Display
 
     public Task? C64CodeTask { get; set; }
 
-    public MonogameApp(KeyboardMapping keyboardMapping, bool trackTime)
+    public MonogameApp(KeyboardMapping keyboardMapping, bool trackTime, MacroExecutor? macroExecutor = null)
     {
         _graphicsDeviceManager = new GraphicsDeviceManager(this);
 
@@ -37,6 +38,7 @@ public class MonogameApp : Game, IC64Display
 
         _trackTime = trackTime;
         _keyboardMapping = keyboardMapping;
+        _macroExecutor = macroExecutor;
     }
 
     public void RenderFrame(RgbColor[] pixels)
@@ -148,6 +150,13 @@ public class MonogameApp : Game, IC64Display
         }
 
         _keyboardMapping.UpdateState(keyboardState);
+
+        // Execute macro frame and update simulated keys
+        if (_macroExecutor != null)
+        {
+            _macroExecutor.OnFrame();
+            _keyboardMapping.SetSimulatedKeys(_macroExecutor.GetSimulatedKeys());
+        }
 
         base.Update(gameTime);
     }

@@ -10,6 +10,7 @@ public class KeyboardMapping
 {
     private readonly Lock _lock = new Lock();
     private KeyboardState _currentKeyboardState;
+    private HashSet<Keys> _simulatedKeys = new();
 
     // Keyboard matrix bit layout
     //
@@ -121,6 +122,17 @@ public class KeyboardMapping
     }
 
     /// <summary>
+    /// Sets the currently simulated keys from the macro executor.
+    /// </summary>
+    public void SetSimulatedKeys(IReadOnlySet<Keys> keys)
+    {
+        lock (_lock)
+        {
+            _simulatedKeys = new HashSet<Keys>(keys);
+        }
+    }
+
+    /// <summary>
     /// Gets the value for the rows in the keyboard matrix based off of the columns
     /// specified by CIA1's Data Port A value.
     /// </summary>
@@ -133,15 +145,21 @@ public class KeyboardMapping
     {
 
         KeyboardState state;
+        HashSet<Keys> simulatedKeys;
         lock (_lock)
         {
             state = _currentKeyboardState;
+            simulatedKeys = _simulatedKeys;
         }
 
         var result = 0xFF; // Start off with all rows off
         var pressedKeys = state.GetPressedKeys() ?? [];
 
-        foreach (var key in pressedKeys)
+        // Combine real and simulated keys
+        var allKeys = new HashSet<Keys>(pressedKeys);
+        allKeys.UnionWith(simulatedKeys);
+
+        foreach (var key in allKeys)
         {
             if (KeyMappings.TryGetValue(key, out var mapping))
             {
