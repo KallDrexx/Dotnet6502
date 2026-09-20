@@ -1,0 +1,9 @@
+<Solution>
+  <Project Path="../NESDecompiler/NESDecompiler.Core/NESDecompiler.Core.csproj" />
+  <Project Path="Dotnet6502.C64/Dotnet6502.C64.csproj" />
+  <Project Path="Dotnet6502.Common/Dotnet6502.Common.csproj" />
+  <Project Path="Dotnet6502.ComprehensiveTestRunner/Dotnet6502.ComprehensiveTestRunner.csproj" />
+  <Project Path="Dotnet6502.Nes.Cli/Dotnet6502.Nes.Cli.csproj" />
+  <Project Path="Dotnet6502.Nes/Dotnet6502.Nes.csproj" />
+  <Project Path="Dotnet6502.Tests/Dotnet6502.Tests.csproj" />
+</Solution>
