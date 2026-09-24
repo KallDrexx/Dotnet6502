@@ -13,6 +13,6 @@ public interface ISystem
     public Base6502Hal Hal { get; }
     public Action? OnFrameFinished { get; set; }
 
-    public int GetResetVector();
+    public ushort GetResetVector();
 }
 

@@ -6,7 +6,7 @@ public static class CommandLineHandler
 {
     public record NesConfig(FileInfo RomFile);
 
-    public record Options(NesConfig? NesConfig, int FrameCount);
+    public record Options(NesConfig? NesConfig, int FrameCount, int? FramesPerInterval);
 
     public static Options? Parse(string[] args)
     {
@@ -44,6 +44,7 @@ public static class CommandLineHandler
     {
         FileInfo? romFile = null;
         int? frameCount = null;
+        int? framesPerInterval = null;
 
         while (!args.IsEmpty)
         {
@@ -51,6 +52,14 @@ public static class CommandLineHandler
             if (newFrameCount != null)
             {
                 frameCount = newFrameCount;
+                continue;
+            }
+
+            var newFramesPerInterval = ParseFramesPerInterval(ref args);
+            if (newFramesPerInterval != null)
+            {
+                framesPerInterval = newFramesPerInterval;
+                continue;
             }
 
             switch (args[0])
@@ -87,9 +96,28 @@ public static class CommandLineHandler
         }
 
         var nesOptions = new NesConfig(romFile);
-        var options = new Options(nesOptions, frameCount.Value);
-
+        var options = new Options(nesOptions, frameCount.Value, framesPerInterval);
         return options;
+    }
+
+    private static int? ParseFramesPerInterval(ref Span<string> args)
+    {
+        if (args.IsEmpty || (args[0] != "--interval" && args[0] != "-i"))
+        {
+            return null;
+        }
+
+        args = args[1..];
+        if (args.IsEmpty || !args[0].All(Char.IsDigit))
+        {
+            Console.Error.WriteLine("No frame count specified");
+            return null;
+        }
+
+        var count = int.Parse(args[0]);
+        args = args[1..];
+
+        return count;
     }
 
     private static int? ParseFrameCount(ref Span<string> args)
@@ -124,8 +152,9 @@ Usage:
 Required:
   --frames, -f   The number of frames to execute before quitting
 
-Options:
-  --help,   -h   Show this help message
+Optional:
+  --help,     -h   Show this help message
+  --interval, -i   The number of frames per interval
 
 Systems:
   nes            Runs the NES system for benchmarking

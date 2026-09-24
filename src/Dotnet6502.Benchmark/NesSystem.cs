@@ -18,7 +18,7 @@ public class NesSystem : ISystem
     public CancellationTokenSource CodeCancellationTokenSource { get; }
     public Base6502Hal Hal { get; }
     public Action? OnFrameFinished { get; set; }
-
+    
     public NesSystem(NesConfig config)
     {
         Console.WriteLine($"Loading NES ROM: '{config.RomFile.FullName}'");
@@ -27,7 +27,7 @@ public class NesSystem : ISystem
         _romInfo = loader.LoadFromFile(config.RomFile.FullName);
         _programRomData = loader.GetPRGROMData();
         _chrRomData = loader.GetCHRROMData();
-
+    
         Console.WriteLine(_romInfo.ToString());
 
         _nesDisplay = new NesDisplay(this);
@@ -40,7 +40,7 @@ public class NesSystem : ISystem
         Hal = new NesHal(MemoryBus!, _ppu, null, false, CodeCancellationTokenSource.Token);
     }
 
-    public int GetResetVector()
+    public ushort GetResetVector()
     {
         return _romInfo.ResetVector;
     }
