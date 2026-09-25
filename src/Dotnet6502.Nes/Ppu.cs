@@ -89,6 +89,11 @@ public class Ppu : IMemoryDevice
     /// </summary>
     public ReadOnlyMemory<byte>? RawBlockFromZero => null;
 
+    /// <summary>
+    /// If true, then most PPU logic is bypassed. Used for benchmarking non-PPU activities.
+    /// </summary>
+    public bool MinimizePpuLogic { get; set; }
+
     public Ppu(byte[] chrRomData, MirroringType mirroringType, INesDisplay nesDisplay)
     {
         _nesDisplay = nesDisplay;
@@ -337,6 +342,15 @@ public class Ppu : IMemoryDevice
                 _currentScanLineCycle = 0;
                 _currentScanLine++;
                 _pixelIndex++;
+
+                if (MinimizePpuLogic && _currentScanLine == 1)
+                {
+                    // Some games (like smb) expect a sprite 0 hit. Since we are minimizing
+                    // PPU logic, we won't ever do this normally, so default it to true
+                    // after a certain period of time.
+                    PpuStatus.Sprite0HitFlag = true;
+                }
+                
                 RebuildScanLineRenderInfo();
                 HandleDisplayablePixelLogic();
                 break;
@@ -366,7 +380,7 @@ public class Ppu : IMemoryDevice
                 _currentScanLineCycle = 0;
                 _currentScanLine++;
                 PpuStatus.VBlankFlag = true;
-                PpuStatus.Sprite0HitFlag = false;
+                PpuStatus.Sprite0HitFlag = false; // false;
                 RenderFrame();
                 break;
 
@@ -379,7 +393,10 @@ public class Ppu : IMemoryDevice
 
     private void HandleDisplayablePixelLogic()
     {
-        DrawNextPixel();
+        if (!MinimizePpuLogic)
+        {
+            DrawNextPixel();
+        }
     }
 
     private void DrawNextPixel()
@@ -684,6 +701,11 @@ public class Ppu : IMemoryDevice
 
     private void RebuildScanLineRenderInfo()
     {
+        if (MinimizePpuLogic)
+        {
+            return;
+        }
+        
         const int tileSizeInBytes = 16;
         const int tileWidthInPixels = 8;
         const int columnsPerNameTable = 32;
