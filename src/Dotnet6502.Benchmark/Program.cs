@@ -7,7 +7,7 @@ namespace Dotnet6502.Benchmark;
 
 public static class Program
 {
-    private record RunInterval(TimeSpan Timing, int FrameCount);
+    private record RunInterval(TimeSpan Timing, int FrameCount, int CompileCount);
 
     public static async Task<int> Main(string[] args)
     {
@@ -59,18 +59,19 @@ public static class Program
             await writer.WriteAsync("Interval, Frames, ");
             for (var x = 0; x < runs.Length; x++)
             {
-                await writer.WriteAsync($"Run #{x + 1} ms, ");
+                await writer.WriteAsync($"Run {x + 1} ms, ");
             }
 
-            await writer.WriteLineAsync("Average ms, Average ms Per Frame");
+            await writer.WriteLineAsync("Average ms, Average ms Per Frame, Compilation Count");
 
             // Contents
             for (var x = 0; x < intervalCount; x++)
             {
                 await writer.WriteAsync($"{x}, ");
-
+                var compilationCount = 0;
                 var frameCount = 0;
                 var totalMs = 0.0;
+
                 for (var y = 0; y < runs.Length; y++)
                 {
                     var info = runs[y].Dequeue();
@@ -79,6 +80,7 @@ public static class Program
                         // The first run needs to write the frame count
                         await writer.WriteAsync($"{info.FrameCount}, ");
                         frameCount = info.FrameCount;
+                        compilationCount = info.CompileCount;
                     }
 
                     await writer.WriteAsync($"{info.Timing.TotalMilliseconds:0.000}, ");
@@ -87,7 +89,9 @@ public static class Program
 
                 var averagePerRun = totalMs / runs.Length;
                 var averagePerFrame = averagePerRun / frameCount;
-                await writer.WriteLineAsync($"{averagePerRun:0.000}, {averagePerFrame:0.000}, ");
+                await writer.WriteAsync($"{averagePerRun:0.000}, {averagePerFrame:0.000}, ");
+                await writer.WriteAsync($"{compilationCount}");
+                await writer.WriteLineAsync();
             }
         }
 
@@ -119,9 +123,15 @@ public static class Program
         long frameCount = 0;
         var stopwatch = new Stopwatch();
         var timings = new Queue<RunInterval>((int)Math.Ceiling((decimal)options.FrameCount / framesPerInterval));
+        var prevCompileCount = 0;
+        var intervalCompileCount = 0;
 
         system.OnFrameFinished = () =>
         {
+            var newCompilationCount = jitCompiler.MethodNotCompiledCount - prevCompileCount;
+            prevCompileCount = jitCompiler.MethodNotCompiledCount;
+            intervalCompileCount += newCompilationCount;
+            
             if (!stopwatch.IsRunning)
             {
                 // First frame is missed for accuracy
@@ -135,9 +145,10 @@ public static class Program
                 if (frameCount % framesPerInterval == 0)
                 {
                     stopwatch.Stop();
-                    timings.Enqueue(new RunInterval(stopwatch.Elapsed, framesPerInterval));
+                    timings.Enqueue(new RunInterval(stopwatch.Elapsed, framesPerInterval, intervalCompileCount));
                     stopwatch.Restart();
                     isNewInterval = true;
+                    intervalCompileCount = 0;
                 }
 
                 if (frameCount >= options.FrameCount)
@@ -145,7 +156,7 @@ public static class Program
                     stopwatch.Stop();
                     if (!isNewInterval)
                     {
-                        timings.Enqueue(new RunInterval(stopwatch.Elapsed, (int)frameCount % framesPerInterval));
+                        timings.Enqueue(new RunInterval(stopwatch.Elapsed, (int)frameCount % framesPerInterval, intervalCompileCount));
                     }
 
                     system.CodeCancellationTokenSource.Cancel();

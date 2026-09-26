@@ -34,6 +34,11 @@ public class JitCompiler
     /// </summary>
     public bool AlwaysUseInterpreter { get; set; }
 
+    /// <summary>
+    /// The number of times a method was executed but was not yet compiled
+    /// </summary>
+    public int MethodNotCompiledCount { get; private set; }
+
     public JitCompiler(Base6502Hal hal, IJitCustomizer? jitCustomizer, MemoryBus memoryBus, Ir6502Interpreter interpreter)
     {
         _hal = hal;
@@ -74,6 +79,7 @@ public class JitCompiler
             var method = _executableMethodCache.GetMethodForAddress((ushort)nextAddress);
             if (method == null)
             {
+                MethodNotCompiledCount++;
                 (method, firstInstructionIndex) = CreateExecutableMethod(nextAddress);
             }
 
