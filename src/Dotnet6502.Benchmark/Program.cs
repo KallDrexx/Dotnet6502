@@ -9,7 +9,7 @@ public static class Program
 {
     private record RunInterval(TimeSpan Timing, int FrameCount);
 
-    public static int Main(string[] args)
+    public static async Task<int> Main(string[] args)
     {
         var options = CommandLineHandler.Parse(args);
         if (options == null)
@@ -45,30 +45,53 @@ public static class Program
             return 1;
         }
 
-        for (var x = 0; x < intervalCount; x++)
+        var fileName = $"dn6502-{DateTime.Now:yyyyMMddHHmmss}.csv";
+        var path = Path.Combine(Path.GetTempPath(), fileName);
+        using (var file = File.Create(path))
+        using (var writer = new StreamWriter(file))
         {
-            
-        }
+            // `#` prefixes are used so some csv tools don't align width on these values
+            await writer.WriteLineAsync("#Dotnet6502 Benchmark Run");
+            await writer.WriteLineAsync($"#{args.Aggregate((x, y) => $"{x} {y}")}");
+            await writer.WriteLineAsync();
 
-
-        var intervalNum = 0;
-        while (timings.TryDequeue(out var data))
-        {
-            intervalNum++;
-            var averageTime = data.Timing.TotalMilliseconds / data.FrameCount;
-
-            Console.Write($"{intervalNum:000}: ");
-            Console.Write($"average: {averageTime:00.00}ms ");
-            Console.Write($"total: {data.Timing.TotalMilliseconds:000.00}ms ");
-
-            if (data.FrameCount != framesPerInterval)
+            // Write headers
+            await writer.WriteAsync("Interval, Frames, ");
+            for (var x = 0; x < runs.Length; x++)
             {
-                Console.Write($"({data.FrameCount} frames)");
+                await writer.WriteAsync($"Run #{x + 1} ms, ");
             }
 
-            Console.WriteLine();
+            await writer.WriteLineAsync("Average ms, Average ms Per Frame");
+
+            // Contents
+            for (var x = 0; x < intervalCount; x++)
+            {
+                await writer.WriteAsync($"{x}, ");
+
+                var frameCount = 0;
+                var totalMs = 0.0;
+                for (var y = 0; y < runs.Length; y++)
+                {
+                    var info = runs[y].Dequeue();
+                    if (y == 0)
+                    {
+                        // The first run needs to write the frame count
+                        await writer.WriteAsync($"{info.FrameCount}, ");
+                        frameCount = info.FrameCount;
+                    }
+
+                    await writer.WriteAsync($"{info.Timing.TotalMilliseconds:0.000}, ");
+                    totalMs += info.Timing.TotalMilliseconds;
+                }
+
+                var averagePerRun = totalMs / runs.Length;
+                var averagePerFrame = averagePerRun / frameCount;
+                await writer.WriteLineAsync($"{averagePerRun:0.000}, {averagePerFrame:0.000}, ");
+            }
         }
 
+        Console.WriteLine($"Benchmark results written to {path}");
 
         return 0;
     }
