@@ -6,7 +6,13 @@ public static class CommandLineHandler
 {
     public record NesConfig(FileInfo RomFile);
 
-    public record Options(NesConfig? NesConfig, int FrameCount, int? FramesPerInterval);
+    public class Options
+    {
+        public NesConfig? NesConfig { get; init; }
+        public int FrameCount { get; init; }
+        public int? FramesPerInterval { get; init; }
+        public bool UseInterpreter { get; init; }
+    }
 
     public static Options? Parse(string[] args)
     {
@@ -45,6 +51,7 @@ public static class CommandLineHandler
         FileInfo? romFile = null;
         int? frameCount = null;
         int? framesPerInterval = null;
+        var useInterpreter = false;
 
         while (!args.IsEmpty)
         {
@@ -59,6 +66,12 @@ public static class CommandLineHandler
             if (newFramesPerInterval != null)
             {
                 framesPerInterval = newFramesPerInterval;
+                continue;
+            }
+
+            if (ParseUseInterpreter(ref args) == true)
+            {
+                useInterpreter = true;
                 continue;
             }
 
@@ -94,10 +107,15 @@ public static class CommandLineHandler
             Console.Error.WriteLine("Error: No frame count specified (--frames)");
             return null;
         }
-
+        
         var nesOptions = new NesConfig(romFile);
-        var options = new Options(nesOptions, frameCount.Value, framesPerInterval);
-        return options;
+        return new Options
+        {
+            NesConfig = nesOptions,
+            FrameCount = frameCount.Value,
+            FramesPerInterval = framesPerInterval,
+            UseInterpreter = useInterpreter,
+        };
     }
 
     private static int? ParseFramesPerInterval(ref Span<string> args)
@@ -138,6 +156,17 @@ public static class CommandLineHandler
         args = args[1..];
 
         return count;
+    }
+
+    private static bool? ParseUseInterpreter(ref Span<string> args)
+    {
+        if (args.IsEmpty || (args[0] != "--interpreter"))
+        {
+            return null;
+        }
+
+        args = args[1..];
+        return true;
     }
 
     private static void ShowHelp()

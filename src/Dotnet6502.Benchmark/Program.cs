@@ -117,7 +117,10 @@ public static class Program
         var interpreter = new Ir6502Interpreter();
         jitCustomizer.AddInstructions(interpreter);
 
-        var jitCompiler = new JitCompiler(system.Hal, jitCustomizer, system.MemoryBus, interpreter);
+        var jitCompiler = new JitCompiler(system.Hal, jitCustomizer, system.MemoryBus, interpreter)
+        {
+            AlwaysUseInterpreter = options.UseInterpreter
+        };
 
         var framesPerInterval = options.FramesPerInterval ?? 60;
         long frameCount = 0;
