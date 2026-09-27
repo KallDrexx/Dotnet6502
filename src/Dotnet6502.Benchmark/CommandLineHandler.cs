@@ -4,7 +4,7 @@ namespace Dotnet6502.Benchmark;
 
 public static class CommandLineHandler
 {
-    public record NesConfig(FileInfo RomFile);
+    public record NesConfig(FileInfo RomFile, bool BypassPpuLogic);
 
     public class C64Config
     {
@@ -64,6 +64,7 @@ public static class CommandLineHandler
         int? frameCount = null;
         int? framesPerInterval = null;
         var useInterpreter = false;
+        var noPpu = false;
 
         while (!args.IsEmpty)
         {
@@ -102,6 +103,11 @@ public static class CommandLineHandler
                     args = args[1..];
                     break;
 
+                case "--noppu":
+                    args = args[1..];
+                    noPpu = true;
+                    break;                
+
                 default:
                     Console.Error.WriteLine($"Error: Unknown option '{args[0]}'");
                     return null;
@@ -120,7 +126,7 @@ public static class CommandLineHandler
             return null;
         }
 
-        var nesOptions = new NesConfig(romFile);
+        var nesOptions = new NesConfig(romFile, noPpu);
         return new Options
         {
             NesConfig = nesOptions,
@@ -307,6 +313,7 @@ Systems:
 
 Nes Options:
   --rom <file-path>    (Required) The NES ROM file to run
+  --noppu              If specified, bypasses most PPU logic
 
 C64 Options:
   --kernel <file-path> (Required) The C64 Kernel rom to load

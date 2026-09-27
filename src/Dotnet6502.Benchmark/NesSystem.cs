@@ -31,7 +31,10 @@ public class NesSystem : ISystem
         Console.WriteLine(_romInfo.ToString());
 
         _nesDisplay = new NesDisplay(this);
-        _ppu = new Ppu(_chrRomData, _romInfo.MirroringType, _nesDisplay);
+        _ppu = new Ppu(_chrRomData, _romInfo.MirroringType, _nesDisplay)
+        {
+            MinimizePpuLogic = config.BypassPpuLogic,
+        };
 
         MemoryBus = new MemoryBus(0xFFFF + 1);
         SetupMemoryBus();
