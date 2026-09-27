@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using Dotnet6502.Benchmark;
+using Dotnet6502.C64.Integration;
 using Dotnet6502.Common.Compilation;
 using Dotnet6502.Nes;
 
@@ -103,9 +104,16 @@ public static class Program
     private static Queue<RunInterval>? RunBenchmark(CommandLineHandler.Options options)
     {
         ISystem system;
+        IJitCustomizer jitCustomizer;
         if (options.NesConfig != null)
         {
             system = new NesSystem(options.NesConfig);
+            jitCustomizer = new NesJitCustomizer();
+        }
+        else if (options.C64Config != null)
+        {
+            system = new C64System(options.C64Config);
+            jitCustomizer = new C64JitCustomizer();
         }
         else
         {
@@ -113,7 +121,6 @@ public static class Program
             return null;
         }
 
-        var jitCustomizer = new NesJitCustomizer();
         var interpreter = new Ir6502Interpreter();
         jitCustomizer.AddInstructions(interpreter);
 
@@ -134,7 +141,7 @@ public static class Program
             var newCompilationCount = jitCompiler.MethodNotCompiledCount - prevCompileCount;
             prevCompileCount = jitCompiler.MethodNotCompiledCount;
             intervalCompileCount += newCompilationCount;
-            
+
             if (!stopwatch.IsRunning)
             {
                 // First frame is missed for accuracy

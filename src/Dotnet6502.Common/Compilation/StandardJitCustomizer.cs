@@ -43,4 +43,9 @@ public class StandardJitCustomizer : IJitCustomizer
     {
         return new Dictionary<Type, MsilGenerator.CustomIlGenerator>();
     }
+
+    public void AddInstructions(Ir6502Interpreter interpreter)
+    {
+        // Nothing to add
+    }
 }

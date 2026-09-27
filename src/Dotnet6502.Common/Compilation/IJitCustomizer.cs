@@ -14,4 +14,10 @@ public interface IJitCustomizer
     /// A list of custom IL generators that should be used during the JIT process
     /// </summary>
     IReadOnlyDictionary<Type, MsilGenerator.CustomIlGenerator> GetCustomIlGenerators();
+
+    /// <summary>
+    /// Allows adding additional instructions to the interpreter that are used by
+    /// this JitCustomizer.
+    /// </summary>
+    void AddInstructions(Ir6502Interpreter interpreter);
 }

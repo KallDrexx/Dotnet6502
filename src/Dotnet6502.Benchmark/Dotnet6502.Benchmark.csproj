@@ -11,6 +11,7 @@
     <ProjectReference Include="..\..\NESDecompiler\NESDecompiler.Core\NESDecompiler.Core.csproj" />
     <ProjectReference Include="..\Dotnet6502.Common\Dotnet6502.Common.csproj" />
     <ProjectReference Include="..\Dotnet6502.Nes\Dotnet6502.Nes.csproj" />
+    <ProjectReference Include="..\Dotnet6502.C64\Dotnet6502.C64.csproj" />
   </ItemGroup>
 
 </Project>
