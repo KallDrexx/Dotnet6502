@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Dotnet6502.Common.Macros;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -18,6 +19,7 @@ public class MonogameApp : Game, INesDisplay, INesInput
     private readonly object _synchronizationLock = new();
     private readonly Color[] _pixelColors = new Color[Width * Height];
     private readonly bool _trackTime;
+    private readonly MacroNesInput? _macroInput;
     private SpriteBatch _spriteBatch = null!;
     private Texture2D _texture = null!;
     private bool _readyToContinue;
@@ -25,10 +27,13 @@ public class MonogameApp : Game, INesDisplay, INesInput
     private Stopwatch _timer = new();
     private TimeSpan _totalTime;
     private int _frameCountSinceLastTimer;
+    private int _frameNumber;
+    private bool _isPaused;
+    private bool _isBackspaceDown;
 
     public Task? NesCodeTask { get; set; }
 
-    public MonogameApp(bool trackTime)
+    public MonogameApp(bool trackTime, Macro? macro)
     {
         _graphicsDeviceManager = new GraphicsDeviceManager(this);
 
@@ -36,6 +41,11 @@ public class MonogameApp : Game, INesDisplay, INesInput
         Window.AllowUserResizing = true;
 
         _trackTime = trackTime;
+        if (macro != null)
+        {
+            _macroInput = new MacroNesInput(macro);
+            _macroInput.UpdateForFrameNumber(0);
+        }
     }
 
     public void RenderFrame(RgbColor[] pixels)
@@ -81,6 +91,12 @@ public class MonogameApp : Game, INesDisplay, INesInput
             }
 
             _readyToContinue = false;
+        }
+
+        if (!_isPaused)
+        {
+            _frameNumber++;
+            _macroInput?.UpdateForFrameNumber(_frameNumber);
         }
     }
 
@@ -129,26 +145,53 @@ public class MonogameApp : Game, INesDisplay, INesInput
         // Now that update has called, Signal to the NES thread that it can continue with the next frame
         lock (_synchronizationLock)
         {
-            _readyToContinue = true;
-            Monitor.Pulse(_synchronizationLock);
-
+            if (!_isPaused)
+            {
+                _readyToContinue = true;
+                Monitor.Pulse(_synchronizationLock);
+            }
+            
             _texture.SetData(_pixelColors);
         }
 
         var keyboardState = Keyboard.GetState();
-        _controllerState.Up = keyboardState.IsKeyDown(Keys.Up);
-        _controllerState.Down = keyboardState.IsKeyDown(Keys.Down);
-        _controllerState.Left = keyboardState.IsKeyDown(Keys.Left);
-        _controllerState.Right = keyboardState.IsKeyDown(Keys.Right);
-        _controllerState.Start = keyboardState.IsKeyDown(Keys.Enter);
-        _controllerState.Select = keyboardState.IsKeyDown(Keys.Back);
-        _controllerState.A = keyboardState.IsKeyDown(Keys.Z);
-        _controllerState.B = keyboardState.IsKeyDown(Keys.X);
 
+        if (_isPaused)
+        {
+            if (_isBackspaceDown && keyboardState.IsKeyUp(Keys.Back))
+            {
+                _isPaused = false;
+            }
+        }
+        else
+        {
+            _controllerState.Up = keyboardState.IsKeyDown(Keys.Up);
+            _controllerState.Down = keyboardState.IsKeyDown(Keys.Down);
+            _controllerState.Left = keyboardState.IsKeyDown(Keys.Left);
+            _controllerState.Right = keyboardState.IsKeyDown(Keys.Right);
+            _controllerState.Start = keyboardState.IsKeyDown(Keys.Enter);
+            _controllerState.Select = keyboardState.IsKeyDown(Keys.Back);
+            _controllerState.A = keyboardState.IsKeyDown(Keys.Z);
+            _controllerState.B = keyboardState.IsKeyDown(Keys.X);
+
+            if (_isBackspaceDown && keyboardState.IsKeyUp(Keys.Back))
+            {
+                _isPaused = true;
+            }
+        }
+
+        _isBackspaceDown = keyboardState.IsKeyDown(Keys.Back);
         if (keyboardState.IsKeyDown(Keys.Escape))
         {
             Exit();
         }
+
+        if (_macroInput != null)
+        {
+            Window.Title = $"Dotnet6502.Nes.Cli ({_frameNumber})";
+        }
+
+        Window.Title += _isPaused ? "(paused)" : "";
 
         base.Update(gameTime);
     }
@@ -206,6 +249,6 @@ public class MonogameApp : Game, INesDisplay, INesInput
 
     public ControllerState GetGamepad1State()
     {
-        return _controllerState;
+        return _macroInput?.GetGamepad1State() ?? _controllerState;
     }
 }

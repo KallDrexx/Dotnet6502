@@ -4,14 +4,15 @@ namespace Dotnet6502.Common.Macros;
 
 public class Macro
 {
-    public IReadOnlyList<MacroInstruction> Instructions { get; }
+    public IReadOnlyDictionary<int, MacroInstruction[]> Instructions { get; }
 
     private Macro(IReadOnlyList<MacroInstruction> instructions)
     {
-        Instructions = [.. instructions.OrderBy(x => x.FrameNumber)];
+        Instructions = instructions.GroupBy(x => x.FrameNumber)
+            .ToDictionary(x => x.Key, x => x.ToArray());
     }
 
-    public static async Task<Macro> Parse(Stream stream)
+    public static async Task<Macro> ParseAsync(Stream stream)
     {
         var instructions = new List<MacroInstruction>();
         var lineNumber = 0;
@@ -55,7 +56,7 @@ public class Macro
             {
                 FrameNumber = frameNumber,
                 Type = type,
-                Value = parts[3].Trim(),
+                Value = parts[2].Trim(),
             });
         }
 

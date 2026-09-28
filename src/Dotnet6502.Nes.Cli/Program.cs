@@ -3,6 +3,7 @@ using NESDecompiler.Core.ROM;
 using Dotnet6502.Common.Compilation;
 using Dotnet6502.Common.Hardware;
 using Dotnet6502.Nes;
+using Dotnet6502.Common.Macros;
 
 // Parse command line arguments
 var commandLineValues = CommandLineHandler.Parse(args);
@@ -11,12 +12,20 @@ if (commandLineValues == null)
     return 1;
 }
 
+Macro? macro = null;
+if (commandLineValues.MacroFile != null)
+{
+    using var file = commandLineValues.MacroFile.OpenRead();
+    macro = await Macro.ParseAsync(file);
+}
+
 var (romInfo, programRomData, chrRomData) = ParseRom(commandLineValues);
 var (app, nesCodeCancellationTokenSource, memoryBus, hal) = SetupHardware(
     chrRomData,
     romInfo,
     commandLineValues,
-    programRomData);
+    programRomData,
+    macro);
 
 var jitCustomizer = new NesJitCustomizer();
 var interpreter = new Ir6502Interpreter();
@@ -49,11 +58,12 @@ static (MonogameApp, CancellationTokenSource, MemoryBus, NesHal) SetupHardware(
     byte[] chrRomData,
     ROMInfo romInfo2,
     CommandLineHandler.Values commandLineValues1,
-    byte[] programRomData)
+    byte[] programRomData,
+    Macro? macro1)
 {
     Console.WriteLine("Setting up HAL and JIT compiler...");
 
-    var monogameApp = new MonogameApp(false);
+    var monogameApp = new MonogameApp(false, macro1);
     var cancellationTokenSource = new CancellationTokenSource();
     var ppu = new Ppu(chrRomData, romInfo2.MirroringType, monogameApp);
 

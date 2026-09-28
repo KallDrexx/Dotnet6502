@@ -2,7 +2,7 @@ namespace Dotnet6502.Nes.Cli;
 
 public static class CommandLineHandler
 {
-    public record Values(FileInfo RomFile, FileInfo? DebugLogFile, bool IsDebugMode);
+    public record Values(FileInfo RomFile, FileInfo? DebugLogFile, bool IsDebugMode, FileInfo? MacroFile);
 
     public static Values? Parse(string[] args)
     {
@@ -15,6 +15,7 @@ public static class CommandLineHandler
         FileInfo? romFile = null;
         FileInfo? debugLogFile = null;
         bool isDebugMode = false;
+        FileInfo? macroFile = null;
 
         for (int i = 0; i < args.Length; i++)
         {
@@ -56,6 +57,18 @@ public static class CommandLineHandler
                     ShowHelp();
                     return null;
 
+                case "--macro":
+                    if (i + 1 < args.Length)
+                    {
+                        macroFile = new FileInfo(args[++i]);
+                    }
+                    else
+                    {
+                        Console.Error.WriteLine("Error: --macro requires a file path");
+                        return null;
+                    }
+                    break;
+
                 default:
                     Console.Error.WriteLine($"Error: Unknown option '{args[i]}'");
                     ShowHelp();
@@ -77,7 +90,13 @@ public static class CommandLineHandler
             return null;
         }
 
-        return new Values(romFile, debugLogFile, isDebugMode);
+        if (macroFile != null && !macroFile.Exists)
+        {
+            Console.Error.WriteLine($"Error: Macro file '{macroFile.FullName}' does not exist");
+            return null;
+        }
+
+        return new Values(romFile, debugLogFile, isDebugMode, macroFile);
     }
 
     private static void ShowHelp()
