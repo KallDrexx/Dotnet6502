@@ -186,12 +186,13 @@ public class MonogameApp : Game, INesDisplay, INesInput
             Exit();
         }
 
+        var title = $"Dotnet6502.Nes.Cli";
         if (_macroInput != null)
         {
-            Window.Title = $"Dotnet6502.Nes.Cli ({_frameNumber})";
+            title += $" ({_frameNumber})";
         }
 
-        Window.Title += _isPaused ? "(paused)" : "";
+        Window.Title = title + (_isPaused ? " (paused)" : "");
 
         base.Update(gameTime);
     }
