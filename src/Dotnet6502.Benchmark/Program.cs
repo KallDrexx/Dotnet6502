@@ -2,6 +2,7 @@
 using Dotnet6502.Benchmark;
 using Dotnet6502.C64.Integration;
 using Dotnet6502.Common.Compilation;
+using Dotnet6502.Common.Macros;
 using Dotnet6502.Nes;
 
 namespace Dotnet6502.Benchmark;
@@ -18,6 +19,13 @@ public static class Program
             return 1;
         }
 
+        Macro? macro = null;
+        if (options.Macro != null)
+        {
+            using var file = options.Macro.OpenRead();
+            macro = await Macro.ParseAsync(file);
+        }
+
         var framesPerInterval = options.FramesPerInterval ?? 60;
         const int runCount = 5;
         var runs = new Queue<RunInterval>[runCount];
@@ -25,7 +33,7 @@ public static class Program
         Console.WriteLine($"Starting {runCount} benchmark runs");
         for (var x = 0; x < runCount; x++)
         {
-            var runInfo = RunBenchmark(options);
+            var runInfo = RunBenchmark(options, macro);
             if (runInfo == null)
             {
                 return 1;
@@ -101,13 +109,13 @@ public static class Program
         return 0;
     }
 
-    private static Queue<RunInterval>? RunBenchmark(CommandLineHandler.Options options)
+    private static Queue<RunInterval>? RunBenchmark(CommandLineHandler.Options options, Macro? macro)
     {
         ISystem system;
         IJitCustomizer jitCustomizer;
         if (options.NesConfig != null)
         {
-            system = new NesSystem(options.NesConfig);
+            system = new NesSystem(options.NesConfig, macro);
             jitCustomizer = new NesJitCustomizer();
         }
         else if (options.C64Config != null)
@@ -130,11 +138,13 @@ public static class Program
         };
 
         var framesPerInterval = options.FramesPerInterval ?? 60;
-        long frameCount = 0;
+        var frameCount = 0;
         var stopwatch = new Stopwatch();
         var timings = new Queue<RunInterval>((int)Math.Ceiling((decimal)options.FrameCount / framesPerInterval));
         var prevCompileCount = 0;
         var intervalCompileCount = 0;
+
+        system.SetFrameNumber(frameCount);
 
         system.OnFrameFinished = () =>
         {
@@ -171,6 +181,8 @@ public static class Program
 
                     system.CodeCancellationTokenSource.Cancel();
                 }
+
+                system.SetFrameNumber(frameCount);
             }
         };
 

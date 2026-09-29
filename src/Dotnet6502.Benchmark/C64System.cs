@@ -45,6 +45,11 @@ public class C64System : ISystem
         return memoryConfig;
     }
 
+    public void SetFrameNumber(int frameNumber)
+    {
+        throw new NotImplementedException();
+    }
+
     private class C64Display : IC64Display
     {
         private readonly C64System _system;

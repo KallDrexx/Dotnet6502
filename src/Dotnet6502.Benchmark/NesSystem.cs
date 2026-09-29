@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using Dotnet6502.Common.Hardware;
+using Dotnet6502.Common.Macros;
 using Dotnet6502.Nes;
 using NESDecompiler.Core.ROM;
 using static Dotnet6502.Benchmark.CommandLineHandler;
@@ -13,13 +14,14 @@ public class NesSystem : ISystem
     private readonly byte[] _programRomData, _chrRomData;
     private readonly NesDisplay _nesDisplay;
     private readonly Ppu _ppu;
+    private readonly MacroNesInput? _nesInput;
 
     public MemoryBus MemoryBus { get; }
     public CancellationTokenSource CodeCancellationTokenSource { get; }
     public Base6502Hal Hal { get; }
     public Action? OnFrameFinished { get; set; }
     
-    public NesSystem(NesConfig config)
+    public NesSystem(NesConfig config, Macro? macro)
     {
         Console.WriteLine($"Loading NES ROM: '{config.RomFile.FullName}'");
         var loader = new ROMLoader();
@@ -27,6 +29,9 @@ public class NesSystem : ISystem
         _romInfo = loader.LoadFromFile(config.RomFile.FullName);
         _programRomData = loader.GetPRGROMData();
         _chrRomData = loader.GetCHRROMData();
+        _nesInput = macro != null
+            ? new MacroNesInput(macro)
+            : null;
     
         Console.WriteLine(_romInfo.ToString());
 
@@ -65,10 +70,14 @@ public class NesSystem : ISystem
             MemoryBus.Attach(_ppu, (ushort)x);
         }
 
+        IMemoryDevice joystick = _nesInput != null
+            ? new Joystick1(_nesInput)
+            : new NullMemoryDevice(1);
+
         MemoryBus.Attach(new NullMemoryDevice(0x13), 0x4000); // APU not implemented
         MemoryBus.Attach(new OamDmaDevice(_ppu, MemoryBus), 0x4014);
         MemoryBus.Attach(new NullMemoryDevice(1), 0x4015); // sound channel not implemented
-        MemoryBus.Attach(new NullMemoryDevice(1), 0x4016);
+        MemoryBus.Attach(joystick, 0x4016);
         MemoryBus.Attach(new NullMemoryDevice(1), 0x4017); // gamepad 2 not implemented yet
         MemoryBus.Attach(new NullMemoryDevice(8), 0x4018); // disabled apu/i/o functionality
         MemoryBus.Attach(cartridgeSpace, 0x4020);
@@ -86,6 +95,11 @@ public class NesSystem : ISystem
             var prgRomDataIndex = _programRomData.Length - x - 1;
             cartridgeSpace.Write((ushort)unmappedSpaceIndex, _programRomData[prgRomDataIndex]);
         }
+    }
+
+    public void SetFrameNumber(int frameNumber)
+    {
+        _nesInput?.UpdateForFrameNumber(frameNumber);
     }
 
     private class NesDisplay(NesSystem parent) : INesDisplay

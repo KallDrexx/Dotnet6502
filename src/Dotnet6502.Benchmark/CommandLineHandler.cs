@@ -20,6 +20,7 @@ public static class CommandLineHandler
         public int FrameCount { get; init; }
         public int? FramesPerInterval { get; init; }
         public bool UseInterpreter { get; init; }
+        public FileInfo? Macro { get; init; }
     }
 
     public static Options? Parse(string[] args)
@@ -65,6 +66,7 @@ public static class CommandLineHandler
         int? framesPerInterval = null;
         var useInterpreter = false;
         var noPpu = false;
+        FileInfo? macroFile = null;
 
         while (!args.IsEmpty)
         {
@@ -106,7 +108,19 @@ public static class CommandLineHandler
                 case "--noppu":
                     args = args[1..];
                     noPpu = true;
-                    break;                
+                    break;
+
+                case "--macro":
+                    args = args[1..];
+                    if (args.IsEmpty)
+                    {
+                        Console.Error.WriteLine($"Error: --macro requires a file path");
+                        break;
+                    }
+
+                    macroFile = new FileInfo(args[0]);
+                    args = args[1..];
+                    break;
 
                 default:
                     Console.Error.WriteLine($"Error: Unknown option '{args[0]}'");
@@ -133,6 +147,7 @@ public static class CommandLineHandler
             FrameCount = frameCount.Value,
             FramesPerInterval = framesPerInterval,
             UseInterpreter = useInterpreter,
+            Macro = macroFile,
         };
     }
 
@@ -141,6 +156,7 @@ public static class CommandLineHandler
         FileInfo? kernel = null, basic = null, charRom = null;
         int? frameCount = null, framesPerInterval = null;
         var useInterpreter = false;
+        FileInfo? macroFile = null;
 
         while (!args.IsEmpty)
         {
@@ -203,6 +219,19 @@ public static class CommandLineHandler
                     args = args[1..];
 
                     break;
+                
+                case "--macro":
+                    args = args[1..];
+                    if (args.IsEmpty)
+                    {
+                        Console.Error.WriteLine($"Error: --macro requires a file path");
+                        break;
+                    }
+
+                    macroFile = new FileInfo(args[0]);
+                    args = args[1..];
+                    break;
+
 
                 default:
                     Console.Error.WriteLine($"Unknown option: {args[0]}");
@@ -236,6 +265,7 @@ public static class CommandLineHandler
             FrameCount = frameCount.Value,
             FramesPerInterval = framesPerInterval,
             UseInterpreter = useInterpreter,
+            Macro = macroFile,
         };
     }
 

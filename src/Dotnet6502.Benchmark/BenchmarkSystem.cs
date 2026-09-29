@@ -14,5 +14,6 @@ public interface ISystem
     public Action? OnFrameFinished { get; set; }
 
     public ushort GetResetVector();
+    public void SetFrameNumber(int frameNumber);
 }
 
