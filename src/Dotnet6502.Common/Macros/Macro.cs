@@ -48,7 +48,6 @@ public class Macro
             {
                 "down" => MacroInstructionType.ButtonDown,
                 "up" => MacroInstructionType.ButtonUp,
-                "text" => MacroInstructionType.Text,
                 _ => throw new InvalidOperationException($"Line {lineNumber}: Invalid instruction type '{parts[1]}'"),
             };
 

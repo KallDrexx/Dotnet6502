@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Dotnet6502.C64.Emulation;
 using Dotnet6502.C64.Hardware;
+using Dotnet6502.Common.Macros;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -19,6 +20,7 @@ public class MonogameApp : Game, IC64Display
     private readonly Stopwatch _timer = new();
     private readonly KeyboardMapping _keyboardMapping;
     private readonly MacroExecutor? _macroExecutor;
+    private readonly HashSet<Keys> _macroPressedKeys = [];
     private SpriteBatch _spriteBatch = null!;
     private Texture2D _texture = null!;
     private bool _readyToContinue;
@@ -26,6 +28,7 @@ public class MonogameApp : Game, IC64Display
     private TimeSpan _totalTime;
     private int _frameCountSinceLastTimer;
     private bool _warningRaised;
+    private int _frameNumber;
 
     public Task? C64CodeTask { get; set; }
 
@@ -84,6 +87,7 @@ public class MonogameApp : Game, IC64Display
             }
 
             _readyToContinue = false;
+            _frameNumber++;
         }
     }
 
@@ -210,5 +214,75 @@ public class MonogameApp : Game, IC64Display
         }
 
         return new Rectangle(startX, startY, width, height);
+    }
+
+    private void UpdateMacroKeys(Macro macro)
+    {
+        if (macro.Instructions.TryGetValue(_frameNumber, out var instructions))
+        {
+            foreach (var instruction in instructions)
+            {
+                var key = instruction.Value.ToLower().Trim() switch
+                {
+                    "a" => Keys.A,
+                    "b" => Keys.B,
+                    "c" => Keys.C,
+                    "d" => Keys.D,
+                    "e" => Keys.E,
+                    "f" => Keys.F,
+                    "g" => Keys.G,
+                    "h" => Keys.H,
+                    "i" => Keys.I,
+                    "j" => Keys.J,
+                    "k" => Keys.K,
+                    "l" => Keys.L,
+                    "m" => Keys.M,
+                    "n" => Keys.N,
+                    "o" => Keys.O,
+                    "p" => Keys.P,
+                    "q" => Keys.Q,
+                    "r" => Keys.R,
+                    "s" => Keys.S,
+                    "t" => Keys.T,
+                    "u" => Keys.U,
+                    "v" => Keys.V,
+                    "w" => Keys.W,
+                    "x" => Keys.X,
+                    "y" => Keys.Y,
+                    "z" => Keys.Z,
+                    "0" => Keys.D0,
+                    "1" => Keys.D1,
+                    "2" => Keys.D2,
+                    "3" => Keys.D3,
+                    "4" => Keys.D4,
+                    "5" => Keys.D5,
+                    "6" => Keys.D6,
+                    "7" => Keys.D7,
+                    "8" => Keys.D8,
+                    "9" => Keys.D9,
+                    "back" => Keys.Back,
+                    "enter" => Keys.Enter,
+                    "up" => Keys.Up,
+                    "down" => Keys.Down,
+                    "left" => Keys.Left,
+                    "right" => Keys.Right,
+                    _ => throw new NotSupportedException($"No support for macro instruction '{instruction.Value}'"),
+                };
+
+                switch (instruction.Type)
+                {
+                    case MacroInstructionType.ButtonDown:
+                        _macroPressedKeys.Add(key);
+                        break;
+
+                    case MacroInstructionType.ButtonUp:
+                        _macroPressedKeys.Remove(key);
+                        break;
+
+                    default:
+                        throw new NotSupportedException($"No support for macro type {instruction.Type}");
+                }
+            }
+        }
     }
 }
