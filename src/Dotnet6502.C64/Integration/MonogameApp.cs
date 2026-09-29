@@ -157,7 +157,7 @@ public class MonogameApp : Game, IC64Display
 
         if (_macro != null)
         {
-            UpdateMacroKeys();
+            UpdateMacroKeys(_macroPressedKeys, _macro, _frameNumber);
             _keyboardMapping.SetSimulatedKeys(_macroPressedKeys);
         }
 
@@ -217,14 +217,9 @@ public class MonogameApp : Game, IC64Display
         return new Rectangle(startX, startY, width, height);
     }
 
-    private void UpdateMacroKeys()
+    public static void UpdateMacroKeys(HashSet<Keys> pressedKeys, Macro macro, int frameNumber)
     {
-        if (_macro == null)
-        {
-            return;
-        }
-        
-        if (_macro.Instructions.TryGetValue(_frameNumber, out var instructions))
+        if (macro.Instructions.TryGetValue(frameNumber, out var instructions))
         {
             foreach (var instruction in instructions)
             {
@@ -285,11 +280,11 @@ public class MonogameApp : Game, IC64Display
                 switch (instruction.Type)
                 {
                     case MacroInstructionType.ButtonDown:
-                        _macroPressedKeys.Add(key);
+                        pressedKeys.Add(key);
                         break;
 
                     case MacroInstructionType.ButtonUp:
-                        _macroPressedKeys.Remove(key);
+                        pressedKeys.Remove(key);
                         break;
 
                     default:
@@ -297,5 +292,10 @@ public class MonogameApp : Game, IC64Display
                 }
             }
         }
+    }
+
+    public static void UpdateMacroKeys()
+    {
+        throw new NotImplementedException();
     }
 }

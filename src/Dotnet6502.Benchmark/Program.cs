@@ -120,7 +120,7 @@ public static class Program
         }
         else if (options.C64Config != null)
         {
-            system = new C64System(options.C64Config);
+            system = new C64System(options.C64Config, macro);
             jitCustomizer = new C64JitCustomizer();
         }
         else
