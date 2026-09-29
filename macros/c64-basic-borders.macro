@@ -1,0 +1,19 @@
+150,text,10 for c[0 to 15
+190,down,enter
+191,up,enter
+
+200,text,20 poke 53280, c
+240,down,enter
+241,up,enter
+
+245,text,30 for d[1 to 200; next d
+300,down,enter
+301,up,enter
+
+305,text,40 next c
+330,down,enter
+331,up,enter
+
+340,text,run
+360,down,enter
+361,up,enter

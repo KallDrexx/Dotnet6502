@@ -19,8 +19,8 @@ public class MonogameApp : Game, IC64Display
     private readonly bool _trackTime;
     private readonly Stopwatch _timer = new();
     private readonly KeyboardMapping _keyboardMapping;
-    private readonly MacroExecutor? _macroExecutor;
     private readonly HashSet<Keys> _macroPressedKeys = [];
+    private readonly Macro? _macro;
     private SpriteBatch _spriteBatch = null!;
     private Texture2D _texture = null!;
     private bool _readyToContinue;
@@ -32,7 +32,7 @@ public class MonogameApp : Game, IC64Display
 
     public Task? C64CodeTask { get; set; }
 
-    public MonogameApp(KeyboardMapping keyboardMapping, bool trackTime, MacroExecutor? macroExecutor = null)
+    public MonogameApp(KeyboardMapping keyboardMapping, bool trackTime, Macro? macro)
     {
         _graphicsDeviceManager = new GraphicsDeviceManager(this);
 
@@ -41,7 +41,7 @@ public class MonogameApp : Game, IC64Display
 
         _trackTime = trackTime;
         _keyboardMapping = keyboardMapping;
-        _macroExecutor = macroExecutor;
+        _macro = macro;
     }
 
     public void RenderFrame(RgbColor[] pixels)
@@ -155,12 +155,13 @@ public class MonogameApp : Game, IC64Display
 
         _keyboardMapping.UpdateState(keyboardState);
 
-        // Execute macro frame and update simulated keys
-        if (_macroExecutor != null)
+        if (_macro != null)
         {
-            _macroExecutor.OnFrame();
-            _keyboardMapping.SetSimulatedKeys(_macroExecutor.GetSimulatedKeys());
+            UpdateMacroKeys();
+            _keyboardMapping.SetSimulatedKeys(_macroPressedKeys);
         }
+
+        Window.Title = $"Dotnet6502.C64 ({_frameNumber})";
 
         base.Update(gameTime);
     }
@@ -216,13 +217,18 @@ public class MonogameApp : Game, IC64Display
         return new Rectangle(startX, startY, width, height);
     }
 
-    private void UpdateMacroKeys(Macro macro)
+    private void UpdateMacroKeys()
     {
-        if (macro.Instructions.TryGetValue(_frameNumber, out var instructions))
+        if (_macro == null)
+        {
+            return;
+        }
+        
+        if (_macro.Instructions.TryGetValue(_frameNumber, out var instructions))
         {
             foreach (var instruction in instructions)
             {
-                var key = instruction.Value.ToLower().Trim() switch
+                var key = instruction.Value.ToLower() switch
                 {
                     "a" => Keys.A,
                     "b" => Keys.B,
@@ -266,6 +272,13 @@ public class MonogameApp : Game, IC64Display
                     "down" => Keys.Down,
                     "left" => Keys.Left,
                     "right" => Keys.Right,
+                    "+" => Keys.OemPlus,
+                    "-" => Keys.OemMinus,
+                    ";" => Keys.OemSemicolon,
+                    "[" => Keys.OemOpenBrackets,
+                    "]" => Keys.OemCloseBrackets,
+                    " " => Keys.Space,
+                    "," => Keys.OemComma,
                     _ => throw new NotSupportedException($"No support for macro instruction '{instruction.Value}'"),
                 };
 
