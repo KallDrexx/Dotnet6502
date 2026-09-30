@@ -49,6 +49,12 @@ public class JitCompiler
     /// </summary>
     public int MethodCacheInvalidationCount => _executableMethodCache.InvalidationCount;
 
+    /// <summary>
+    /// Allows tracking what methods are being compiled. Consumers must provide a
+    /// valid hash set to enable tracking, otherwise tracking will not occur.
+    /// </summary>
+    public HashSet<ushort>? CompiledMethods { get; set; }
+
     public JitCompiler(Base6502Hal hal, IJitCustomizer? jitCustomizer, MemoryBus memoryBus, Ir6502Interpreter interpreter)
     {
         _hal = hal;
@@ -91,6 +97,7 @@ public class JitCompiler
             if (method == null)
             {
                 MethodNotCompiledCount++;
+                CompiledMethods?.Add((ushort)nextAddress);
                 (method, firstInstructionIndex) = CreateExecutableMethod(nextAddress);
             }
 
