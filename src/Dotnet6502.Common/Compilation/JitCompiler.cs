@@ -44,6 +44,11 @@ public class JitCompiler
     /// </summary>
     public int MethodCallCount { get; private set; }
 
+    /// <summary>
+    /// The number of times a method's compilation cache has been invalidated
+    /// </summary>
+    public int MethodCacheInvalidationCount => _executableMethodCache.InvalidationCount;
+
     public JitCompiler(Base6502Hal hal, IJitCustomizer? jitCustomizer, MemoryBus memoryBus, Ir6502Interpreter interpreter)
     {
         _hal = hal;
