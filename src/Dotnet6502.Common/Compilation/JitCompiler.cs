@@ -39,6 +39,11 @@ public class JitCompiler
     /// </summary>
     public int MethodNotCompiledCount { get; private set; }
 
+    /// <summary>
+    /// The number of times a method was called
+    /// </summary>
+    public int MethodCallCount { get; private set; }
+
     public JitCompiler(Base6502Hal hal, IJitCustomizer? jitCustomizer, MemoryBus memoryBus, Ir6502Interpreter interpreter)
     {
         _hal = hal;
@@ -75,6 +80,7 @@ public class JitCompiler
         int nextAddress = address;
         while (nextAddress >= 0)
         {
+            MethodCallCount++;
             var firstInstructionIndex = 0;
             var method = _executableMethodCache.GetMethodForAddress((ushort)nextAddress);
             if (method == null)
