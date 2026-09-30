@@ -351,7 +351,8 @@ C64 Options:
   --char   <file-path> (Required) The C64 Character rom to load
 
 Examples:
-  Dotnet6502.Benchmark --system nes smb.nes --frames 360
+  Dotnet6502.Benchmark nes --rom smb.nes --frames 2200 --interval 60 --macro macros/smb-benchmark.macro
+  Dotnet6502.Benchmark c64 --char c64-chars.bin --basic c64-basic.bin --kernel c64-kernel.rom --frames 1000 --macro macros/c64-basic-borders.macro
 """;
 
         Console.WriteLine(helpText);

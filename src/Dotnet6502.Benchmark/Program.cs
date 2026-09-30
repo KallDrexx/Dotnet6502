@@ -80,6 +80,7 @@ public static class Program
                 var compilationCount = 0;
                 var frameCount = 0;
                 var totalMs = 0.0;
+                var totalCompilations = 0.0;
 
                 for (var y = 0; y < runs.Length; y++)
                 {
@@ -94,12 +95,19 @@ public static class Program
 
                     await writer.WriteAsync($"{info.Timing.TotalMilliseconds:0.000}, ");
                     totalMs += info.Timing.TotalMilliseconds;
+                    totalCompilations += info.CompileCount;
                 }
 
                 var averagePerRun = totalMs / runs.Length;
                 var averagePerFrame = averagePerRun / frameCount;
+                var averageCompilations = totalCompilations / runs.Length;
+                if (Math.Abs(averageCompilations - compilationCount) > 10)
+                {
+                    Console.WriteLine($"Interval {x} had different compilation counts in different runs! ({averageCompilations} vs {compilationCount})");
+                }
+                
                 await writer.WriteAsync($"{averagePerRun:0.000}, {averagePerFrame:0.000}, ");
-                await writer.WriteAsync($"{compilationCount}");
+                await writer.WriteAsync($"{compilationCount}, ");
                 await writer.WriteLineAsync();
             }
         }
