@@ -77,8 +77,10 @@ HashSet<ushort> CompiledMethods);
             }
 
             await writer.WriteLineAsync("Average ms, Average ms Per Frame, Compilation Count, Method Call Count, " +
-                                        "Cache Rate, Unique Compilation Count, Invalidations, ");
+                                        "Cache Rate, Interval Unique Compilation Count, Global Unique Compile Count, Invalidations, ");
 
+            HashSet<ushort> globalCompiledMethods = [];
+            
             // Contents
             for (var x = 0; x < intervalCount; x++)
             {
@@ -91,6 +93,8 @@ HashSet<ushort> CompiledMethods);
                 var firstMethodCallCount = 0;
                 var firstInvalidationCount = 0;
                 HashSet<ushort> firstCompiledMethods = [];
+                var prevGlobalCompiledMethodCount = globalCompiledMethods.Count;
+                var intervalGlobalCompiledMethodCount = 0;
 
                 for (var y = 0; y < runs.Length; y++)
                 {
@@ -104,6 +108,13 @@ HashSet<ushort> CompiledMethods);
                         firstMethodCallCount = info.MethodCallCount;
                         firstInvalidationCount = info.InvalidationCount;
                         firstCompiledMethods = info.CompiledMethods;
+
+                        foreach (var address in info.CompiledMethods)
+                        {
+                            globalCompiledMethods.Add(address);
+                        }
+
+                        intervalGlobalCompiledMethodCount = globalCompiledMethods.Count - prevGlobalCompiledMethodCount;
                     }
 
                     await writer.WriteAsync($"{info.Timing.TotalMilliseconds:0.000}, ");
@@ -133,6 +144,7 @@ HashSet<ushort> CompiledMethods);
                 await writer.WriteAsync($"{firstMethodCallCount}, ");
                 await writer.WriteAsync($"{cacheRatePercent:0.00}%, ");
                 await writer.WriteAsync($"{firstCompiledMethods.Count}, ");
+                await writer.WriteAsync($"{intervalGlobalCompiledMethodCount}, ");
                 await writer.WriteAsync($"{firstInvalidationCount}, ");
                 await writer.WriteLineAsync();
             }
