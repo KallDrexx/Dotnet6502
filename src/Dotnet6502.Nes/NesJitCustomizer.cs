@@ -8,6 +8,11 @@ namespace Dotnet6502.Nes;
 /// </summary>
 public class NesJitCustomizer : IJitCustomizer
 {
+    /// <summary>
+    /// If true, debug strings will be written for better debugging support
+    /// </summary>
+    public bool WriteDebugStrings { get; init; }
+    
     private record IncrementCycleCount(int Cycles) : Ir6502.Instruction;
 
     private record CallDebugHook(string Info) : Ir6502.Instruction;
@@ -45,7 +50,12 @@ public class NesJitCustomizer : IJitCustomizer
             }
 
             updatedInstructions.Add(new IncrementCycleCount(instruction.OriginalInstruction.Info.Cycles));
-            updatedInstructions.Add(new CallDebugHook(instruction.OriginalInstruction.ToString()));
+
+            if (WriteDebugStrings)
+            {
+                updatedInstructions.Add(new CallDebugHook(instruction.OriginalInstruction.ToString()));
+            }
+            
             updatedInstructions.AddRange(instruction.Ir6502Instructions.Skip(skipCount));
 
             var updatedInstruction = instruction with

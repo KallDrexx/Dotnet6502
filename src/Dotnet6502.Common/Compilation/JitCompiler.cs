@@ -44,6 +44,11 @@ public class JitCompiler
     /// </summary>
     public int MethodCallCount { get; private set; }
 
+    /// <summary>
+    /// If true, then the HAL debug hook will be invoked by compiled methods.
+    /// </summary>
+    public bool AddDebugHooks { get; init; }
+
     public JitCompiler(Base6502Hal hal, IJitCustomizer? jitCustomizer, MemoryBus memoryBus, Ir6502Interpreter interpreter)
     {
         _hal = hal;
@@ -94,22 +99,36 @@ public class JitCompiler
                 _ranMethods.Dequeue();
             }
 
-            _hal.DebugHook($"Entering function 0x{nextAddress:X4}");
+            if (AddDebugHooks)
+            {
+                _hal.DebugHook($"Entering function 0x{nextAddress:X4}");
+            }
+            
             _currentlyExecutingFunctionAddress = (ushort)nextAddress;
             nextAddress = method(_hal, firstInstructionIndex);
-            _hal.DebugHook($"Exiting function 0x{_currentlyExecutingFunctionAddress:X4}");
+
+            if (AddDebugHooks)
+            {
+                _hal.DebugHook($"Exiting function 0x{_currentlyExecutingFunctionAddress:X4}");
+            }
         }
 
         if (_ranMethods.Count == 0)
         {
-            _hal.DebugHook($"No functions executed");
+            if (AddDebugHooks)
+            {
+                _hal.DebugHook($"No functions executed");
+            }
         }
         else
         {
             var path = _ranMethods.Select(x => x.ToString("X4"))
                 .Aggregate((x, y) => $"{x} -> {y}");
 
-            _hal.DebugHook($"Function path: {path}");
+            if (AddDebugHooks)
+            {
+                _hal.DebugHook($"Function path: {path}");
+            }
         }
     }
 
@@ -147,12 +166,20 @@ public class JitCompiler
 
         if (AlwaysUseInterpreter || !convertedFunction.HandledAllKnownSmcTargets)
         {
-            _hal.DebugHook($"Using interpreter for 0x{nextAddress:X4}");
+            if (AddDebugHooks)
+            {
+                _hal.DebugHook($"Using interpreter for 0x{nextAddress:X4}");
+            }
+            
             method = _interpreter.CreateExecutableMethod(convertedFunction.Instructions);
         }
         else
         {
-            _hal.DebugHook($"Using JIT for 0x{nextAddress:X4}");
+            if (AddDebugHooks)
+            {
+                _hal.DebugHook($"Using JIT for 0x{nextAddress:X4}");
+            }
+            
             method = ExecutableMethodGenerator.Generate(
                 $"func_{function.Address:X4}",
                 convertedFunction.Instructions,

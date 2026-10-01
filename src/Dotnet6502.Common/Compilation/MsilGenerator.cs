@@ -47,7 +47,7 @@ public class MsilGenerator
         ilGenerator.DeclareLocal(typeof(string));
     }
 
-    public void Generate(Ir6502.Instruction instruction, ILGenerator ilGenerator)
+    public void Generate(Ir6502.Instruction instruction, ILGenerator ilGenerator, bool addDebugStatements = false)
     {
         if (_customIlGenerators.TryGetValue(instruction.GetType(), out var generator))
         {
@@ -110,15 +110,23 @@ public class MsilGenerator
                 break;
 
             case Ir6502.StoreDebugString debugString:
-                GenerateDebugString(debugString, ilGenerator);
+                if (addDebugStatements)
+                {
+                    GenerateDebugString(debugString, ilGenerator);
+                }
+                
                 break;
 
             case Ir6502.DebugValue debugValue:
-                GenerateDebugValue(debugValue, ilGenerator);
+                if (addDebugStatements)
+                {
+                    GenerateDebugValue(debugValue, ilGenerator);
+                }
+                
                 break;
 
             case Ir6502.PollForInterrupt poll:
-                GeneratePollForInterrupts(poll, ilGenerator);
+                GeneratePollForInterrupts(poll, ilGenerator, addDebugStatements);
                 break;
 
             case Ir6502.PollForRecompilation recompilation:
@@ -432,7 +440,7 @@ public class MsilGenerator
         ilGenerator.Emit(OpCodes.Callvirt, debugHookMethod);
     }
 
-    private static void GeneratePollForInterrupts(Ir6502.PollForInterrupt poll, ILGenerator ilGenerator)
+    private static void GeneratePollForInterrupts(Ir6502.PollForInterrupt poll, ILGenerator ilGenerator, bool writeDebugString)
     {
         const int fullPollAddressIndex = 0;
         const int highByteIndex = 1;
@@ -457,7 +465,10 @@ public class MsilGenerator
         GeneratePushStackValue(new Ir6502.PushStackValue(addressLowByte), ilGenerator);
         GeneratePushStackValue(new Ir6502.PushStackValue(new Ir6502.AllFlags()), ilGenerator);
 
-        WriteDebugString(ilGenerator, $"Saving 0x{poll.ContinuationAddress:X4} as address on stack");
+        if (writeDebugString)
+        {
+            WriteDebugString(ilGenerator, $"Saving 0x{poll.ContinuationAddress:X4} as address on stack");
+        }
 
         // Set the interrupt disable flag to true
         var setFlagMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.SetFlag))!;

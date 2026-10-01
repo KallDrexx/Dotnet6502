@@ -5,6 +5,12 @@ namespace Dotnet6502.Common.Compilation;
 /// </summary>
 public class StandardJitCustomizer : IJitCustomizer
 {
+    /// <summary>
+    /// If true, then each instruction has a debug string statement added to make
+    /// reading the MSIL and step by step debugging easier.
+    /// </summary>
+    public bool AddInstructionDebugStatement { get; init; }
+    
     public IReadOnlyList<ConvertedInstruction> MutateInstructions(IReadOnlyList<ConvertedInstruction> instructions)
     {
         var result = new List<ConvertedInstruction>();
@@ -18,7 +24,6 @@ public class StandardJitCustomizer : IJitCustomizer
             }
 
             var newIrInstructions = new List<Ir6502.Instruction>();
-
             var debugInstruction = new Ir6502.StoreDebugString(instruction.OriginalInstruction.ToString());
             var pollInstruction = new Ir6502.PollForInterrupt(instruction.OriginalInstruction.CPUAddress);
 
@@ -29,11 +34,15 @@ public class StandardJitCustomizer : IJitCustomizer
                 newIrInstructions.Add(instruction.Ir6502Instructions[0]);
             }
 
-            newIrInstructions.Add(debugInstruction);
+            if (AddInstructionDebugStatement)
+            {
+                newIrInstructions.Add(debugInstruction);
+            }
+            
             newIrInstructions.Add(pollInstruction);
             newIrInstructions.AddRange(instruction.Ir6502Instructions.Skip(firstInstructionIsLabel ? 1 : 0));
 
-            result.Add(instruction with {Ir6502Instructions = newIrInstructions});
+            result.Add(instruction with { Ir6502Instructions = newIrInstructions });
         }
 
         return result;
