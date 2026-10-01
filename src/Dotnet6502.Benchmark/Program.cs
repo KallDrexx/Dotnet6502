@@ -8,13 +8,7 @@ namespace Dotnet6502.Benchmark;
 
 public static class Program
 {
-    private record RunInterval(
-TimeSpan Timing,
-int FrameCount,
-int CompileCount,
-int MethodCallCount,
-int InvalidationCount,
-HashSet<ushort> CompiledMethods);
+    private record RunInterval(TimeSpan Timing, int FrameCount, int CompileCount, int MethodCallCount);
 
     public static async Task<int> Main(string[] args)
     {
@@ -76,8 +70,8 @@ HashSet<ushort> CompiledMethods);
                 await writer.WriteAsync($"Run {x + 1} ms, ");
             }
 
-            await writer.WriteLineAsync("Average ms, Average ms Per Frame, Compilation Count, Method Call Count, " +
-                                        "Cache Rate, Interval Unique Compilation Count, Global Unique Compile Count, Invalidations, ");
+            await writer.WriteLineAsync("Average ms, Average ms Per Frame, Compilation Count, " +
+                                        "Cache Rate, ");
 
             HashSet<ushort> globalCompiledMethods = [];
             
@@ -91,8 +85,6 @@ HashSet<ushort> CompiledMethods);
                 var totalCompilations = 0;
                 var totalMethodCallCount = 0;
                 var firstMethodCallCount = 0;
-                var firstInvalidationCount = 0;
-                HashSet<ushort> firstCompiledMethods = [];
                 var prevGlobalCompiledMethodCount = globalCompiledMethods.Count;
                 var intervalGlobalCompiledMethodCount = 0;
 
@@ -106,13 +98,6 @@ HashSet<ushort> CompiledMethods);
                         frameCount = info.FrameCount;
                         compilationCount = info.CompileCount;
                         firstMethodCallCount = info.MethodCallCount;
-                        firstInvalidationCount = info.InvalidationCount;
-                        firstCompiledMethods = info.CompiledMethods;
-
-                        foreach (var address in info.CompiledMethods)
-                        {
-                            globalCompiledMethods.Add(address);
-                        }
 
                         intervalGlobalCompiledMethodCount = globalCompiledMethods.Count - prevGlobalCompiledMethodCount;
                     }
@@ -141,11 +126,7 @@ HashSet<ushort> CompiledMethods);
 
                 await writer.WriteAsync($"{averagePerRun:0.000}, {averagePerFrame:0.000}, ");
                 await writer.WriteAsync($"{compilationCount}, ");
-                await writer.WriteAsync($"{firstMethodCallCount}, ");
                 await writer.WriteAsync($"{cacheRatePercent:0.00}%, ");
-                await writer.WriteAsync($"{firstCompiledMethods.Count}, ");
-                await writer.WriteAsync($"{intervalGlobalCompiledMethodCount}, ");
-                await writer.WriteAsync($"{firstInvalidationCount}, ");
                 await writer.WriteLineAsync();
             }
         }
@@ -181,7 +162,6 @@ HashSet<ushort> CompiledMethods);
         var jitCompiler = new JitCompiler(system.Hal, jitCustomizer, system.MemoryBus, interpreter)
         {
             AlwaysUseInterpreter = options.UseInterpreter,
-            CompiledMethods = [],
         };
 
         var framesPerInterval = options.FramesPerInterval ?? 60;
@@ -190,7 +170,6 @@ HashSet<ushort> CompiledMethods);
         var timings = new Queue<RunInterval>((int)Math.Ceiling((decimal)options.FrameCount / framesPerInterval));
         var prevCompileCount = 0;
         var prevCallCount = 0;
-        var prevInvalidationCount = 0;
 
         system.SetFrameNumber(frameCount);
 
@@ -216,19 +195,11 @@ HashSet<ushort> CompiledMethods);
                     var intervalCallCount = jitCompiler.MethodCallCount - prevCallCount;
                     prevCallCount = jitCompiler.MethodCallCount;
 
-                    var intervalInvalidationCount = jitCompiler.MethodCacheInvalidationCount - prevInvalidationCount;
-                    prevInvalidationCount = jitCompiler.MethodCacheInvalidationCount;
-
-                    var compiledMethods = jitCompiler.CompiledMethods.ToHashSet();
-                    jitCompiler.CompiledMethods.Clear();
-
                     timings.Enqueue(new RunInterval(
                         stopwatch.Elapsed,
                         framesPerInterval,
                         intervalCompileCount,
-                        intervalCallCount,
-                        intervalInvalidationCount,
-                        compiledMethods));
+                        intervalCallCount));
 
                     stopwatch.Restart();
                     isNewInterval = true;
@@ -242,18 +213,12 @@ HashSet<ushort> CompiledMethods);
                     {
                         var intervalCompileCount = jitCompiler.MethodNotCompiledCount - prevCompileCount;
                         var intervalCallCount = jitCompiler.MethodCallCount - prevCallCount;
-                        var intervalInvalidationCount = jitCompiler.MethodCacheInvalidationCount - prevInvalidationCount;
-                        
-                        var compiledMethods = jitCompiler.CompiledMethods.ToHashSet();
-                        jitCompiler.CompiledMethods.Clear();
 
                         timings.Enqueue(new RunInterval(
                             stopwatch.Elapsed,
                             frameCount % framesPerInterval,
                             intervalCompileCount,
-                            intervalCallCount,
-                            intervalInvalidationCount,
-                            compiledMethods));
+                            intervalCallCount));
                     }
 
                     system.CodeCancellationTokenSource.Cancel();

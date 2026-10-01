@@ -31,11 +31,6 @@ public class ExecutableMethodCache
         public bool HasBeenInvalidated { get; set; }
     }
 
-    /// <summary>
-    /// The number of times a cached method has been marked for invalidation
-    /// </summary>
-    public int InvalidationCount { get; private set; }
-
     private readonly Dictionary<ushort, MethodInfo> _executableMethods = new();
 
     /// <summary>
@@ -181,7 +176,6 @@ public class ExecutableMethodCache
 
                 if (shouldBeInvalided)
                 {
-                    InvalidationCount++;
                     function.HasBeenInvalidated = true;
                 }
             }

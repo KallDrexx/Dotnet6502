@@ -44,17 +44,6 @@ public class JitCompiler
     /// </summary>
     public int MethodCallCount { get; private set; }
 
-    /// <summary>
-    /// The number of times a method's compilation cache has been invalidated
-    /// </summary>
-    public int MethodCacheInvalidationCount => _executableMethodCache.InvalidationCount;
-
-    /// <summary>
-    /// Allows tracking what methods are being compiled. Consumers must provide a
-    /// valid hash set to enable tracking, otherwise tracking will not occur.
-    /// </summary>
-    public HashSet<ushort>? CompiledMethods { get; set; }
-
     public JitCompiler(Base6502Hal hal, IJitCustomizer? jitCustomizer, MemoryBus memoryBus, Ir6502Interpreter interpreter)
     {
         _hal = hal;
@@ -96,8 +85,6 @@ public class JitCompiler
             var method = _executableMethodCache.GetMethodForAddress((ushort)nextAddress);
             if (method == null)
             {
-                MethodNotCompiledCount++;
-                CompiledMethods?.Add((ushort)nextAddress);
                 (method, firstInstructionIndex) = CreateExecutableMethod(nextAddress);
             }
 
@@ -134,6 +121,8 @@ public class JitCompiler
     private (ExecutableMethod Method, int FirstIndex) CreateExecutableMethod(int nextAddress)
     {
         ExecutableMethod method;
+
+        // Does the address we are trying to jump through exist within an existing cached function?
         var existingFunction = _executableMethodCache.GetFunctionAddressForInstruction((ushort)nextAddress);
         if (existingFunction != null)
         {
@@ -148,6 +137,8 @@ public class JitCompiler
 
             return (cachedMethod, existingFunction.Value.InstructionIndex);
         }
+
+        MethodNotCompiledCount++;
 
         var function = DecompileFunction((ushort)nextAddress);
         var convertedFunction = GetIrInstructions(function);
