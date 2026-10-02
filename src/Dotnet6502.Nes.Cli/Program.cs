@@ -31,7 +31,7 @@ var jitCustomizer = new NesJitCustomizer();
 var interpreter = new Ir6502Interpreter();
 jitCustomizer.AddInstructions(interpreter);
 
-var jitCompiler = new JitCompiler(hal, jitCustomizer, memoryBus, interpreter);
+var jitCompiler = new JitCompiler<NesHal>(hal, jitCustomizer, memoryBus, interpreter);
 jitCompiler.AlwaysUseInterpreter = false;
 
 await RunRom(romInfo, jitCompiler, app, nesCodeCancellationTokenSource);
@@ -121,7 +121,7 @@ static MemoryBus SetupMemoryBus(Ppu ppu, MonogameApp monogameApp, byte[] bytes)
 
 static async Task RunRom(
     ROMInfo romInfo, 
-    JitCompiler jitCompiler, 
+    JitCompiler<NesHal> jitCompiler, 
     MonogameApp app,
     CancellationTokenSource cancellationTokenSource)
 {

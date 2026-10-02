@@ -6,7 +6,7 @@ using NESDecompiler.Core.Disassembly;
 
 namespace Dotnet6502.Tests.Common;
 
-public class TestJitCompiler : JitCompiler
+public class TestJitCompiler : JitCompiler<TestHal>
 {
     public Dictionary<Type, MsilGenerator.CustomIlGenerator>? CustomGenerators { get; set; }
 

@@ -1,5 +1,4 @@
 using System.Reflection.Emit;
-using Dotnet6502.Common;
 using Dotnet6502.Common.Compilation;
 using Dotnet6502.Common.Hardware;
 using Shouldly;
@@ -16,7 +15,7 @@ public class CustomIlGeneratorTests
         void CustomGenerator(Ir6502.Instruction instruction, ILGenerator ilGenerator)
         {
             var pushMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.PushToStack))!;
-            ilGenerator.Emit(JitCompiler.LoadHalArg);
+            ilGenerator.Emit(JitCompiler<Base6502Hal>.LoadHalArg);
             ilGenerator.Emit(OpCodes.Ldc_I4, 123);
             ilGenerator.Emit(OpCodes.Callvirt, pushMethod);
         }

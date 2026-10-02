@@ -3,11 +3,10 @@ using Dotnet6502.Common.Hardware;
 using NESDecompiler.Core.CPU;
 using NESDecompiler.Core.Decompilation;
 using NESDecompiler.Core.Disassembly;
-using NESDecompiler.Core.ROM;
 
 namespace Dotnet6502.ComprehensiveTestRunner;
 
-public class TestJitCompiler : JitCompiler
+public class TestJitCompiler : JitCompiler<Base6502Hal>
 {
     public TestMemoryMap MemoryMap { get; }
     public Base6502Hal TestHal { get; }
