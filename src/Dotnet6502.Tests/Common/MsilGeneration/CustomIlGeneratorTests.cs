@@ -12,7 +12,7 @@ public class CustomIlGeneratorTests
     [Fact]
     public void Can_Execute_Generator_For_Custom_Instruction()
     {
-        void CustomGenerator(Ir6502.Instruction instruction, ILGenerator ilGenerator)
+        static void CustomGenerator(Ir6502.Instruction instruction, ILGenerator ilGenerator)
         {
             var pushMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.PushToStack))!;
             ilGenerator.Emit(JitCompiler<Base6502Hal>.LoadHalArg);
