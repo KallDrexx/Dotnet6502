@@ -8,7 +8,7 @@ namespace Dotnet6502.Common.Compilation;
 /// Compiles 6502 assembly functions based on a specified method entry point
 /// on an as-needed basis.
 /// </summary>
-public class JitCompiler
+public class JitCompiler<THal> where THal : Base6502Hal
 {
     protected record ConvertedFunction(
         IReadOnlyList<ConvertedInstruction> Instructions,
@@ -19,7 +19,7 @@ public class JitCompiler
     public static readonly OpCode LoadHalArg = OpCodes.Ldarg_0;
     public static readonly OpCode LoadJumpIndexArg = OpCodes.Ldarg_1;
 
-    private readonly Base6502Hal _hal;
+    private readonly THal _hal;
     private readonly IReadOnlyList<IJitCustomizer> _jitCustomizers;
     private readonly MemoryBus _memoryBus;
     private readonly Queue<ushort> _ranMethods = new();
@@ -49,7 +49,7 @@ public class JitCompiler
     /// </summary>
     public bool AddDebugHooks { get; init; }
 
-    public JitCompiler(Base6502Hal hal, IJitCustomizer? jitCustomizer, MemoryBus memoryBus, Ir6502Interpreter interpreter)
+    public JitCompiler(THal hal, IJitCustomizer? jitCustomizer, MemoryBus memoryBus, Ir6502Interpreter interpreter)
     {
         _hal = hal;
         _hal.OnMemoryWritten = address =>
@@ -103,7 +103,7 @@ public class JitCompiler
             {
                 _hal.DebugHook($"Entering function 0x{nextAddress:X4}");
             }
-            
+
             _currentlyExecutingFunctionAddress = (ushort)nextAddress;
             nextAddress = method(_hal, firstInstructionIndex);
 
@@ -170,7 +170,7 @@ public class JitCompiler
             {
                 _hal.DebugHook($"Using interpreter for 0x{nextAddress:X4}");
             }
-            
+
             method = _interpreter.CreateExecutableMethod(convertedFunction.Instructions);
         }
         else
@@ -179,7 +179,7 @@ public class JitCompiler
             {
                 _hal.DebugHook($"Using JIT for 0x{nextAddress:X4}");
             }
-            
+
             method = ExecutableMethodGenerator.Generate(
                 $"func_{function.Address:X4}",
                 convertedFunction.Instructions,

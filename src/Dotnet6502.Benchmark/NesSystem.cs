@@ -8,7 +8,7 @@ using static Dotnet6502.Benchmark.CommandLineHandler;
 
 namespace Dotnet6502.Benchmark;
 
-public class NesSystem : ISystem
+public class NesSystem : ISystem<NesHal>
 {
     private readonly ROMInfo _romInfo;
     private readonly byte[] _programRomData, _chrRomData;
@@ -18,7 +18,7 @@ public class NesSystem : ISystem
 
     public MemoryBus MemoryBus { get; }
     public CancellationTokenSource CodeCancellationTokenSource { get; }
-    public Base6502Hal Hal { get; }
+    public NesHal Hal { get; }
     public Action? OnFrameFinished { get; set; }
     
     public NesSystem(NesConfig config, Macro? macro)

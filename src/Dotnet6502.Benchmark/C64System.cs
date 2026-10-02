@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Dotnet6502.Benchmark;
 
-public class C64System : ISystem
+public class C64System : ISystem<C64Hal>
 {
     private readonly C64Display _display;
     private readonly C64MemoryConfig _memoryConfig;
@@ -18,7 +18,7 @@ public class C64System : ISystem
     
     public MemoryBus MemoryBus { get; private set; }
     public CancellationTokenSource CodeCancellationTokenSource { get; } = new();
-    public Base6502Hal Hal { get; private set; }
+    public C64Hal Hal { get; private set; }
     public Action? OnFrameFinished { get; set; }
 
     public C64System(CommandLineHandler.C64Config config, Macro? macro)

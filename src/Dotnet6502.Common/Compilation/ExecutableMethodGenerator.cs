@@ -85,7 +85,7 @@ public static class ExecutableMethodGenerator
                 .Select(x => ilLabels[x.Name])
                 .ToArray();
 
-            ilGenerator.Emit(JitCompiler.LoadJumpIndexArg);
+            ilGenerator.Emit(JitCompiler<Base6502Hal>.LoadJumpIndexArg);
             ilGenerator.Emit(OpCodes.Switch, msilLabels);
         }
 

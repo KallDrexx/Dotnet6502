@@ -6,11 +6,11 @@ namespace Dotnet6502.Benchmark;
 /// <summary>
 /// Represents a type of system that can be benchmarked
 /// </summary>
-public interface ISystem
+public interface ISystem<out THal> where THal : Base6502Hal
 {
     public MemoryBus MemoryBus { get; }
     public CancellationTokenSource CodeCancellationTokenSource { get; }
-    public Base6502Hal Hal { get; }
+    public THal Hal { get; }
     public Action? OnFrameFinished { get; set; }
 
     public ushort GetResetVector();

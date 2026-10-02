@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics;
+using Dotnet6502.C64.Hardware;
 using Dotnet6502.C64.Integration;
 using Dotnet6502.Common.Compilation;
+using Dotnet6502.Common.Hardware;
 using Dotnet6502.Common.Macros;
 using Dotnet6502.Nes;
 
@@ -32,7 +34,21 @@ public static class Program
         Console.WriteLine($"Starting {runCount} benchmark runs");
         for (var x = 0; x < runCount; x++)
         {
-            var runInfo = RunBenchmark(options, macro);
+            Queue<RunInterval>? runInfo;
+            if (options.NesConfig != null)
+            {
+                runInfo = RunBenchmark<NesHal>(options, macro);
+            }
+            else if (options.C64Config != null)
+            {
+                runInfo = RunBenchmark<C64Hal>(options, macro);
+            }
+            else
+            {
+                const string message = "No known benchmark system type provided";
+                throw new ArgumentException(message);
+            }
+
             if (runInfo == null)
             {
                 return 1;
@@ -136,30 +152,42 @@ public static class Program
         return 0;
     }
 
-    private static Queue<RunInterval>? RunBenchmark(CommandLineHandler.Options options, Macro? macro)
+    private static Queue<RunInterval>? RunBenchmark<THal>(CommandLineHandler.Options options, Macro? macro)
+    where THal : Base6502Hal
     {
-        ISystem system;
+        ISystem<THal> system;
         IJitCustomizer jitCustomizer;
-        if (options.NesConfig != null)
+
+        if (typeof(THal) == typeof(NesHal))
         {
-            system = new NesSystem(options.NesConfig, macro);
+            if (options.NesConfig == null)
+            {
+                throw new ArgumentNullException(nameof(options.NesConfig));
+            }
+
+            system = (ISystem<THal>) new NesSystem(options.NesConfig, macro);
             jitCustomizer = new NesJitCustomizer();
         }
-        else if (options.C64Config != null)
+        else if (typeof(THal) == typeof(C64Hal))
         {
-            system = new C64System(options.C64Config, macro);
+            if (options.C64Config == null)
+            {
+                throw new ArgumentNullException(nameof(options.C64Config));
+            }
+
+            system = (ISystem<THal>) new C64System(options.C64Config, macro);
             jitCustomizer = new C64JitCustomizer();
         }
         else
         {
-            Console.Error.WriteLine("No known system specified to benchmark");
-            return null;
+            var message = $"No known benchmarking system known for {typeof(THal).FullName}";
+            throw new NotSupportedException(message);
         }
 
         var interpreter = new Ir6502Interpreter();
         jitCustomizer.AddInstructions(interpreter);
 
-        var jitCompiler = new JitCompiler(system.Hal, jitCustomizer, system.MemoryBus, interpreter)
+        var jitCompiler = new JitCompiler<THal>(system.Hal, jitCustomizer, system.MemoryBus, interpreter)
         {
             AlwaysUseInterpreter = options.UseInterpreter,
         };

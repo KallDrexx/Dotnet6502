@@ -88,7 +88,7 @@ public class NesJitCustomizer : IJitCustomizer
             }
 
             // Load the hardware field
-            ilGenerator.Emit(JitCompiler.LoadHalArg);
+            ilGenerator.Emit(JitCompiler<NesHal>.LoadHalArg);
 
             // Cast from I6502Hal interface to NesHal concrete type
             ilGenerator.Emit(OpCodes.Castclass, typeof(NesHal));
@@ -109,7 +109,7 @@ public class NesJitCustomizer : IJitCustomizer
             var debugInstruction = (CallDebugHook)instruction;
 
             // Load the hardware field
-            ilGenerator.Emit(JitCompiler.LoadHalArg);
+            ilGenerator.Emit(JitCompiler<NesHal>.LoadHalArg);
 
             // Cast from I6502Hal interface to NesHal concrete type
             ilGenerator.Emit(OpCodes.Castclass, typeof(NesHal));

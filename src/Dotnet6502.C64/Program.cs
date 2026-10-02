@@ -34,7 +34,7 @@ var interpreter = new Ir6502Interpreter();
 var jitCustomizer = new C64JitCustomizer();
 jitCustomizer.AddInstructions(interpreter);
 
-var jitCompiler = new JitCompiler(hal, jitCustomizer, memoryConfig.CpuMemoryBus, interpreter);
+var jitCompiler = new JitCompiler<C64Hal>(hal, jitCustomizer, memoryConfig.CpuMemoryBus, interpreter);
 // jitCompiler.AlwaysUseInterpreter = true;
 
 // Add patches
