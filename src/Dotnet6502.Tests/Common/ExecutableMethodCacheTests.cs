@@ -1,4 +1,5 @@
 using Dotnet6502.Common.Compilation;
+using Dotnet6502.Common.Hardware;
 using NESDecompiler.Core.CPU;
 using NESDecompiler.Core.Decompilation;
 using NESDecompiler.Core.Disassembly;
@@ -13,7 +14,7 @@ public class ExecutableMethodCacheTests
     {
         var function = CreateTestFunction(0x1234);
         var method = CreateTestMethod();
-        var cache = new ExecutableMethodCache();
+        var cache = new ExecutableMethodCache<Base6502Hal>();
 
         cache.AddExecutableMethod(method, function, []);
         var result = cache.GetMethodForAddress(0x1234);
@@ -27,7 +28,7 @@ public class ExecutableMethodCacheTests
     {
         var function = CreateTestFunction(0x1234, 0x2345);
         var method = CreateTestMethod();
-        var cache = new ExecutableMethodCache();
+        var cache = new ExecutableMethodCache<Base6502Hal>();
 
         cache.AddExecutableMethod(method, function, []);
         cache.MemoryChanged(0x1234);
@@ -41,7 +42,7 @@ public class ExecutableMethodCacheTests
     {
         var function = CreateTestFunction(0x1234, 0x2345);
         var method = CreateTestMethod();
-        var cache = new ExecutableMethodCache();
+        var cache = new ExecutableMethodCache<Base6502Hal>();
 
         cache.AddExecutableMethod(method, function, []);
         cache.MemoryChanged(0x2345);
@@ -55,7 +56,7 @@ public class ExecutableMethodCacheTests
     {
         var function = CreateTestFunction(0x1234, 0x2345);
         var method = CreateTestMethod();
-        var cache = new ExecutableMethodCache();
+        var cache = new ExecutableMethodCache<Base6502Hal>();
 
         cache.AddExecutableMethod(method, function, [0x2345]);
         cache.MemoryChanged(0x2345);
@@ -69,7 +70,7 @@ public class ExecutableMethodCacheTests
     {
         var function = CreateTestFunction(0x1234, 0x2345);
         var method = CreateTestMethod();
-        var cache = new ExecutableMethodCache();
+        var cache = new ExecutableMethodCache<Base6502Hal>();
 
         cache.AddExecutableMethod(method, function, []);
         cache.MemoryChanged(0x0135);
@@ -82,13 +83,13 @@ public class ExecutableMethodCacheTests
     [Fact]
     public void Cached_Methods_Not_Accessed_Get_Evicted_When_Max_Reached()
     {
-        var cache = new ExecutableMethodCache();
+        var cache = new ExecutableMethodCache<Base6502Hal>();
         var testFunction = CreateTestFunction(0x1234);
         var method = CreateTestMethod();
 
         cache.AddExecutableMethod(method, testFunction, []);
 
-        for (var x = 0; x < ExecutableMethodCache.MaxCachedMethodCount - 1; x++)
+        for (var x = 0; x < ExecutableMethodCache<Base6502Hal>.MaxCachedMethodCount - 1; x++)
         {
             var address = 0x3344 + x;
             cache.AddExecutableMethod(CreateTestMethod(), CreateTestFunction((ushort)address), []);
@@ -101,13 +102,13 @@ public class ExecutableMethodCacheTests
     [Fact]
     public void Cached_Methods_Not_Evicted_If_Recently_Used_When_Max_Reached()
     {
-        var cache = new ExecutableMethodCache();
+        var cache = new ExecutableMethodCache<Base6502Hal>();
         var testFunction = CreateTestFunction(0x1234);
         var method = CreateTestMethod();
 
         cache.AddExecutableMethod(method, testFunction, []);
 
-        for (var x = 0; x < ExecutableMethodCache.MaxCachedMethodCount - 1; x++)
+        for (var x = 0; x < ExecutableMethodCache<Base6502Hal>.MaxCachedMethodCount - 1; x++)
         {
             var address = 0x3344 + x;
             cache.AddExecutableMethod(CreateTestMethod(), CreateTestFunction((ushort)address), []);
@@ -144,7 +145,7 @@ public class ExecutableMethodCacheTests
         return new DecompiledFunction(instructionAddresses[0], instructions, new HashSet<ushort>());
     }
 
-    private static ExecutableMethod CreateTestMethod()
+    private static ExecutableMethod<Base6502Hal> CreateTestMethod()
     {
         return (_, _) => 0;
     }
