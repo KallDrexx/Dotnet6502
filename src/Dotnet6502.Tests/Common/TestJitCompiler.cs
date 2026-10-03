@@ -45,7 +45,7 @@ public class TestJitCompiler : JitCompiler<TestHal>
         var function = new DecompiledFunction(address, [nop], new HashSet<ushort>());
         var convertedInstructions = new ConvertedInstruction(nop, instructions);
         var convertedFunction = new ConvertedFunction([convertedInstructions], [], false, []);
-        var method = ExecutableMethodGenerator.Generate(
+        var method = ExecutableMethodGenerator<TestHal>.Generate(
             $"test_0x{address:X4}",
             [convertedInstructions],
             [],

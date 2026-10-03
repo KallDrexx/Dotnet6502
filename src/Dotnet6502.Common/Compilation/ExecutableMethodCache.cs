@@ -1,8 +1,9 @@
+using Dotnet6502.Common.Hardware;
 using NESDecompiler.Core.Decompilation;
 
 namespace Dotnet6502.Common.Compilation;
 
-public class ExecutableMethodCache
+public class ExecutableMethodCache<THal> where THal : Base6502Hal
 {
     // Rough guess at a value that can keep a full program worth of functions in memory without constant
     // eviction every frame.
@@ -18,7 +19,7 @@ public class ExecutableMethodCache
     /// <param name="AddressesThatDontTriggerEviction">Modifications to this address won't cause eviction</param>
     /// <param name="DecompiledFunction">The original decompiled function this method was created from</param>
     private record MethodInfo(
-        ExecutableMethod Method,
+        ExecutableMethod<THal> Method,
         HashSet<byte> RelevantPages,
         LinkedListNode<ushort> LruEntry,
         HashSet<ushort> InstructionAddresses,
@@ -54,7 +55,7 @@ public class ExecutableMethodCache
     /// is already set up to handle self modifying code at these specific addresses.
     /// </param>
     public void AddExecutableMethod(
-        ExecutableMethod method,
+        ExecutableMethod<THal> method,
         DecompiledFunction decompiledFunction,
         HashSet<ushort> addressesWhichAllowModifications)
     {
@@ -96,7 +97,7 @@ public class ExecutableMethodCache
         }
     }
 
-    public ExecutableMethod? GetMethodForAddress(ushort functionStartAddress)
+    public ExecutableMethod<THal>? GetMethodForAddress(ushort functionStartAddress)
     {
         if (!_executableMethods.TryGetValue(functionStartAddress, out var info))
         {

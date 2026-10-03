@@ -7,9 +7,9 @@ namespace Dotnet6502.Common.Compilation;
 /// <summary>
 /// Generates an executable method from 6502 assembly instruction
 /// </summary>
-public static class ExecutableMethodGenerator
+public static class ExecutableMethodGenerator<THal> where THal : Base6502Hal
 {
-    public static ExecutableMethod Generate(
+    public static ExecutableMethod<THal> Generate(
         string name,
         IReadOnlyList<ConvertedInstruction> instructions,
         IReadOnlyList<Ir6502.Label> jumpTableLabels,
@@ -25,7 +25,7 @@ public static class ExecutableMethodGenerator
         return GenerateViaAssemblies(name, instructions, customIlGenerators, jumpTableLabels, addDebugStatements);
     }
 
-    private static ExecutableMethod GenerateViaAssemblies(
+    private static ExecutableMethod<THal> GenerateViaAssemblies(
         string name,
         IReadOnlyList<ConvertedInstruction> instructions,
         IReadOnlyDictionary<Type, MsilGenerator.CustomIlGenerator>? customIlGenerators,
@@ -47,7 +47,7 @@ public static class ExecutableMethodGenerator
             MethodAttributes.Public | MethodAttributes.Static,
             CallingConventions.Standard,
             typeof(int),
-            [typeof(Base6502Hal), typeof(int)]);
+            [typeof(THal), typeof(int)]);
 
         var ilGenerator = methodBuilder.GetILGenerator();
         GenerateMsil(ilGenerator, instructions, jumpTableLabels, customIlGenerators, addDebugStatements);
@@ -59,7 +59,7 @@ public static class ExecutableMethodGenerator
             throw new InvalidOperationException("Failed to get method from newly constructed type");
         }
 
-        return (ExecutableMethod)Delegate.CreateDelegate(typeof(ExecutableMethod), method, true)!;
+        return (ExecutableMethod<THal>)Delegate.CreateDelegate(typeof(ExecutableMethod<THal>), method, true)!;
     }
 
     /// <summary>
@@ -157,7 +157,7 @@ public static class ExecutableMethodGenerator
             MethodAttributes.Public | MethodAttributes.Static,
             CallingConventions.Standard,
             typeof(ushort?),
-            [typeof(Base6502Hal)]);
+            [typeof(THal)]);
 
         var ilGenerator = methodBuilder.GetILGenerator();
         GenerateMsil(ilGenerator, instructions, jumpTableLabels, customIlGenerators, addDebugStatements);

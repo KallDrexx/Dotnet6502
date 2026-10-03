@@ -14,7 +14,7 @@ public abstract class Patch
     /// </summary>
     public abstract ushort FunctionEntryAddress { get; }
 
-    public ExecutableMethod Apply(ExecutableMethod functionToWrap)
+    public ExecutableMethod<THal> Apply<THal>(ExecutableMethod<THal> functionToWrap) where THal : Base6502Hal
     {
         return (hal, index) =>
         {

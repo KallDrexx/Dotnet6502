@@ -17,7 +17,7 @@ public class Ir6502Interpreter
         _customHandlers.Add(typeof(T), handler);
     }
 
-    public ExecutableMethod CreateExecutableMethod(IReadOnlyList<ConvertedInstruction> instructions)
+    public ExecutableMethod<THal> CreateExecutableMethod<THal>(IReadOnlyList<ConvertedInstruction> instructions) where THal : Base6502Hal
     {
         var flattenedInstructions = instructions
             .SelectMany(x => x.Ir6502Instructions.Select(y => new { Orig = x.OriginalInstruction, Ir = y }))
@@ -30,12 +30,12 @@ public class Ir6502Interpreter
         return (hal, index) => Execute(flattenedInstructions, labelTargets, localCount, hal, index);
     }
 
-    private int Execute(
+    private int Execute<THal>(
         IReadOnlyList<KeyValuePair<Ir6502.Instruction, DisassembledInstruction>> instructions,
         IReadOnlyDictionary<Ir6502.Identifier, int> labelTargets,
         int localCount,
-        Base6502Hal hal,
-        int instructionIndex)
+        THal hal,
+        int instructionIndex) where THal : Base6502Hal
     {
         var locals = new int[localCount];
         var instructionPointer = instructionIndex; // TODO: add test cases around this logic

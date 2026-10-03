@@ -26,7 +26,7 @@ public class JitCompiler<THal> where THal : Base6502Hal
     private readonly Ir6502Interpreter _interpreter;
     private readonly SmcTracker _smcTracker = new();
     private readonly Dictionary<ushort, Patch> _patches = [];
-    private readonly ExecutableMethodCache _executableMethodCache = new();
+    private readonly ExecutableMethodCache<THal> _executableMethodCache = new();
     private ushort _currentlyExecutingFunctionAddress;
 
     /// <summary>
@@ -137,9 +137,9 @@ public class JitCompiler<THal> where THal : Base6502Hal
         _patches.Add(patch.FunctionEntryAddress, patch);
     }
 
-    private (ExecutableMethod Method, int FirstIndex) CreateExecutableMethod(int nextAddress)
+    private (ExecutableMethod<THal> Method, int FirstIndex) CreateExecutableMethod(int nextAddress)
     {
-        ExecutableMethod method;
+        ExecutableMethod<THal> method;
 
         // Does the address we are trying to jump through exist within an existing cached function?
         var existingFunction = _executableMethodCache.GetFunctionAddressForInstruction((ushort)nextAddress);
@@ -171,7 +171,7 @@ public class JitCompiler<THal> where THal : Base6502Hal
                 _hal.DebugHook($"Using interpreter for 0x{nextAddress:X4}");
             }
 
-            method = _interpreter.CreateExecutableMethod(convertedFunction.Instructions);
+            method = _interpreter.CreateExecutableMethod<THal>(convertedFunction.Instructions);
         }
         else
         {
@@ -180,7 +180,7 @@ public class JitCompiler<THal> where THal : Base6502Hal
                 _hal.DebugHook($"Using JIT for 0x{nextAddress:X4}");
             }
 
-            method = ExecutableMethodGenerator.Generate(
+            method = ExecutableMethodGenerator<THal>.Generate(
                 $"func_{function.Address:X4}",
                 convertedFunction.Instructions,
                 convertedFunction.JumpTableLabels,
@@ -248,9 +248,9 @@ public class JitCompiler<THal> where THal : Base6502Hal
             jumpTableLabels);
     }
 
-    protected ExecutableMethod AddExecutableMethod(
+    protected ExecutableMethod<THal> AddExecutableMethod(
         int nextAddress,
-        ExecutableMethod method,
+        ExecutableMethod<THal> method,
         DecompiledFunction function,
         ConvertedFunction convertedFunction)
     {
