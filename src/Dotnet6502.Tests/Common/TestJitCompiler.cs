@@ -8,7 +8,7 @@ namespace Dotnet6502.Tests.Common;
 
 public class TestJitCompiler : JitCompiler<TestHal>
 {
-    public Dictionary<Type, MsilGenerator.CustomIlGenerator>? CustomGenerators { get; set; }
+    public Dictionary<Type, MsilGenerator<TestHal>.CustomIlGenerator>? CustomGenerators { get; set; }
 
     public TestMemoryMap Memory { get; }
     public TestHal TestHal { get; }

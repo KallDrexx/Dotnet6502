@@ -20,7 +20,7 @@ public class JitCompiler<THal> where THal : Base6502Hal
     public static readonly OpCode LoadJumpIndexArg = OpCodes.Ldarg_1;
 
     private readonly THal _hal;
-    private readonly IReadOnlyList<IJitCustomizer> _jitCustomizers;
+    private readonly IReadOnlyList<IJitCustomizer<THal>> _jitCustomizers;
     private readonly MemoryBus _memoryBus;
     private readonly Queue<ushort> _ranMethods = new();
     private readonly Ir6502Interpreter _interpreter;
@@ -49,7 +49,7 @@ public class JitCompiler<THal> where THal : Base6502Hal
     /// </summary>
     public bool AddDebugHooks { get; init; }
 
-    public JitCompiler(THal hal, IJitCustomizer? jitCustomizer, MemoryBus memoryBus, Ir6502Interpreter interpreter)
+    public JitCompiler(THal hal, IJitCustomizer<THal>? jitCustomizer, MemoryBus memoryBus, Ir6502Interpreter interpreter)
     {
         _hal = hal;
         _hal.OnMemoryWritten = address =>
@@ -70,8 +70,8 @@ public class JitCompiler<THal> where THal : Base6502Hal
         };
 
         _jitCustomizers = jitCustomizer != null
-            ? [new StandardJitCustomizer(), jitCustomizer]
-            : [new StandardJitCustomizer()];
+            ? [new StandardJitCustomizer<THal>(), jitCustomizer]
+            : [new StandardJitCustomizer<THal>()];
 
         _memoryBus = memoryBus;
         _interpreter = interpreter;

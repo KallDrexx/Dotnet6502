@@ -7,7 +7,7 @@ namespace Dotnet6502.Common.Compilation;
 /// <summary>
 /// Generates MSIL for a NES Intermediary Representation instruction
 /// </summary>
-public class MsilGenerator
+public class MsilGenerator<THal> where THal : Base6502Hal
 {
     public delegate void CustomIlGenerator(Ir6502.Instruction instruction, ILGenerator ilGenerator);
 
@@ -227,7 +227,7 @@ public class MsilGenerator
                 if (functionAddress.IsIndirect)
                 {
                     // Look up the pointer to find the location of the function to call
-                    var readMemoryMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.ReadMemory))!;
+                    var readMemoryMethod = typeof(THal).GetMethod(nameof(Base6502Hal.ReadMemory))!;
                     ilGenerator.Emit(JitCompiler<Base6502Hal>.LoadHalArg);
                     ilGenerator.Emit(OpCodes.Ldc_I4, functionAddress.Address);
                     ilGenerator.Emit(OpCodes.Dup);
@@ -342,7 +342,7 @@ public class MsilGenerator
 
     private static void GeneratePopStackValue(Ir6502.PopStackValue pop, ILGenerator ilGenerator)
     {
-        var popMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.PopFromStack))!;
+        var popMethod = typeof(THal).GetMethod(nameof(Base6502Hal.PopFromStack))!;
         ilGenerator.Emit(JitCompiler<Base6502Hal>.LoadHalArg);
         ilGenerator.Emit(OpCodes.Callvirt, popMethod);
         SaveStackToTempLocal(ilGenerator);
@@ -351,7 +351,7 @@ public class MsilGenerator
 
     private static void GeneratePushStackValue(Ir6502.PushStackValue push, ILGenerator ilGenerator)
     {
-        var pushMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.PushToStack))!;
+        var pushMethod = typeof(THal).GetMethod(nameof(Base6502Hal.PushToStack))!;
         ilGenerator.Emit(JitCompiler<Base6502Hal>.LoadHalArg);
         LoadValueToStack(push.Source, ilGenerator);
         ilGenerator.Emit(OpCodes.Callvirt, pushMethod);
@@ -408,7 +408,7 @@ public class MsilGenerator
 
     private void GenerateDebugValue(Ir6502.DebugValue debugValue, ILGenerator ilGenerator)
     {
-        var debugHookMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.DebugHook))!;
+        var debugHookMethod = typeof(THal).GetMethod(nameof(Base6502Hal.DebugHook))!;
 
         // Since the result of every value is a number, and the .net runtime stores these on the
         // stack as ints, then we can use int.ToString() to get a string representation
@@ -446,8 +446,8 @@ public class MsilGenerator
         const int highByteIndex = 1;
         const int lowByteIndex = 2;
         var continueExecution = ilGenerator.DefineLabel();
-        var pollMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.PollForInterrupt))!;
-        var readMemoryMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.ReadMemory))!;
+        var pollMethod = typeof(THal).GetMethod(nameof(Base6502Hal.PollForInterrupt))!;
+        var readMemoryMethod = typeof(THal).GetMethod(nameof(Base6502Hal.ReadMemory))!;
 
         ilGenerator.Emit(JitCompiler<Base6502Hal>.LoadHalArg);
         ilGenerator.Emit(OpCodes.Callvirt, pollMethod);
@@ -471,7 +471,7 @@ public class MsilGenerator
         }
 
         // Set the interrupt disable flag to true
-        var setFlagMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.SetFlag))!;
+        var setFlagMethod = typeof(THal).GetMethod(nameof(Base6502Hal.SetFlag))!;
         ilGenerator.Emit(JitCompiler<Base6502Hal>.LoadHalArg);
         ilGenerator.Emit(OpCodes.Ldc_I4, (int)ConvertFlagName(Ir6502.FlagName.InterruptDisable));
         ilGenerator.Emit(OpCodes.Ldc_I4_1);
@@ -508,7 +508,7 @@ public class MsilGenerator
         Ir6502.RecordCurrentInstructionAddress record,
         ILGenerator ilGenerator)
     {
-        var setInstructionMethod = typeof(Base6502Hal)
+        var setInstructionMethod = typeof(THal)
             .GetProperty(nameof(Base6502Hal.CurrentInstructionAddress))!
             .SetMethod!;
 
@@ -519,7 +519,7 @@ public class MsilGenerator
 
     private static void GeneratePollForRecompilation(Ir6502.PollForRecompilation recompilation, ILGenerator ilGenerator)
     {
-        var pollMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.PollForRecompilation))!;
+        var pollMethod = typeof(THal).GetMethod(nameof(Base6502Hal.PollForRecompilation))!;
         var continueExecution = ilGenerator.DefineLabel();
 
         ilGenerator.Emit(JitCompiler<Base6502Hal>.LoadHalArg);
@@ -541,7 +541,7 @@ public class MsilGenerator
         switch (value)
         {
             case Ir6502.AllFlags:
-                var getStatusMethod = typeof(Base6502Hal)
+                var getStatusMethod = typeof(THal)
                     .GetProperty(nameof(Base6502Hal.ProcessorStatus))!
                     .GetMethod!;
 
@@ -554,7 +554,7 @@ public class MsilGenerator
                 break;
 
             case Ir6502.Flag flag:
-                var getFlagMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.GetFlag))!;
+                var getFlagMethod = typeof(THal).GetMethod(nameof(Base6502Hal.GetFlag))!;
                 ilGenerator.Emit(JitCompiler<Base6502Hal>.LoadHalArg);
                 ilGenerator.Emit(OpCodes.Ldc_I4, (int)ConvertFlagName(flag.FlagName));
                 ilGenerator.Emit(OpCodes.Callvirt, getFlagMethod);
@@ -563,7 +563,7 @@ public class MsilGenerator
 
             case Ir6502.Memory memory:
             {
-                var readMemoryMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.ReadMemory))!;
+                var readMemoryMethod = typeof(THal).GetMethod(nameof(Base6502Hal.ReadMemory))!;
 
                 ilGenerator.Emit(JitCompiler<Base6502Hal>.LoadHalArg);
                 LoadMemoryLocationToStack(memory.Location, ilGenerator);
@@ -593,7 +593,7 @@ public class MsilGenerator
                 break;
 
             case Ir6502.StackPointer:
-                var getStackPointerMethod = typeof(Base6502Hal)
+                var getStackPointerMethod = typeof(THal)
                     .GetProperty(nameof(Base6502Hal.StackPointer))!
                     .GetMethod!;
 
@@ -612,7 +612,7 @@ public class MsilGenerator
 
     private static void LoadIndirectMemoryValueToStack(Ir6502.IndirectMemory indirectMemory, ILGenerator ilGenerator)
     {
-        var readMemoryMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.ReadMemory))!;
+        var readMemoryMethod = typeof(THal).GetMethod(nameof(Base6502Hal.ReadMemory))!;
 
         ilGenerator.Emit(JitCompiler<Base6502Hal>.LoadHalArg);
         ilGenerator.Emit(OpCodes.Ldc_I4, (int)indirectMemory.ZeroPageAddress);
@@ -676,7 +676,7 @@ public class MsilGenerator
             case Ir6502.DynamicMemoryLocation dynamic:
             {
                 // Need to load the final memory location from the location specified
-                var readMemoryMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.ReadMemory))!;
+                var readMemoryMethod = typeof(THal).GetMethod(nameof(Base6502Hal.ReadMemory))!;
 
                 // Load the low byte first
                 ilGenerator.Emit(JitCompiler<Base6502Hal>.LoadHalArg);
@@ -713,7 +713,7 @@ public class MsilGenerator
         switch (destination)
         {
             case Ir6502.AllFlags:
-                var setStatusMethod = typeof(Base6502Hal)
+                var setStatusMethod = typeof(THal)
                     .GetProperty(nameof(Base6502Hal.ProcessorStatus))!
                     .SetMethod!;
 
@@ -727,7 +727,7 @@ public class MsilGenerator
                 throw new InvalidOperationException("Can't write to constant");
 
             case Ir6502.Flag flag:
-                var setFlagMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.SetFlag))!;
+                var setFlagMethod = typeof(THal).GetMethod(nameof(Base6502Hal.SetFlag))!;
                 ilGenerator.Emit(JitCompiler<Base6502Hal>.LoadHalArg);
                 ilGenerator.Emit(OpCodes.Ldc_I4, (int)ConvertFlagName(flag.FlagName));
                 LoadTempLocalToStack(ilGenerator);
@@ -739,7 +739,7 @@ public class MsilGenerator
 
             case Ir6502.Memory memory:
             {
-                var writeMemoryMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.WriteMemory))!;
+                var writeMemoryMethod = typeof(THal).GetMethod(nameof(Base6502Hal.WriteMemory))!;
 
                 ilGenerator.Emit(JitCompiler<Base6502Hal>.LoadHalArg);
                 LoadMemoryLocationToStack(memory.Location, ilGenerator);
@@ -764,7 +764,7 @@ public class MsilGenerator
             {
                 // WARNING: Since the value we want to write ultimately is in temp index 0
                 // no code in here should save to that index.
-                var readMemoryMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.ReadMemory))!;
+                var readMemoryMethod = typeof(THal).GetMethod(nameof(Base6502Hal.ReadMemory))!;
                 ilGenerator.Emit(JitCompiler<Base6502Hal>.LoadHalArg);
                 ilGenerator.Emit(OpCodes.Ldc_I4, (int)indirectMemory.ZeroPageAddress);
 
@@ -816,7 +816,7 @@ public class MsilGenerator
                 ilGenerator.Emit(OpCodes.Conv_U1); // Convert int to byte
 
                 // Write the value to the address we now have
-                var writeMemoryMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.WriteMemory))!;
+                var writeMemoryMethod = typeof(THal).GetMethod(nameof(Base6502Hal.WriteMemory))!;
                 ilGenerator.Emit(OpCodes.Callvirt, writeMemoryMethod);
                 break;
             }
@@ -824,15 +824,15 @@ public class MsilGenerator
             case Ir6502.Register register:
                 var setMethod = register.Name switch
                 {
-                    Ir6502.RegisterName.Accumulator => typeof(Base6502Hal)
+                    Ir6502.RegisterName.Accumulator => typeof(THal)
                         .GetProperty(nameof(Base6502Hal.ARegister))!
                         .SetMethod!,
 
-                    Ir6502.RegisterName.XIndex => typeof(Base6502Hal)
+                    Ir6502.RegisterName.XIndex => typeof(THal)
                         .GetProperty(nameof(Base6502Hal.XRegister))!
                         .SetMethod!,
 
-                    Ir6502.RegisterName.YIndex => typeof(Base6502Hal)
+                    Ir6502.RegisterName.YIndex => typeof(THal)
                         .GetProperty(nameof(Base6502Hal.YRegister))!
                         .SetMethod!,
 
@@ -847,7 +847,7 @@ public class MsilGenerator
                 break;
 
             case Ir6502.StackPointer:
-                var setStackPointerMethod = typeof(Base6502Hal)
+                var setStackPointerMethod = typeof(THal)
                     .GetProperty(nameof(Base6502Hal.StackPointer))!
                     .SetMethod!;
 
@@ -889,15 +889,15 @@ public class MsilGenerator
     {
         var getMethod = registerName switch
         {
-            Ir6502.RegisterName.Accumulator => typeof(Base6502Hal)
+            Ir6502.RegisterName.Accumulator => typeof(THal)
                 .GetProperty(nameof(Base6502Hal.ARegister))!
                 .GetMethod!,
 
-            Ir6502.RegisterName.XIndex => typeof(Base6502Hal)
+            Ir6502.RegisterName.XIndex => typeof(THal)
                 .GetProperty(nameof(Base6502Hal.XRegister))!
                 .GetMethod!,
 
-            Ir6502.RegisterName.YIndex => typeof(Base6502Hal)
+            Ir6502.RegisterName.YIndex => typeof(THal)
                 .GetProperty(nameof(Base6502Hal.YRegister))!
                 .GetMethod!,
 
@@ -925,7 +925,7 @@ public class MsilGenerator
 
     private static void WriteDebugString(ILGenerator ilGenerator, string debugMessage)
     {
-        var debugHookMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.DebugHook))!;
+        var debugHookMethod = typeof(THal).GetMethod(nameof(Base6502Hal.DebugHook))!;
         ilGenerator.Emit(JitCompiler<Base6502Hal>.LoadHalArg);
         ilGenerator.Emit(OpCodes.Ldstr, debugMessage);
         ilGenerator.Emit(OpCodes.Callvirt, debugHookMethod);

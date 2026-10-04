@@ -13,7 +13,7 @@ public static class ExecutableMethodGenerator<THal> where THal : Base6502Hal
         string name,
         IReadOnlyList<ConvertedInstruction> instructions,
         IReadOnlyList<Ir6502.Label> jumpTableLabels,
-        IReadOnlyDictionary<Type, MsilGenerator.CustomIlGenerator>? customIlGenerators = null,
+        IReadOnlyDictionary<Type, MsilGenerator<THal>.CustomIlGenerator>? customIlGenerators = null,
         bool generateDll = false,
         bool addDebugStatements = false)
     {
@@ -28,7 +28,7 @@ public static class ExecutableMethodGenerator<THal> where THal : Base6502Hal
     private static ExecutableMethod<THal> GenerateViaAssemblies(
         string name,
         IReadOnlyList<ConvertedInstruction> instructions,
-        IReadOnlyDictionary<Type, MsilGenerator.CustomIlGenerator>? customIlGenerators,
+        IReadOnlyDictionary<Type, MsilGenerator<THal>.CustomIlGenerator>? customIlGenerators,
         IReadOnlyList<Ir6502.Label> jumpTableLabels,
         bool addDebugStatements)
     {
@@ -68,7 +68,7 @@ public static class ExecutableMethodGenerator<THal> where THal : Base6502Hal
     private static void GenerateMsil(ILGenerator ilGenerator,
         IReadOnlyList<ConvertedInstruction> instructions,
         IReadOnlyList<Ir6502.Label> jumpTableLabels,
-        IReadOnlyDictionary<Type, MsilGenerator.CustomIlGenerator>? customIlGenerators = null,
+        IReadOnlyDictionary<Type, MsilGenerator<THal>.CustomIlGenerator>? customIlGenerators = null,
         bool addDebugStatements = false)
     {
         // We need to pull out all labels so they can be pre-defined, since they need to be
@@ -90,7 +90,7 @@ public static class ExecutableMethodGenerator<THal> where THal : Base6502Hal
         }
 
         // Figure out how many locals this method will need and declare them.
-        MsilGenerator.DeclareRequiredLocals(ilGenerator);
+        MsilGenerator<THal>.DeclareRequiredLocals(ilGenerator);
 
         // Declare locals required for instruction usage
         var localCount = GetMaxLocalCount(instructions.SelectMany(x => x.Ir6502Instructions).ToArray());
@@ -99,7 +99,7 @@ public static class ExecutableMethodGenerator<THal> where THal : Base6502Hal
             ilGenerator.DeclareLocal(typeof(int));
         }
 
-        var msilGenerator = new MsilGenerator(ilLabels, customIlGenerators);
+        var msilGenerator = new MsilGenerator<THal>(ilLabels, customIlGenerators);
         foreach (var instruction in instructions)
         {
             foreach (var irInstruction in instruction.Ir6502Instructions)
@@ -144,7 +144,7 @@ public static class ExecutableMethodGenerator<THal> where THal : Base6502Hal
 
     private static void GenerateDebuggableDll(string name,
         IReadOnlyList<ConvertedInstruction> instructions,
-        IReadOnlyDictionary<Type, MsilGenerator.CustomIlGenerator>? customIlGenerators,
+        IReadOnlyDictionary<Type, MsilGenerator<THal>.CustomIlGenerator>? customIlGenerators,
         IReadOnlyList<Ir6502.Label> jumpTableLabels,
         bool addDebugStatements)
     {

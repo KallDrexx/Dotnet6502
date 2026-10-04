@@ -20,7 +20,7 @@ public class CustomIlGeneratorTests
             ilGenerator.Emit(OpCodes.Callvirt, pushMethod);
         }
 
-        var customGenerators = new Dictionary<Type, MsilGenerator.CustomIlGenerator>()
+        var customGenerators = new Dictionary<Type, MsilGenerator<TestHal>.CustomIlGenerator>()
         {
             { typeof(TestInstruction), CustomGenerator },
         };

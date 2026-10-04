@@ -156,7 +156,7 @@ public static class Program
     where THal : Base6502Hal
     {
         ISystem<THal> system;
-        IJitCustomizer jitCustomizer;
+        IJitCustomizer<THal> jitCustomizer;
 
         if (typeof(THal) == typeof(NesHal))
         {
@@ -166,7 +166,7 @@ public static class Program
             }
 
             system = (ISystem<THal>) new NesSystem(options.NesConfig, macro);
-            jitCustomizer = new NesJitCustomizer();
+            jitCustomizer = (IJitCustomizer<THal>) new NesJitCustomizer();
         }
         else if (typeof(THal) == typeof(C64Hal))
         {
@@ -176,7 +176,7 @@ public static class Program
             }
 
             system = (ISystem<THal>) new C64System(options.C64Config, macro);
-            jitCustomizer = new C64JitCustomizer();
+            jitCustomizer = (IJitCustomizer<THal>) new C64JitCustomizer();
         }
         else
         {

@@ -45,7 +45,7 @@ public class TestJitCompiler : JitCompiler<Base6502Hal>
             $"test_0x{address:X4}",
             [convertedInstructions],
             [],
-            new Dictionary<Type, MsilGenerator.CustomIlGenerator>());
+            new Dictionary<Type, MsilGenerator<Base6502Hal>.CustomIlGenerator>());
 
         AddExecutableMethod(address, method, function, convertedFunction);
     }

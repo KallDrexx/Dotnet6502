@@ -1,9 +1,11 @@
+using Dotnet6502.Common.Hardware;
+
 namespace Dotnet6502.Common.Compilation;
 
 /// <summary>
 /// Adds standard debugging string and polling detection instructions to all instruction paths
 /// </summary>
-public class StandardJitCustomizer : IJitCustomizer
+public class StandardJitCustomizer<THal> : IJitCustomizer<THal> where THal : Base6502Hal
 {
     /// <summary>
     /// If true, then each instruction has a debug string statement added to make
@@ -48,9 +50,9 @@ public class StandardJitCustomizer : IJitCustomizer
         return result;
     }
 
-    public IReadOnlyDictionary<Type, MsilGenerator.CustomIlGenerator> GetCustomIlGenerators()
+    public IReadOnlyDictionary<Type, MsilGenerator<THal>.CustomIlGenerator> GetCustomIlGenerators()
     {
-        return new Dictionary<Type, MsilGenerator.CustomIlGenerator>();
+        return new Dictionary<Type, MsilGenerator<THal>.CustomIlGenerator>();
     }
 
     public void AddInstructions(Ir6502Interpreter interpreter)

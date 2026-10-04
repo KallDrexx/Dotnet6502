@@ -7,7 +7,7 @@ namespace Dotnet6502.C64.Integration;
 /// <summary>
 /// Customizes the JIT operations for the C64
 /// </summary>
-public class C64JitCustomizer : IJitCustomizer
+public class C64JitCustomizer : IJitCustomizer<C64Hal>
 {
     private record IncrementCycleCount(int Cycles) : Ir6502.Instruction;
 
@@ -63,16 +63,16 @@ public class C64JitCustomizer : IJitCustomizer
         return result;
     }
 
-    public IReadOnlyDictionary<Type, MsilGenerator.CustomIlGenerator> GetCustomIlGenerators()
+    public IReadOnlyDictionary<Type, MsilGenerator<C64Hal>.CustomIlGenerator> GetCustomIlGenerators()
     {
-        return new Dictionary<Type, MsilGenerator.CustomIlGenerator>
+        return new Dictionary<Type, MsilGenerator<C64Hal>.CustomIlGenerator>
         {
             { typeof(IncrementCycleCount), CreateCycleCountIlGenerator() },
             { typeof(CallDebugHook), CreateDebugHookIlGenerator() },
         };
     }
 
-    private static MsilGenerator.CustomIlGenerator CreateCycleCountIlGenerator()
+    private static MsilGenerator<C64Hal>.CustomIlGenerator CreateCycleCountIlGenerator()
     {
         return (instruction, ilGenerator) =>
         {
@@ -96,7 +96,7 @@ public class C64JitCustomizer : IJitCustomizer
         };
     }
 
-    private static MsilGenerator.CustomIlGenerator CreateDebugHookIlGenerator()
+    private static MsilGenerator<C64Hal>.CustomIlGenerator CreateDebugHookIlGenerator()
     {
         return (instruction, ilGenerator) =>
         {

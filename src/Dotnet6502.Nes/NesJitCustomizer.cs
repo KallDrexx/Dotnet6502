@@ -6,7 +6,7 @@ namespace Dotnet6502.Nes;
 /// <summary>
 /// Customizes the JIT operations for NES Roms
 /// </summary>
-public class NesJitCustomizer : IJitCustomizer
+public class NesJitCustomizer : IJitCustomizer<NesHal>
 {
     /// <summary>
     /// If true, debug strings will be written for better debugging support
@@ -69,16 +69,16 @@ public class NesJitCustomizer : IJitCustomizer
         return result;
     }
 
-    public IReadOnlyDictionary<Type, MsilGenerator.CustomIlGenerator> GetCustomIlGenerators()
+    public IReadOnlyDictionary<Type, MsilGenerator<NesHal>.CustomIlGenerator> GetCustomIlGenerators()
     {
-        return new Dictionary<Type, MsilGenerator.CustomIlGenerator>
+        return new Dictionary<Type, MsilGenerator<NesHal>.CustomIlGenerator>
         {
             { typeof(IncrementCycleCount), CreateCycleCountIlGenerator() },
             { typeof(CallDebugHook), CreateDebugHookIlGenerator() },
         };
     }
 
-    private static MsilGenerator.CustomIlGenerator CreateCycleCountIlGenerator()
+    private static MsilGenerator<NesHal>.CustomIlGenerator CreateCycleCountIlGenerator()
     {
         return (instruction, ilGenerator) =>
         {
@@ -102,7 +102,7 @@ public class NesJitCustomizer : IJitCustomizer
         };
     }
 
-    private static MsilGenerator.CustomIlGenerator CreateDebugHookIlGenerator()
+    private static MsilGenerator<NesHal>.CustomIlGenerator CreateDebugHookIlGenerator()
     {
         return (instruction, ilGenerator) =>
         {
