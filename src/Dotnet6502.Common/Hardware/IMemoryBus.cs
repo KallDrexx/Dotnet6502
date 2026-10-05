@@ -1,3 +1,4 @@
+using NESDecompiler.Core.Decompilation;
 using System;
 
 namespace Dotnet6502.Common.Hardware;
@@ -17,4 +18,6 @@ public interface IMemoryBus
     /// Reads a byte from the absolute address specified
     /// </summary>
     byte Read(ushort address);
+
+    IReadOnlyList<CodeRegion> GetAllCodeRegions();
 }

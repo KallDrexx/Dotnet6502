@@ -21,7 +21,7 @@ public class JitCompiler<THal> where THal : I6502Hal
 
     private readonly THal _hal;
     private readonly IReadOnlyList<IJitCustomizer<THal>> _jitCustomizers;
-    private readonly GenericMemoryBus _memoryBus;
+    private readonly IMemoryBus _memoryBus;
     private readonly Queue<ushort> _ranMethods = new();
     private readonly Ir6502Interpreter _interpreter;
     private readonly SmcTracker _smcTracker = new();
@@ -49,7 +49,7 @@ public class JitCompiler<THal> where THal : I6502Hal
     /// </summary>
     public bool AddDebugHooks { get; init; }
 
-    public JitCompiler(THal hal, IJitCustomizer<THal>? jitCustomizer, GenericMemoryBus memoryBus, Ir6502Interpreter interpreter)
+    public JitCompiler(THal hal, IJitCustomizer<THal>? jitCustomizer, IMemoryBus memoryBus, Ir6502Interpreter interpreter)
     {
         _hal = hal;
         _hal.OnMemoryWritten = address =>
