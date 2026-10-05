@@ -16,7 +16,7 @@ public class C64System : ISystem<C64Hal>
     private readonly Macro? _macro;
     private readonly HashSet<Keys> _pressedMacroKeys = [];
     
-    public GenericMemoryBus MemoryBus { get; private set; }
+    public IMemoryBus MemoryBus { get; private set; }
     public CancellationTokenSource CodeCancellationTokenSource { get; } = new();
     public C64Hal Hal { get; private set; }
     public Action? OnFrameFinished { get; set; }

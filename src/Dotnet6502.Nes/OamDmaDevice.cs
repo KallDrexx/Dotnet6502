@@ -5,13 +5,13 @@ namespace Dotnet6502.Nes;
 public class OamDmaDevice : IMemoryDevice
 {
     private readonly Ppu _ppu;
-    private readonly GenericMemoryBus _readMemoryBus;
+    private readonly IMemoryBus _readMemoryBus;
 
     public uint Size => 1;
 
     public ReadOnlyMemory<byte>? RawBlockFromZero => null;
 
-    public OamDmaDevice(Ppu ppu, GenericMemoryBus readMemoryBus)
+    public OamDmaDevice(Ppu ppu, IMemoryBus readMemoryBus)
     {
         _ppu = ppu;
         _readMemoryBus = readMemoryBus;

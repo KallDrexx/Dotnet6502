@@ -8,7 +8,7 @@ namespace Dotnet6502.Benchmark;
 /// </summary>
 public interface ISystem<out THal> where THal : I6502Hal
 {
-    public GenericMemoryBus MemoryBus { get; }
+    public IMemoryBus MemoryBus { get; }
     public CancellationTokenSource CodeCancellationTokenSource { get; }
     public THal Hal { get; }
     public Action? OnFrameFinished { get; set; }
