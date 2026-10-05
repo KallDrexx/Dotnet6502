@@ -6,12 +6,12 @@ using NESDecompiler.Core.Disassembly;
 
 namespace Dotnet6502.ComprehensiveTestRunner;
 
-public class TestJitCompiler : JitCompiler<Base6502Hal>
+public class TestJitCompiler : JitCompiler<Base6502Hal<GenericMemoryBus>>
 {
     public TestMemoryMap MemoryMap { get; }
-    public Base6502Hal TestHal { get; }
+    public Base6502Hal<GenericMemoryBus> TestHal { get; }
 
-    private TestJitCompiler(Base6502Hal testHal, TestMemoryMap testMemoryMap, MemoryBus memoryBus)
+    private TestJitCompiler(Base6502Hal<GenericMemoryBus> testHal, TestMemoryMap testMemoryMap, GenericMemoryBus memoryBus)
         : base(testHal, null, memoryBus, new Ir6502Interpreter())
     {
         MemoryMap = testMemoryMap;
@@ -21,10 +21,10 @@ public class TestJitCompiler : JitCompiler<Base6502Hal>
     public static TestJitCompiler Create()
     {
         var memoryMap = new TestMemoryMap();
-        var memoryBus = new MemoryBus(0xFFFF + 1);
+        var memoryBus = new GenericMemoryBus(0xFFFF + 1);
         memoryBus.Attach(memoryMap, 0);
 
-        var hal = new Base6502Hal(memoryBus);
+        var hal = new Base6502Hal<GenericMemoryBus>(memoryBus);
 
         return new TestJitCompiler(hal, memoryMap, memoryBus);
     }
@@ -41,11 +41,11 @@ public class TestJitCompiler : JitCompiler<Base6502Hal>
         var function = new DecompiledFunction(address, [nop], new HashSet<ushort>());
         var convertedInstructions = new ConvertedInstruction(nop, instructions);
         var convertedFunction = new ConvertedFunction([convertedInstructions], [], false, []);
-        var method = ExecutableMethodGenerator<Base6502Hal>.Generate(
+        var method = ExecutableMethodGenerator<Base6502Hal<GenericMemoryBus>>.Generate(
             $"test_0x{address:X4}",
             [convertedInstructions],
             [],
-            new Dictionary<Type, MsilGenerator<Base6502Hal>.CustomIlGenerator>());
+            new Dictionary<Type, MsilGenerator<Base6502Hal<GenericMemoryBus>>.CustomIlGenerator>());
 
         AddExecutableMethod(address, method, function, convertedFunction);
     }

@@ -14,8 +14,8 @@ public class CustomIlGeneratorTests
     {
         static void CustomGenerator(Ir6502.Instruction instruction, ILGenerator ilGenerator)
         {
-            var pushMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.PushToStack))!;
-            ilGenerator.Emit(JitCompiler<Base6502Hal>.LoadHalArg);
+            var pushMethod = typeof(Base6502Hal<GenericMemoryBus>).GetMethod(nameof(Base6502Hal<GenericMemoryBus>.PushToStack))!;
+            ilGenerator.Emit(JitCompiler<Base6502Hal<GenericMemoryBus>>.LoadHalArg);
             ilGenerator.Emit(OpCodes.Ldc_I4, 123);
             ilGenerator.Emit(OpCodes.Callvirt, pushMethod);
         }

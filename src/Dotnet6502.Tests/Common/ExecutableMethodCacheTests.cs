@@ -14,7 +14,7 @@ public class ExecutableMethodCacheTests
     {
         var function = CreateTestFunction(0x1234);
         var method = CreateTestMethod();
-        var cache = new ExecutableMethodCache<Base6502Hal>();
+        var cache = new ExecutableMethodCache<Base6502Hal<GenericMemoryBus>>();
 
         cache.AddExecutableMethod(method, function, []);
         var result = cache.GetMethodForAddress(0x1234);
@@ -28,7 +28,7 @@ public class ExecutableMethodCacheTests
     {
         var function = CreateTestFunction(0x1234, 0x2345);
         var method = CreateTestMethod();
-        var cache = new ExecutableMethodCache<Base6502Hal>();
+        var cache = new ExecutableMethodCache<Base6502Hal<GenericMemoryBus>>();
 
         cache.AddExecutableMethod(method, function, []);
         cache.MemoryChanged(0x1234);
@@ -42,7 +42,7 @@ public class ExecutableMethodCacheTests
     {
         var function = CreateTestFunction(0x1234, 0x2345);
         var method = CreateTestMethod();
-        var cache = new ExecutableMethodCache<Base6502Hal>();
+        var cache = new ExecutableMethodCache<Base6502Hal<GenericMemoryBus>>();
 
         cache.AddExecutableMethod(method, function, []);
         cache.MemoryChanged(0x2345);
@@ -56,7 +56,7 @@ public class ExecutableMethodCacheTests
     {
         var function = CreateTestFunction(0x1234, 0x2345);
         var method = CreateTestMethod();
-        var cache = new ExecutableMethodCache<Base6502Hal>();
+        var cache = new ExecutableMethodCache<Base6502Hal<GenericMemoryBus>>();
 
         cache.AddExecutableMethod(method, function, [0x2345]);
         cache.MemoryChanged(0x2345);
@@ -70,7 +70,7 @@ public class ExecutableMethodCacheTests
     {
         var function = CreateTestFunction(0x1234, 0x2345);
         var method = CreateTestMethod();
-        var cache = new ExecutableMethodCache<Base6502Hal>();
+        var cache = new ExecutableMethodCache<Base6502Hal<GenericMemoryBus>>();
 
         cache.AddExecutableMethod(method, function, []);
         cache.MemoryChanged(0x0135);
@@ -83,13 +83,13 @@ public class ExecutableMethodCacheTests
     [Fact]
     public void Cached_Methods_Not_Accessed_Get_Evicted_When_Max_Reached()
     {
-        var cache = new ExecutableMethodCache<Base6502Hal>();
+        var cache = new ExecutableMethodCache<Base6502Hal<GenericMemoryBus>>();
         var testFunction = CreateTestFunction(0x1234);
         var method = CreateTestMethod();
 
         cache.AddExecutableMethod(method, testFunction, []);
 
-        for (var x = 0; x < ExecutableMethodCache<Base6502Hal>.MaxCachedMethodCount - 1; x++)
+        for (var x = 0; x < ExecutableMethodCache<Base6502Hal<GenericMemoryBus>>.MaxCachedMethodCount - 1; x++)
         {
             var address = 0x3344 + x;
             cache.AddExecutableMethod(CreateTestMethod(), CreateTestFunction((ushort)address), []);
@@ -102,13 +102,13 @@ public class ExecutableMethodCacheTests
     [Fact]
     public void Cached_Methods_Not_Evicted_If_Recently_Used_When_Max_Reached()
     {
-        var cache = new ExecutableMethodCache<Base6502Hal>();
+        var cache = new ExecutableMethodCache<Base6502Hal<GenericMemoryBus>>();
         var testFunction = CreateTestFunction(0x1234);
         var method = CreateTestMethod();
 
         cache.AddExecutableMethod(method, testFunction, []);
 
-        for (var x = 0; x < ExecutableMethodCache<Base6502Hal>.MaxCachedMethodCount - 1; x++)
+        for (var x = 0; x < ExecutableMethodCache<Base6502Hal<GenericMemoryBus>>.MaxCachedMethodCount - 1; x++)
         {
             var address = 0x3344 + x;
             cache.AddExecutableMethod(CreateTestMethod(), CreateTestFunction((ushort)address), []);
@@ -145,7 +145,7 @@ public class ExecutableMethodCacheTests
         return new DecompiledFunction(instructionAddresses[0], instructions, new HashSet<ushort>());
     }
 
-    private static ExecutableMethod<Base6502Hal> CreateTestMethod()
+    private static ExecutableMethod<Base6502Hal<GenericMemoryBus>> CreateTestMethod()
     {
         return (_, _) => 0;
     }

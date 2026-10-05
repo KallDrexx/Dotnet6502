@@ -21,7 +21,7 @@ public class DiskImageReadPatch : Patch
         _prgData = prgData;
     }
 
-    protected override int NativeFunction(Base6502Hal hal)
+    protected override int NativeFunction(I6502Hal hal)
     {
         var device = hal.ReadMemory(0xBA);
 
@@ -91,7 +91,7 @@ public class DiskImageReadPatch : Patch
         return SimulateRts(hal);
     }
 
-    private byte[]? GetDiskImageContents(Base6502Hal hal, byte[] petsciiFilename)
+    private byte[]? GetDiskImageContents(I6502Hal hal, byte[] petsciiFilename)
     {
         if (_image == null)
         {
@@ -142,7 +142,7 @@ public class DiskImageReadPatch : Patch
         return content;
     }
 
-    private byte[]? GetPrgContents(Base6502Hal hal, byte[] petsciiFilename)
+    private byte[]? GetPrgContents(I6502Hal hal, byte[] petsciiFilename)
     {
         if (_prgData == null)
         {

@@ -5,7 +5,7 @@ namespace Dotnet6502.Common.Hardware;
 /// <summary>
 /// The memory bus that allows attaching memory devices at specific address spaces
 /// </summary>
-public class MemoryBus
+public class GenericMemoryBus : IMemoryBus
 {
     private record AttachedDevice(ushort BaseAddress, IMemoryDevice Device);
     private record VisibleRange(ushort DeviceIndex, int StartAddress, int EndAddress);
@@ -23,7 +23,7 @@ public class MemoryBus
     /// </summary>
     private List<VisibleRange> _cachedVisibleRanges = [];
 
-    public MemoryBus(int memorySize)
+    public GenericMemoryBus(int memorySize)
     {
         _deviceIndexMap = new ushort[memorySize];
     }

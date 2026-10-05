@@ -2,7 +2,7 @@ using Dotnet6502.Common.Hardware;
 
 namespace Dotnet6502.Nes;
 
-public class NesHal : Base6502Hal
+public class NesHal : Base6502Hal<GenericMemoryBus>
 {
     // ReSharper disable once NotAccessedPositionalProperty.Local
     private readonly record struct MemWriteValue(ushort Address, byte Value, int ScanLine);
@@ -17,7 +17,7 @@ public class NesHal : Base6502Hal
     private readonly bool _debugModeEnabled;
     private bool _nmiTriggered;
 
-    public NesHal(MemoryBus memory, Ppu ppu, DebugWriter? debugWriter, bool debugModeEnabled, CancellationToken cancellationToken)
+    public NesHal(GenericMemoryBus memory, Ppu ppu, DebugWriter? debugWriter, bool debugModeEnabled, CancellationToken cancellationToken)
         : base(memory)
     {
         _ppu = ppu;

@@ -1,15 +1,8 @@
 namespace Dotnet6502.Common.Hardware;
 
-public class Base6502Hal
+public class Base6502Hal<TMemory> : I6502Hal where TMemory : IMemoryBus
 {
-    /// <summary>
-    /// A delegate that allows the JIT to be notified of memory being changed. A value of
-    /// true being returned means that the currently executing function has had its instructions
-    /// modified.
-    /// </summary>
-    public delegate bool MemoryWriteEvent(ushort address);
-
-    private readonly MemoryBus _memoryBus;
+    private readonly TMemory _memoryBus;
     private byte _flags;
     private bool _recompilationRequired;
 
@@ -18,7 +11,7 @@ public class Base6502Hal
     public byte YRegister { get; set; }
     public byte StackPointer { get; set; } = 0xFF;
     public ushort CurrentInstructionAddress { get; set; }
-    public MemoryWriteEvent? OnMemoryWritten;
+    public I6502Hal.MemoryWriteEvent? OnMemoryWritten { get; set; }
 
     public byte ProcessorStatus
     {
@@ -34,7 +27,7 @@ public class Base6502Hal
 
     private ushort StackAddress => (ushort)(0x0100 | StackPointer);
 
-    public Base6502Hal(MemoryBus memoryBus)
+    public Base6502Hal(TMemory memoryBus)
     {
         _memoryBus = memoryBus;
     }

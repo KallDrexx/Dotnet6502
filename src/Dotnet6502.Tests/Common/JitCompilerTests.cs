@@ -83,7 +83,7 @@ public class JitCompilerTests
         public bool FallThrough { get; set; }
         public ushort NextAddress { get; set; }
 
-        protected override int NativeFunction(Base6502Hal hal)
+        protected override int NativeFunction(I6502Hal hal)
         {
             if (FallThrough)
             {

@@ -7,7 +7,7 @@ namespace Dotnet6502.Common.Compilation;
 /// <summary>
 /// Generates an executable method from 6502 assembly instruction
 /// </summary>
-public static class ExecutableMethodGenerator<THal> where THal : Base6502Hal
+public static class ExecutableMethodGenerator<THal> where THal : I6502Hal
 {
     public static ExecutableMethod<THal> Generate(
         string name,
@@ -85,7 +85,7 @@ public static class ExecutableMethodGenerator<THal> where THal : Base6502Hal
                 .Select(x => ilLabels[x.Name])
                 .ToArray();
 
-            ilGenerator.Emit(JitCompiler<Base6502Hal>.LoadJumpIndexArg);
+            ilGenerator.Emit(JitCompiler<I6502Hal>.LoadJumpIndexArg);
             ilGenerator.Emit(OpCodes.Switch, msilLabels);
         }
 

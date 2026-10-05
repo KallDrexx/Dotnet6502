@@ -13,7 +13,7 @@ public class TestJitCompiler : JitCompiler<TestHal>
     public TestMemoryMap Memory { get; }
     public TestHal TestHal { get; }
 
-    private TestJitCompiler(TestHal testHal, TestMemoryMap memory, MemoryBus memoryBus)
+    private TestJitCompiler(TestHal testHal, TestMemoryMap memory, GenericMemoryBus memoryBus)
         : base(testHal, null, memoryBus, new Ir6502Interpreter())
     {
         Memory = memory;
@@ -24,7 +24,7 @@ public class TestJitCompiler : JitCompiler<TestHal>
 
     public static TestJitCompiler Create()
     {
-        var memoryBus = new MemoryBus(0xFFFF + 1);
+        var memoryBus = new GenericMemoryBus(0xFFFF + 1);
         var memoryMap = new TestMemoryMap();
         memoryBus.Attach(memoryMap, 0);
 

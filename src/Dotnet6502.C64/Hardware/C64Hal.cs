@@ -2,7 +2,7 @@ using Dotnet6502.Common.Hardware;
 
 namespace Dotnet6502.C64.Hardware;
 
-public class C64Hal : Base6502Hal
+public class C64Hal : Base6502Hal<GenericMemoryBus>
 {
     private readonly CancellationToken _cancellationToken;
     private readonly Vic2 _vic2;

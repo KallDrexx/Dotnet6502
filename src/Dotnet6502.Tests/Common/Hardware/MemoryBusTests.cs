@@ -8,7 +8,7 @@ public class MemoryBusTests
     [Fact]
     public void GetAllCodeRegions_Returns_Single_Device_Fully_Visible()
     {
-        var bus = new MemoryBus(0x10000);
+        var bus = new GenericMemoryBus(0x10000);
         var ram = new BasicRamMemoryDevice(0x1000);
         bus.Attach(ram, 0x0000);
 
@@ -22,7 +22,7 @@ public class MemoryBusTests
     [Fact]
     public void GetAllCodeRegions_Excludes_Completely_Overridden_Device()
     {
-        var bus = new MemoryBus(0x10000);
+        var bus = new GenericMemoryBus(0x10000);
         var ram = new BasicRamMemoryDevice(0x1000);
         var rom = new BasicRamMemoryDevice(0x1000);
 
@@ -42,7 +42,7 @@ public class MemoryBusTests
     [Fact]
     public void GetAllCodeRegions_Handles_Partial_Override_Fragmentation()
     {
-        var bus = new MemoryBus(0x10000);
+        var bus = new GenericMemoryBus(0x10000);
         var ram = new BasicRamMemoryDevice(0x4000); // 0x0000-0x3FFF
         var rom = new BasicRamMemoryDevice(0x1000); // Will override 0x2000-0x2FFF
 
@@ -71,7 +71,7 @@ public class MemoryBusTests
     public void GetAllCodeRegions_Handles_Mirrored_Devices()
     {
         // NES-style RAM mirroring
-        var bus = new MemoryBus(0x10000);
+        var bus = new GenericMemoryBus(0x10000);
         var ram = new BasicRamMemoryDevice(0x0800);
 
         bus.Attach(ram, 0x0000);
@@ -105,7 +105,7 @@ public class MemoryBusTests
     [Fact]
     public void GetAllCodeRegions_Excludes_Devices_Without_RawBlockFromZero()
     {
-        var bus = new MemoryBus(0x10000);
+        var bus = new GenericMemoryBus(0x10000);
         var ram = new BasicRamMemoryDevice(0x1000);
         var nullDevice = new NullMemoryDevice(0x1000);
 
@@ -122,7 +122,7 @@ public class MemoryBusTests
     [Fact]
     public void GetAllCodeRegions_Returns_Empty_List_For_Empty_Bus()
     {
-        var bus = new MemoryBus(0x10000);
+        var bus = new GenericMemoryBus(0x10000);
         var regions = bus.GetAllCodeRegions();
         regions.Count.ShouldBe(0);
     }
@@ -130,7 +130,7 @@ public class MemoryBusTests
     [Fact]
     public void GetAllCodeRegions_Returns_Current_Memory_Content_After_Write()
     {
-        var bus = new MemoryBus(0x10000);
+        var bus = new GenericMemoryBus(0x10000);
         var ram = new BasicRamMemoryDevice(0x1000);
         bus.Attach(ram, 0x0000);
 
@@ -147,7 +147,7 @@ public class MemoryBusTests
     public void GetAllCodeRegions_Handles_Complex_C64_Style_Configuration()
     {
         // simulate C64 memory map with overlapping ROMs
-        var bus = new MemoryBus(0x10000);
+        var bus = new GenericMemoryBus(0x10000);
         var fullRam = new BasicRamMemoryDevice(0x10000);
         var charRom = new BasicRamMemoryDevice(0x1000);
 
@@ -187,7 +187,7 @@ public class MemoryBusTests
     [Fact]
     public void GetAllCodeRegions_Slices_Device_Memory_Correctly()
     {
-        var bus = new MemoryBus(0x10000);
+        var bus = new GenericMemoryBus(0x10000);
         var ram = new BasicRamMemoryDevice(0x1000);
 
         // Write test pattern

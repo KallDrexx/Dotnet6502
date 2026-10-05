@@ -32,7 +32,7 @@ public class Vic2
     private readonly IC64Display _c64Display;
     private readonly Vic2RegisterData _vic2Registers;
     private readonly Vic2MemoryDevice _vic2RegisterDevice;
-    private readonly MemoryBus _ramView;
+    private readonly GenericMemoryBus _ramView;
     private readonly ComplexInterfaceAdapter _cia2;
     private readonly BasicRamMemoryDevice _colorRam;
     private readonly RgbColor[] _frameBuffer = new RgbColor[VisibleDotsPerScanLine * VisibleScanLines];

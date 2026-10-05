@@ -5,7 +5,7 @@ namespace Dotnet6502.Common.Compilation;
 /// <summary>
 /// Allows customizing JIT operations
 /// </summary>
-public interface IJitCustomizer<THal> where THal : Base6502Hal
+public interface IJitCustomizer<THal> where THal : I6502Hal
 {
     /// <summary>
     /// Updates a set of instructions that will be used to form a function

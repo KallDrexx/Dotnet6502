@@ -153,7 +153,7 @@ public static class Program
     }
 
     private static Queue<RunInterval>? RunBenchmark<THal>(CommandLineHandler.Options options, Macro? macro)
-    where THal : Base6502Hal
+    where THal : I6502Hal
     {
         ISystem<THal> system;
         IJitCustomizer<THal> jitCustomizer;

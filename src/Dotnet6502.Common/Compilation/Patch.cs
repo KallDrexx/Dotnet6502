@@ -14,7 +14,7 @@ public abstract class Patch
     /// </summary>
     public abstract ushort FunctionEntryAddress { get; }
 
-    public ExecutableMethod<THal> Apply<THal>(ExecutableMethod<THal> functionToWrap) where THal : Base6502Hal
+    public ExecutableMethod<THal> Apply<THal>(ExecutableMethod<THal> functionToWrap) where THal : I6502Hal
     {
         return (hal, index) =>
         {
@@ -32,12 +32,12 @@ public abstract class Patch
     /// <returns>
     /// Address of the next 6502 function to call. If negative, it falls into the wrapped function
     /// </returns>
-    protected abstract int NativeFunction(Base6502Hal hal);
+    protected abstract int NativeFunction(I6502Hal hal);
 
     /// <summary>
     /// Simulates an RTS instruction, returning the address from the top of the stack plus 1.
     /// </summary>
-    protected int SimulateRts(Base6502Hal hal)
+    protected int SimulateRts(I6502Hal hal)
     {
         var low = hal.PopFromStack();
         var high = hal.PopFromStack();

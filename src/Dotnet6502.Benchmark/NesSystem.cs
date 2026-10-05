@@ -16,7 +16,7 @@ public class NesSystem : ISystem<NesHal>
     private readonly Ppu _ppu;
     private readonly MacroNesInput? _nesInput;
 
-    public MemoryBus MemoryBus { get; }
+    public GenericMemoryBus MemoryBus { get; }
     public CancellationTokenSource CodeCancellationTokenSource { get; }
     public NesHal Hal { get; }
     public Action? OnFrameFinished { get; set; }
@@ -41,7 +41,7 @@ public class NesSystem : ISystem<NesHal>
             MinimizePpuLogic = config.BypassPpuLogic,
         };
 
-        MemoryBus = new MemoryBus(0xFFFF + 1);
+        MemoryBus = new GenericMemoryBus(0xFFFF + 1);
         SetupMemoryBus();
 
         CodeCancellationTokenSource = new CancellationTokenSource();

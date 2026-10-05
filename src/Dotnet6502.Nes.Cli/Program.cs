@@ -54,7 +54,7 @@ static (ROMInfo, byte[] ProgramRomData, byte[] ChrRomData) ParseRom(CommandLineH
     return (romInfo1, programRomData, chrRomData);
 }
 
-static (MonogameApp, CancellationTokenSource, MemoryBus, NesHal) SetupHardware(
+static (MonogameApp, CancellationTokenSource, GenericMemoryBus, NesHal) SetupHardware(
     byte[] chrRomData,
     ROMInfo romInfo2,
     CommandLineHandler.Values commandLineValues1,
@@ -77,9 +77,9 @@ static (MonogameApp, CancellationTokenSource, MemoryBus, NesHal) SetupHardware(
     return (monogameApp, cancellationTokenSource, memoryBus, nesHal);
 }
 
-static MemoryBus SetupMemoryBus(Ppu ppu, MonogameApp monogameApp, byte[] bytes)
+static GenericMemoryBus SetupMemoryBus(Ppu ppu, MonogameApp monogameApp, byte[] bytes)
 {
-    var memoryBus = new MemoryBus(0xFFFF + 1);
+    var memoryBus = new GenericMemoryBus(0xFFFF + 1);
     var cpuRam = new BasicRamMemoryDevice(0x800);
     var cartridgeSpace = new BasicRamMemoryDevice(0xBFE0);
 

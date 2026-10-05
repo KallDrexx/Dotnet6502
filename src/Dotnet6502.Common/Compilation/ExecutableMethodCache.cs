@@ -3,7 +3,7 @@ using NESDecompiler.Core.Decompilation;
 
 namespace Dotnet6502.Common.Compilation;
 
-public class ExecutableMethodCache<THal> where THal : Base6502Hal
+public class ExecutableMethodCache<THal> where THal : I6502Hal
 {
     // Rough guess at a value that can keep a full program worth of functions in memory without constant
     // eviction every frame.

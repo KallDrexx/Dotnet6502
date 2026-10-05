@@ -5,7 +5,7 @@ namespace Dotnet6502.Common.Compilation;
 /// <summary>
 /// Adds standard debugging string and polling detection instructions to all instruction paths
 /// </summary>
-public class StandardJitCustomizer<THal> : IJitCustomizer<THal> where THal : Base6502Hal
+public class StandardJitCustomizer<THal> : IJitCustomizer<THal> where THal : I6502Hal
 {
     /// <summary>
     /// If true, then each instruction has a debug string statement added to make

@@ -8,7 +8,7 @@ namespace Dotnet6502.Common.Compilation;
 /// </summary>
 public class Ir6502Interpreter
 {
-    public delegate void CustomInstructionHandler(Ir6502.Instruction instruction, Base6502Hal hal, int[] locals);
+    public delegate void CustomInstructionHandler(Ir6502.Instruction instruction, I6502Hal hal, int[] locals);
 
     private readonly Dictionary<Type, CustomInstructionHandler> _customHandlers = new();
 
@@ -17,7 +17,7 @@ public class Ir6502Interpreter
         _customHandlers.Add(typeof(T), handler);
     }
 
-    public ExecutableMethod<THal> CreateExecutableMethod<THal>(IReadOnlyList<ConvertedInstruction> instructions) where THal : Base6502Hal
+    public ExecutableMethod<THal> CreateExecutableMethod<THal>(IReadOnlyList<ConvertedInstruction> instructions) where THal : I6502Hal
     {
         var flattenedInstructions = instructions
             .SelectMany(x => x.Ir6502Instructions.Select(y => new { Orig = x.OriginalInstruction, Ir = y }))
@@ -35,7 +35,7 @@ public class Ir6502Interpreter
         IReadOnlyDictionary<Ir6502.Identifier, int> labelTargets,
         int localCount,
         THal hal,
-        int instructionIndex) where THal : Base6502Hal
+        int instructionIndex) where THal : I6502Hal
     {
         var locals = new int[localCount];
         var instructionPointer = instructionIndex; // TODO: add test cases around this logic
@@ -165,7 +165,7 @@ public class Ir6502Interpreter
         return targetIndex;
     }
 
-    private static int ExecutePollForInterrupt(Ir6502.PollForInterrupt poll, Base6502Hal hal)
+    private static int ExecutePollForInterrupt(Ir6502.PollForInterrupt poll, I6502Hal hal)
     {
         var interruptVectorAddress = hal.PollForInterrupt();
         if (interruptVectorAddress == 0)
@@ -186,7 +186,7 @@ public class Ir6502Interpreter
         return (highByte << 8) | lowByte;
     }
 
-    private static void ExecuteBinary(Ir6502.Binary binary, Base6502Hal hal, int[] locals)
+    private static void ExecuteBinary(Ir6502.Binary binary, I6502Hal hal, int[] locals)
     {
         var left = ReadValue(binary.Left, hal, locals);
         var right = ReadValue(binary.Right, hal, locals);
@@ -211,7 +211,7 @@ public class Ir6502Interpreter
         WriteValue(binary.Destination, result, hal, locals);
     }
 
-    private static void ExecuteUnary(Ir6502.Unary unary, Base6502Hal hal, int[] locals)
+    private static void ExecuteUnary(Ir6502.Unary unary, I6502Hal hal, int[] locals)
     {
         var source = ReadValue(unary.Source, hal, locals);
         var result = unary.Operator switch
@@ -224,7 +224,7 @@ public class Ir6502Interpreter
         WriteValue(unary.Destination, result, hal, locals);
     }
 
-    private static int ReadValue(Ir6502.Value value, Base6502Hal hal, int[] locals)
+    private static int ReadValue(Ir6502.Value value, I6502Hal hal, int[] locals)
     {
         return value switch
         {
@@ -246,7 +246,7 @@ public class Ir6502Interpreter
         };
     }
 
-    private static void WriteValue(Ir6502.Value destination, int value, Base6502Hal hal, int[] locals)
+    private static void WriteValue(Ir6502.Value destination, int value, I6502Hal hal, int[] locals)
     {
         switch (destination)
         {
@@ -299,7 +299,7 @@ public class Ir6502Interpreter
         }
     }
 
-    private static ushort GetMemoryAddress(Ir6502.Memory memory, Base6502Hal hal)
+    private static ushort GetMemoryAddress(Ir6502.Memory memory, I6502Hal hal)
     {
         var location = memory.Location;
         ushort address = 0;
@@ -341,7 +341,7 @@ public class Ir6502Interpreter
         return address;
     }
 
-    private static int ReadIndirectMemory(Ir6502.IndirectMemory indirectMemory, Base6502Hal hal)
+    private static int ReadIndirectMemory(Ir6502.IndirectMemory indirectMemory, I6502Hal hal)
     {
         var zeroPageAddress = indirectMemory.ZeroPageAddress;
 
@@ -362,7 +362,7 @@ public class Ir6502Interpreter
         return hal.ReadMemory(address);
     }
 
-    private static void WriteIndirectMemory(Ir6502.IndirectMemory indirectMemory, byte value, Base6502Hal hal)
+    private static void WriteIndirectMemory(Ir6502.IndirectMemory indirectMemory, byte value, I6502Hal hal)
     {
         var zeroPageAddress = indirectMemory.ZeroPageAddress;
 
@@ -383,7 +383,7 @@ public class Ir6502Interpreter
         hal.WriteMemory(address, value);
     }
 
-    private static int ResolveCallTarget(Ir6502.ICallTarget callTarget, Base6502Hal hal, int[] locals)
+    private static int ResolveCallTarget(Ir6502.ICallTarget callTarget, I6502Hal hal, int[] locals)
     {
         return callTarget switch
         {
@@ -393,7 +393,7 @@ public class Ir6502Interpreter
         };
     }
 
-    private static int ResolveFunctionAddress(Ir6502.FunctionAddress functionAddress, Base6502Hal hal)
+    private static int ResolveFunctionAddress(Ir6502.FunctionAddress functionAddress, I6502Hal hal)
     {
         if (!functionAddress.IsIndirect)
         {
