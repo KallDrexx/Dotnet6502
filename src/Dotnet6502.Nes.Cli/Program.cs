@@ -27,12 +27,18 @@ var (app, nesCodeCancellationTokenSource, memoryBus, hal) = SetupHardware(
     programRomData,
     macro);
 
-var jitCustomizer = new NesJitCustomizer();
+var jitCustomizer = new NesJitCustomizer()
+{
+    WriteDebugStrings = commandLineValues.IsDebugMode || commandLineValues.DebugLogFile != null,
+};
+
 var interpreter = new Ir6502Interpreter();
 jitCustomizer.AddInstructions(interpreter);
 
-var jitCompiler = new JitCompiler<NesHal>(hal, jitCustomizer, memoryBus, interpreter);
-jitCompiler.AlwaysUseInterpreter = false;
+var jitCompiler = new JitCompiler<NesHal>(hal, jitCustomizer, memoryBus, interpreter)
+{
+    AddDebugHooks = commandLineValues.IsDebugMode || commandLineValues.DebugLogFile != null,
+};
 
 await RunRom(romInfo, jitCompiler, app, nesCodeCancellationTokenSource);
 
