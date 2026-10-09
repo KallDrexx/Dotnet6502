@@ -70,8 +70,8 @@ public class JitCompiler<THal> where THal : I6502Hal
         };
 
         _jitCustomizers = jitCustomizer != null
-            ? [new StandardJitCustomizer<THal>(), jitCustomizer]
-            : [new StandardJitCustomizer<THal>()];
+            ? [new StandardJitCustomizer<THal>(), jitCustomizer, new OptimizingJitCustomizer<THal>()]
+            : [new StandardJitCustomizer<THal>(), new OptimizingJitCustomizer<THal>()];
 
         _memoryBus = memoryBus;
         _interpreter = interpreter;

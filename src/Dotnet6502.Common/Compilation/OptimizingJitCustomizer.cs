@@ -15,14 +15,26 @@ public class OptimizingJitCustomizer<THal> : IJitCustomizer<THal> where THal : I
 
     public IReadOnlyDictionary<Type, MsilGenerator<THal>.CustomIlGenerator> GetCustomIlGenerators()
     {
-        throw new NotImplementedException();
+        return new Dictionary<Type, MsilGenerator<THal>.CustomIlGenerator>();
     }
 
     public IReadOnlyList<ConvertedInstruction> MutateInstructions(IReadOnlyList<ConvertedInstruction> instructions)
     {
         // The index of a write instruction to a value that has not been read yet
         var openWrites = new Dictionary<Ir6502.Value, InstructionIndex>();
-        var removedInstructionCount = 0;
+        var instructionsToRemove = new List<InstructionIndex>();
+
+        var instructionCount = instructions.SelectMany(x => x.Ir6502Instructions).Count();
+
+        List<Ir6502.Flag> flags = [
+            new Ir6502.Flag(Ir6502.FlagName.Carry),
+            new Ir6502.Flag(Ir6502.FlagName.Zero),
+            new Ir6502.Flag(Ir6502.FlagName.InterruptDisable),
+            new Ir6502.Flag(Ir6502.FlagName.BFlag),
+            new Ir6502.Flag(Ir6502.FlagName.Decimal),
+            new Ir6502.Flag(Ir6502.FlagName.Overflow),
+            new Ir6502.Flag(Ir6502.FlagName.Negative),
+        ];
 
         for (var outerIndex = 0; outerIndex < instructions.Count; outerIndex++)
         {
@@ -45,6 +57,10 @@ public class OptimizingJitCustomizer<THal> : IJitCustomizer<THal> where THal : I
 
                 foreach (var value in readValues)
                 {
+                    if (openWrites.TryGetValue(value, out var previous))
+                    {
+                        Console.WriteLine($"Write to {value} has been read");
+                    }
                     openWrites.Remove(value);
                 }
 
@@ -68,15 +84,68 @@ public class OptimizingJitCustomizer<THal> : IJitCustomizer<THal> where THal : I
                     // may mean that memory locations are read or acted on outside of the CPU, and thus
                     // we can't risk optimizing them out.
 
-                    if (writtenValue is Ir6502.Register)
+                    if (writtenValue is Ir6502.AllFlags)
                     {
-                        if (openWrites.TryGetValue(writtenValue, out var toRemove))
+                        // We are overwriting all the flags, so previous writes can be removed
+                        foreach (var flag in flags)
                         {
-                            
+                            if (openWrites.TryGetValue(flag, out var prevValue))
+                            {
+                                var prevInstruction = instructions[prevValue.Outer].Ir6502Instructions[prevValue.Inner];
+                                Console.WriteLine($"Removing open write to {flag}");
+                                instructionsToRemove.Add(prevValue);
+                                openWrites.Remove(flag);
+                            }
                         }
+
+                        if (openWrites.TryGetValue(writtenValue, out var prevAllFlags))
+                        {
+                            var prevInstruction = instructions[prevAllFlags.Outer].Ir6502Instructions[prevAllFlags.Inner];
+                            Console.WriteLine($"Removing open write to {writtenValue}");
+                            instructionsToRemove.Add(prevAllFlags);
+                        }
+
+                        Console.WriteLine($"Writing to {writtenValue}");
+                        openWrites[writtenValue] = new InstructionIndex(outerIndex, innerIndex);
+
+                    }
+                    else if (writtenValue is Ir6502.Flag)
+                    {
+                        // A previous open write to all flags is no longer considered open, since we don't know
+                        // if other flags are relevant.
+                        openWrites.Remove(new Ir6502.AllFlags());
+
+                        if (openWrites.TryGetValue(writtenValue, out var prevValue))
+                        {
+                            var prevInstruction = instructions[prevValue.Outer].Ir6502Instructions[prevValue.Inner];
+                            Console.WriteLine($"Removing open write to {writtenValue}");
+                            instructionsToRemove.Add(prevValue);
+                        }
+
+                        Console.WriteLine($"Writing to {writtenValue}");
+                        openWrites[writtenValue] = new InstructionIndex(outerIndex, innerIndex);
+                    }
+                    else if (writtenValue is Ir6502.Register)
+                    {
+                        if (openWrites.TryGetValue(writtenValue, out var prevValue))
+                        {
+                            var prevInstruction = instructions[prevValue.Outer].Ir6502Instructions[prevValue.Inner];
+                            Console.WriteLine($"Removing open write to {writtenValue}");
+                            instructionsToRemove.Add(prevValue);
+                        }
+
+                        Console.WriteLine($"Writing to {writtenValue}");
+                        openWrites[writtenValue] = new InstructionIndex(outerIndex, innerIndex);
                     }
                 }
             }
+        }
+
+        // Remove all instructions flagged for removal
+        var orderedRemovals = instructionsToRemove.OrderByDescending(x => x.Outer).ThenByDescending(x => x.Inner).ToArray();
+        foreach (var removal in orderedRemovals)
+        {
+            instructions[removal.Outer].Ir6502Instructions.RemoveAt(removal.Inner);
         }
 
         return instructions;
