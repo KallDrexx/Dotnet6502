@@ -39,8 +39,11 @@ public class OptimizingJitCustomizer<THal> : IJitCustomizer<THal> where THal : I
         for (var outerIndex = 0; outerIndex < instructions.Count; outerIndex++)
         {
             var instruction = instructions[outerIndex];
+            Console.WriteLine($"Starting instruction at {instruction.OriginalInstruction.CPUAddress:x2}");
+
             for (var innerIndex = 0; innerIndex < instruction.Ir6502Instructions.Count; innerIndex++)
             {
+                Console.WriteLine($"IR: {instruction.Ir6502Instructions[innerIndex].GetType().Name}");
                 // If we have any open writes marked, but we are reading from them, then
                 // they are no longer open.
                 var irInstruction = instruction.Ir6502Instructions[innerIndex];
@@ -57,6 +60,7 @@ public class OptimizingJitCustomizer<THal> : IJitCustomizer<THal> where THal : I
 
                 foreach (var value in readValues)
                 {
+                    Console.WriteLine($"Reading {value}");
                     if (openWrites.TryGetValue(value, out var previous))
                     {
                         Console.WriteLine($"Write to {value} has been read");
@@ -83,7 +87,7 @@ public class OptimizingJitCustomizer<THal> : IJitCustomizer<THal> where THal : I
                     // side effect free and are not used if not directly read in between. Memory mapping
                     // may mean that memory locations are read or acted on outside of the CPU, and thus
                     // we can't risk optimizing them out.
-
+                        Console.WriteLine($"Writing to {writtenValue}");
                     if (writtenValue is Ir6502.AllFlags)
                     {
                         // We are overwriting all the flags, so previous writes can be removed
@@ -105,7 +109,7 @@ public class OptimizingJitCustomizer<THal> : IJitCustomizer<THal> where THal : I
                             instructionsToRemove.Add(prevAllFlags);
                         }
 
-                        Console.WriteLine($"Writing to {writtenValue}");
+
                         openWrites[writtenValue] = new InstructionIndex(outerIndex, innerIndex);
 
                     }
@@ -122,7 +126,6 @@ public class OptimizingJitCustomizer<THal> : IJitCustomizer<THal> where THal : I
                             instructionsToRemove.Add(prevValue);
                         }
 
-                        Console.WriteLine($"Writing to {writtenValue}");
                         openWrites[writtenValue] = new InstructionIndex(outerIndex, innerIndex);
                     }
                     else if (writtenValue is Ir6502.Register)
@@ -130,11 +133,10 @@ public class OptimizingJitCustomizer<THal> : IJitCustomizer<THal> where THal : I
                         if (openWrites.TryGetValue(writtenValue, out var prevValue))
                         {
                             var prevInstruction = instructions[prevValue.Outer].Ir6502Instructions[prevValue.Inner];
-                            Console.WriteLine($"Removing open write to {writtenValue}");
+                            Console.WriteLine($"Removing open write to {writtenValue} ({prevValue})");
                             instructionsToRemove.Add(prevValue);
                         }
 
-                        Console.WriteLine($"Writing to {writtenValue}");
                         openWrites[writtenValue] = new InstructionIndex(outerIndex, innerIndex);
                     }
                 }
@@ -145,6 +147,8 @@ public class OptimizingJitCustomizer<THal> : IJitCustomizer<THal> where THal : I
         var orderedRemovals = instructionsToRemove.OrderByDescending(x => x.Outer).ThenByDescending(x => x.Inner).ToArray();
         foreach (var removal in orderedRemovals)
         {
+            var instructionToRemove = instructions[removal.Outer].Ir6502Instructions[removal.Inner];
+            Console.WriteLine($"Removing instruction from 0x{instructions[removal.Outer].OriginalInstruction.CPUAddress:x2}: {instructionToRemove} ({removal})");
             instructions[removal.Outer].Ir6502Instructions.RemoveAt(removal.Inner);
         }
 
