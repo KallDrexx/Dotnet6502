@@ -23,8 +23,6 @@ public class OptimizingJitCustomizer<THal> : IJitCustomizer<THal> where THal : I
         // The index of a write instruction to a value that has not been read yet
         var openWrites = new Dictionary<Ir6502.Value, InstructionIndex>();
         var instructionsToRemove = new List<InstructionIndex>();
-        var labelsProcessed = new HashSet<Ir6502.Identifier>();
-
         var instructionCount = instructions.SelectMany(x => x.Ir6502Instructions).Count();
 
         List<Ir6502.Flag> flags = [
@@ -40,21 +38,24 @@ public class OptimizingJitCustomizer<THal> : IJitCustomizer<THal> where THal : I
         for (var outerIndex = 0; outerIndex < instructions.Count; outerIndex++)
         {
             var instruction = instructions[outerIndex];
-            Console.WriteLine($"Starting instruction at {instruction.OriginalInstruction.CPUAddress:x2}");
+            Console.WriteLine($"Starting instruction at {instruction.OriginalInstruction.CPUAddress:x2} ({outerIndex:000})");
 
             for (var innerIndex = 0; innerIndex < instruction.Ir6502Instructions.Count; innerIndex++)
             {
-                Console.WriteLine($"IR: {instruction.Ir6502Instructions[innerIndex].GetType().Name}");
+                var innerInstruction = instruction.Ir6502Instructions[innerIndex];
 
-                // If we have any open writes marked, but we are reading from them, then
-                // they are no longer open.
-                var irInstruction = instruction.Ir6502Instructions[innerIndex];
-                if (irInstruction is Ir6502.Label label)
+                Console.Write($"IR {innerIndex:00}: {innerInstruction.GetType().Name} ");
+                if (innerInstruction is Ir6502.Binary binary1)
                 {
-                    labelsProcessed.Add(label.Name);
-                    continue;
+                    Console.Write($"({binary1.Operator})");
                 }
-                
+                else if (innerInstruction is Ir6502.Unary unary1)
+                {
+                    Console.WriteLine($"({unary1.Operator})");
+                }
+                Console.WriteLine();
+
+                var irInstruction = instruction.Ir6502Instructions[innerIndex];
                 Ir6502.Value[] readValues = irInstruction switch
                 {
                     Ir6502.Copy copy => [copy.Source],
@@ -76,9 +77,15 @@ public class OptimizingJitCustomizer<THal> : IJitCustomizer<THal> where THal : I
                     openWrites.Remove(value);
                 }
 
-                // If the instruction is a jump to an address we've already processed, then this is
-                // a loop and we need to consider all open writes closed, as the loop may have actually
-                // read from the value
+                // If a jump call is encountered, regardless of forward or backwards, we can't
+                // statically prove reading of written values. For example, a counter is usually
+                // done via a add/subtract then comparison loop, and because we are jumping backwards
+                // we don't necessarily see (in the current simple logic) that we read the previous
+                // value (since most comparisons use the zero flag). Likewise, a jump forward could
+                // mean that we will jump past a 2nd write of an existing value, meaning we will optimize
+                // out the first write, even though at runtime we will not actually perform that 2nd write.
+                //
+                // So to handle these cases we just want to clear open writes on any jump.
                 Ir6502.Identifier? jumpTarget = irInstruction switch
                 {
                     Ir6502.Jump jump => jump.Target,
@@ -87,7 +94,7 @@ public class OptimizingJitCustomizer<THal> : IJitCustomizer<THal> where THal : I
                     _ => null,
                 };
 
-                if (jumpTarget != null && labelsProcessed.Contains(jumpTarget))
+                if (jumpTarget != null)
                 {
                     openWrites.Clear();
                     continue;
