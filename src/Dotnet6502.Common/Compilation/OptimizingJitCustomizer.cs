@@ -23,6 +23,7 @@ public class OptimizingJitCustomizer<THal> : IJitCustomizer<THal> where THal : I
         // The index of a write instruction to a value that has not been read yet
         var openWrites = new Dictionary<Ir6502.Value, InstructionIndex>();
         var instructionsToRemove = new List<InstructionIndex>();
+        var labelsProcessed = new HashSet<Ir6502.Identifier>();
 
         var instructionCount = instructions.SelectMany(x => x.Ir6502Instructions).Count();
 
@@ -44,9 +45,16 @@ public class OptimizingJitCustomizer<THal> : IJitCustomizer<THal> where THal : I
             for (var innerIndex = 0; innerIndex < instruction.Ir6502Instructions.Count; innerIndex++)
             {
                 Console.WriteLine($"IR: {instruction.Ir6502Instructions[innerIndex].GetType().Name}");
+
                 // If we have any open writes marked, but we are reading from them, then
                 // they are no longer open.
                 var irInstruction = instruction.Ir6502Instructions[innerIndex];
+                if (irInstruction is Ir6502.Label label)
+                {
+                    labelsProcessed.Add(label.Name);
+                    continue;
+                }
+                
                 Ir6502.Value[] readValues = irInstruction switch
                 {
                     Ir6502.Copy copy => [copy.Source],
@@ -68,8 +76,25 @@ public class OptimizingJitCustomizer<THal> : IJitCustomizer<THal> where THal : I
                     openWrites.Remove(value);
                 }
 
+                // If the instruction is a jump to an address we've already processed, then this is
+                // a loop and we need to consider all open writes closed, as the loop may have actually
+                // read from the value
+                Ir6502.Identifier? jumpTarget = irInstruction switch
+                {
+                    Ir6502.Jump jump => jump.Target,
+                    Ir6502.JumpIfZero jumpIf => jumpIf.Target,
+                    Ir6502.JumpIfNotZero jumpNot => jumpNot.Target,
+                    _ => null,
+                };
+
+                if (jumpTarget != null && labelsProcessed.Contains(jumpTarget))
+                {
+                    openWrites.Clear();
+                    continue;
+                }
+
                 // Pull out the value this instruction is writing to
-                Ir6502.Value? writtenValue = irInstruction switch
+                Ir6502.Value ? writtenValue = irInstruction switch
                 {
                     Ir6502.Copy copy => copy.Destination,
                     Ir6502.Unary unary => unary.Destination,
