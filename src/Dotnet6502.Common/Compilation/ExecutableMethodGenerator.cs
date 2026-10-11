@@ -15,14 +15,40 @@ public static class ExecutableMethodGenerator<THal> where THal : I6502Hal
         IReadOnlyList<Ir6502.Label> jumpTableLabels,
         IReadOnlyDictionary<Type, MsilGenerator<THal>.CustomIlGenerator>? customIlGenerators = null,
         bool generateDll = false,
-        bool addDebugStatements = false)
+        bool addDebugStatements = false,
+        bool allowDebugging = false)
     {
         if (generateDll)
         {
             GenerateDebuggableDll(name, instructions, customIlGenerators, jumpTableLabels, addDebugStatements);
         }
 
-        return GenerateViaAssemblies(name, instructions, customIlGenerators, jumpTableLabels, addDebugStatements);
+        return allowDebugging
+            ? GenerateViaAssemblies(name, instructions, customIlGenerators, jumpTableLabels, addDebugStatements)
+            : GenerateViaDynamicMethod(name, instructions, customIlGenerators, jumpTableLabels, addDebugStatements);
+    }
+
+    private static ExecutableMethod<THal> GenerateViaDynamicMethod(
+        string name,
+        IReadOnlyList<ConvertedInstruction> instructions,
+        IReadOnlyDictionary<Type, MsilGenerator<THal>.CustomIlGenerator>? customIlGenerators,
+        IReadOnlyList<Ir6502.Label> jumpTableLabels,
+        bool addDebugStatements)
+    {
+        // Dynamic methods are much cheaper to generate than assemblies, since resolving call tokens
+        // doesn't require building member ref signatures, and no assembly/module/type needs to be created.
+        // The trade-off is that they are harder to inspect in a debugger.
+        var dynamicMethod = new DynamicMethod(
+            name,
+            typeof(int),
+            [typeof(THal), typeof(int)],
+            typeof(ExecutableMethodGenerator<THal>).Module,
+            skipVisibility: true);
+
+        var ilGenerator = dynamicMethod.GetILGenerator();
+        GenerateMsil(ilGenerator, instructions, jumpTableLabels, customIlGenerators, addDebugStatements);
+
+        return dynamicMethod.CreateDelegate<ExecutableMethod<THal>>();
     }
 
     private static ExecutableMethod<THal> GenerateViaAssemblies(
