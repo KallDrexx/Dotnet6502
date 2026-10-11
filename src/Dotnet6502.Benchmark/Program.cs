@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Text.Json;
 using Dotnet6502.C64.Integration;
 using Dotnet6502.Common.Compilation;
 using Dotnet6502.Common.Macros;
@@ -8,21 +9,58 @@ namespace Dotnet6502.Benchmark;
 
 public static class Program
 {
+    private record TimingStats(double Average, double Median, double StdDev, double Min, double Max)
+    {
+        public static TimingStats Calculate(IReadOnlyList<double> values)
+        {
+            var sorted = values.Order().ToArray();
+            var average = sorted.Average();
+            var middle = sorted.Length / 2;
+            var median = sorted.Length % 2 == 0
+                ? (sorted[middle - 1] + sorted[middle]) / 2
+                : sorted[middle];
+
+            // Sample standard deviation, since the runs are a sample of possible run timings
+            var stdDev = sorted.Length > 1
+                ? Math.Sqrt(sorted.Sum(x => (x - average) * (x - average)) / (sorted.Length - 1))
+                : 0;
+
+            return new TimingStats(average, median, stdDev, sorted[0], sorted[^1]);
+        }
+    }
+
     private record RunInterval(TimeSpan Timing, int FrameCount, int CompileCount, int MethodCallCount);
+
+    /// <summary>
+    /// Hidden argument that tells the process to execute a single benchmark run and write
+    /// the interval results to the specified file. Each run is executed in its own process
+    /// so that every run starts with a cold .NET JIT, just like the emulator does.
+    /// </summary>
+    private const string ChildResultFlag = "--child-result";
 
     public static async Task<int> Main(string[] args)
     {
+        var childFlagIndex = Array.IndexOf(args, ChildResultFlag);
+        if (childFlagIndex >= 0)
+        {
+            if (childFlagIndex + 1 >= args.Length)
+            {
+                Console.Error.WriteLine($"Error: {ChildResultFlag} requires a file path");
+                return 1;
+            }
+
+            var resultPath = args[childFlagIndex + 1];
+            var benchmarkArgs = args
+                .Where((_, index) => index != childFlagIndex && index != childFlagIndex + 1)
+                .ToArray();
+
+            return await RunChildAsync(benchmarkArgs, resultPath);
+        }
+
         var options = CommandLineHandler.Parse(args);
         if (options == null)
         {
             return 1;
-        }
-
-        Macro? macro = null;
-        if (options.Macro != null)
-        {
-            using var file = options.Macro.OpenRead();
-            macro = await Macro.ParseAsync(file);
         }
 
         var framesPerInterval = options.FramesPerInterval ?? 60;
@@ -32,7 +70,8 @@ public static class Program
         Console.WriteLine($"Starting {runCount} benchmark runs");
         for (var x = 0; x < runCount; x++)
         {
-            var runInfo = RunBenchmark(options, macro);
+            Console.WriteLine($"Starting run {x + 1} of {runCount}");
+            var runInfo = await RunChildProcessAsync(args);
             if (runInfo == null)
             {
                 return 1;
@@ -70,8 +109,15 @@ public static class Program
                 await writer.WriteAsync($"Run {x + 1} ms, ");
             }
 
-            await writer.WriteLineAsync("Average ms, Average ms Per Frame, Compilation Count, " +
+            await writer.WriteLineAsync("Average ms, Median ms, Std Dev ms, Min ms, Max ms, " +
+                                        "Average ms Per Frame, Median ms Per Frame, Compilation Count, " +
                                         "Cache Rate, ");
+
+            var runTotalMs = new double[runs.Length];
+            var totalFrameCount = 0;
+            var totalCompilationCount = 0;
+            var totalMethodCallCountAllRuns = 0;
+            var totalCompilationsAllRuns = 0;
 
             HashSet<ushort> globalCompiledMethods = [];
             
@@ -81,7 +127,7 @@ public static class Program
                 await writer.WriteAsync($"{x}, ");
                 var compilationCount = 0;
                 var frameCount = 0;
-                var totalMs = 0.0;
+                var timings = new double[runs.Length];
                 var totalCompilations = 0;
                 var totalMethodCallCount = 0;
                 var firstMethodCallCount = 0;
@@ -103,15 +149,15 @@ public static class Program
                     }
 
                     await writer.WriteAsync($"{info.Timing.TotalMilliseconds:0.000}, ");
-                    totalMs += info.Timing.TotalMilliseconds;
+                    timings[y] = info.Timing.TotalMilliseconds;
+                    runTotalMs[y] += info.Timing.TotalMilliseconds;
                     totalCompilations += info.CompileCount;
                     totalMethodCallCount += info.MethodCallCount;
                 }
 
-                var averagePerRun = totalMs / runs.Length;
-                var averagePerFrame = averagePerRun / frameCount;
-                var averageCompilations = totalCompilations / runs.Length;
-                var averageCallCounts = totalMethodCallCount / runs.Length;
+                var stats = TimingStats.Calculate(timings);
+                var averageCompilations = (double)totalCompilations / runs.Length;
+                var averageCallCounts = (double)totalMethodCallCount / runs.Length;
                 var cacheRatePercent = ((double)totalMethodCallCount - totalCompilations) / totalMethodCallCount * 100;
 
                 if (Math.Abs(averageCompilations - compilationCount) > 10)
@@ -124,16 +170,137 @@ public static class Program
                     Console.WriteLine($"Interval {x} had different method call counts for different runs! ({averageCallCounts} vs {firstMethodCallCount})");
                 }
 
-                await writer.WriteAsync($"{averagePerRun:0.000}, {averagePerFrame:0.000}, ");
+                await WriteStatsAsync(writer, stats, frameCount);
                 await writer.WriteAsync($"{compilationCount}, ");
                 await writer.WriteAsync($"{cacheRatePercent:0.00}%, ");
                 await writer.WriteLineAsync();
+
+                totalFrameCount += frameCount;
+                totalCompilationCount += compilationCount;
+                totalMethodCallCountAllRuns += totalMethodCallCount;
+                totalCompilationsAllRuns += totalCompilations;
             }
+
+            // Whole run totals, so the spread of entire runs can be compared
+            var totalStats = TimingStats.Calculate(runTotalMs);
+            var totalCacheRatePercent = ((double)totalMethodCallCountAllRuns - totalCompilationsAllRuns) /
+                                        totalMethodCallCountAllRuns * 100;
+
+            await writer.WriteAsync($"Total, {totalFrameCount}, ");
+            foreach (var runMs in runTotalMs)
+            {
+                await writer.WriteAsync($"{runMs:0.000}, ");
+            }
+
+            await WriteStatsAsync(writer, totalStats, totalFrameCount);
+            await writer.WriteAsync($"{totalCompilationCount}, ");
+            await writer.WriteAsync($"{totalCacheRatePercent:0.00}%, ");
+            await writer.WriteLineAsync();
+
+            Console.WriteLine($"Total run time: median {totalStats.Median:0.000} ms, " +
+                              $"std dev {totalStats.StdDev:0.000} ms, " +
+                              $"min {totalStats.Min:0.000} ms, " +
+                              $"max {totalStats.Max:0.000} ms");
         }
 
         Console.WriteLine($"Benchmark results written to {path}");
 
         return 0;
+    }
+
+    private static async Task WriteStatsAsync(StreamWriter writer, TimingStats stats, int frameCount)
+    {
+        await writer.WriteAsync($"{stats.Average:0.000}, {stats.Median:0.000}, {stats.StdDev:0.000}, ");
+        await writer.WriteAsync($"{stats.Min:0.000}, {stats.Max:0.000}, ");
+        await writer.WriteAsync($"{stats.Average / frameCount:0.000}, {stats.Median / frameCount:0.000}, ");
+    }
+
+    /// <summary>
+    /// Executes a single benchmark run in the current process and writes the results to the
+    /// specified file for the parent process to read.
+    /// </summary>
+    private static async Task<int> RunChildAsync(string[] args, string resultPath)
+    {
+        var options = CommandLineHandler.Parse(args);
+        if (options == null)
+        {
+            return 1;
+        }
+
+        Macro? macro = null;
+        if (options.Macro != null)
+        {
+            using var file = options.Macro.OpenRead();
+            macro = await Macro.ParseAsync(file);
+        }
+
+        var runInfo = RunBenchmark(options, macro);
+
+        if (runInfo == null)
+        {
+            return 1;
+        }
+
+        await File.WriteAllTextAsync(resultPath, JsonSerializer.Serialize(runInfo.ToArray()));
+        return 0;
+    }
+
+    /// <summary>
+    /// Executes a single benchmark run in a new process, so it does not benefit from any .NET
+    /// JIT tiering done by previous runs.
+    /// </summary>
+    private static async Task<Queue<RunInterval>?> RunChildProcessAsync(string[] args)
+    {
+        var resultPath = Path.Combine(Path.GetTempPath(), $"dn6502-run-{Guid.NewGuid():N}.json");
+        var processPath = Environment.ProcessPath
+                          ?? throw new InvalidOperationException("Unable to determine the current process path");
+
+        var startInfo = new ProcessStartInfo(processPath)
+        {
+            UseShellExecute = false,
+        };
+
+        // When launched via `dotnet run` or `dotnet <dll>`, the process is the dotnet host, so
+        // the benchmark assembly needs to be passed to it.
+        if (Path.GetFileNameWithoutExtension(processPath) == "dotnet")
+        {
+            startInfo.ArgumentList.Add(typeof(Program).Assembly.Location);
+        }
+
+        foreach (var arg in args)
+        {
+            startInfo.ArgumentList.Add(arg);
+        }
+
+        startInfo.ArgumentList.Add(ChildResultFlag);
+        startInfo.ArgumentList.Add(resultPath);
+
+        try
+        {
+            using var process = Process.Start(startInfo)
+                                ?? throw new InvalidOperationException("Failed to start benchmark child process");
+
+            await process.WaitForExitAsync();
+            if (process.ExitCode != 0)
+            {
+                Console.Error.WriteLine($"Benchmark child process exited with code {process.ExitCode}");
+                return null;
+            }
+
+            var json = await File.ReadAllTextAsync(resultPath);
+            var intervals = JsonSerializer.Deserialize<RunInterval[]>(json);
+            if (intervals == null)
+            {
+                Console.Error.WriteLine("Benchmark child process did not produce any results");
+                return null;
+            }
+
+            return new Queue<RunInterval>(intervals);
+        }
+        finally
+        {
+            File.Delete(resultPath);
+        }
     }
 
     private static Queue<RunInterval>? RunBenchmark(CommandLineHandler.Options options, Macro? macro)

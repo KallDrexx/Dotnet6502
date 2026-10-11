@@ -232,10 +232,9 @@ public static class CommandLineHandler
                     args = args[1..];
                     break;
 
-
                 default:
                     Console.Error.WriteLine($"Unknown option: {args[0]}");
-                    break;
+                    return null;
 
             }
         }
