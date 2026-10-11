@@ -571,13 +571,19 @@ public class Ppu : IMemoryDevice
 
     private void RenderFrame()
     {
-        DrawSprites();
+        if (!MinimizePpuLogic)
+        {
+            DrawSprites();
+        }
 
         _nesDisplay.RenderFrame(_framebuffer);
 
-        for (var x = 0; x < _framebuffer.Length; x++)
+        if (!MinimizePpuLogic)
         {
-            _framebuffer[x] = new RgbColor(0, 0, 0);
+            for (var x = 0; x < _framebuffer.Length; x++)
+            {
+                _framebuffer[x] = new RgbColor(0, 0, 0);
+            }
         }
     }
 
