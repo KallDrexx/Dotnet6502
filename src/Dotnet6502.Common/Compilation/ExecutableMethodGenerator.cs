@@ -7,28 +7,30 @@ namespace Dotnet6502.Common.Compilation;
 /// <summary>
 /// Generates an executable method from 6502 assembly instruction
 /// </summary>
-public static class ExecutableMethodGenerator
+public static class ExecutableMethodGenerator<THal> where THal : I6502Hal
 {
-    public static ExecutableMethod Generate(
+    public static ExecutableMethod<THal> Generate(
         string name,
         IReadOnlyList<ConvertedInstruction> instructions,
         IReadOnlyList<Ir6502.Label> jumpTableLabels,
-        IReadOnlyDictionary<Type, MsilGenerator.CustomIlGenerator>? customIlGenerators = null,
-        bool generateDll = false)
+        IReadOnlyDictionary<Type, MsilGenerator<THal>.CustomIlGenerator>? customIlGenerators = null,
+        bool generateDll = false,
+        bool addDebugStatements = false)
     {
         if (generateDll)
         {
-            GenerateDebuggableDll(name, instructions, customIlGenerators, jumpTableLabels);
+            GenerateDebuggableDll(name, instructions, customIlGenerators, jumpTableLabels, addDebugStatements);
         }
 
-        return GenerateViaAssemblies(name, instructions, customIlGenerators, jumpTableLabels);
+        return GenerateViaAssemblies(name, instructions, customIlGenerators, jumpTableLabels, addDebugStatements);
     }
 
-    private static ExecutableMethod GenerateViaAssemblies(
+    private static ExecutableMethod<THal> GenerateViaAssemblies(
         string name,
         IReadOnlyList<ConvertedInstruction> instructions,
-        IReadOnlyDictionary<Type, MsilGenerator.CustomIlGenerator>? customIlGenerators,
-        IReadOnlyList<Ir6502.Label> jumpTableLabels)
+        IReadOnlyDictionary<Type, MsilGenerator<THal>.CustomIlGenerator>? customIlGenerators,
+        IReadOnlyList<Ir6502.Label> jumpTableLabels,
+        bool addDebugStatements)
     {
         // While we could use `new DynamicMethod()` to create these methods, it hurts debug-ability.
         // Specifically, the stack frame just shows "Lightweight function call" or something similar
@@ -45,10 +47,10 @@ public static class ExecutableMethodGenerator
             MethodAttributes.Public | MethodAttributes.Static,
             CallingConventions.Standard,
             typeof(int),
-            [typeof(Base6502Hal), typeof(int)]);
+            [typeof(THal), typeof(int)]);
 
         var ilGenerator = methodBuilder.GetILGenerator();
-        GenerateMsil(ilGenerator, instructions, jumpTableLabels, customIlGenerators);
+        GenerateMsil(ilGenerator, instructions, jumpTableLabels, customIlGenerators, addDebugStatements);
 
         var constructedType = typeBuilder.CreateType();
         var method = constructedType.GetMethod(methodBuilder.Name);
@@ -57,7 +59,7 @@ public static class ExecutableMethodGenerator
             throw new InvalidOperationException("Failed to get method from newly constructed type");
         }
 
-        return (ExecutableMethod)Delegate.CreateDelegate(typeof(ExecutableMethod), method, true)!;
+        return (ExecutableMethod<THal>)Delegate.CreateDelegate(typeof(ExecutableMethod<THal>), method, true)!;
     }
 
     /// <summary>
@@ -66,7 +68,8 @@ public static class ExecutableMethodGenerator
     private static void GenerateMsil(ILGenerator ilGenerator,
         IReadOnlyList<ConvertedInstruction> instructions,
         IReadOnlyList<Ir6502.Label> jumpTableLabels,
-        IReadOnlyDictionary<Type, MsilGenerator.CustomIlGenerator>? customIlGenerators = null)
+        IReadOnlyDictionary<Type, MsilGenerator<THal>.CustomIlGenerator>? customIlGenerators = null,
+        bool addDebugStatements = false)
     {
         // We need to pull out all labels so they can be pre-defined, since they need to be
         // defined before they can be marked or referenced
@@ -82,12 +85,12 @@ public static class ExecutableMethodGenerator
                 .Select(x => ilLabels[x.Name])
                 .ToArray();
 
-            ilGenerator.Emit(JitCompiler.LoadJumpIndexArg);
+            ilGenerator.Emit(JitCompiler<I6502Hal>.LoadJumpIndexArg);
             ilGenerator.Emit(OpCodes.Switch, msilLabels);
         }
 
         // Figure out how many locals this method will need and declare them.
-        MsilGenerator.DeclareRequiredLocals(ilGenerator);
+        MsilGenerator<THal>.DeclareRequiredLocals(ilGenerator);
 
         // Declare locals required for instruction usage
         var localCount = GetMaxLocalCount(instructions.SelectMany(x => x.Ir6502Instructions).ToArray());
@@ -96,12 +99,12 @@ public static class ExecutableMethodGenerator
             ilGenerator.DeclareLocal(typeof(int));
         }
 
-        var msilGenerator = new MsilGenerator(ilLabels, customIlGenerators);
+        var msilGenerator = new MsilGenerator<THal>(ilLabels, customIlGenerators);
         foreach (var instruction in instructions)
         {
             foreach (var irInstruction in instruction.Ir6502Instructions)
             {
-                msilGenerator.Generate(irInstruction, ilGenerator);
+                msilGenerator.Generate(irInstruction, ilGenerator, addDebugStatements);
             }
         }
 
@@ -141,8 +144,9 @@ public static class ExecutableMethodGenerator
 
     private static void GenerateDebuggableDll(string name,
         IReadOnlyList<ConvertedInstruction> instructions,
-        IReadOnlyDictionary<Type, MsilGenerator.CustomIlGenerator>? customIlGenerators,
-        IReadOnlyList<Ir6502.Label> jumpTableLabels)
+        IReadOnlyDictionary<Type, MsilGenerator<THal>.CustomIlGenerator>? customIlGenerators,
+        IReadOnlyList<Ir6502.Label> jumpTableLabels,
+        bool addDebugStatements)
     {
         var assemblyName = new AssemblyName($"assembly_for_{name}");
         var assemblyBuilder = new PersistedAssemblyBuilder(assemblyName, typeof(object).Assembly);
@@ -153,10 +157,10 @@ public static class ExecutableMethodGenerator
             MethodAttributes.Public | MethodAttributes.Static,
             CallingConventions.Standard,
             typeof(ushort?),
-            [typeof(Base6502Hal)]);
+            [typeof(THal)]);
 
         var ilGenerator = methodBuilder.GetILGenerator();
-        GenerateMsil(ilGenerator, instructions, jumpTableLabels, customIlGenerators);
+        GenerateMsil(ilGenerator, instructions, jumpTableLabels, customIlGenerators, addDebugStatements);
 
         typeBuilder.CreateType();
 

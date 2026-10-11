@@ -10,8 +10,8 @@ public class C64MemoryConfig
     public BasicRamMemoryDevice BasicRom { get; } = new(0xBFFF - 0xA000 + 1);
     public IoMemoryArea IoMemoryArea { get; } = new();
 
-    public MemoryBus CpuMemoryBus { get; } = new(0xFFFF + 1);
-    public MemoryBus Vic2MemoryBus { get; } = new(0xFFFF + 1);
+    public GenericMemoryBus CpuMemoryBus { get; } = new(0xFFFF + 1);
+    public GenericMemoryBus Vic2MemoryBus { get; } = new(0xFFFF + 1);
 
     public C64MemoryConfig()
     {

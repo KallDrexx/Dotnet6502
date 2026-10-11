@@ -1,5 +1,4 @@
 using System.Reflection.Emit;
-using Dotnet6502.Common;
 using Dotnet6502.Common.Compilation;
 using Dotnet6502.Common.Hardware;
 using Shouldly;
@@ -13,15 +12,15 @@ public class CustomIlGeneratorTests
     [Fact]
     public void Can_Execute_Generator_For_Custom_Instruction()
     {
-        void CustomGenerator(Ir6502.Instruction instruction, ILGenerator ilGenerator)
+        static void CustomGenerator(Ir6502.Instruction instruction, ILGenerator ilGenerator)
         {
-            var pushMethod = typeof(Base6502Hal).GetMethod(nameof(Base6502Hal.PushToStack))!;
-            ilGenerator.Emit(JitCompiler.LoadHalArg);
+            var pushMethod = typeof(Base6502Hal<GenericMemoryBus>).GetMethod(nameof(Base6502Hal<GenericMemoryBus>.PushToStack))!;
+            ilGenerator.Emit(JitCompiler<Base6502Hal<GenericMemoryBus>>.LoadHalArg);
             ilGenerator.Emit(OpCodes.Ldc_I4, 123);
             ilGenerator.Emit(OpCodes.Callvirt, pushMethod);
         }
 
-        var customGenerators = new Dictionary<Type, MsilGenerator.CustomIlGenerator>()
+        var customGenerators = new Dictionary<Type, MsilGenerator<TestHal>.CustomIlGenerator>()
         {
             { typeof(TestInstruction), CustomGenerator },
         };

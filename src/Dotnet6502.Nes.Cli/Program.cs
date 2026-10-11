@@ -27,12 +27,18 @@ var (app, nesCodeCancellationTokenSource, memoryBus, hal) = SetupHardware(
     programRomData,
     macro);
 
-var jitCustomizer = new NesJitCustomizer();
+var jitCustomizer = new NesJitCustomizer()
+{
+    WriteDebugStrings = commandLineValues.IsDebugMode || commandLineValues.DebugLogFile != null,
+};
+
 var interpreter = new Ir6502Interpreter();
 jitCustomizer.AddInstructions(interpreter);
 
-var jitCompiler = new JitCompiler(hal, jitCustomizer, memoryBus, interpreter);
-jitCompiler.AlwaysUseInterpreter = false;
+var jitCompiler = new JitCompiler<NesHal>(hal, jitCustomizer, memoryBus, interpreter)
+{
+    AddDebugHooks = commandLineValues.IsDebugMode || commandLineValues.DebugLogFile != null,
+};
 
 await RunRom(romInfo, jitCompiler, app, nesCodeCancellationTokenSource);
 
@@ -54,7 +60,7 @@ static (ROMInfo, byte[] ProgramRomData, byte[] ChrRomData) ParseRom(CommandLineH
     return (romInfo1, programRomData, chrRomData);
 }
 
-static (MonogameApp, CancellationTokenSource, MemoryBus, NesHal) SetupHardware(
+static (MonogameApp, CancellationTokenSource, NesMemoryBus, NesHal) SetupHardware(
     byte[] chrRomData,
     ROMInfo romInfo2,
     CommandLineHandler.Values commandLineValues1,
@@ -71,57 +77,15 @@ static (MonogameApp, CancellationTokenSource, MemoryBus, NesHal) SetupHardware(
         ? new DebugWriter(commandLineValues1.DebugLogFile, ppu)
         : null;
 
-    var memoryBus = SetupMemoryBus(ppu, monogameApp, programRomData);
+    var memoryBus = new NesMemoryBus(ppu, monogameApp, programRomData);
 
     var nesHal = new NesHal(memoryBus, ppu, debugWriter, commandLineValues1.IsDebugMode, cancellationTokenSource.Token);
     return (monogameApp, cancellationTokenSource, memoryBus, nesHal);
 }
 
-static MemoryBus SetupMemoryBus(Ppu ppu, MonogameApp monogameApp, byte[] bytes)
-{
-    var memoryBus = new MemoryBus(0xFFFF + 1);
-    var cpuRam = new BasicRamMemoryDevice(0x800);
-    var cartridgeSpace = new BasicRamMemoryDevice(0xBFE0);
-
-    memoryBus.Attach(cpuRam, 0x0000);
-    memoryBus.Attach(cpuRam, 0x0800);
-    memoryBus.Attach(cpuRam, 0x1000);
-    memoryBus.Attach(cpuRam, 0x1800);
-
-    // PPU repeats every 8 bytes until 0x4000
-    for (var x = 0x2000; x < 0x4000; x += 8)
-    {
-        memoryBus.Attach(ppu, (ushort)x);
-    }
-
-    memoryBus.Attach(new NullMemoryDevice(0x13), 0x4000); // APU not implemented
-    memoryBus.Attach(new OamDmaDevice(ppu, memoryBus), 0x4014);
-    memoryBus.Attach(new NullMemoryDevice(1), 0x4015); // sound channel not implemented
-    memoryBus.Attach(new Joystick1(monogameApp), 0x4016);
-    memoryBus.Attach(new NullMemoryDevice(1), 0x4017); // gamepad 2 not implemented yet
-    memoryBus.Attach(new NullMemoryDevice(8), 0x4018); // disabled apu/i/o functionality
-    memoryBus.Attach(cartridgeSpace, 0x4020);
-
-    // Map the cartridge data to the end of the cartridge space
-    if (bytes.Length % 0x4000 != 0)
-    {
-        var message = $"Expected prgRom as multiple of 0x4000, instead it was 0x{bytes.Length:X4}";
-        throw new InvalidOperationException(message);
-    }
-
-    for (var x = 0; x < bytes.Length; x++)
-    {
-        var unmappedSpaceIndex = cartridgeSpace.Size - x - 1;
-        var prgRomDataIndex = bytes.Length - x - 1;
-        cartridgeSpace.Write((ushort)unmappedSpaceIndex, bytes[prgRomDataIndex]);
-    }
-
-    return memoryBus;
-}
-
 static async Task RunRom(
     ROMInfo romInfo, 
-    JitCompiler jitCompiler, 
+    JitCompiler<NesHal> jitCompiler, 
     MonogameApp app,
     CancellationTokenSource cancellationTokenSource)
 {

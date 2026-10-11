@@ -6,14 +6,14 @@ using NESDecompiler.Core.Disassembly;
 
 namespace Dotnet6502.Tests.Common;
 
-public class TestJitCompiler : JitCompiler
+public class TestJitCompiler : JitCompiler<TestHal>
 {
-    public Dictionary<Type, MsilGenerator.CustomIlGenerator>? CustomGenerators { get; set; }
+    public Dictionary<Type, MsilGenerator<TestHal>.CustomIlGenerator>? CustomGenerators { get; set; }
 
     public TestMemoryMap Memory { get; }
     public TestHal TestHal { get; }
 
-    private TestJitCompiler(TestHal testHal, TestMemoryMap memory, MemoryBus memoryBus)
+    private TestJitCompiler(TestHal testHal, TestMemoryMap memory, GenericMemoryBus memoryBus)
         : base(testHal, null, memoryBus, new Ir6502Interpreter())
     {
         Memory = memory;
@@ -24,7 +24,7 @@ public class TestJitCompiler : JitCompiler
 
     public static TestJitCompiler Create()
     {
-        var memoryBus = new MemoryBus(0xFFFF + 1);
+        var memoryBus = new GenericMemoryBus(0xFFFF + 1);
         var memoryMap = new TestMemoryMap();
         memoryBus.Attach(memoryMap, 0);
 
@@ -45,7 +45,7 @@ public class TestJitCompiler : JitCompiler
         var function = new DecompiledFunction(address, [nop], new HashSet<ushort>());
         var convertedInstructions = new ConvertedInstruction(nop, instructions);
         var convertedFunction = new ConvertedFunction([convertedInstructions], [], false, []);
-        var method = ExecutableMethodGenerator.Generate(
+        var method = ExecutableMethodGenerator<TestHal>.Generate(
             $"test_0x{address:X4}",
             [convertedInstructions],
             [],

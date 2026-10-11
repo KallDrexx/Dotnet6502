@@ -6,8 +6,13 @@ namespace Dotnet6502.Nes;
 /// <summary>
 /// Customizes the JIT operations for NES Roms
 /// </summary>
-public class NesJitCustomizer : IJitCustomizer
+public class NesJitCustomizer : IJitCustomizer<NesHal>
 {
+    /// <summary>
+    /// If true, debug strings will be written for better debugging support
+    /// </summary>
+    public bool WriteDebugStrings { get; init; }
+    
     private record IncrementCycleCount(int Cycles) : Ir6502.Instruction;
 
     private record CallDebugHook(string Info) : Ir6502.Instruction;
@@ -45,7 +50,12 @@ public class NesJitCustomizer : IJitCustomizer
             }
 
             updatedInstructions.Add(new IncrementCycleCount(instruction.OriginalInstruction.Info.Cycles));
-            updatedInstructions.Add(new CallDebugHook(instruction.OriginalInstruction.ToString()));
+
+            if (WriteDebugStrings)
+            {
+                updatedInstructions.Add(new CallDebugHook(instruction.OriginalInstruction.ToString()));
+            }
+            
             updatedInstructions.AddRange(instruction.Ir6502Instructions.Skip(skipCount));
 
             var updatedInstruction = instruction with
@@ -59,16 +69,16 @@ public class NesJitCustomizer : IJitCustomizer
         return result;
     }
 
-    public IReadOnlyDictionary<Type, MsilGenerator.CustomIlGenerator> GetCustomIlGenerators()
+    public IReadOnlyDictionary<Type, MsilGenerator<NesHal>.CustomIlGenerator> GetCustomIlGenerators()
     {
-        return new Dictionary<Type, MsilGenerator.CustomIlGenerator>
+        return new Dictionary<Type, MsilGenerator<NesHal>.CustomIlGenerator>
         {
             { typeof(IncrementCycleCount), CreateCycleCountIlGenerator() },
             { typeof(CallDebugHook), CreateDebugHookIlGenerator() },
         };
     }
 
-    private static MsilGenerator.CustomIlGenerator CreateCycleCountIlGenerator()
+    private static MsilGenerator<NesHal>.CustomIlGenerator CreateCycleCountIlGenerator()
     {
         return (instruction, ilGenerator) =>
         {
@@ -78,7 +88,7 @@ public class NesJitCustomizer : IJitCustomizer
             }
 
             // Load the hardware field
-            ilGenerator.Emit(JitCompiler.LoadHalArg);
+            ilGenerator.Emit(JitCompiler<NesHal>.LoadHalArg);
 
             // Cast from I6502Hal interface to NesHal concrete type
             ilGenerator.Emit(OpCodes.Castclass, typeof(NesHal));
@@ -92,14 +102,14 @@ public class NesJitCustomizer : IJitCustomizer
         };
     }
 
-    private static MsilGenerator.CustomIlGenerator CreateDebugHookIlGenerator()
+    private static MsilGenerator<NesHal>.CustomIlGenerator CreateDebugHookIlGenerator()
     {
         return (instruction, ilGenerator) =>
         {
             var debugInstruction = (CallDebugHook)instruction;
 
             // Load the hardware field
-            ilGenerator.Emit(JitCompiler.LoadHalArg);
+            ilGenerator.Emit(JitCompiler<NesHal>.LoadHalArg);
 
             // Cast from I6502Hal interface to NesHal concrete type
             ilGenerator.Emit(OpCodes.Castclass, typeof(NesHal));

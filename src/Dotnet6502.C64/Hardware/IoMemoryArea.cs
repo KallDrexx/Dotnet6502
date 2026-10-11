@@ -6,7 +6,7 @@ public class IoMemoryArea : IMemoryDevice
 {
     private const int TotalSize = 0xdfff - 0xd000 + 1;
 
-    private readonly MemoryBus _memoryBus;
+    private readonly GenericMemoryBus _memoryBus;
 
     public uint Size => TotalSize;
 
@@ -22,7 +22,7 @@ public class IoMemoryArea : IMemoryDevice
 
     public IoMemoryArea()
     {
-        _memoryBus = new MemoryBus(TotalSize);
+        _memoryBus = new GenericMemoryBus(TotalSize);
 
         // Despite there only being 47 registers, the block of memory used is 64 bytes repeated until 0x400
         for (var x = 0; x < 10; x++)

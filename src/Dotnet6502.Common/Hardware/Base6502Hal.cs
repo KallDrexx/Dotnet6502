@@ -1,27 +1,9 @@
 namespace Dotnet6502.Common.Hardware;
 
-public class Base6502Hal
+public class Base6502Hal<TMemory> : I6502Hal where TMemory : IMemoryBus
 {
-    /// <summary>
-    /// A delegate that allows the JIT to be notified of memory being changed. A value of
-    /// true being returned means that the currently executing function has had its instructions
-    /// modified.
-    /// </summary>
-    public delegate bool MemoryWriteEvent(ushort address);
-
-    private readonly MemoryBus _memoryBus;
-    private readonly Dictionary<CpuStatusFlags, bool> _flags  = new()
-    {
-        { CpuStatusFlags.Unused, true },
-        { CpuStatusFlags.BFlag, false },
-        { CpuStatusFlags.Carry, false },
-        { CpuStatusFlags.Decimal, false },
-        { CpuStatusFlags.InterruptDisable, false },
-        { CpuStatusFlags.Negative, false },
-        { CpuStatusFlags.Overflow, false },
-        { CpuStatusFlags.Zero, false },
-    };
-
+    private readonly TMemory _memoryBus;
+    private byte _flags;
     private bool _recompilationRequired;
 
     public byte ARegister { get; set; }
@@ -29,45 +11,52 @@ public class Base6502Hal
     public byte YRegister { get; set; }
     public byte StackPointer { get; set; } = 0xFF;
     public ushort CurrentInstructionAddress { get; set; }
-    public MemoryWriteEvent? OnMemoryWritten;
+    public I6502Hal.MemoryWriteEvent? OnMemoryWritten { get; set; }
 
     public byte ProcessorStatus
     {
-        get => (byte)(
-            (Convert.ToByte(_flags[CpuStatusFlags.Negative]) << 7) |
-            (Convert.ToByte(_flags[CpuStatusFlags.Overflow]) << 6) |
-            (Convert.ToByte(_flags[CpuStatusFlags.Unused]) << 5) |
-            (Convert.ToByte(_flags[CpuStatusFlags.BFlag]) << 4) |
-            (Convert.ToByte(_flags[CpuStatusFlags.Decimal]) << 3) |
-            (Convert.ToByte(_flags[CpuStatusFlags.InterruptDisable]) << 2) |
-            (Convert.ToByte(_flags[CpuStatusFlags.Zero]) << 1) |
-            (Convert.ToByte(_flags[CpuStatusFlags.Carry]) << 0));
-        set
+        get
         {
-            _flags[CpuStatusFlags.Negative] =         (value & 0b10000000) == 0b10000000;
-            _flags[CpuStatusFlags.Overflow] =         (value & 0b01000000) == 0b01000000;
-            _flags[CpuStatusFlags.Decimal] =          (value & 0b00001000) == 0b00001000;
-            _flags[CpuStatusFlags.InterruptDisable] = (value & 0b00000100) == 0b00000100;
-            _flags[CpuStatusFlags.Zero] =             (value & 0b00000010) == 0b00000010;
-            _flags[CpuStatusFlags.Carry] =            (value & 0b00000001) == 0b00000001;
+            // Ensure Unused flag always comes back as true
+            SetFlag(CpuStatusFlags.Unused, true);
+            return _flags;
         }
+
+        set => _flags = value;
     }
 
     private ushort StackAddress => (ushort)(0x0100 | StackPointer);
 
-    public Base6502Hal(MemoryBus memoryBus)
+    public Base6502Hal(TMemory memoryBus)
     {
         _memoryBus = memoryBus;
     }
 
     public void SetFlag(CpuStatusFlags flag, bool value)
     {
-        _flags[flag] = value;
+        if (flag == CpuStatusFlags.Unused && !value)
+        {
+            return; // never let unused be set to false
+        }
+        
+        var shift = GetShiftAmount(flag);
+        var mask = (byte)(1 << shift);
+        if (value)
+        {
+            _flags |= mask;
+        }
+        else
+        {
+            _flags &= (byte)~mask;
+        }
     }
 
     public bool GetFlag(CpuStatusFlags flag)
     {
-        return _flags[flag];
+        var shift = GetShiftAmount(flag);
+        var mask = (byte)(1 << shift);
+
+        return (_flags & mask) > 0;
     }
 
     public virtual byte ReadMemory(ushort address)
@@ -123,5 +112,21 @@ public class Base6502Hal
 
     public virtual void DebugHook(string info)
     {
+    }
+    
+    private static byte GetShiftAmount(CpuStatusFlags flag)
+    {
+        return flag switch
+        {
+            CpuStatusFlags.Carry => 0,
+            CpuStatusFlags.Zero => 1,
+            CpuStatusFlags.InterruptDisable => 2,
+            CpuStatusFlags.Decimal => 3,
+            CpuStatusFlags.BFlag => 4,
+            CpuStatusFlags.Unused => 5,
+            CpuStatusFlags.Overflow => 6,
+            CpuStatusFlags.Negative => 7,
+            _ => throw new NotSupportedException(flag.ToString()),
+        };
     }
 }

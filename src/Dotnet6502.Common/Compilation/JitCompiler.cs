@@ -8,7 +8,7 @@ namespace Dotnet6502.Common.Compilation;
 /// Compiles 6502 assembly functions based on a specified method entry point
 /// on an as-needed basis.
 /// </summary>
-public class JitCompiler
+public class JitCompiler<THal> where THal : I6502Hal
 {
     protected record ConvertedFunction(
         IReadOnlyList<ConvertedInstruction> Instructions,
@@ -19,14 +19,14 @@ public class JitCompiler
     public static readonly OpCode LoadHalArg = OpCodes.Ldarg_0;
     public static readonly OpCode LoadJumpIndexArg = OpCodes.Ldarg_1;
 
-    private readonly Base6502Hal _hal;
-    private readonly IReadOnlyList<IJitCustomizer> _jitCustomizers;
-    private readonly MemoryBus _memoryBus;
+    private readonly THal _hal;
+    private readonly IReadOnlyList<IJitCustomizer<THal>> _jitCustomizers;
+    private readonly IMemoryBus _memoryBus;
     private readonly Queue<ushort> _ranMethods = new();
     private readonly Ir6502Interpreter _interpreter;
     private readonly SmcTracker _smcTracker = new();
     private readonly Dictionary<ushort, Patch> _patches = [];
-    private readonly ExecutableMethodCache _executableMethodCache = new();
+    private readonly ExecutableMethodCache<THal> _executableMethodCache = new();
     private ushort _currentlyExecutingFunctionAddress;
 
     /// <summary>
@@ -44,7 +44,12 @@ public class JitCompiler
     /// </summary>
     public int MethodCallCount { get; private set; }
 
-    public JitCompiler(Base6502Hal hal, IJitCustomizer? jitCustomizer, MemoryBus memoryBus, Ir6502Interpreter interpreter)
+    /// <summary>
+    /// If true, then the HAL debug hook will be invoked by compiled methods.
+    /// </summary>
+    public bool AddDebugHooks { get; init; }
+
+    public JitCompiler(THal hal, IJitCustomizer<THal>? jitCustomizer, IMemoryBus memoryBus, Ir6502Interpreter interpreter)
     {
         _hal = hal;
         _hal.OnMemoryWritten = address =>
@@ -65,8 +70,8 @@ public class JitCompiler
         };
 
         _jitCustomizers = jitCustomizer != null
-            ? [new StandardJitCustomizer(), jitCustomizer]
-            : [new StandardJitCustomizer()];
+            ? [new StandardJitCustomizer<THal>(), jitCustomizer, new OptimizingJitCustomizer<THal>()]
+            : [new StandardJitCustomizer<THal>(), new OptimizingJitCustomizer<THal>()];
 
         _memoryBus = memoryBus;
         _interpreter = interpreter;
@@ -94,22 +99,36 @@ public class JitCompiler
                 _ranMethods.Dequeue();
             }
 
-            _hal.DebugHook($"Entering function 0x{nextAddress:X4}");
+            if (AddDebugHooks)
+            {
+                _hal.DebugHook($"Entering function 0x{nextAddress:X4}");
+            }
+
             _currentlyExecutingFunctionAddress = (ushort)nextAddress;
             nextAddress = method(_hal, firstInstructionIndex);
-            _hal.DebugHook($"Exiting function 0x{_currentlyExecutingFunctionAddress:X4}");
+
+            if (AddDebugHooks)
+            {
+                _hal.DebugHook($"Exiting function 0x{_currentlyExecutingFunctionAddress:X4}");
+            }
         }
 
         if (_ranMethods.Count == 0)
         {
-            _hal.DebugHook($"No functions executed");
+            if (AddDebugHooks)
+            {
+                _hal.DebugHook($"No functions executed");
+            }
         }
         else
         {
             var path = _ranMethods.Select(x => x.ToString("X4"))
                 .Aggregate((x, y) => $"{x} -> {y}");
 
-            _hal.DebugHook($"Function path: {path}");
+            if (AddDebugHooks)
+            {
+                _hal.DebugHook($"Function path: {path}");
+            }
         }
     }
 
@@ -118,9 +137,9 @@ public class JitCompiler
         _patches.Add(patch.FunctionEntryAddress, patch);
     }
 
-    private (ExecutableMethod Method, int FirstIndex) CreateExecutableMethod(int nextAddress)
+    private (ExecutableMethod<THal> Method, int FirstIndex) CreateExecutableMethod(int nextAddress)
     {
-        ExecutableMethod method;
+        ExecutableMethod<THal> method;
 
         // Does the address we are trying to jump through exist within an existing cached function?
         var existingFunction = _executableMethodCache.GetFunctionAddressForInstruction((ushort)nextAddress);
@@ -147,13 +166,21 @@ public class JitCompiler
 
         if (AlwaysUseInterpreter || !convertedFunction.HandledAllKnownSmcTargets)
         {
-            _hal.DebugHook($"Using interpreter for 0x{nextAddress:X4}");
-            method = _interpreter.CreateExecutableMethod(convertedFunction.Instructions);
+            if (AddDebugHooks)
+            {
+                _hal.DebugHook($"Using interpreter for 0x{nextAddress:X4}");
+            }
+
+            method = _interpreter.CreateExecutableMethod<THal>(convertedFunction.Instructions);
         }
         else
         {
-            _hal.DebugHook($"Using JIT for 0x{nextAddress:X4}");
-            method = ExecutableMethodGenerator.Generate(
+            if (AddDebugHooks)
+            {
+                _hal.DebugHook($"Using JIT for 0x{nextAddress:X4}");
+            }
+
+            method = ExecutableMethodGenerator<THal>.Generate(
                 $"func_{function.Address:X4}",
                 convertedFunction.Instructions,
                 convertedFunction.JumpTableLabels,
@@ -221,9 +248,9 @@ public class JitCompiler
             jumpTableLabels);
     }
 
-    protected ExecutableMethod AddExecutableMethod(
+    protected ExecutableMethod<THal> AddExecutableMethod(
         int nextAddress,
-        ExecutableMethod method,
+        ExecutableMethod<THal> method,
         DecompiledFunction function,
         ConvertedFunction convertedFunction)
     {
