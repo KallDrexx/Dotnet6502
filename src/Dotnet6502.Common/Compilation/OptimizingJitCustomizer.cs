@@ -53,9 +53,31 @@ public class OptimizingJitCustomizer<THal> : IJitCustomizer<THal> where THal : I
                     _ => [],
                 };
 
-                foreach (var value in readValues)
+                // We also read registers via memory destination value types for memory pointers
+                Ir6502.Value? destValue = irInstruction switch
                 {
-                    openWrites.Remove(value);
+                    Ir6502.Copy copy => copy.Destination,
+                    Ir6502.Unary unary => unary.Destination,
+                    Ir6502.Binary binary => binary.Destination,
+                    Ir6502.PopStackValue pop => pop.Destination,
+                    _ => null,
+                };
+                
+                foreach (var value in readValues.Append(destValue))
+                {
+                    if (value != null) openWrites.Remove(value);
+                    switch (value)
+                    {
+                        case Ir6502.Memory { RegisterToAdd: { } reg }:
+                            openWrites.Remove(new Ir6502.Register(reg));
+                            break;
+                        case Ir6502.IndirectMemory { IsPreIndexed: true }:
+                            openWrites.Remove(new Ir6502.Register(Ir6502.RegisterName.XIndex));
+                            break;
+                        case Ir6502.IndirectMemory { IsPostIndexed: true }:
+                            openWrites.Remove(new Ir6502.Register(Ir6502.RegisterName.YIndex));
+                            break;
+                    }
                 }
 
                 // If a jump call is encountered, regardless of forward or backwards, we can't
@@ -67,15 +89,7 @@ public class OptimizingJitCustomizer<THal> : IJitCustomizer<THal> where THal : I
                 // out the first write, even though at runtime we will not actually perform that 2nd write.
                 //
                 // So to handle these cases we just want to clear open writes on any jump.
-                Ir6502.Identifier? jumpTarget = irInstruction switch
-                {
-                    Ir6502.Jump jump => jump.Target,
-                    Ir6502.JumpIfZero jumpIf => jumpIf.Target,
-                    Ir6502.JumpIfNotZero jumpNot => jumpNot.Target,
-                    _ => null,
-                };
-
-                if (jumpTarget != null)
+                if (irInstruction is Ir6502.Jump or Ir6502.JumpIfZero or Ir6502.JumpIfNotZero)
                 {
                     openWrites.Clear();
                     continue;
